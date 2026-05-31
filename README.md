@@ -1,3 +1,5 @@
+中文 | [English](README.en.md)
+
 # Regex CSS Highlighter
 
 一个 Obsidian 插件，通过正则表达式匹配文本并应用自定义 CSS 样式高亮显示。

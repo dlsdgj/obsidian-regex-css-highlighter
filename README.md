@@ -4,7 +4,14 @@
 
 ## 更新日志
 
-### 🆕 v1.5.7 (2026-05-31)
+### 🆕 v1.5.8 (2026-06-01)
+
+- **移除"关于"部分** - 移除主面板底部"关于"section，版本更新日志统一迁移至readme.md
+- **清理捐赠功能代码** - 移除showDonateImage类方法和独立函数、setupDonateText函数、捐赠按钮CSS样式及相关翻译键
+- **清理无用翻译键** - 移除main.tab.about、settings.about、settings.updateHistory、settings.viewUpdates等不再使用的翻译键
+- **清理DONATE_QR_CODE常量** - 移除base64编码的捐赠二维码图片常量
+
+### v1.5.7 (2026-05-31)
 
 - **国际化支持** - 主面板添加 CN/EN 语言切换按钮，支持中英文界面切换
 - **全面国际化** - 设置项标题、悬浮球选项、分组样式按钮等所有界面文本国际化

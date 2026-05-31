@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover } = require("obsidian");
+﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover } = require("obsidian");
 
 // 直接将CSS规则追加到动态样式元素，确保新样式立即生效（无需重新读取文件）
 function appendCSSToDynamicStyle(cssRule) {
@@ -11,6 +11,10 @@ function appendCSSToDynamicStyle(cssRule) {
   }
   styleElement.textContent += '\n' + cssRule;
 }
+
+const _langSwitchStyle = document.createElement('style');
+_langSwitchStyle.textContent = `.lang-zh{display:inline-block;padding:1px 8px;border-radius:3px;font-size:12px;font-weight:500;background:#D85A30;color:#fff;letter-spacing:.1em}.lang-en{display:inline-block;padding:1px 8px;border-radius:3px;font-size:12px;font-weight:500;background:#185FA5;color:#fff;letter-spacing:.08em}`;
+document.head.appendChild(_langSwitchStyle);
 
 // 跨平台文件操作工具：桌面端用 Node.js fs 模块（快速），手机端用 Obsidian Vault Adapter（兼容）
 const _isDesktop = typeof process !== 'undefined' && process.versions && !!process.versions.electron;
@@ -186,6 +190,1874 @@ const crossFS = {
   }
 };
 
+let _currentLang = 'zh';
+
+const i18n = {
+  zh: {
+    'main.title': 'regex css highlighter',
+    'main.openPluginLocation': '打开插件位置',
+    'main.opacity': '透明度',
+    'main.tab.styles': '样式',
+    'main.tab.rules': '规则',
+    'main.tab.settings': '设置',
+    'main.tab.about': '关于',
+    'main.styleSearch': '搜索样式...',
+    'main.noStyles': '暂无样式',
+    'main.openCssEditor': '打开样式编辑器',
+    'main.openStyleCategories': '打开样式分组',
+    'main.addGroup': '添加分组',
+    'main.defaultHide': '默认隐藏',
+    'main.defaultShow': '默认显示',
+    'main.styleCount': '样式数',
+    'main.currentRules': '当前文件的高亮规则',
+    'main.globalRules': '全局高亮规则',
+    'main.headingStyles': '标题样式',
+    'main.remarkTexts': '已备注文本',
+    'main.addRule': '添加规则',
+    'main.regex': '正则表达式',
+    'main.styleClass': '样式类名',
+    'main.remark': '备注',
+    'main.source': '来源',
+    'main.timestamp': '时间',
+    'main.enabled': '启用',
+    'main.disabled': '禁用',
+    'main.edit': '编辑',
+    'main.delete': '删除',
+    'main.save': '保存',
+    'main.cancel': '取消',
+    'main.confirm': '确认',
+    'main.close': '关闭',
+    'main.copy': '复制',
+    'main.copyClassName': '复制类名',
+    'main.copyFullStyle': '复制完整样式',
+    'main.addToShowcase': '加入展示',
+    'removeFromShowcase': '从展示列表移除',
+    'main.rename': '重命名',
+    'main.moveUp': '上移',
+    'main.moveDown': '下移',
+    'main.floatDisplay': '悬浮显示',
+    'main.cancelFloat': '取消悬浮显示',
+    'main.addToFloatingBall': '添加到悬浮球',
+    'main.removeFromFloatingBall': '从悬浮球移除',
+    'main.showInFloatingBall': '在悬浮球中显示',
+    'main.hideInFloatingBall': '在悬浮球中隐藏',
+    'main.modifyDisplayText': '修改显示文字',
+    'main.newGroupName': '新分组名称',
+    'main.groupNameExists': '该分组名称已存在!',
+    'main.groupNameEmpty': '分组名称不能为空!',
+    'main.groupCreated': '新分组已创建',
+    'main.groupRenamed': '分组已重命名',
+    'main.groupDeleted': '分组已删除',
+    'main.groupAdded': '样式已添加到分组',
+    'main.groupExists': '样式已存在于分组',
+    'main.groupAddFailed': '添加样式到分组失败',
+    'main.noStyleDefinition': '未找到样式定义',
+    'main.styleAddedToCategory': '已将CSS样式添加到分类',
+    'main.clipboardEmpty': '剪贴板内容为空，请先复制CSS样式或备注内容',
+    'main.invalidCssFormat': '剪贴板中的CSS代码格式无效',
+    'main.selectTextOrKeyword': '请先选中要应用样式的文本或在输入框中输入关键词',
+    'main.noDefaultGroup': '未设置默认分组',
+    'main.styleRuleUpdated': '已更新样式规则',
+    'main.styleRuleCreated': '已为选中文本创建样式规则',
+    'main.cannotExtractClass': '无法提取CSS类名',
+    'main.noCssFound': '未找到CSS样式代码',
+    'main.selectStyleFirst': '请先选择一个样式',
+    'main.cannotGetEditor': '无法获取当前编辑器',
+    'main.applyStyleFailed': '应用样式失败',
+    'main.ruleExists': '该文本的样式规则已存在',
+    'main.ruleAdded': '已为选中文本添加样式规则',
+    'main.cannotGetFilePath': '无法获取当前文件路径',
+    'main.remarkUpdated': '已更新选中文本的备注',
+    'main.remarkMerged': '已将备注合并到规则中',
+    'main.remarkAddedNew': '已为选中文本添加新规则和备注',
+    'main.remarkAdded': '已为选中文本添加备注',
+    'main.remarkAddFailed': '添加备注失败',
+    'main.cannotOpenFile': '无法打开文件，请检查文件是否存在',
+    'main.cannotOpenEditor': '无法打开编辑器',
+    'main.openMdFile': '请先打开一个Markdown文件',
+    'main.selectText': '请先选中文字',
+    'main.selectTextToStyle': '请先选中要应用样式的文字',
+    'main.selectTextToRemark': '请先选中要添加备注的文本',
+    'main.selectTextToRemove': '请先选中要移除高亮的文本',
+    'main.selectTextToPinyin': '请先选中要注音的文本',
+    'main.selectTextToDeletePinyin': '请先选中要删除注音的文本',
+    'main.selectTextToEntity': '请先选中要提取实体的文本',
+    'main.selectTextToHighlight': '请先选中要高亮的文本',
+    'main.selectTextToMerge': '请先选中要合并的文本',
+    'main.selectTextToStyleApply': '请先选中要应用样式的文本',
+    'main.noMatchingRule': '未找到匹配的高亮规则',
+    'main.noHighlightRule': '当前文件没有高亮规则',
+    'main.globalRuleRemoved': '已移除全局高亮规则',
+    'main.fileRuleRemoved': '已移除文件高亮规则',
+    'main.styleApplied': '已将样式应用到选中文本',
+    'main.styleAlreadyFloating': '样式已在悬浮显示中',
+    'main.styleHidden': '已隐藏分组的悬浮样式',
+    'main.floatEnabled': '悬浮显示已启用，按住拖动位置，左键点击应用样式到选中文本',
+    'main.floatNameUpdated': '悬浮按钮名称已更新',
+    'main.floatOptionUpdated': '悬浮选项已更新',
+    'main.floatGroupCancelled': '已取消分组的悬浮显示',
+    'main.floatOptionCancelled': '已取消的悬浮显示',
+    'main.displayTextChanged': '显示文字已更新',
+    'main.classNameCopied': '已复制类名',
+    'main.fullStyleCopied': '已复制完整样式',
+    'main.globalRuleExists': '规则已存在于全局规则中',
+    'main.globalRuleAdded': '全局规则已添加',
+    'main.globalRuleAddFailed': '添加全局规则失败',
+    'main.middleClickHint': '请先选中文字，中键点击将其添加为全局规则',
+    'main.noUnusedStyle': '没有可用的未使用样式',
+    'main.allStylesTried': '已尝试所有未使用样式，重新开始',
+    'main.styleChanged': '更换样式',
+    'main.highlightAdded': '添加高亮',
+    'main.globalHighlightAdded': '添加全局高亮',
+    'main.styleRemoved': '已移除样式',
+    'main.operationFailed': '操作失败',
+    'main.mergeTarget': '不在高亮规则中',
+    'main.mergeExists': '已存在于规则中',
+    'main.merged': '已合并',
+    'main.clipboardEmptyShort': '剪贴板为空',
+    'main.textChanged': '选中的文本已改变，无法自动应用新样式',
+    'main.cannotGetActiveEditor': '无法获取当前活动的编辑器',
+    'main.applyNewStyleFailed': '应用新样式到选中文本时出错',
+    'main.addFromClipboardFailed': '从剪贴板添加样式失败',
+    'main.ruleMovedToGlobal': '已将规则从局部移动到全局',
+    'main.ruleMovedToLocal': '已将规则从全局移动到局部',
+    'main.globalRuleNotFound': '未找到对应的全局规则',
+    'main.localRuleNotFound': '未找到对应的局部规则',
+    'main.localRuleExists': '局部规则中已存在相同规则',
+    'main.globalRuleExistsShort': '全局规则中已存在相同规则',
+    'main.cannotGetRuleInfo': '无法获取规则信息',
+    'main.cannotGetMatchText': '无法获取匹配文本',
+    'main.fileNameEmpty': '文件名不能为空',
+    'main.fileExists': '文件也已存在',
+    'main.savedToFile': '已保存到文件',
+    'main.mergedToFile': '已合并到文件',
+    'main.mergeFailed': '合并失败',
+    'main.saveFailed': '保存失败',
+    'main.noPinyin': '选中的文本没有注音',
+    'main.pinyinDeleted': '已删除注音',
+    'main.pinyinDeleteFailed': '删除注音失败',
+    'main.pinyinAdded': '拼音已添加',
+    'main.pinyinFailed': '注音失败',
+    'main.pinyinMismatch': '拼音数量与文字数量不匹配，请重试',
+    'main.pinyinGetting': '正在获取拼音...',
+    'main.cannotGetFilePath2': '无法获取文件路径',
+    'main.cannotGetEditor2': '无法获取编辑器实例',
+    'main.pinyinSaved': '注音文件已保存',
+    'main.jsonFormatError': 'JSON格式错误',
+    'main.openEditorFailed': '打开编辑器失败',
+    'main.configureAiFirst': '请先在设置中配置AI的API Key',
+    'main.sendingToAi': '正在发送请求到AI...',
+    'main.aiError': 'AI助手出错',
+    'main.aiStyleOptimized': 'AI样式优化完成',
+    'main.aiOptimizeFailed': 'AI优化失败',
+    'main.aiStyleGenerated': 'AI样式生成完成',
+    'main.aiGenerateFailed': 'AI生成失败',
+    'main.inputStyleRequirement': '请输入样式需求',
+    'main.inputStyleModification': '请输入样式修改要求',
+    'main.classNameExists': '类名已存在，将跳过',
+    'main.replyReceived': '回复已收到',
+    'main.sendFailed': '发送失败',
+    'main.promptEmpty': '提示词不能为空',
+    'main.promptSaved': '提示词已保存',
+    'main.promptSaveFailed': '保存提示词失败',
+    'main.promptLoaded': '已加载提示词',
+    'main.promptApplyFailed': '应用提示词失败',
+    'main.managePromptFailed': '管理提示词失败',
+    'main.promptTemplateSaved': '提示词模板已保存',
+    'main.inputEntityName': '请输入实体名称',
+    'main.entityNameUpdated': '实体名称已更新为',
+    'main.entityAdded': '已添加新实体',
+    'main.selectEntity': '请先选择一个实体',
+    'main.entityStyleAssigned': '已为实体分配样式',
+    'main.assignStyleFirst': '请先为实体分配样式',
+    'main.entityStyleApplied': '已成功为实体应用样式',
+    'main.entityStyleApplyFailed': '应用样式失败',
+    'main.entityRulesAdded': '已成功为实体添加样式规则',
+    'main.imageSaved': '图片已保存',
+    'main.imageSaveFailed': '保存图片失败',
+    'main.inputFormat': '请输入格式模式',
+    'main.inputStyleName': '请输入样式名',
+    'main.noMatchText': '未找到匹配的文本',
+    'main.formatReplaced': '已替换格式，添加高亮规则',
+    'main.formatReplaceFailed': '替换失败，请检查格式模式是否正确',
+    'main.undone': '已撤销',
+    'main.redone': '已重做',
+    'main.reapplied': '已重新应用规则',
+    'main.jumpedTo': '已跳转到',
+    'main.notFoundInDoc': '未在文档中找到',
+    'main.partialMatchDetected': '检测到部分匹配的规则',
+    'main.collapse': '折叠',
+    'main.expand': '展开',
+    'main.collapseAll': '全部折叠',
+    'main.expandAll': '全部展开',
+    'main.addRemark': '添加备注',
+    'main.removeHighlight': '移除高亮',
+    'main.pinyin': '注音',
+    'main.aiReply': 'AI回复',
+    'main.entityExtract': '实体提取',
+    'main.styleShowcase': '高亮列表',
+    'main.fontSwitch': '切换字体',
+    'main.switchMode': '模式切换',
+    'main.hideFloatingBtns': '隐藏悬浮按钮',
+    'main.showFloatingBtns': '显示悬浮按钮',
+    'main.hideTextStyles': '隐藏文本样式',
+    'main.showTextStyles': '显示文本样式',
+    'main.textStylesHidden': '已隐藏文本样式',
+    'main.textStylesShown': '已显示文本样式',
+    'main.floatingBtnsHidden': '悬浮按钮已隐藏',
+    'main.floatingBtnsShown': '悬浮按钮已显示',
+    'main.modeSwitched': '悬浮球模式已切换为',
+    'main.alwaysMode': '常显模式',
+    'main.followMode': '跟随选中模式',
+    'main.openMainPanel': '打开主面板',
+    'main.formatReplace': '格式替换',
+    'main.randomHighlight': '随机高亮',
+    'main.randomGlobalHighlight': '随机全局高亮',
+    'main.changeStyle': '更换样式',
+    'main.removeStyle': '移除样式',
+    'main.mergeText': '合并文本',
+    'main.addFromClipboard': '从剪贴板添加',
+    'main.moveToGlobal': '移到全局',
+    'main.moveToLocal': '移到局部',
+    'main.disableRule': '禁用规则',
+    'main.enableRule': '启用规则',
+    'main.editRemark': '编辑备注',
+    'main.moveRule': '移动规则',
+    'main.longPress': '长按进入多选模式',
+    'main.rightClickEdit': '右键编辑样式',
+    'main.middleClickGlobal': '中键单击应用为全局规则',
+    'main.doubleClickGroup': '双击分组标题隐藏/显示',
+    'main.leftClickApply': '左键单击应用样式',
+    'settings.display': '显示',
+    'settings.readingModeLineHeight': '阅读模式行高',
+    'settings.readingModeMargin': '阅读模式边距',
+    'settings.leftMargin': '左边距',
+    'settings.rightMargin': '右边距',
+    'settings.mainPanelOpacity': '主面板透明度',
+    'settings.entityPanelOpacity': '按钮面板透明度',
+    'settings.panelOpacityUpdated': '面板透明度已更新',
+    'settings.remarkPopupSettings': '备注弹窗设置',
+    'settings.remarkLineSpacing': '备注弹窗行间距',
+    'settings.remarkPopupSaved': '备注弹窗设置已保存',
+    'settings.saveFailed': '保存失败',
+    'settings.saveFailedDetail': '保存失败，请检查控制台获取详细信息',
+    'settings.cleanMissingStyles': '清理分类文件中不存在样式',
+    'settings.cleanMissing': '清理',
+    'settings.cleanedMissing': '已清理不存在的样式',
+    'settings.floatingBall': '悬浮球',
+    'settings.floatingBallMode': '悬浮球模式',
+    'settings.alwaysShow': '常显模式',
+    'settings.followSelection': '跟随选中模式',
+    'settings.manageFloatingOptions': '管理悬浮球选项',
+    'settings.manageFloatingOptionsDesc': '勾选的选项会在悬浮球菜单中显示，取消勾选则隐藏',
+    'settings.floatingBallOptionsSaved': '悬浮球选项设置已保存',
+    'settings.fontSwitchSettings': '字体切换设置',
+    'settings.fontSwitchSaved': '字体切换设置已保存',
+    'settings.pinyinSettings': '拼音设置',
+    'settings.pinyinStyle': '拼音样式',
+    'settings.pinyinSaved': '拼音样式已保存',
+    'settings.aiSettings': 'AI设置',
+    'settings.aiName': 'AI名称',
+    'settings.aiApiUrl': 'API地址',
+    'settings.aiApiKey': 'API Key',
+    'settings.aiModel': '模型',
+    'settings.addAi': '添加AI',
+    'settings.testApi': '测试连接',
+    'settings.testingApi': '正在测试API连接...',
+    'settings.apiTestSuccess': 'API测试成功！',
+    'settings.apiTestFailed': 'API测试失败',
+    'settings.apiResponseError': 'API响应格式异常',
+    'settings.inputAiName': '请输入AI名称',
+    'settings.aiSettingsSaved': 'AI设置已保存',
+    'settings.aiDeleted': '已删除AI',
+    'settings.inputTestText': '请输入测试文本',
+    'settings.completeAiConfig': '请填写完整的AI配置信息',
+    'settings.deepSeekModelHint': 'DeepSeek模型名称可能不正确，建议使用',
+    'settings.debugLog': '调试耗时日志',
+    'settings.disableHeadingStyle': '禁用标题样式',
+    'settings.showRecentRules': '折叠时显示最近规则',
+    'settings.styleUsageCount': '样式使用次数角标',
+    'settings.hideAllStyles': '隐藏所有文本样式',
+    'settings.about': '关于',
+    'settings.updateHistory': '更新历史',
+    'settings.defaultHideEnabled': '已开启默认隐藏功能，下次打开模态框时所有分组将呈隐藏状态',
+    'settings.defaultHideDisabled': '已关闭默认隐藏功能',
+    'settings.groupReordered': '分组已重新排序',
+    'settings.groupSortFailed': '分组排序时出错',
+    'settings.lineMarginUpdated': '阅读模式行、边距已更新',
+    'settings.defaultLineHeight': '默认',
+    'settings.styleUsageUpdated': '样式使用次数文件更新成功',
+    'settings.styleUsageUpdateFailed': '更新失败，请检查控制台获取详细信息',
+    'showcase.title': '高亮列表',
+    'showcase.hint': '仅显示已"加入展示"的样式所应用的高亮文本',
+    'showcase.hintCount': '显示应用次数的样式所应用的高亮文本',
+    'showcase.inMainPanel': '在主面板中右键点击样式按钮选择"加入展示"',
+    'showcase.noData': '暂无数据。请先在主面板样式按钮右键菜单中选择"加入展示"添加样式。',
+    'showcase.filter': '筛选',
+    'showcase.total': '共',
+    'showcase.rules': '条',
+    'showcase.loading': '加载中...',
+    'showcase.styleName': '样式名',
+    'showcase.text': '文本',
+    'showcase.source': '来源',
+    'showcase.remark': '备注',
+    'showcase.time': '时间',
+    'showcase.global': '全局',
+    'showcase.local': '局部',
+    'showcase.currentFile': '当前文件',
+    'showcase.openFiles': '已打开文件',
+    'showcase.allFiles': '所有文件',
+    'showcase.sortByStyle': '按样式名',
+    'showcase.sortByText': '按文本',
+    'showcase.sortBySource': '按来源',
+    'showcase.sortByTime': '按时间',
+    'showcase.sortByRemark': '按备注',
+    'showcase.ascending': '升序',
+    'showcase.descending': '降序',
+    'showcase.minLength': '最小字数',
+    'showcase.maxLength': '最大字数',
+    'showcase.showStyleName': '显示样式名',
+    'showcase.showSource': '显示来源',
+    'showcase.showRemark': '显示备注',
+    'showcase.showTimestamp': '显示时间',
+    'showcase.export': '导出',
+    'showcase.exportCsv': '导出CSV',
+    'showcase.exportJson': '导出JSON',
+    'showcase.exportMarkdown': '导出Markdown',
+    'font.title': '切换正文字体',
+    'font.defaultFont': '默认字体',
+    'font.customFont': '自定义字体',
+    'font.restoreDefault': '恢复默认',
+    'font.tempDisable': '临时禁用',
+    'font.tempEnable': '临时启用',
+    'font.defaultRestored': '已恢复默认字体',
+    'font.tempDisabled': '已临时禁用自定义字体、行间距和边距',
+    'font.tempEnabled': '已启用自定义字体、行间距和边距',
+    'font.noFont': '未找到可用字体',
+    'font.switchedTo': '已切换字体为',
+    'entity.title': '实体提取',
+    'entity.selectEntity': '选择实体',
+    'entity.addEntity': '添加实体',
+    'entity.deleteEntity': '删除实体',
+    'entity.renameEntity': '重命名实体',
+    'entity.assignStyle': '分配样式',
+    'entity.applyAll': '全部应用',
+    'entity.noEntity': '暂无实体',
+    'format.title': '格式替换',
+    'format.inputFormat': '输入格式模式',
+    'format.inputStyle': '输入样式名',
+    'format.preview': '预览',
+    'format.replace': '替换',
+    'format.undo': '撤销',
+    'format.redo': '重做',
+    'cssEditor.title': 'CSS样式编辑器',
+    'cssEditor.save': '保存样式',
+    'cssEditor.saved': '样式已保存',
+    'cssEditor.saveFailed': '样式保存失败',
+    'cssEditor.preview': '预览',
+    'remark.title': '添加备注',
+    'remark.inputRemark': '输入备注内容',
+    'remark.save': '保存',
+    'remark.lineSpacing': '行间距',
+    'floating.styleWindow': '悬浮样式',
+    'floating.dragToMove': '按住拖动位置',
+    'floating.clickToApply': '左键点击应用样式到选中文本',
+    'floating.middleClickGlobal': '中键点击添加为全局规则',
+    'floating.editName': '编辑名称',
+    'floating.closeFloat': '关闭悬浮显示',
+    'floating.hideGroupFloat': '隐藏本组悬浮样式',
+    'floating.pinMenu': '固定子菜单',
+    'floating.unpinMenu': '取消固定',
+    'floating.editOption': '编辑',
+    'floating.closeFloatOption': '关闭悬浮显示',
+    'floating.editTitle': '编辑悬浮选项',
+    'floating.displayText': '显示文字',
+    'floating.styleClassName': '样式类名',
+    'floating.customStyle': '自定义样式',
+    'floating.preview': '预览',
+    'floating.styleClassHint': '主面板样式按钮长按/右键→复制类名',
+    'floating.customStyleHint': '输入完整CSS样式（如: background: #ff6eb4; color: #5c0030;）',
+    'floating.optionSaved': '悬浮选项已更新',
+    'floating.nameUpdated': '悬浮按钮名称已更新',
+    'context.addToGlobal': '添加到全局规则',
+    'context.addToLocal': '添加到当前文件规则',
+    'context.modifyDisplayText': '修改显示文字',
+    'context.copyClassName': '复制类名',
+    'context.copyFullStyle': '复制完整样式',
+    'context.editStyle': '编辑样式',
+    'context.addToShowcase': '加入展示',
+    'context.removeFromShowcase': '从展示列表移除',
+    'context.floatDisplay': '悬浮显示',
+    'context.cancelFloat': '取消悬浮显示',
+    'context.addGroup': '添加到分组',
+    'context.renameGroup': '重命名分组',
+    'context.deleteGroup': '删除分组',
+    'context.newGroup': '新建分组',
+    'context.showInFloatingBall': '在悬浮球中显示',
+    'context.hideInFloatingBall': '从悬浮球中移除',
+    'context.disableRule': '禁用规则',
+    'context.enableRule': '启用规则',
+    'context.editRemark': '编辑备注',
+    'context.moveToGlobal': '移到全局',
+    'context.moveToLocal': '移到局部',
+    'context.deleteRule': '删除规则',
+    'context.inputToEditor': '输入到表达式编辑框',
+    'context.moveToCurrentFile': '移动到当前文件规则',
+    'context.moveToGlobalRules': '移动到全局规则',
+    'context.deleteGlobalRule': '删除全局规则',
+    'context.deleteHeadingStyle': '删除标题样式',
+    'context.deleteHistoryRule': '删除规则',
+    'context.addToGlobalRule': '应用为全局规则',
+    'context.disableShiftRight': 'Shift+右键禁用规则',
+    'global.description': '单击输入到表达式编辑框 | 长按移动到当前文件规则 | 中键点击删除 | 右键编辑备注 | Shift+右键禁用规则',
+    'history.description': '单击输入到表达式编辑框 | 长按移动到全局规则 | 中键点击删除 | 右键编辑备注',
+    'heading.description': '单击应用到标题 | 中键点击删除 | 右键编辑样式',
+    'heading.styleApplied': '标题样式已应用到所有对应级别标题',
+    'heading.styleDeleted': '标题样式已删除',
+    'rule.regex': '正则',
+    'rule.style': '样式',
+    'rule.remark': '备注',
+    'rule.global': '全局',
+    'rule.local': '局部',
+    'rule.enabled': '已启用',
+    'rule.disabled': '已禁用',
+    'rule.emptyHint': '选中文字后点击样式按钮添加规则',
+    'rule.emptyHintNoSelection': '暂无规则',
+    'lang.zh': '中文',
+    'lang.en': 'English',
+    'main.width': '宽度',
+    'main.addOrAppend': '添加或追加',
+    'main.regexLabel': '正则表达式',
+    'main.cannotOpenPluginLocation': '无法打开插件位置，请检查控制台获取详细信息。',
+    'main.styleListGroup': '样式列表/分组',
+    'main.styleInstructions': '左键单击应用样式，长按进入多选模式，右键编辑样式，中键单击应用为全局规则，双击分组标题隐藏/显示',
+    'main.noFileOpen': '(未打开文件)',
+    'main.cannotLoadCategories': '(无法加载样式类别)',
+    'main.openStylesCss': '打开styles.css',
+    'main.openStyleCategoriesFile': '打开样式分组文件',
+    'main.hiddenGroups': '已隐藏的分组',
+    'main.defaultHideAllGroups': '默认隐藏所有分组',
+    'main.openDataJson': '打开data.json',
+    'main.openGlobalRulesFile': '打开全局规则文件',
+    'main.openRulesFile': '打开规则文件',
+    'main.clipboardContentAdded': '已追加剪贴板内容到正则表达式',
+    'main.clipboardContentSet': '已添加剪贴板内容到正则表达式',
+    'main.cannotGetClipboard': '无法获取剪贴板内容，请手动输入',
+    'main.globalRuleUpdated': '全局规则已更新为',
+    'main.ruleUpdated': '规则已更新为',
+    'main.noRuleToUpdate': '未找到可更新的规则，请先点击历史记录或全局规则按钮',
+    'settings.settingsTitle': '设置',
+    'settings.updateCount': '更新计数',
+    'settings.ruleSourceBadge': '规则来源标记(g/l)',
+    'settings.ruleSourceBadgeHint': '悬停高亮文本时显示g(全局)/l(局部)标记',
+    'settings.ruleSourceBadgeThreshold': '字数阈值',
+    'settings.ruleSourceBadgeThresholdHint': '匹配文本字数大于此值时显示标记(0=始终显示)',
+    'settings.headingLevelLabel': '标题层级标签(h1/h2...)',
+    'settings.autoExpandMode': '自动展开模式',
+    'settings.scan': '扫描',
+    'settings.cleanNonExistent': '清除不存在的样式',
+    'settings.scanFailed': '扫描失败，请检查控制台',
+    'settings.lineHeight': '行距',
+    'settings.leftMargin': '左边距',
+    'settings.rightMargin2': '右边距',
+    'settings.mobilePreviewMargins': '手机版阅读模式边距',
+    'settings.previewFontSize': '预览字体大小',
+    'settings.remarkPopupWidth': '备注弹窗宽度',
+    'settings.remarkPopupBorderWidth': '备注弹窗边框宽度',
+    'context.addAsGlobalRule': '添加为全局规则',
+    'context.addAsHeadingStyle': '添加为标题样式',
+    'context.moveToGroup': '移动到分组',
+    'context.formatReplace': '格式替换',
+    'context.delete': '删除',
+    'context.edit': '编辑',
+    'heading.level1': '一级标题h1',
+    'heading.level2': '二级标题h2',
+    'heading.level3': '三级标题h3',
+    'heading.level4': '四级标题h4',
+    'heading.level5': '五级标题h5',
+    'heading.level6': '六级标题h6',
+    'font.switchBodyFont': '切换正文字体',
+    'font.inUse': '使用中',
+    'font.defaultFontRestore': '默认字体（恢复）',
+    'font.favoriteFonts': '收藏字体',
+    'font.allFonts': '全部字体',
+    'font.layoutSettings': '排版设置',
+    'font.clickStarHint': '点击星标收藏字体，收藏字体将显示在列表顶部',
+    'font.searchFont': '搜索字体...',
+    'pinyin.addLocal': '添加注音(局部)',
+    'pinyin.addGlobal': '添加注音(全局)',
+    'pinyin.editFile': '编辑注音文件',
+    'pinyin.remove': '删除注音',
+    'pinyin.tone': '声调:',
+    'pinyin.editTitle': '编辑注音文件',
+    'floating.editTitle': '编辑悬浮选项',
+    'floating.displayTextLabel': '显示文字',
+    'floating.styleClassNameLabel': '样式类名',
+    'floating.hideGroupFloat': '隐藏本组悬浮样式',
+    'showcase.currentDoc': '当前文档',
+    'showcase.allOpenDocs': '所有打开文档',
+    'showcase.allDocs': '所有文档',
+    'showcase.showGlobal': '显示全局高亮',
+    'showcase.minCountPrefix': '样式最少被应用',
+    'showcase.minCountSuffix': '次',
+    'showcase.charCount': '字数:',
+    'showcase.charUnit': '字',
+    'showcase.allMatchExist': '所有匹配项已存在于规则中',
+    'showcase.replaceHistory': '替换历史',
+    'showcase.noReplaceHistory': '暂无替换历史',
+    'showcase.executeReplace': '执行替换',
+    'showcase.formatPattern': '格式模式:',
+    'showcase.styleNameLabel': '样式名:',
+    'showcase.errorPrefix': '错误: ',
+    'cssEditor.addStyleTo': '添加新样式到',
+    'cssEditor.addStyle': '添加样式',
+    'cssEditor.generating': '生成中...',
+    'cssEditor.generateStyle': '生成样式',
+    'cssEditor.aiStyleOptimize': 'AI 样式优化',
+    'cssEditor.aiStyleGenerate': 'AI 样式生成',
+    'cssEditor.noAiWarning': '当前无可用AI，',
+    'cssEditor.goToSettings': '到设置中配置',
+    'cssEditor.sendToAiOptimize': '发送到AI优化',
+    'cssEditor.optimizing': '优化中...',
+    'cssEditor.buttonText': '按钮文字 (留空则显示「示例」或选中文字):',
+    'cssEditor.reset': '重置',
+    'entity.extracting': '正在提取实体...',
+    'entity.extractedEntities': '提取的实体',
+    'entity.stylesWithZeroCount': '角标为0的样式',
+    'entity.preview': '预览',
+    'remark.insertImage': '📷 插入图片',
+    'remark.pasteImageHint': '支持 Ctrl+V 粘贴剪贴板图片',
+    'remark.hidePreview': '👁 隐藏预览',
+    'remark.showPreview': '👁 预览',
+    'remark.promptName': '提示词名称: ',
+    'remark.promptContent': '提示词内容: ',
+    'donate.thanks': '感谢支持！',
+    'donate.contact': '如有使用问题或建议，欢迎联系 wx: jtugqivi',
+    'common.refreshing': '刷新中...',
+    'context.delete': '删除',
+    'context.edit': '编辑',
+    'context.moveToGroup': '移动到分组',
+    'context.addAsGlobalRule': '添加为全局规则',
+    'context.addAsHeadingStyle': '添加为标题样式',
+    'context.formatReplace': '格式替换',
+    'context.deleteRule': '删除规则',
+    'context.moveToCurrentFile': '移动到当前文件规则',
+    'context.moveToGlobalRules': '移动到全局规则',
+    'showcase.currentDoc': '当前文档',
+    'showcase.allOpenDocs': '所有打开文档',
+    'showcase.allDocs': '所有文档',
+    'showcase.showGlobal': '显示全局高亮',
+    'showcase.minCountPrefix': '样式最少被应用',
+    'showcase.minCountSuffix': '次',
+    'showcase.charCount': '字数:',
+    'showcase.charUnit': '字',
+    'showcase.noData': '暂无数据。请先在主面板样式按钮右键菜单中选择"加入展示"添加样式。',
+    'settings.previewFontSize': '预览字体大小',
+    'settings.remarkKeepOpen': '确认后不自动关闭',
+    'settings.remarkPopupFontSize': '备注弹窗字体大小',
+    'settings.remarkPopupPadding': '备注弹窗内边距',
+    'settings.remarkLineSpacing': '备注弹窗行间距',
+    'settings.times': '倍',
+    'settings.remarkPopupBorderColor': '备注弹窗边框颜色',
+    'settings.remarkPopupOnlyOnSelection': '仅在选中文本时弹出',
+    'settings.enableFontSwitch': '启用字体切换功能',
+    'settings.test': '测试',
+    'settings.testingApi': '测试中...',
+    'settings.setAsCurrentAi': '设为当前AI',
+    'settings.finishEdit': '完成编辑',
+    'settings.noApiKey': '未设置API Key',
+    'settings.globalPinyinStyle': '全局拼音样式',
+    'settings.localPinyinStyle': '局部拼音样式',
+    'settings.resetToDefault': '重置为默认',
+    'settings.saveStyle': '保存样式',
+    'settings.viewUpdates': '查看更新',
+    'settings.getApiKey': '获取API Key',
+    'settings.temperature': '温度参数',
+    'settings.aiList': '已添加的AI',
+    'settings.editAi': '编辑AI设置',
+    'settings.testApi': '测试API',
+    'global.description': '单击输入到表达式编辑框 | 长按移动到当前文件规则 | 中键点击删除 | 右键编辑备注 | Shift+右键禁用规则',
+    'heading.autoApply': '自动应用到Obsidian原生标题元素',
+    'heading.noStyles': '暂无标题样式，右键样式按钮选择「添加为标题样式」来创建',
+    'history.description': '单击输入到表达式编辑框 | 长按移动到全局规则 | 中键点击删除 | 右键编辑备注',
+    'ai.chatHistory': '对话历史',
+    'ai.reply': 'AI 回复',
+    'ai.enableWebSearch': '启用网络搜索',
+    'ai.remarkOptional': '备注（可选）',
+    'ai.addToRemark': '添加到备注',
+    'ai.replaceRemark': '替换备注',
+    'ai.keyword': '关键词',
+    'ai.applyStyle': '应用样式',
+    'ai.send': '发送',
+    'ai.defaultGroup': '默认添加到分组',
+    'ai.createGroupFirst': '请先创建分组',
+    'ai.autoSendDesc': '按下快捷键即发送(有默认提示词及选中文本状态下)',
+    'ai.autoSendHint': '未勾选则仅弹出窗口',
+    'ai.waitingResponse': '正在等待AI响应...',
+    'ai.done': '完成 ✓',
+    'ai.inputMessage': '请在下方输入消息并发送',
+    'ai.newConversation': '新对话',
+    'ai.noChatHistory': '暂无对话历史',
+    'ai.noStyleGroup': '暂无样式分组',
+    'ai.waitingCss': '等待CSS样式...',
+    'ai.promptTemplate': '提示词模板',
+    'ai.selectPromptTemplate': '选择提示词模板...',
+    'ai.manage': '管理',
+    'ai.currentAi': '当前AI',
+    'ai.managePromptTemplate': '管理提示词模板',
+    'ai.addNewPrompt': '添加新提示词',
+    'ai.noPromptTemplate': '暂无提示词模板',
+    'font.switchBodyFont': '切换正文字体',
+    'font.inUse': '使用中',
+    'font.defaultFontRestore': '默认字体（恢复）',
+    'font.favoriteFonts': '收藏字体',
+    'font.allFonts': '全部字体',
+    'font.layoutSettings': '排版设置',
+    'font.clickStarHint': '点击星标收藏字体，收藏字体将显示在列表顶部',
+    'font.searchFont': '搜索字体...',
+    'pinyin.addLocal': '添加注音(局部)',
+    'pinyin.addGlobal': '添加注音(全局)',
+    'pinyin.editFile': '编辑注音文件',
+    'pinyin.remove': '删除注音',
+    'pinyin.editTitle': '编辑注音文件',
+    'pinyin.tone': '声调',
+    'floating.editTitle': '编辑悬浮选项',
+    'floating.displayTextLabel': '显示文字',
+    'floating.styleClassNameLabel': '样式类名',
+    'settings.remarkPopupWidth': '备注弹窗宽度',
+    'settings.remarkPopupBorderWidth': '备注弹窗边框宽度',
+    'settings.marginDesc': '调整阅读模式内容区域的行距和左右边距',
+    'main.width': '宽度',
+    'main.openRulesFile': '打开规则文件',
+    'main.createNewRule': '创建新规则',
+    'main.openStyleCategoriesFile': '打开样式分组文件',
+    'main.createDiffName': '新建不同名称',
+    'main.mergeContent': '合并内容',
+    'main.merge': '合并',
+    'main.addNewStyle': '添加新样式',
+    'main.dblClickHideGroup': '双击隐藏分组',
+    'main.dblClickExpandGroup': '双击展开分组',
+    'main.dblClickShowGroup': '双击显示分组',
+    'main.expandGroupStyles': '展开分组内样式按钮',
+    'main.collapseGroupStyles': '折叠分组内样式按钮',
+    'main.hoverExpandGroup': '悬停展开分组内样式按钮',
+    'main.remarkCleared': '备注已清除',
+    'font.previewText': '天地玄黄，宇宙洪荒。The quick brown fox jumps.',
+    'format.patternExample': '例如: \\*\\*(.+?)\\*\\*',
+    'format.styleExample': '例如: bold',
+    'cssEditor.inputButtonText': '输入按钮显示的文字',
+    'cssEditor.inputModifyReq': '请输入您的样式修改要求',
+    'cssEditor.inputStyleEffect': '请输入您想要的样式效果',
+    'remark.inputPromptName': '请输入提示词名称',
+    'remark.inputPromptContent': '请输入提示词内容',
+    'settings.ctrlScrollOpacity': 'Ctrl+鼠标滚轮调整透明度',
+    'settings.altScrollWidth': 'Alt+鼠标滚轮调整宽度',
+    'settings.lineHeightExample': '如1.8',
+    'settings.aiNameExample': '例如: OpenAI GPT-4',
+    'settings.aiModelExample': '例如: gpt-4-turbo, claude-3-sonnet-20240229',
+    'floating.floatThisGroup': '悬浮显示此分组',
+    'floating.floatThisStyle': '悬浮显示此样式',
+    'floating.pinMenuDesc': '固定子菜单（保持展开并可拖动）',
+    'floating.inputDisplayText': '请输入显示文字',
+    'floating.inputCssClass': '输入CSS类名（可选，用于自定义按钮外观）',
+    'showcase.dblClickJump': '双击跳转到文档位置',
+    'heading.styleApplied': '标题样式已应用到所有对应级别标题',
+    'heading.styleDeleted': '标题样式已删除',
+    'ai.nameCol': '名称',
+    'ai.createdAtCol': '创建时间',
+    'ai.actionsCol': '操作',
+    'main.regexPlaceholder': '如 TODO|FIXME',
+    'ai.responsePlaceholder': 'AI响应将显示在这里...输入您的问题或修改要求以继续对话。',
+    'main.saveAsFile': '保存为文件',
+    'main.switchToEn': '切换到英文',
+    'main.switchToZh': '切换到中文',
+    'main.langSwitchNotice': '语言已切换，请重新打开面板以查看效果',
+    'showcase.countHint': '💡 显示应用次数',
+    'showcase.countHintSuffix': '的样式所应用的高亮文本',
+    'showcase.displayHint': '💡 仅显示已"加入展示"的样式所应用的高亮文本. (在主面板中右键点击样式按钮选择"加入展示")',
+    'cssEditor.countFileZero': '计数文件: 0个类名 (未生成)',
+    'cssEditor.countMismatch': '(数量不一致可能导致计数显示偏移)',
+    'settings.temperatureDesc': '温度参数控制AI输出的随机性。值越低（0-0.5）输出越确定、保守；值越高（1.5-2）输出越多样、创新。',
+    'main.newGroup': '新分组',
+    'main.renameGroup': '重命名分组',
+    'main.inputNewGroupName': '请输入新的分组名称',
+    'main.savePrompt': '保存提示词',
+    'main.fileExistsTitle': '文件已存在',
+    'main.fileExistsDesc': '文件已存在，请选择操作：',
+    'main.inputNewFileName': '输入新文件名',
+    'main.inputNewFileNameHint': '请输入新文件名（不含.md）',
+    'floating.editBtnName': '编辑悬浮按钮名称',
+    'floating.inputNewDisplayName': '请输入新的显示名称',
+    'remark.promptDefaultName': '提示词',
+    'main.confirmDeleteGroup': '确认删除分组',
+    'main.deletePrompt': '删除提示词',
+    'main.confirmDeletePrompt': '确定要删除此提示词吗?',
+    'main.donateQrCode': '捐赠二维码',
+    'main.editRemark': '编辑备注',
+    'main.editRemarkGlobal': '编辑备注（全局规则）',
+    'main.addRemark': '添加备注',
+    'main.addRemarkGlobal': '添加备注（全局规则）',
+    'main.inputRemarkContent': '请输入备注内容...',
+    'main.deleteGroupWithStyles': '删除分组将同时删除其中的所有样式。确定要删除吗？',
+    'main.deleteEmptyGroup': '确定要删除空分组吗？',
+    'main.selectTextToHighlight': '请先选中要高亮的文本',
+    'main.selectTextToRemove': '请先选中要移除样式的文本',
+    'main.noHighlightRule': '当前文件没有高亮规则',
+    'main.noMatchingRule': '未找到选中文本对应的高亮规则',
+    'main.selectTextToRemark': '请先选中要添加备注的文字，或复制CSS样式',
+    'main.selectTextToMerge': '请先选中要合并的文本',
+    'main.selectTextToPinyin': '请先选中要注音的文本',
+    'main.selectTextToDeletePinyin': '请先选中要删除注音的文本',
+    'main.selectTextToEntity': '请先选中要提取实体的文本',
+    'main.configureAiFirst': '请先在设置中配置AI的API Key',
+    'main.pinyinGetting': '正在获取拼音...',
+    'main.pinyinMismatch': '拼音数量与文字数量不匹配，请重试',
+    'main.pinyinAdded': '拼音已添加',
+    'main.pinyinFailed': '注音失败',
+    'main.pinyinDeleted': '已删除注音',
+    'main.pinyinDeleteFailed': '删除注音失败',
+    'main.pinyinSaved': '注音文件已保存',
+    'main.noPinyin': '选中的文本没有注音',
+    'main.jsonFormatError': 'JSON格式错误',
+    'main.openEditorFailed': '打开编辑器失败',
+    'main.sendingToAi': '正在发送请求到AI...',
+    'main.aiError': 'AI助手出错',
+    'main.replyReceived': '回复已收到',
+    'main.sendFailed': '发送失败',
+    'main.cannotExtractClass': '无法提取CSS类名',
+    'main.groupAdded': '样式已添加到分组',
+    'main.groupExists': '样式已存在于分组',
+    'main.groupAddFailed': '添加样式到分组失败',
+    'main.clipboardEmptyShort': '剪贴板为空',
+    'main.styleRuleUpdated': '已更新样式规则',
+    'main.styleRuleCreated': '已为选中文本创建样式规则',
+    'main.remarkUpdated': '已更新选中文本的备注',
+    'main.remarkMerged': '已将备注合并到规则中',
+    'main.remarkAddedNew': '已为选中文本添加新规则和备注',
+    'main.remarkAdded': '已为选中文本添加备注',
+    'main.remarkAddFailed': '添加备注失败',
+    'main.cannotOpenFile': '无法打开文件，请检查文件是否存在',
+    'main.cannotOpenEditor': '无法打开编辑器',
+    'main.selectText': '请先选中文字',
+    'main.textChanged': '选中的文本已改变，无法自动应用新样式',
+    'main.cannotGetActiveEditor': '无法获取当前活动的编辑器',
+    'main.applyNewStyleFailed': '应用新样式到选中文本时出错',
+    'main.addFromClipboardFailed': '从剪贴板添加样式失败',
+    'main.ruleMovedToGlobal': '已将规则从局部移动到全局',
+    'main.ruleMovedToLocal': '已将规则从全局移动到局部',
+    'main.globalRuleNotFound': '未找到对应的全局规则',
+    'main.localRuleNotFound': '未找到对应的局部规则',
+    'main.localRuleExists': '局部规则中已存在相同规则',
+    'main.globalRuleExistsShort': '全局规则中已存在相同规则',
+    'main.cannotGetRuleInfo': '无法获取规则信息',
+    'main.cannotGetMatchText': '无法获取匹配文本',
+    'main.fileNameEmpty': '文件名不能为空',
+    'main.fileExists': '文件也已存在',
+    'main.savedToFile': '已保存到文件',
+    'main.mergedToFile': '已合并到文件',
+    'main.mergeFailed': '合并失败',
+    'main.saveFailed': '保存失败',
+    'main.operationFailed': '操作失败',
+    'main.promptEmpty': '提示词不能为空',
+    'main.promptSaved': '提示词已保存',
+    'main.promptSaveFailed': '保存提示词失败',
+    'main.promptLoaded': '已加载提示词',
+    'main.promptApplyFailed': '应用提示词失败',
+    'main.managePromptFailed': '管理提示词失败',
+    'main.promptTemplateSaved': '提示词模板已保存',
+    'main.imageSaved': '图片已保存',
+    'main.imageSaveFailed': '保存图片失败',
+    'main.styleRemoved': '已移除样式',
+    'main.highlightAdded': '添加高亮',
+    'main.globalHighlightAdded': '添加全局高亮',
+    'main.styleChanged': '更换样式',
+    'main.noUnusedStyle': '没有可用的未使用样式',
+    'main.allStylesTried': '已尝试所有未使用样式，重新开始',
+    'main.mergeTarget': '不在高亮规则中',
+    'main.mergeExists': '已存在于规则中',
+    'main.merged': '已合并',
+    'main.ruleAdded': '已为选中文本添加样式规则',
+    'main.applyStyleFailed': '应用样式失败',
+    'settings.testApiValue': '你好，AI',
+    'settings.getApiKey': '获取API Key',
+    'settings.viewUpdates': '查看更新',
+    'heading.styleSupport': 'Obsidian 标题样式支持',
+    'ai.unknownDoc': '未知文档',
+    'ai.untitledDoc': '未命名文档',
+    'ai.newConversation': '新对话',
+    'remark.addPrompt': '新增提示词',
+    'remark.editPrompt': '编辑提示词',
+    'format.code': '代码',
+    'format.replacedCount': '已替换',
+    'format.addedCount': '添加',
+    'format.highlightRules': '条高亮规则',
+    'format.clickReapply': '点击重新应用',
+    'format.pattern': '模式',
+    'format.style': '样式',
+    'showcase.totalCount': '共',
+    'showcase.filteredCount': '共',
+    'showcase.totalLabel': '条（总计',
+    'main.image': '图片',
+    'main.entityExtractFailed': '提取失败',
+    'cssEditor.editStyle': '编辑样式',
+    'ai.cssExpertPrompt': '你是一个CSS样式生成专家，请为正则表达式高亮功能创建CSS样式。请仅返回CSS代码，包括有效的类选择器和样式规则，不要包含其他解释或说明。示例格式：.my-custom-style { background-color: #ffeb3b; color: #333; padding: 2px 4px; border-radius: 3px; }',
+    'main.addNewStyleTo': '添加新样式到',
+    'main.styleAddedToCategorySuccess': '样式已成功添加到',
+    'main.stylesAddedToCategory': '成功添加样式到',
+    'main.category': '分类',
+    'main.dragToSortGroup': '可拖拽排序分组',
+    'main.reopenGroup': '重新打开分组',
+    'main.clickApplyStyle': '点击应用样式，可拖拽排序',
+    'main.ruleMovedToGlobalSuccess': '规则已移动到全局规则',
+    'main.ruleReapplied': '规则已重新应用样式',
+    'main.globalRuleStyleApplied': '全局规则已成功应用样式',
+    'main.ruleStyleApplied': '规则已成功应用样式',
+    'main.ruleExistsInGlobal': '规则已存在于全局规则中',
+    'main.styleAddedToGlobalRule': '已将样式添加到全局规则',
+    'main.styleMovedToGroup': '已将样式移动到分组',
+    'main.styleDeleted': '样式已删除',
+    'main.styleAddedAsHeading': '已将样式添加为',
+    'main.longPressMultiSelect': '长按: 进入多选模式',
+    'main.middleClickGlobal': '中键: 应用为全局规则',
+    'main.styleCategoryCount': '样式类别',
+    'main.foundMissingStyles': '发现',
+    'main.missingInCss': '个样式在 styles.css 中不存在:',
+    'main.cleanedMissingStyles': '已清理',
+    'main.missingStyles': '个不存在的样式',
+    'main.confirmDeleteAi': '确定要删除AI',
+    'main.globalRule': '全局规则',
+    'main.clickToEdit': '点击: 编辑(编辑后按Ctrl+Enter更新)',
+    'main.longPressMove': '长按: 移动到当前文件',
+    'main.empty': '空',
+    'main.status': '状态',
+    'main.enable': '启用',
+    'main.disable': '禁用',
+    'main.rule': '规则',
+    'main.rightClick': '右键',
+    'main.ruleMovedByLongPress': '规则已通过长按移动到当前文件',
+    'cssEditor.countFileLabel': '计数文件',
+    'cssEditor.classCount': '个类名',
+    'main.globalRuleDeleted': '全局规则已删除',
+    'main.ruleToggled': '规则已',
+    'main.movedToLocalRule': '已移动到当前文件规则',
+    'main.localRule': '当前文件规则',
+    'main.clickToApply': '点击: 应用规则(编辑后按Ctrl+Enter更新)',
+    'main.clickToGlobal': '点击: 移动到全局规则',
+    'main.ruleAddedToGlobalByLongPress': '规则已通过长按添加到全局规则',
+    'main.leftClickEdit': '左键: 编辑(Ctrl+Enter更新)',
+    'main.movedToGlobalRule': '已移动到全局规则',
+    'main.styleUpdated': '样式已成功更新',
+    'main.globalRuleStyleAdded': '已添加全局规则样式',
+    'main.cannotFindCategory': '无法找到分类容器',
+    'main.cannotFindDragBtn': '无法找到要拖拽的样式按钮',
+    'floating.mode': '模式',
+    'floating.alwaysShow': '常显',
+    'floating.follow': '跟随',
+    'main.pinyinContext': '上文中',
+    'main.pinyinPosition': '号位置为待注音字',
+    'main.pinyinContextPrompt': '上下文（用于确定多音字和通假字的正确读音，注意：上下文仅供参考，不要为上下文中的文字标注拼音）',
+    'main.apiRequestFailed': 'API请求失败',
+    'main.applyCategoryStyle': '应用分类样式',
+    'ai.docName': '文档名称',
+    'ai.searchResult': '搜索结果',
+    'ai.searchResultSnippet': '详细信息',
+    'ai.searchResultSnippetAlt': '不同角度的分析和解读',
+    'ai.searchResultSnippet3': '最新研究成果和数据',
+    'ai.searchSummary': '根据搜索结果，为您总结了关于',
+    'main.error': '错误',
+    'ai.user': '用户',
+    'ai.conversations': '条',
+    'settings.heading': '标题',
+    'settings.popup': '备注弹窗',
+    'settings.floatingBall': '悬浮球',
+    'settings.fontSwitch': '字体切换',
+    'settings.aiSettings': 'AI 设置',
+    'settings.pinyinStyle': '拼音样式',
+    'entity.selectTextFirst': '请先选中要提取实体的文本',
+    'main.noNewStyleToAdd': '没有可添加的新样式',
+    'main.preview': '示例',
+    'main.collapseGroup': '折叠分组内样式按钮',
+    'main.expandGroup': '展开分组内样式按钮',
+    'floating.openMainPanel': '打开主面板',
+    'floating.formatReplace': '格式替换',
+    'floating.addRemark': '添加备注',
+    'floating.removeHighlight': '移除高亮',
+    'floating.pinyin': '注音',
+    'floating.aiAssistant': 'AI回复',
+    'floating.extractEntities': '实体提取',
+    'floating.styleShowcase': '高亮列表',
+    'floating.fontSwitch': '切换字体',
+    'floating.switchMode': '模式切换',
+    'floating.hideFloatingBtns': '隐藏悬浮按钮',
+    'floating.hideTextStyles': '隐藏/显示文本样式',
+    'floating.alwaysModeDesc': '常显模式：悬浮球始终显示在屏幕上',
+    'floating.followModeDesc': '跟随选中模式：选中文字时悬浮球出现在鼠标位置附近',
+    'floating.opacityTip': '鼠标移到悬浮球上Ctrl+鼠标滚轮调整透明度',
+    'settings.fontSwitchDesc1': '开启后，悬浮球菜单中会显示"切换字体"选项',
+    'settings.fontSwitchDesc2': '直接读取系统已安装字体，点击星标可收藏常用字体',
+    'settings.desktopOnly': '仅桌面端支持',
+    'floating.addPinyinLocal': '添加注音(局部)',
+    'floating.addPinyinGlobal': '添加注音(全局)',
+    'floating.editPinyinFile': '编辑注音文件',
+    'floating.removePinyin': '删除注音',
+    'floating.enableCustomStyle': '启用自定义样式',
+    'floating.disableCustomStyle': '禁用自定义样式',
+    'floating.hideGroupStyles': '隐藏同组所有样式',
+    'main.removeFromShowcase': '移出展示',
+    'main.filter': '筛选',
+    'main.globalRuleClickToLocal': '全局规则 - 点击移动到局部规则',
+    'main.localRuleClickToGlobal': '局部规则 - 点击移动到全局规则',
+    'main.fileRule': '文件规则',
+    'main.className': '类名',
+    'main.cssCleaned': 'CSS清理完成：删除了 {count} 个孤立样式',
+    'main.noContent': '无内容',
+    'main.cannotReadCategories': '无法读取 style-categories.json',
+    'main.cannotReadStyles': '无法读取 styles.css',
+    'main.allStylesExist': '✓ 所有分类中的样式在 styles.css 中均存在，无需清理',
+    'main.styleAndRemarkApplied': '样式和备注已应用！',
+    'main.alreadyExistsInRules': '已存在于规则中',
+  },
+  en: {
+    'main.title': 'regex css highlighter',
+    'main.openPluginLocation': 'Open Plugin Location',
+    'main.opacity': 'Opacity',
+    'main.tab.styles': 'Styles',
+    'main.tab.rules': 'Rules',
+    'main.tab.settings': 'Settings',
+    'main.tab.about': 'About',
+    'main.styleSearch': 'Search styles...',
+    'main.noStyles': 'No styles',
+    'main.openCssEditor': 'Open Style Editor',
+    'main.openStyleCategories': 'Open Style Categories',
+    'main.addGroup': 'Add Group',
+    'main.defaultHide': 'Default Hide',
+    'main.defaultShow': 'Default Show',
+    'main.styleCount': 'Style Count',
+    'main.currentRules': 'Current File Highlight Rules',
+    'main.globalRules': 'Global Highlight Rules',
+    'main.headingStyles': 'Heading Styles',
+    'main.remarkTexts': 'Remarked Texts',
+    'main.addRule': 'Add Rule',
+    'main.regex': 'Regex',
+    'main.styleClass': 'Style Class',
+    'main.remark': 'Remark',
+    'main.source': 'Source',
+    'main.timestamp': 'Time',
+    'main.enabled': 'Enabled',
+    'main.disabled': 'Disabled',
+    'main.edit': 'Edit',
+    'main.delete': 'Delete',
+    'main.save': 'Save',
+    'main.cancel': 'Cancel',
+    'main.confirm': 'Confirm',
+    'main.close': 'Close',
+    'main.copy': 'Copy',
+    'main.copyClassName': 'Copy Class Name',
+    'main.copyFullStyle': 'Copy Full Style',
+    'main.addToShowcase': 'Add to Showcase',
+    'removeFromShowcase': 'Remove from Showcase',
+    'main.rename': 'Rename',
+    'main.moveUp': 'Move Up',
+    'main.moveDown': 'Move Down',
+    'main.floatDisplay': 'Float Display',
+    'main.cancelFloat': 'Cancel Float',
+    'main.addToFloatingBall': 'Add to Floating Ball',
+    'main.removeFromFloatingBall': 'Remove from Floating Ball',
+    'main.showInFloatingBall': 'Show in Floating Ball',
+    'main.hideInFloatingBall': 'Hide in Floating Ball',
+    'main.modifyDisplayText': 'Modify Display Text',
+    'main.newGroupName': 'New Group Name',
+    'main.groupNameExists': 'Group name already exists!',
+    'main.groupNameEmpty': 'Group name cannot be empty!',
+    'main.groupCreated': 'New group created',
+    'main.groupRenamed': 'Group renamed',
+    'main.groupDeleted': 'Group deleted',
+    'main.groupAdded': 'Style added to group',
+    'main.groupExists': 'Style already exists in group',
+    'main.groupAddFailed': 'Failed to add style to group',
+    'main.noStyleDefinition': 'Style definition not found',
+    'main.styleAddedToCategory': 'CSS style added to category',
+    'main.clipboardEmpty': 'Clipboard is empty, please copy CSS style or remark content first',
+    'main.invalidCssFormat': 'Invalid CSS format in clipboard',
+    'main.selectTextOrKeyword': 'Please select text to apply style or enter keyword in input box',
+    'main.noDefaultGroup': 'No default group set',
+    'main.styleRuleUpdated': 'Style rule updated',
+    'main.styleRuleCreated': 'Style rule created for selected text',
+    'main.cannotExtractClass': 'Cannot extract CSS class name',
+    'main.noCssFound': 'No CSS style code found',
+    'main.selectStyleFirst': 'Please select a style first',
+    'main.cannotGetEditor': 'Cannot get current editor',
+    'main.applyStyleFailed': 'Failed to apply style',
+    'main.ruleExists': 'Style rule already exists for this text',
+    'main.ruleAdded': 'Style rule added for selected text',
+    'main.cannotGetFilePath': 'Cannot get current file path',
+    'main.remarkUpdated': 'Remark updated for selected text',
+    'main.remarkMerged': 'Remark merged into rules',
+    'main.remarkAddedNew': 'New rule and remark added for selected text',
+    'main.remarkAdded': 'Remark added for selected text',
+    'main.remarkAddFailed': 'Failed to add remark',
+    'main.cannotOpenFile': 'Cannot open file, please check if file exists',
+    'main.cannotOpenEditor': 'Cannot open editor',
+    'main.openMdFile': 'Please open a Markdown file first',
+    'main.selectText': 'Please select text first',
+    'main.selectTextToStyle': 'Please select text to apply style',
+    'main.selectTextToRemark': 'Please select text to add remark',
+    'main.selectTextToRemove': 'Please select text to remove highlight',
+    'main.selectTextToPinyin': 'Please select text to add pinyin',
+    'main.selectTextToDeletePinyin': 'Please select text to delete pinyin',
+    'main.selectTextToEntity': 'Please select text to extract entities',
+    'main.selectTextToHighlight': 'Please select text to highlight',
+    'main.selectTextToMerge': 'Please select text to merge',
+    'main.selectTextToStyleApply': 'Please select text to apply style',
+    'main.noMatchingRule': 'No matching highlight rule found',
+    'main.noHighlightRule': 'No highlight rules in current file',
+    'main.globalRuleRemoved': 'Global highlight rule removed',
+    'main.fileRuleRemoved': 'File highlight rule removed',
+    'main.styleApplied': 'Style applied to selected text',
+    'main.styleAlreadyFloating': 'Style is already in floating display',
+    'main.styleHidden': 'Floating styles hidden for group',
+    'main.floatEnabled': 'Float display enabled, drag to move, left-click to apply style',
+    'main.floatNameUpdated': 'Floating button name updated',
+    'main.floatOptionUpdated': 'Floating option updated',
+    'main.floatGroupCancelled': 'Float display cancelled for group',
+    'main.floatOptionCancelled': 'Float display cancelled',
+    'main.displayTextChanged': 'Display text updated',
+    'main.classNameCopied': 'Class name copied',
+    'main.fullStyleCopied': 'Full style copied',
+    'main.globalRuleExists': 'Rule already exists in global rules',
+    'main.globalRuleAdded': 'Global rule added',
+    'main.globalRuleAddFailed': 'Failed to add global rule',
+    'main.middleClickHint': 'Select text first, middle-click to add as global rule',
+    'main.noUnusedStyle': 'No unused styles available',
+    'main.allStylesTried': 'All unused styles tried, starting over',
+    'main.styleChanged': 'Style changed',
+    'main.highlightAdded': 'Highlight added',
+    'main.globalHighlightAdded': 'Global highlight added',
+    'main.styleRemoved': 'Style removed',
+    'main.operationFailed': 'Operation failed',
+    'main.mergeTarget': 'Not in highlight rules',
+    'main.mergeExists': 'Already exists in rules',
+    'main.merged': 'Merged',
+    'main.clipboardEmptyShort': 'Clipboard is empty',
+    'main.textChanged': 'Selected text has changed, cannot auto-apply new style',
+    'main.cannotGetActiveEditor': 'Cannot get active editor',
+    'main.applyNewStyleFailed': 'Failed to apply new style to selected text',
+    'main.addFromClipboardFailed': 'Failed to add style from clipboard',
+    'main.ruleMovedToGlobal': 'Rule moved from local to global',
+    'main.ruleMovedToLocal': 'Rule moved from global to local',
+    'main.globalRuleNotFound': 'Corresponding global rule not found',
+    'main.localRuleNotFound': 'Corresponding local rule not found',
+    'main.localRuleExists': 'Same rule already exists in local rules',
+    'main.globalRuleExistsShort': 'Same rule already exists in global rules',
+    'main.cannotGetRuleInfo': 'Cannot get rule info',
+    'main.cannotGetMatchText': 'Cannot get matching text',
+    'main.fileNameEmpty': 'File name cannot be empty',
+    'main.fileExists': 'File also already exists',
+    'main.savedToFile': 'Saved to file',
+    'main.mergedToFile': 'Merged to file',
+    'main.mergeFailed': 'Merge failed',
+    'main.saveFailed': 'Save failed',
+    'main.noPinyin': 'No pinyin found for selected text',
+    'main.pinyinDeleted': 'Pinyin deleted',
+    'main.pinyinDeleteFailed': 'Failed to delete pinyin',
+    'main.pinyinAdded': 'Pinyin added',
+    'main.pinyinFailed': 'Failed to add pinyin',
+    'main.pinyinMismatch': 'Pinyin count does not match character count, please retry',
+    'main.pinyinGetting': 'Getting pinyin...',
+    'main.cannotGetFilePath2': 'Cannot get file path',
+    'main.cannotGetEditor2': 'Cannot get editor instance',
+    'main.pinyinSaved': 'Pinyin file saved',
+    'main.jsonFormatError': 'JSON format error',
+    'main.openEditorFailed': 'Failed to open editor',
+    'main.configureAiFirst': 'Please configure AI API Key in settings first',
+    'main.sendingToAi': 'Sending request to AI...',
+    'main.aiError': 'AI assistant error',
+    'main.aiStyleOptimized': 'AI style optimization completed',
+    'main.aiOptimizeFailed': 'AI optimization failed',
+    'main.aiStyleGenerated': 'AI style generation completed',
+    'main.aiGenerateFailed': 'AI generation failed',
+    'main.inputStyleRequirement': 'Please enter style requirements',
+    'main.inputStyleModification': 'Please enter style modification requirements',
+    'main.classNameExists': 'Class name already exists, will skip',
+    'main.replyReceived': 'Reply received',
+    'main.sendFailed': 'Send failed',
+    'main.promptEmpty': 'Prompt cannot be empty',
+    'main.promptSaved': 'Prompt saved',
+    'main.promptSaveFailed': 'Failed to save prompt',
+    'main.promptLoaded': 'Prompt loaded',
+    'main.promptApplyFailed': 'Failed to apply prompt',
+    'main.managePromptFailed': 'Failed to manage prompts',
+    'main.promptTemplateSaved': 'Prompt template saved',
+    'main.inputEntityName': 'Please enter entity name',
+    'main.entityNameUpdated': 'Entity name updated to',
+    'main.entityAdded': 'New entity added',
+    'main.selectEntity': 'Please select an entity first',
+    'main.entityStyleAssigned': 'Style assigned to entity',
+    'main.assignStyleFirst': 'Please assign a style to entity first',
+    'main.entityStyleApplied': 'Styles applied to entities successfully',
+    'main.entityStyleApplyFailed': 'Failed to apply style',
+    'main.entityRulesAdded': 'Style rules added for entities successfully',
+    'main.imageSaved': 'Image saved',
+    'main.imageSaveFailed': 'Failed to save image',
+    'main.inputFormat': 'Please enter format pattern',
+    'main.inputStyleName': 'Please enter style name',
+    'main.noMatchText': 'No matching text found',
+    'main.formatReplaced': 'Format replaced, highlight rules added',
+    'main.formatReplaceFailed': 'Replace failed, please check format pattern',
+    'main.undone': 'Undone',
+    'main.redone': 'Redone',
+    'main.reapplied': 'Rules reapplied',
+    'main.jumpedTo': 'Jumped to',
+    'main.notFoundInDoc': 'Not found in document',
+    'main.partialMatchDetected': 'Partially matching rules detected',
+    'main.collapse': 'Collapse',
+    'main.expand': 'Expand',
+    'main.collapseAll': 'Collapse All',
+    'main.expandAll': 'Expand All',
+    'main.addRemark': 'Add Remark',
+    'main.removeHighlight': 'Remove Highlight',
+    'main.pinyin': 'Pinyin',
+    'main.aiReply': 'AI Reply',
+    'main.entityExtract': 'Entity Extract',
+    'main.styleShowcase': 'Highlight List',
+    'main.fontSwitch': 'Font Switch',
+    'main.switchMode': 'Switch Mode',
+    'main.hideFloatingBtns': 'Hide Floating Buttons',
+    'main.showFloatingBtns': 'Show Floating Buttons',
+    'main.hideTextStyles': 'Hide Text Styles',
+    'main.showTextStyles': 'Show Text Styles',
+    'main.textStylesHidden': 'Text styles hidden',
+    'main.textStylesShown': 'Text styles shown',
+    'main.floatingBtnsHidden': 'Floating buttons hidden',
+    'main.floatingBtnsShown': 'Floating buttons shown',
+    'main.modeSwitched': 'Floating ball mode switched to',
+    'main.alwaysMode': 'Always Show',
+    'main.followMode': 'Follow Selection',
+    'main.openMainPanel': 'Open Main Panel',
+    'main.formatReplace': 'Format Replace',
+    'main.randomHighlight': 'Random Highlight',
+    'main.randomGlobalHighlight': 'Random Global Highlight',
+    'main.changeStyle': 'Change Style',
+    'main.removeStyle': 'Remove Style',
+    'main.mergeText': 'Merge Text',
+    'main.addFromClipboard': 'Add from Clipboard',
+    'main.moveToGlobal': 'Move to Global',
+    'main.moveToLocal': 'Move to Local',
+    'main.disableRule': 'Disable Rule',
+    'main.enableRule': 'Enable Rule',
+    'main.editRemark': 'Edit Remark',
+    'main.moveRule': 'Move Rule',
+    'main.longPress': 'Long press for multi-select',
+    'main.rightClickEdit': 'Right-click to edit style',
+    'main.middleClickGlobal': 'Middle-click to apply as global rule',
+    'main.doubleClickGroup': 'Double-click group title to toggle',
+    'main.leftClickApply': 'Left-click to apply style',
+    'settings.display': 'Display',
+    'settings.readingModeLineHeight': 'Reading Mode Line Height',
+    'settings.readingModeMargin': 'Reading Mode Margin',
+    'settings.leftMargin': 'Left Margin',
+    'settings.rightMargin': 'Right Margin',
+    'settings.mainPanelOpacity': 'Main Panel Opacity',
+    'settings.entityPanelOpacity': 'Button Panel Opacity',
+    'settings.panelOpacityUpdated': 'Panel opacity updated',
+    'settings.remarkPopupSettings': 'Remark Popup Settings',
+    'settings.remarkLineSpacing': 'Remark Popup Line Spacing',
+    'settings.remarkPopupSaved': 'Remark popup settings saved',
+    'settings.saveFailed': 'Save failed',
+    'settings.saveFailedDetail': 'Save failed, please check console for details',
+    'settings.cleanMissingStyles': 'Clean Missing Styles in Categories',
+    'settings.cleanMissing': 'Clean',
+    'settings.cleanedMissing': 'Cleaned missing styles',
+    'settings.floatingBall': 'Floating Ball',
+    'settings.floatingBallMode': 'Floating Ball Mode',
+    'settings.alwaysShow': 'Always Show',
+    'settings.followSelection': 'Follow Selection',
+    'settings.manageFloatingOptions': 'Manage Floating Ball Options',
+    'settings.manageFloatingOptionsDesc': 'Checked options will be shown in the floating ball menu, unchecked will be hidden',
+    'settings.floatingBallOptionsSaved': 'Floating ball options saved',
+    'settings.fontSwitchSettings': 'Font Switch Settings',
+    'settings.fontSwitchSaved': 'Font switch settings saved',
+    'settings.pinyinSettings': 'Pinyin Settings',
+    'settings.pinyinStyle': 'Pinyin Style',
+    'settings.pinyinSaved': 'Pinyin style saved',
+    'settings.aiSettings': 'AI Settings',
+    'settings.aiName': 'AI Name',
+    'settings.aiApiUrl': 'API URL',
+    'settings.aiApiKey': 'API Key',
+    'settings.aiModel': 'Model',
+    'settings.addAi': 'Add AI',
+    'settings.testApi': 'Test Connection',
+    'settings.testingApi': 'Testing API connection...',
+    'settings.apiTestSuccess': 'API test successful!',
+    'settings.apiTestFailed': 'API test failed',
+    'settings.apiResponseError': 'API response format error',
+    'settings.inputAiName': 'Please enter AI name',
+    'settings.aiSettingsSaved': 'AI settings saved',
+    'settings.aiDeleted': 'AI deleted',
+    'settings.inputTestText': 'Please enter test text',
+    'settings.completeAiConfig': 'Please complete AI configuration',
+    'settings.deepSeekModelHint': 'DeepSeek model name may be incorrect, recommended',
+    'settings.debugLog': 'Debug Timing Log',
+    'settings.disableHeadingStyle': 'Disable Heading Styles',
+    'settings.showRecentRules': 'Show Recent Rules when Collapsed',
+    'settings.styleUsageCount': 'Style Usage Count Badge',
+    'settings.hideAllStyles': 'Hide All Text Styles',
+    'settings.about': 'About',
+    'settings.updateHistory': 'Update History',
+    'settings.defaultHideEnabled': 'Default hide enabled, all groups will be hidden next time',
+    'settings.defaultHideDisabled': 'Default hide disabled',
+    'settings.groupReordered': 'Group reordered',
+    'settings.groupSortFailed': 'Group sort failed',
+    'settings.lineMarginUpdated': 'Reading mode line height and margins updated',
+    'settings.defaultLineHeight': 'Default',
+    'settings.styleUsageUpdated': 'Style usage file updated',
+    'settings.styleUsageUpdateFailed': 'Update failed, check console for details',
+    'showcase.title': 'Highlight List',
+    'showcase.hint': 'Only showing highlights from styles added to showcase',
+    'showcase.hintCount': 'Showing highlights from styles with usage count',
+    'showcase.inMainPanel': 'Right-click style button in main panel and select "Add to Showcase"',
+    'showcase.noData': 'No data. Please right-click style button in main panel and select "Add to Showcase".',
+    'showcase.filter': 'Filter',
+    'showcase.total': 'Total',
+    'showcase.rules': 'rules',
+    'showcase.loading': 'Loading...',
+    'showcase.styleName': 'Style Name',
+    'showcase.text': 'Text',
+    'showcase.source': 'Source',
+    'showcase.remark': 'Remark',
+    'showcase.time': 'Time',
+    'showcase.global': 'Global',
+    'showcase.local': 'Local',
+    'showcase.currentFile': 'Current File',
+    'showcase.openFiles': 'Open Files',
+    'showcase.allFiles': 'All Files',
+    'showcase.sortByStyle': 'By Style Name',
+    'showcase.sortByText': 'By Text',
+    'showcase.sortBySource': 'By Source',
+    'showcase.sortByTime': 'By Time',
+    'showcase.sortByRemark': 'By Remark',
+    'showcase.ascending': 'Ascending',
+    'showcase.descending': 'Descending',
+    'showcase.minLength': 'Min Length',
+    'showcase.maxLength': 'Max Length',
+    'showcase.showStyleName': 'Show Style Name',
+    'showcase.showSource': 'Show Source',
+    'showcase.showRemark': 'Show Remark',
+    'showcase.showTimestamp': 'Show Timestamp',
+    'showcase.export': 'Export',
+    'showcase.exportCsv': 'Export CSV',
+    'showcase.exportJson': 'Export JSON',
+    'showcase.exportMarkdown': 'Export Markdown',
+    'font.title': 'Switch Body Font',
+    'font.defaultFont': 'Default Font',
+    'font.customFont': 'Custom Font',
+    'font.restoreDefault': 'Restore Default',
+    'font.tempDisable': 'Temp Disable',
+    'font.tempEnable': 'Temp Enable',
+    'font.defaultRestored': 'Default font restored',
+    'font.tempDisabled': 'Custom font, line spacing and margins temporarily disabled',
+    'font.tempEnabled': 'Custom font, line spacing and margins enabled',
+    'font.noFont': 'No fonts available',
+    'font.switchedTo': 'Font switched to',
+    'entity.title': 'Entity Extraction',
+    'entity.selectEntity': 'Select Entity',
+    'entity.addEntity': 'Add Entity',
+    'entity.deleteEntity': 'Delete Entity',
+    'entity.renameEntity': 'Rename Entity',
+    'entity.assignStyle': 'Assign Style',
+    'entity.applyAll': 'Apply All',
+    'entity.noEntity': 'No entities',
+    'format.title': 'Format Replace',
+    'format.inputFormat': 'Enter Format Pattern',
+    'format.inputStyle': 'Enter Style Name',
+    'format.preview': 'Preview',
+    'format.replace': 'Replace',
+    'format.undo': 'Undo',
+    'format.redo': 'Redo',
+    'cssEditor.title': 'CSS Style Editor',
+    'cssEditor.save': 'Save Style',
+    'cssEditor.saved': 'Style saved',
+    'cssEditor.saveFailed': 'Style save failed',
+    'cssEditor.preview': 'Preview',
+    'remark.title': 'Add Remark',
+    'remark.inputRemark': 'Enter remark content',
+    'remark.save': 'Save',
+    'remark.lineSpacing': 'Line Spacing',
+    'floating.styleWindow': 'Floating Style',
+    'floating.dragToMove': 'Drag to move position',
+    'floating.clickToApply': 'Left-click to apply style to selected text',
+    'floating.middleClickGlobal': 'Middle-click to add as global rule',
+    'floating.editName': 'Edit Name',
+    'floating.closeFloat': 'Close Float',
+    'floating.hideGroupFloat': 'Hide Group Float Styles',
+    'floating.pinMenu': 'Pin Submenu',
+    'floating.unpinMenu': 'Unpin',
+    'floating.editOption': 'Edit',
+    'floating.closeFloatOption': 'Close Float',
+    'floating.editTitle': 'Edit Floating Option',
+    'floating.displayText': 'Display Text',
+    'floating.styleClassName': 'Style Class Name',
+    'floating.customStyle': 'Custom Style',
+    'floating.preview': 'Preview',
+    'floating.styleClassHint': 'Long-press/right-click style button in main panel → Copy class name',
+    'floating.customStyleHint': 'Enter complete CSS style (e.g.: background: #ff6eb4; color: #5c0030;)',
+    'floating.optionSaved': 'Floating option updated',
+    'floating.nameUpdated': 'Floating button name updated',
+    'context.addToGlobal': 'Add to Global Rules',
+    'context.addToLocal': 'Add to Current File Rules',
+    'context.modifyDisplayText': 'Modify Display Text',
+    'context.copyClassName': 'Copy Class Name',
+    'context.copyFullStyle': 'Copy Full Style',
+    'context.editStyle': 'Edit Style',
+    'context.addToShowcase': 'Add to Showcase',
+    'context.removeFromShowcase': 'Remove from Showcase',
+    'context.floatDisplay': 'Float Display',
+    'context.cancelFloat': 'Cancel Float',
+    'context.addGroup': 'Add to Group',
+    'context.renameGroup': 'Rename Group',
+    'context.deleteGroup': 'Delete Group',
+    'context.newGroup': 'New Group',
+    'context.showInFloatingBall': 'Show in Floating Ball',
+    'context.hideInFloatingBall': 'Remove from Floating Ball',
+    'context.disableRule': 'Disable Rule',
+    'context.enableRule': 'Enable Rule',
+    'context.editRemark': 'Edit Remark',
+    'context.moveToGlobal': 'Move to Global',
+    'context.moveToLocal': 'Move to Local',
+    'context.deleteRule': 'Delete Rule',
+    'context.inputToEditor': 'Input to Expression Editor',
+    'context.moveToCurrentFile': 'Move to Current File Rules',
+    'context.moveToGlobalRules': 'Move to Global Rules',
+    'context.deleteGlobalRule': 'Delete Global Rule',
+    'context.deleteHeadingStyle': 'Delete Heading Style',
+    'context.deleteHistoryRule': 'Delete Rule',
+    'context.addToGlobalRule': 'Apply as Global Rule',
+    'context.disableShiftRight': 'Shift+Right-click to Disable',
+    'global.description': 'Click to input to editor | Long-press to move to current file | Middle-click to delete | Right-click to edit remark | Shift+Right-click to disable',
+    'history.description': 'Click to input to editor | Long-press to move to global | Middle-click to delete | Right-click to edit remark',
+    'heading.description': 'Click to apply to heading | Middle-click to delete | Right-click to edit style',
+    'heading.styleApplied': 'Heading style applied to all matching headings',
+    'heading.styleDeleted': 'Heading style deleted',
+    'rule.regex': 'Regex',
+    'rule.style': 'Style',
+    'rule.remark': 'Remark',
+    'rule.global': 'Global',
+    'rule.local': 'Local',
+    'rule.enabled': 'Enabled',
+    'rule.disabled': 'Disabled',
+    'rule.emptyHint': 'Select text and click style button to add rule',
+    'rule.emptyHintNoSelection': 'No rules yet',
+    'lang.zh': '中文',
+    'lang.en': 'English',
+    'main.width': 'Width',
+    'main.addOrAppend': 'Add or Append',
+    'main.regexLabel': 'Regex',
+    'main.cannotOpenPluginLocation': 'Cannot open plugin location, please check console for details.',
+    'main.styleListGroup': 'Style List/Groups',
+    'main.styleInstructions': 'Left-click to apply style, long-press for multi-select, right-click to edit style, middle-click to apply as global rule, double-click group title to toggle',
+    'main.noFileOpen': '(No file open)',
+    'main.cannotLoadCategories': '(Cannot load style categories)',
+    'main.openStylesCss': 'Open styles.css',
+    'main.openStyleCategoriesFile': 'Open Style Categories File',
+    'main.hiddenGroups': 'Hidden Groups',
+    'main.defaultHideAllGroups': 'Default Hide All Groups',
+    'main.openDataJson': 'Open data.json',
+    'main.openGlobalRulesFile': 'Open Global Rules File',
+    'main.openRulesFile': 'Open Rules File',
+    'main.clipboardContentAdded': 'Appended clipboard content to regex',
+    'main.clipboardContentSet': 'Added clipboard content to regex',
+    'main.cannotGetClipboard': 'Cannot access clipboard, please type manually',
+    'main.globalRuleUpdated': 'Global rule updated to',
+    'main.ruleUpdated': 'Rule updated to',
+    'main.noRuleToUpdate': 'No rule to update, please click a history or global rule button first',
+    'settings.settingsTitle': 'Settings',
+    'settings.updateCount': 'Update Count',
+    'settings.ruleSourceBadge': 'Rule Source Badge (g/l)',
+    'settings.ruleSourceBadgeHint': 'Show g(global)/l(local) badge when hovering highlighted text',
+    'settings.ruleSourceBadgeThreshold': 'Character Threshold',
+    'settings.ruleSourceBadgeThresholdHint': 'Show badge when matched text length exceeds this value (0=always show)',
+    'settings.headingLevelLabel': 'Heading Level Label (h1/h2...)',
+    'settings.autoExpandMode': 'Auto Expand Mode',
+    'settings.scan': 'Scan',
+    'settings.cleanNonExistent': 'Clean Non-existent Styles',
+    'settings.scanFailed': 'Scan failed, check console',
+    'settings.lineHeight': 'Line Height',
+    'settings.leftMargin': 'Left Margin',
+    'settings.rightMargin2': 'Right Margin',
+    'settings.mobilePreviewMargins': 'Mobile Reading Mode Margins',
+    'settings.previewFontSize': 'Preview Font Size',
+    'settings.remarkPopupWidth': 'Remark Popup Width',
+    'settings.remarkPopupBorderWidth': 'Remark Popup Border Width',
+    'context.addAsGlobalRule': 'Add as Global Rule',
+    'context.addAsHeadingStyle': 'Add as Heading Style',
+    'context.moveToGroup': 'Move to Group',
+    'context.formatReplace': 'Format Replace',
+    'context.delete': 'Delete',
+    'context.edit': 'Edit',
+    'heading.level1': 'Heading 1 (h1)',
+    'heading.level2': 'Heading 2 (h2)',
+    'heading.level3': 'Heading 3 (h3)',
+    'heading.level4': 'Heading 4 (h4)',
+    'heading.level5': 'Heading 5 (h5)',
+    'heading.level6': 'Heading 6 (h6)',
+    'font.switchBodyFont': 'Switch Body Font',
+    'font.inUse': 'In Use',
+    'font.defaultFontRestore': 'Default Font (Restore)',
+    'font.favoriteFonts': 'Favorite Fonts',
+    'font.allFonts': 'All Fonts',
+    'font.layoutSettings': 'Layout Settings',
+    'font.clickStarHint': 'Click star to favorite font, favorites shown at top',
+    'font.searchFont': 'Search fonts...',
+    'pinyin.addLocal': 'Add Pinyin (Local)',
+    'pinyin.addGlobal': 'Add Pinyin (Global)',
+    'pinyin.editFile': 'Edit Pinyin File',
+    'pinyin.remove': 'Remove Pinyin',
+    'pinyin.tone': 'Tone:',
+    'pinyin.editTitle': 'Edit Pinyin File',
+    'floating.editTitle': 'Edit Floating Option',
+    'floating.displayTextLabel': 'Display Text',
+    'floating.styleClassNameLabel': 'Style Class Name',
+    'floating.hideGroupFloat': 'Hide Group Float Styles',
+    'showcase.currentDoc': 'Current Document',
+    'showcase.allOpenDocs': 'All Open Documents',
+    'showcase.allDocs': 'All Documents',
+    'showcase.showGlobal': 'Show Global Highlights',
+    'showcase.minCountPrefix': 'Applied by styles with min count',
+    'showcase.minCountSuffix': '',
+    'showcase.charCount': 'Chars:',
+    'showcase.charUnit': 'chars',
+    'showcase.allMatchExist': 'All matches already exist in rules',
+    'showcase.replaceHistory': 'Replace History',
+    'showcase.noReplaceHistory': 'No replace history',
+    'showcase.executeReplace': 'Execute Replace',
+    'showcase.formatPattern': 'Format Pattern:',
+    'showcase.styleNameLabel': 'Style Name:',
+    'showcase.errorPrefix': 'Error: ',
+    'cssEditor.addStyleTo': 'Add New Style to',
+    'cssEditor.addStyle': 'Add Style',
+    'cssEditor.generating': 'Generating...',
+    'cssEditor.generateStyle': 'Generate Style',
+    'cssEditor.aiStyleOptimize': 'AI Style Optimization',
+    'cssEditor.aiStyleGenerate': 'AI Style Generation',
+    'cssEditor.noAiWarning': 'No AI available, ',
+    'cssEditor.goToSettings': 'configure in Settings',
+    'cssEditor.sendToAiOptimize': 'Send to AI Optimize',
+    'cssEditor.optimizing': 'Optimizing...',
+    'cssEditor.buttonText': 'Button text (leave empty to show "Example" or selected text):',
+    'cssEditor.reset': 'Reset',
+    'entity.extracting': 'Extracting entities...',
+    'entity.extractedEntities': 'Extracted Entities',
+    'entity.stylesWithZeroCount': 'Styles with Zero Count',
+    'entity.preview': 'Preview',
+    'remark.insertImage': '📷 Insert Image',
+    'remark.pasteImageHint': 'Support Ctrl+V to paste clipboard image',
+    'remark.hidePreview': '👁 Hide Preview',
+    'remark.showPreview': '👁 Preview',
+    'remark.promptName': 'Prompt Name: ',
+    'remark.promptContent': 'Prompt Content: ',
+    'donate.thanks': 'Thanks for your support!',
+    'donate.contact': 'For questions or suggestions, contact wx: jtugqivi',
+    'common.refreshing': 'Refreshing...',
+    'context.delete': 'Delete',
+    'context.edit': 'Edit',
+    'context.moveToGroup': 'Move to Group',
+    'context.addAsGlobalRule': 'Add as Global Rule',
+    'context.addAsHeadingStyle': 'Add as Heading Style',
+    'context.formatReplace': 'Format Replace',
+    'context.deleteRule': 'Delete Rule',
+    'context.moveToCurrentFile': 'Move to Current File Rule',
+    'context.moveToGlobalRules': 'Move to Global Rules',
+    'showcase.currentDoc': 'Current Document',
+    'showcase.allOpenDocs': 'All Open Documents',
+    'showcase.allDocs': 'All Documents',
+    'showcase.showGlobal': 'Show Global Highlights',
+    'showcase.minCountPrefix': 'Applied by styles with min count',
+    'showcase.minCountSuffix': '',
+    'showcase.charCount': 'Char Count:',
+    'showcase.charUnit': 'chars',
+    'showcase.noData': 'No data. Please right-click style button in main panel and select "Add to Showcase".',
+    'settings.previewFontSize': 'Preview Font Size',
+    'settings.remarkKeepOpen': 'Keep Open After Confirm',
+    'settings.remarkPopupFontSize': 'Remark Popup Font Size',
+    'settings.remarkPopupPadding': 'Remark Popup Padding',
+    'settings.remarkLineSpacing': 'Remark Popup Line Spacing',
+    'settings.times': 'x',
+    'settings.remarkPopupBorderColor': 'Remark Popup Border Color',
+    'settings.remarkPopupOnlyOnSelection': 'Only Popup on Selected Text',
+    'settings.enableFontSwitch': 'Enable Font Switch',
+    'settings.test': 'Test',
+    'settings.testingApi': 'Testing...',
+    'settings.setAsCurrentAi': 'Set as Current AI',
+    'settings.finishEdit': 'Finish Edit',
+    'settings.noApiKey': 'API Key Not Set',
+    'settings.globalPinyinStyle': 'Global Pinyin Style',
+    'settings.localPinyinStyle': 'Local Pinyin Style',
+    'settings.resetToDefault': 'Reset to Default',
+    'settings.saveStyle': 'Save Style',
+    'settings.viewUpdates': 'View Updates',
+    'settings.getApiKey': 'Get API Key',
+    'settings.temperature': 'Temperature',
+    'settings.aiList': 'Added AIs',
+    'settings.editAi': 'Edit AI Settings',
+    'settings.testApi': 'Test API',
+    'global.description': 'Click to input | Long press to move to file rules | Middle-click to delete | Right-click to edit remark | Shift+Right-click to disable',
+    'heading.autoApply': 'Auto-apply to Obsidian native heading elements',
+    'heading.noStyles': 'No heading styles. Right-click style button and select "Add as Heading Style" to create',
+    'history.description': 'Click to input | Long press to move to global rules | Middle-click to delete | Right-click to edit remark',
+    'ai.chatHistory': 'Chat History',
+    'ai.reply': 'AI Reply',
+    'ai.enableWebSearch': 'Enable Web Search',
+    'ai.remarkOptional': 'Remark (Optional)',
+    'ai.addToRemark': 'Add to Remark',
+    'ai.replaceRemark': 'Replace Remark',
+    'ai.keyword': 'Keyword',
+    'ai.applyStyle': 'Apply Style',
+    'ai.send': 'Send',
+    'ai.defaultGroup': 'Default Add to Group',
+    'ai.createGroupFirst': 'Please Create Group First',
+    'ai.autoSendDesc': 'Send on shortcut key (with default prompt and selected text)',
+    'ai.autoSendHint': 'Unchecked: only show window',
+    'ai.waitingResponse': 'Waiting for AI response...',
+    'ai.done': 'Done ✓',
+    'ai.inputMessage': 'Please enter message below and send',
+    'ai.newConversation': 'New Conversation',
+    'ai.noChatHistory': 'No chat history',
+    'ai.noStyleGroup': 'No style groups',
+    'ai.waitingCss': 'Waiting for CSS style...',
+    'ai.promptTemplate': 'Prompt Template',
+    'ai.selectPromptTemplate': 'Select prompt template...',
+    'ai.manage': 'Manage',
+    'ai.currentAi': 'Current AI',
+    'ai.managePromptTemplate': 'Manage Prompt Templates',
+    'ai.addNewPrompt': 'Add New Prompt',
+    'ai.noPromptTemplate': 'No prompt templates',
+    'font.switchBodyFont': 'Switch Body Font',
+    'font.inUse': 'In Use',
+    'font.defaultFontRestore': 'Default Font (Restore)',
+    'font.favoriteFonts': 'Favorite Fonts',
+    'font.allFonts': 'All Fonts',
+    'font.layoutSettings': 'Layout Settings',
+    'font.clickStarHint': 'Click star to favorite font, favorites shown at top',
+    'font.searchFont': 'Search fonts...',
+    'pinyin.addLocal': 'Add Pinyin (Local)',
+    'pinyin.addGlobal': 'Add Pinyin (Global)',
+    'pinyin.editFile': 'Edit Pinyin File',
+    'pinyin.remove': 'Remove Pinyin',
+    'pinyin.editTitle': 'Edit Pinyin File',
+    'pinyin.tone': 'Tone',
+    'floating.editTitle': 'Edit Floating Option',
+    'floating.displayTextLabel': 'Display Text',
+    'floating.styleClassNameLabel': 'Style Class Name',
+    'settings.remarkPopupWidth': 'Remark Popup Width',
+    'settings.remarkPopupBorderWidth': 'Remark Popup Border Width',
+    'settings.marginDesc': 'Adjust reading mode content area line height and margins',
+    'main.width': 'Width',
+    'main.openRulesFile': 'Open Rules File',
+    'main.createNewRule': 'Create New Rule',
+    'main.openStyleCategoriesFile': 'Open Style Categories File',
+    'main.createDiffName': 'Create with Different Name',
+    'main.mergeContent': 'Merge Content',
+    'main.merge': 'Merge',
+    'main.addNewStyle': 'Add New Style',
+    'main.dblClickHideGroup': 'Double-click to hide group',
+    'main.dblClickExpandGroup': 'Double-click to expand group',
+    'main.dblClickShowGroup': 'Double-click to show group',
+    'main.expandGroupStyles': 'Expand group style buttons',
+    'main.collapseGroupStyles': 'Collapse group style buttons',
+    'main.hoverExpandGroup': 'Hover to expand group style buttons',
+    'main.remarkCleared': 'Remark cleared',
+    'font.previewText': 'The quick brown fox jumps over the lazy dog.',
+    'format.patternExample': 'e.g.: \\*\\*(.+?)\\*\\*',
+    'format.styleExample': 'e.g.: bold',
+    'cssEditor.inputButtonText': 'Enter button display text',
+    'cssEditor.inputModifyReq': 'Enter your style modification requirements',
+    'cssEditor.inputStyleEffect': 'Enter your desired style effect',
+    'remark.inputPromptName': 'Enter prompt name',
+    'remark.inputPromptContent': 'Enter prompt content',
+    'settings.ctrlScrollOpacity': 'Ctrl+Mouse wheel to adjust opacity',
+    'settings.altScrollWidth': 'Alt+Mouse wheel to adjust width',
+    'settings.lineHeightExample': 'e.g. 1.8',
+    'settings.aiNameExample': 'e.g.: OpenAI GPT-4',
+    'settings.aiModelExample': 'e.g.: gpt-4-turbo, claude-3-sonnet-20240229',
+    'floating.floatThisGroup': 'Float this group',
+    'floating.floatThisStyle': 'Float this style',
+    'floating.pinMenuDesc': 'Pin submenu (keep expanded and draggable)',
+    'floating.inputDisplayText': 'Enter display text',
+    'floating.inputCssClass': 'Enter CSS class name (optional)',
+    'showcase.dblClickJump': 'Double-click to jump to document position',
+    'heading.styleApplied': 'Heading style applied to all corresponding level headings',
+    'heading.styleDeleted': 'Heading style deleted',
+    'ai.nameCol': 'Name',
+    'ai.createdAtCol': 'Created At',
+    'ai.actionsCol': 'Actions',
+    'main.regexPlaceholder': 'e.g. TODO|FIXME',
+    'ai.responsePlaceholder': 'AI response will appear here...Enter your question or modification request to continue.',
+    'main.saveAsFile': 'Save as File',
+    'main.switchToEn': 'Switch to English',
+    'main.switchToZh': 'Switch to Chinese',
+    'main.langSwitchNotice': 'Language switched, please reopen the panel to see changes',
+    'showcase.countHint': '💡 Show highlights applied by styles with count ≥',
+    'showcase.countHintSuffix': '',
+    'showcase.displayHint': '💡 Only show highlights from styles marked "Add to Showcase". (Right-click a style button in the main panel to select "Add to Showcase")',
+    'cssEditor.countFileZero': 'Count file: 0 class names (not generated)',
+    'cssEditor.countMismatch': '(Inconsistent counts may cause display offset)',
+    'settings.temperatureDesc': 'Temperature controls AI output randomness. Lower values (0-0.5) produce more deterministic, conservative output; higher values (1.5-2) produce more diverse, creative output.',
+    'main.newGroup': 'New Group',
+    'main.renameGroup': 'Rename Group',
+    'main.inputNewGroupName': 'Enter new group name',
+    'main.savePrompt': 'Save Prompt',
+    'main.fileExistsTitle': 'File Already Exists',
+    'main.fileExistsDesc': 'File already exists, please choose an action:',
+    'main.inputNewFileName': 'Enter New File Name',
+    'main.inputNewFileNameHint': 'Enter new file name (without .md)',
+    'floating.editBtnName': 'Edit Floating Button Name',
+    'floating.inputNewDisplayName': 'Enter new display name',
+    'remark.promptDefaultName': 'Prompt',
+    'main.confirmDeleteGroup': 'Confirm Delete Group',
+    'main.deletePrompt': 'Delete Prompt',
+    'main.confirmDeletePrompt': 'Are you sure you want to delete this prompt?',
+    'main.donateQrCode': 'Donation QR Code',
+    'main.editRemark': 'Edit Remark',
+    'main.editRemarkGlobal': 'Edit Remark (Global Rule)',
+    'main.addRemark': 'Add Remark',
+    'main.addRemarkGlobal': 'Add Remark (Global Rule)',
+    'main.inputRemarkContent': 'Enter remark content...',
+    'main.deleteGroupWithStyles': 'Deleting the group will also delete all styles in it. Are you sure?',
+    'main.deleteEmptyGroup': 'Are you sure you want to delete the empty group?',
+    'main.selectTextToHighlight': 'Please select text to highlight first',
+    'main.selectTextToRemove': 'Please select text to remove style first',
+    'main.noHighlightRule': 'No highlight rules in current file',
+    'main.noMatchingRule': 'No matching highlight rule found for selected text',
+    'main.selectTextToRemark': 'Please select text to add remark, or copy CSS style',
+    'main.selectTextToMerge': 'Please select text to merge first',
+    'main.selectTextToPinyin': 'Please select text to add pinyin first',
+    'main.selectTextToDeletePinyin': 'Please select text to delete pinyin first',
+    'main.selectTextToEntity': 'Please select text to extract entities first',
+    'main.configureAiFirst': 'Please configure AI API Key in settings first',
+    'main.pinyinGetting': 'Getting pinyin...',
+    'main.pinyinMismatch': 'Pinyin count does not match character count, please retry',
+    'main.pinyinAdded': 'Pinyin added',
+    'main.pinyinFailed': 'Pinyin failed',
+    'main.pinyinDeleted': 'Pinyin deleted',
+    'main.pinyinDeleteFailed': 'Delete pinyin failed',
+    'main.pinyinSaved': 'Pinyin file saved',
+    'main.noPinyin': 'Selected text has no pinyin',
+    'main.jsonFormatError': 'JSON format error',
+    'main.openEditorFailed': 'Failed to open editor',
+    'main.sendingToAi': 'Sending request to AI...',
+    'main.aiError': 'AI assistant error',
+    'main.replyReceived': 'Reply received',
+    'main.sendFailed': 'Send failed',
+    'main.cannotExtractClass': 'Cannot extract CSS class name',
+    'main.groupAdded': 'Style added to group',
+    'main.groupExists': 'Style already exists in group',
+    'main.groupAddFailed': 'Failed to add style to group',
+    'main.clipboardEmptyShort': 'Clipboard is empty',
+    'main.styleRuleUpdated': 'Style rule updated',
+    'main.styleRuleCreated': 'Style rule created for selected text',
+    'main.remarkUpdated': 'Remark updated for selected text',
+    'main.remarkMerged': 'Remark merged into rule',
+    'main.remarkAddedNew': 'New rule and remark added for selected text',
+    'main.remarkAdded': 'Remark added for selected text',
+    'main.remarkAddFailed': 'Failed to add remark',
+    'main.cannotOpenFile': 'Cannot open file, please check if it exists',
+    'main.cannotOpenEditor': 'Cannot open editor',
+    'main.selectText': 'Please select text first',
+    'main.textChanged': 'Selected text has changed, cannot auto-apply new style',
+    'main.cannotGetActiveEditor': 'Cannot get active editor',
+    'main.applyNewStyleFailed': 'Failed to apply new style to selected text',
+    'main.addFromClipboardFailed': 'Failed to add style from clipboard',
+    'main.ruleMovedToGlobal': 'Rule moved from local to global',
+    'main.ruleMovedToLocal': 'Rule moved from global to local',
+    'main.globalRuleNotFound': 'Corresponding global rule not found',
+    'main.localRuleNotFound': 'Corresponding local rule not found',
+    'main.localRuleExists': 'Same rule already exists in local rules',
+    'main.globalRuleExistsShort': 'Same rule already exists in global rules',
+    'main.cannotGetRuleInfo': 'Cannot get rule info',
+    'main.cannotGetMatchText': 'Cannot get match text',
+    'main.fileNameEmpty': 'File name cannot be empty',
+    'main.fileExists': 'File already exists',
+    'main.savedToFile': 'Saved to file',
+    'main.mergedToFile': 'Merged to file',
+    'main.mergeFailed': 'Merge failed',
+    'main.saveFailed': 'Save failed',
+    'main.operationFailed': 'Operation failed',
+    'main.promptEmpty': 'Prompt cannot be empty',
+    'main.promptSaved': 'Prompt saved',
+    'main.promptSaveFailed': 'Failed to save prompt',
+    'main.promptLoaded': 'Prompt loaded',
+    'main.promptApplyFailed': 'Failed to apply prompt',
+    'main.managePromptFailed': 'Failed to manage prompt',
+    'main.promptTemplateSaved': 'Prompt template saved',
+    'main.imageSaved': 'Image saved',
+    'main.imageSaveFailed': 'Failed to save image',
+    'main.styleRemoved': 'Style removed',
+    'main.highlightAdded': 'Highlight added',
+    'main.globalHighlightAdded': 'Global highlight added',
+    'main.styleChanged': 'Style changed',
+    'main.noUnusedStyle': 'No unused styles available',
+    'main.allStylesTried': 'All unused styles tried, starting over',
+    'main.mergeTarget': 'Not in highlight rules',
+    'main.mergeExists': 'Already exists in rules',
+    'main.merged': 'Merged',
+    'main.ruleAdded': 'Style rule added for selected text',
+    'main.applyStyleFailed': 'Failed to apply style',
+    'settings.testApiValue': 'Hello, AI',
+    'settings.getApiKey': 'Get API Key',
+    'settings.viewUpdates': 'View Updates',
+    'heading.styleSupport': 'Obsidian Heading Style Support',
+    'ai.unknownDoc': 'Unknown Document',
+    'ai.untitledDoc': 'Untitled Document',
+    'ai.newConversation': 'New Conversation',
+    'remark.addPrompt': 'Add Prompt',
+    'remark.editPrompt': 'Edit Prompt',
+    'format.code': 'Code',
+    'format.replacedCount': 'Replaced',
+    'format.addedCount': 'Added',
+    'format.highlightRules': 'highlight rules',
+    'format.clickReapply': 'Click to reapply',
+    'format.pattern': 'Pattern',
+    'format.style': 'Style',
+    'showcase.totalCount': 'Total',
+    'showcase.filteredCount': 'Total',
+    'showcase.totalLabel': '(all',
+    'main.image': 'Image',
+    'main.entityExtractFailed': 'Extraction failed',
+    'cssEditor.editStyle': 'Edit Style',
+    'ai.cssExpertPrompt': 'You are a CSS style generation expert. Please create CSS styles for regex highlighting. Only return CSS code with valid class selectors and style rules, without any explanations. Example format: .my-custom-style { background-color: #ffeb3b; color: #333; padding: 2px 4px; border-radius: 3px; }',
+    'main.addNewStyleTo': 'Add New Style to',
+    'main.styleAddedToCategorySuccess': 'Style successfully added to',
+    'main.stylesAddedToCategory': 'Successfully added styles to',
+    'main.category': 'category',
+    'main.dragToSortGroup': 'Drag to sort groups',
+    'main.reopenGroup': 'Reopen group',
+    'main.clickApplyStyle': 'Click to apply style, drag to sort',
+    'main.ruleMovedToGlobalSuccess': 'Rule moved to global rules',
+    'main.ruleReapplied': 'Rule reapplied with style',
+    'main.globalRuleStyleApplied': 'Global rule style applied',
+    'main.ruleStyleApplied': 'Rule style applied',
+    'main.ruleExistsInGlobal': 'Rule already exists in global rules',
+    'main.styleAddedToGlobalRule': 'Style added to global rule',
+    'main.styleMovedToGroup': 'Style moved to group',
+    'main.styleDeleted': 'Style deleted',
+    'main.styleAddedAsHeading': 'Style added as',
+    'main.longPressMultiSelect': 'Long press: Multi-select mode',
+    'main.middleClickGlobal': 'Middle click: Apply as global rule',
+    'main.styleCategoryCount': 'Style categories',
+    'main.foundMissingStyles': 'Found',
+    'main.missingInCss': 'styles not found in styles.css:',
+    'main.cleanedMissingStyles': 'Cleaned',
+    'main.missingStyles': 'missing styles',
+    'main.confirmDeleteAi': 'Are you sure you want to delete AI',
+    'main.globalRule': 'Global Rule',
+    'main.clickToEdit': 'Click: Edit (Ctrl+Enter to update)',
+    'main.longPressMove': 'Long press: Move to current file',
+    'main.empty': 'Empty',
+    'main.status': 'Status',
+    'main.enable': 'Enable',
+    'main.disable': 'Disable',
+    'main.rule': 'rule',
+    'main.rightClick': 'Right-click',
+    'main.ruleMovedByLongPress': 'Rule moved to current file by long press',
+    'cssEditor.countFileLabel': 'Count file',
+    'cssEditor.classCount': 'class names',
+    'main.globalRuleDeleted': 'Global rule deleted',
+    'main.ruleToggled': 'Rule',
+    'main.movedToLocalRule': 'Moved to current file rule',
+    'main.localRule': 'Current File Rule',
+    'main.clickToApply': 'Click: Apply rule (Ctrl+Enter to update)',
+    'main.clickToGlobal': 'Click: Move to global rules',
+    'main.ruleAddedToGlobalByLongPress': 'Rule added to global by long press',
+    'main.leftClickEdit': 'Left-click: Edit (Ctrl+Enter to update)',
+    'main.movedToGlobalRule': 'Moved to global rule',
+    'main.styleUpdated': 'Style successfully updated',
+    'main.globalRuleStyleAdded': 'Global rule style added',
+    'main.cannotFindCategory': 'Cannot find category container',
+    'main.cannotFindDragBtn': 'Cannot find drag style button',
+    'floating.mode': 'Mode',
+    'floating.alwaysShow': 'Always',
+    'floating.follow': 'Follow',
+    'main.pinyinContext': 'Position ',
+    'main.pinyinPosition': ' in context is the character to annotate',
+    'main.pinyinContextPrompt': 'Context (for determining correct pronunciation of polyphonic characters, note: context is for reference only, do not annotate pinyin for context text)',
+    'main.apiRequestFailed': 'API request failed',
+    'main.applyCategoryStyle': 'Apply category style',
+    'ai.docName': 'Document Name',
+    'ai.searchResult': 'Search result',
+    'ai.searchResultSnippet': 'Detailed information about',
+    'ai.searchResultSnippetAlt': 'Analysis and interpretation from different perspectives',
+    'ai.searchResultSnippet3': 'Latest research findings and data',
+    'ai.searchSummary': 'Based on search results, here is a summary about',
+    'main.error': 'Error',
+    'ai.user': 'User',
+    'ai.conversations': 'conversations',
+    'settings.heading': 'Heading',
+    'settings.popup': 'Popup',
+    'settings.floatingBall': 'Floating Ball',
+    'settings.fontSwitch': 'Font Switch',
+    'settings.aiSettings': 'AI Settings',
+    'settings.pinyinStyle': 'Pinyin Style',
+    'entity.selectTextFirst': 'Please select text to extract entities first',
+    'main.noNewStyleToAdd': 'No new styles to add',
+    'main.preview': 'Preview',
+    'main.collapseGroup': 'Collapse group styles',
+    'main.expandGroup': 'Expand group styles',
+    'floating.openMainPanel': 'Open Main Panel',
+    'floating.formatReplace': 'Format Replace',
+    'floating.addRemark': 'Add Remark',
+    'floating.removeHighlight': 'Remove Highlight',
+    'floating.pinyin': 'Pinyin',
+    'floating.aiAssistant': 'AI Assistant',
+    'floating.extractEntities': 'Extract Entities',
+    'floating.styleShowcase': 'Highlight List',
+    'floating.fontSwitch': 'Switch Font',
+    'floating.switchMode': 'Switch Mode',
+    'floating.hideFloatingBtns': 'Hide Floating Buttons',
+    'floating.hideTextStyles': 'Hide/Show Text Styles',
+    'floating.alwaysModeDesc': 'Always mode: Floating ball always visible on screen',
+    'floating.followModeDesc': 'Follow selection mode: Floating ball appears near cursor when text is selected',
+    'floating.opacityTip': 'Hover over floating ball + Ctrl + scroll to adjust opacity',
+    'settings.fontSwitchDesc1': 'When enabled, "Switch Font" option appears in floating ball menu',
+    'settings.fontSwitchDesc2': 'Reads system installed fonts, click star to favorite',
+    'settings.desktopOnly': 'Desktop only',
+    'floating.addPinyinLocal': 'Add Pinyin (Local)',
+    'floating.addPinyinGlobal': 'Add Pinyin (Global)',
+    'floating.editPinyinFile': 'Edit Pinyin File',
+    'floating.removePinyin': 'Remove Pinyin',
+    'floating.enableCustomStyle': 'Enable Custom Style',
+    'floating.disableCustomStyle': 'Disable Custom Style',
+    'floating.hideGroupStyles': 'Hide all group styles',
+    'main.removeFromShowcase': 'Remove from Showcase',
+    'main.filter': 'Filter',
+    'main.globalRuleClickToLocal': 'Global rule - Click to move to local',
+    'main.localRuleClickToGlobal': 'Local rule - Click to move to global',
+    'main.fileRule': 'File rule',
+    'main.className': 'Class name',
+    'main.cssCleaned': 'CSS cleanup done: removed {count} orphaned styles',
+    'main.noContent': 'No content',
+    'main.cannotReadCategories': 'Cannot read style-categories.json',
+    'main.cannotReadStyles': 'Cannot read styles.css',
+    'main.allStylesExist': '✓ All styles in categories exist in styles.css, no cleanup needed',
+    'main.styleAndRemarkApplied': 'Style and remark applied!',
+    'main.alreadyExistsInRules': 'already exists in rules',
+  }
+};
+
+function t(key, params) {
+  let text = key;
+  if (i18n[_currentLang] && i18n[_currentLang].hasOwnProperty(key)) {
+    text = i18n[_currentLang][key];
+  } else if (i18n['zh'] && i18n['zh'].hasOwnProperty(key)) {
+    text = i18n['zh'][key];
+  }
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      text = text.replace(new RegExp('\\{' + k + '\\}', 'g'), v);
+    }
+  }
+  return text;
+}
+
 // 二维码图片base64编码（用户需手动将完整的base64编码粘贴到此处）
 const DONATE_QR_CODE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOwAAADmCAYAAADWSGlyAABNr0lEQVR4nO19CZwdVZn9qXr7e70vSWcjIYSQGCBsBmQJmyjIIKDohBFlVRQVR/yDiiIDIjOIjOigwsgIyChuLMIAgqIEAQmbLAkBEiB70nv36+63v6r/79yq6u5U3Rfr5fVrupN7/JUJlftu3bpVX917v3u+82mmaZpQUFCYFNDf7QYoKCj4hzJYBYVJBGWwCgqTCMpgFRQmEZTBKihMIiiDVVCYRFAGq6AwiaAMVkFhEiFYyY+PPfZYTEQsWLAAP/nJTzzn/+3f/g3Lly8f8+udffbZOOecczznjzvuOPjlpfzud79Dc3Pzduf++Mc/4tprr62obYsWLcJNN93kOX/FFVfgySef3O7c9OnT8Ytf/KKi69122234+c9/7jn/l7/8BeOFFStW4Gtf+xomIkq9K+NisI8//jgmIlKplPT8qlWrqtLmo48+WnqeHwfDMHzVkcvlPOfa29srbq+sXmLlypWeuvfaay9Uinfeeeddfy96enre9TaU+674hZoSKyhMIiiDVVCYRFAGq6AwiVDRGlaGWbNmYc6cORgvvPzyy0gmk77KLly4EEcdddR25zKZDJ577jlfv9d1HUcccYT03/761796zh155JEep9OmTZvEOk/mKHE7nXp7ez3tLRd77LGHtG1Tp0711D1jxgzf9RaLRTz99NOe8xs2bJCWl7WhHEyZMgX77LNPRXXst99+aGhowHiAvounnnpq7Cs2KwB/7j6+9rWvmYVCYdyOo446ytOGJUuWSNtbLBY9v1+7dq30PmRHLBaTtuHKK680A4GA58jlcp6y119/vbRuXdc9vz/rrLMq7p+//vWv0rbdfffd0vJ+0d/fL61X0zTp/cnKlnOce+65vtv20EMPSdvwxz/+cdzey1QqJW0D35VKMOYjLEehQCCA8YKmaWW1zY1y2sprlSrPEUdWt/uasjYQpbzJlfYl2yxr247uxS9k9Y5FWRn8etsnyrtZreuM+RpWxcMrKFQP+rs54ikoKJQHNcIqKEwiBMdrhP3kJz+JoaGhna73kEMOweWXX15By4Drr78ef/vb33yxoj796U/jpJNOGvN1yYc//GHsueeenvPnnXce+vr6PEypj3zkI56yN9xwg7SOUjTNe+65x3OeTKA777xzu3NtbW34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'; // 占位符，用户需要替换为实际的base64数据
 
@@ -249,13 +2121,13 @@ class InputModal extends Modal {
     
     // 取消按钮
     const cancelBtn = buttonContainer.createEl("button");
-    cancelBtn.textContent = "取消";
+    cancelBtn.textContent = t('main.cancel');
     cancelBtn.style.padding = "6px 16px";
     cancelBtn.addEventListener("click", () => this.close());
     
     // 确认按钮
     const confirmBtn = buttonContainer.createEl("button");
-    confirmBtn.textContent = "确认";
+    confirmBtn.textContent = t('main.confirm');
     confirmBtn.style.padding = "6px 16px";
     confirmBtn.style.backgroundColor = "var(--interactive-accent)";
     confirmBtn.style.color = "white";
@@ -317,14 +2189,14 @@ class PromptTemplateModal extends Modal {
     nameDiv.style.marginBottom = "12px";
     
     const nameLabel = nameDiv.createEl("label");
-    nameLabel.textContent = "提示词名称: ";
+    nameLabel.textContent = t('remark.promptName');
     nameLabel.style.display = "block";
     nameLabel.style.marginBottom = "4px";
     nameLabel.style.fontWeight = "bold";
     
     const nameInput = nameDiv.createEl("input");
     nameInput.type = "text";
-    nameInput.placeholder = "请输入提示词名称";
+    nameInput.placeholder = t('remark.inputPromptName');
     nameInput.value = this.template?.name || "";
     nameInput.style.width = "100%";
     nameInput.style.padding = "8px";
@@ -336,13 +2208,13 @@ class PromptTemplateModal extends Modal {
     contentDiv.style.marginBottom = "16px";
     
     const contentLabel = contentDiv.createEl("label");
-    contentLabel.textContent = "提示词内容: ";
+    contentLabel.textContent = t('remark.promptContent');
     contentLabel.style.display = "block";
     contentLabel.style.marginBottom = "4px";
     contentLabel.style.fontWeight = "bold";
     
     const contentTextarea = contentDiv.createEl("textarea");
-    contentTextarea.placeholder = "请输入提示词内容";
+    contentTextarea.placeholder = t('remark.inputPromptContent');
     contentTextarea.value = this.template?.content || "";
     contentTextarea.style.width = "100%";
     contentTextarea.style.height = "200px";
@@ -363,13 +2235,13 @@ class PromptTemplateModal extends Modal {
     
     // 取消按钮
     const cancelBtn = buttonContainer.createEl("button");
-    cancelBtn.textContent = "取消";
+    cancelBtn.textContent = t('main.cancel');
     cancelBtn.style.padding = "6px 16px";
     cancelBtn.addEventListener("click", () => this.close());
     
     // 确认按钮
     const confirmBtn = buttonContainer.createEl("button");
-    confirmBtn.textContent = "确认";
+    confirmBtn.textContent = t('main.confirm');
     confirmBtn.style.padding = "6px 16px";
     confirmBtn.style.backgroundColor = "var(--interactive-accent)";
     confirmBtn.style.color = "white";
@@ -494,7 +2366,7 @@ class AddRemarkModal extends Modal {
     toolbar.style.flexWrap = "wrap";
     
     const imageBtn = toolbar.createEl("button");
-    imageBtn.textContent = "📷 插入图片";
+    imageBtn.textContent = t('remark.insertImage');
     imageBtn.style.padding = "4px 10px";
     imageBtn.style.fontSize = `${popupFontSize}px`;
     imageBtn.style.cursor = "pointer";
@@ -510,7 +2382,7 @@ class AddRemarkModal extends Modal {
     imageBtn.addEventListener("click", () => fileInput.click());
     
     const pasteHint = toolbar.createEl("span");
-    pasteHint.textContent = "支持 Ctrl+V 粘贴剪贴板图片";
+    pasteHint.textContent = t('remark.pasteImageHint');
     pasteHint.style.fontSize = "12px";
     pasteHint.style.color = "var(--text-muted)";
     
@@ -538,7 +2410,7 @@ class AddRemarkModal extends Modal {
     previewContainer.style.backgroundColor = "var(--background-secondary)";
     
     const previewToggle = toolbar.createEl("button");
-    previewToggle.textContent = "👁 预览";
+    previewToggle.textContent = t('remark.showPreview');
     previewToggle.style.padding = "4px 10px";
     previewToggle.style.fontSize = `${popupFontSize}px`;
     previewToggle.style.cursor = "pointer";
@@ -551,11 +2423,11 @@ class AddRemarkModal extends Modal {
       previewVisible = !previewVisible;
       if (previewVisible) {
         previewContainer.style.display = "block";
-        previewToggle.textContent = "👁 隐藏预览";
+        previewToggle.textContent = t('remark.hidePreview');
         await this.renderPreview(textareaEl.value, previewContainer);
       } else {
         previewContainer.style.display = "none";
-        previewToggle.textContent = "👁 预览";
+        previewToggle.textContent = t('remark.showPreview');
       }
     });
     
@@ -587,10 +2459,10 @@ class AddRemarkModal extends Modal {
       try {
         const savedName = await this.saveImageToVault(new Uint8Array(arrayBuffer), fileName);
         this.insertAtCursor(textareaEl, `![[${savedName}]]`);
-        new Notice(`图片已保存: ${savedName}`);
+        new Notice(t('main.imageSaved') + ': ' + savedName);
       } catch (err) {
         console.error('保存图片失败:', err);
-        new Notice(`保存图片失败: ${err.message}`);
+        new Notice(t('main.imageSaveFailed') + ': ' + err.message);
       }
     };
     
@@ -624,13 +2496,13 @@ class AddRemarkModal extends Modal {
     buttonContainer.style.gap = `${popupSpacing}px`;
     
     const cancelBtn = buttonContainer.createEl("button");
-    cancelBtn.textContent = "取消";
+    cancelBtn.textContent = t('main.cancel');
     cancelBtn.style.padding = `${Math.floor(popupSpacing * 0.6)}px ${Math.floor(popupSpacing * 1.5)}px`;
     cancelBtn.style.fontSize = `${popupFontSize}px`;
     cancelBtn.addEventListener("click", () => this.close());
     
     const confirmBtn = buttonContainer.createEl("button");
-    confirmBtn.textContent = "确认";
+    confirmBtn.textContent = t('main.confirm');
     confirmBtn.style.padding = `${Math.floor(popupSpacing * 0.6)}px ${Math.floor(popupSpacing * 1.5)}px`;
     confirmBtn.style.fontSize = `${popupFontSize}px`;
     confirmBtn.style.backgroundColor = "var(--interactive-accent)";
@@ -669,7 +2541,7 @@ class AddRemarkModal extends Modal {
   async renderPreview(content, container) {
     container.empty();
     if (!content.trim()) {
-      container.innerHTML = '<span style="color: var(--text-muted)">无内容</span>';
+      container.innerHTML = `<span style="color: var(--text-muted)">${t('main.noContent')}</span>`;
       return;
     }
     try {
@@ -720,12 +2592,12 @@ class FormatReplaceModal extends Modal {
     this.modalEl.style.maxWidth = '90vw';
 
     // 标题
-    const titleEl = contentEl.createEl('h2', { text: '格式替换' });
+    const titleEl = contentEl.createEl('h2', { text: t('format.title') });
     titleEl.style.marginBottom = '16px';
 
     // 说明
     const descEl = contentEl.createEl('p');
-    descEl.textContent = '输入格式模式和样式名，将文档中匹配的文本添加到高亮规则（移除格式符号）';
+    descEl.textContent = t('format.inputFormat');
     descEl.style.fontSize = '13px';
     descEl.style.color = 'var(--text-muted)';
     descEl.style.marginBottom = '16px';
@@ -740,13 +2612,13 @@ class FormatReplaceModal extends Modal {
     const patternGroup = inputContainer.createDiv();
     patternGroup.style.flex = '1';
     
-    const patternLabel = patternGroup.createEl('div', { text: '格式模式:' });
+    const patternLabel = patternGroup.createEl('div', { text: t('showcase.formatPattern') });
     patternLabel.style.fontSize = '13px';
     patternLabel.style.marginBottom = '4px';
     
     const patternInput = patternGroup.createEl('input');
     patternInput.type = 'text';
-    patternInput.placeholder = '例如: \\*\\*(.+?)\\*\\*';
+    patternInput.placeholder = t('format.patternExample');
     patternInput.style.width = '100%';
     patternInput.style.padding = '8px';
     patternInput.style.border = '1px solid var(--background-modifier-border)';
@@ -758,7 +2630,7 @@ class FormatReplaceModal extends Modal {
       { label: '**加粗**', pattern: '\\*\\*(.+?)\\*\\*' },
       { label: '*斜体*', pattern: '\\*(.+?)\\*' },
       { label: '==高亮==', pattern: '==(.+?)==' },
-      { label: '`代码`', pattern: '`(.+?)`' },
+      { label: '`' + t('format.code') + '`', pattern: '`(.+?)`' },
       { label: '~~删除线~~', pattern: '~~(.+?)~~' },
       { label: '__下划线__', pattern: '__(.+?)__' },
     ];
@@ -789,13 +2661,13 @@ class FormatReplaceModal extends Modal {
     const styleGroup = inputContainer.createDiv();
     styleGroup.style.minWidth = '150px';
     
-    const styleLabel = styleGroup.createEl('div', { text: '样式名:' });
+    const styleLabel = styleGroup.createEl('div', { text: t('showcase.styleNameLabel') });
     styleLabel.style.fontSize = '13px';
     styleLabel.style.marginBottom = '4px';
     
     const styleInput = styleGroup.createEl('input');
     styleInput.type = 'text';
-    styleInput.placeholder = '例如: bold';
+    styleInput.placeholder = t('format.styleExample');
     styleInput.style.width = '100%';
     styleInput.style.padding = '8px';
     styleInput.style.border = '1px solid var(--background-modifier-border)';
@@ -808,7 +2680,7 @@ class FormatReplaceModal extends Modal {
     buttonContainer.style.marginBottom = '16px';
 
     const replaceBtn = buttonContainer.createEl('button');
-    replaceBtn.textContent = '执行替换';
+    replaceBtn.textContent = t('showcase.executeReplace');
     replaceBtn.style.padding = '8px 16px';
     replaceBtn.style.backgroundColor = 'var(--interactive-accent)';
     replaceBtn.style.color = 'white';
@@ -817,7 +2689,7 @@ class FormatReplaceModal extends Modal {
     replaceBtn.style.cursor = 'pointer';
 
     const undoBtn = buttonContainer.createEl('button');
-    undoBtn.textContent = '撤销';
+    undoBtn.textContent = t('format.undo');
     undoBtn.style.padding = '8px 16px';
     undoBtn.style.border = '1px solid var(--background-modifier-border)';
     undoBtn.style.borderRadius = '4px';
@@ -827,7 +2699,7 @@ class FormatReplaceModal extends Modal {
     undoBtn.disabled = true;
 
     const redoBtn = buttonContainer.createEl('button');
-    redoBtn.textContent = '重做';
+    redoBtn.textContent = t('format.redo');
     redoBtn.style.padding = '8px 16px';
     redoBtn.style.border = '1px solid var(--background-modifier-border)';
     redoBtn.style.borderRadius = '4px';
@@ -847,7 +2719,7 @@ class FormatReplaceModal extends Modal {
     historySection.style.borderTop = '1px solid var(--background-modifier-border)';
     historySection.style.paddingTop = '16px';
 
-    const historyTitle = historySection.createEl('div', { text: '替换历史' });
+    const historyTitle = historySection.createEl('div', { text: t('showcase.replaceHistory') });
     historyTitle.style.fontSize = '14px';
     historyTitle.style.fontWeight = 'bold';
     historyTitle.style.marginBottom = '8px';
@@ -866,11 +2738,11 @@ class FormatReplaceModal extends Modal {
       const styleName = styleInput.value.trim();
 
       if (!pattern) {
-        new Notice('请输入格式模式');
+        new Notice(t('main.inputFormat'));
         return;
       }
       if (!styleName) {
-        new Notice('请输入样式名');
+        new Notice(t('main.inputStyleName'));
         return;
       }
 
@@ -881,7 +2753,7 @@ class FormatReplaceModal extends Modal {
         // 获取当前文档内容
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!activeView || !activeView.file) {
-          new Notice('请先打开一个Markdown文件');
+          new Notice(t('main.openMdFile'));
           return;
         }
 
@@ -899,7 +2771,7 @@ class FormatReplaceModal extends Modal {
         }
 
         if (matches.length === 0) {
-          new Notice('未找到匹配的文本');
+          new Notice(t('main.noMatchText'));
           return;
         }
 
@@ -943,7 +2815,7 @@ class FormatReplaceModal extends Modal {
           // 保存到设置
           this.saveHistory();
 
-          statusEl.textContent = `已替换 ${matches.length} 处格式，添加 ${addedRules.length} 条高亮规则`;
+          statusEl.textContent = t('format.replacedCount') + ` ${matches.length} ` + t('format.addedCount') + ` ${addedRules.length} ` + t('format.highlightRules');
           statusEl.style.color = '#27ae60';
 
           this.plugin.rulesVersion++;
@@ -953,16 +2825,16 @@ class FormatReplaceModal extends Modal {
           this.updateHistoryList(historyList);
           this.updateUndoRedoButtons(undoBtn, redoBtn);
 
-          new Notice(`已替换 ${matches.length} 处格式，添加 ${addedRules.length} 条高亮规则`);
+          new Notice(t('main.formatReplaced'));
         } else {
-          statusEl.textContent = '所有匹配项已存在于规则中';
+          statusEl.textContent = t('showcase.allMatchExist');
           statusEl.style.color = 'var(--text-muted)';
         }
 
       } catch (error) {
         console.error('格式替换错误:', error);
-        new Notice('替换失败，请检查格式模式是否正确');
-        statusEl.textContent = '错误: ' + error.message;
+        new Notice(t('main.formatReplaceFailed'));
+        statusEl.textContent = t('showcase.errorPrefix') + error.message;
         statusEl.style.color = '#e74c3c';
       }
     });
@@ -998,7 +2870,7 @@ class FormatReplaceModal extends Modal {
       this.updateHistoryList(historyList);
       this.updateUndoRedoButtons(undoBtn, redoBtn);
 
-      new Notice('已撤销');
+      new Notice(t('main.undone'));
     });
 
     // 重做
@@ -1035,7 +2907,7 @@ class FormatReplaceModal extends Modal {
       this.updateHistoryList(historyList);
       this.updateUndoRedoButtons(undoBtn, redoBtn);
 
-      new Notice('已重做');
+      new Notice(t('main.redone'));
     });
 
     // 更新按钮状态
@@ -1073,7 +2945,7 @@ class FormatReplaceModal extends Modal {
 
     if (currentDocHistory.length === 0) {
       const emptyEl = container.createEl('div');
-      emptyEl.textContent = '暂无替换历史';
+      emptyEl.textContent = t('showcase.noReplaceHistory');
       emptyEl.style.fontSize = '13px';
       emptyEl.style.color = 'var(--text-muted)';
       return;
@@ -1088,7 +2960,7 @@ class FormatReplaceModal extends Modal {
       row.style.justifyContent = 'space-between';
       row.style.padding = '8px';
       row.style.borderBottom = '1px solid var(--background-modifier-border)';
-      row.title = `点击重新应用\n模式: ${item.pattern}\n样式: ${item.styleName}`;
+      row.title = t('format.clickReapply') + `\n` + t('format.pattern') + `: ${item.pattern}\n` + t('format.style') + `: ${item.styleName}`;
 
       if (realIndex === this.historyIndex) {
         row.style.backgroundColor = 'var(--background-modifier-hover)';
@@ -1136,14 +3008,14 @@ class FormatReplaceModal extends Modal {
         this.plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
         this.plugin.refreshCurrentView();
 
-        new Notice(`已重新应用 ${item.addedRules.length} 条规则`);
+        new Notice(t('main.reapplied'));
       });
 
       const infoEl = row.createEl('div');
       infoEl.style.flex = '1';
       infoEl.style.fontSize = '13px';
       infoEl.style.cursor = 'pointer';
-      infoEl.textContent = `${item.pattern} → ${item.styleName} (${item.addedRules.length}条)`;
+      infoEl.textContent = `${item.pattern} → ${item.styleName} (${item.addedRules.length})`;
 
       const timeEl = row.createEl('div');
       timeEl.style.fontSize = '12px';
@@ -1203,7 +3075,7 @@ class ConfirmModal extends Modal {
     
     // 取消按钮
     const cancelBtn = buttonContainer.createEl("button");
-    cancelBtn.textContent = "取消";
+    cancelBtn.textContent = t('main.cancel');
     cancelBtn.style.padding = "6px 16px";
     cancelBtn.addEventListener("click", () => {
       if (this.onCancel) {
@@ -1214,7 +3086,7 @@ class ConfirmModal extends Modal {
     
     // 确认按钮
     const confirmBtn = buttonContainer.createEl("button");
-    confirmBtn.textContent = "确认";
+    confirmBtn.textContent = t('main.confirm');
     confirmBtn.style.padding = "6px 16px";
     confirmBtn.style.backgroundColor = "var(--interactive-danger)";
     confirmBtn.style.color = "white";
@@ -1334,7 +3206,7 @@ class StyleShowcaseModal extends Modal {
     super(app);
     this.plugin = plugin;
     this.styleNames = styleNames;
-    this.showcaseMode = plugin.settings?.showcaseMode || showcaseMode;
+    this.showcaseMode = 'count';
     this.showcaseMinCount = plugin.settings?.showcaseMinCount || 2;
     this.sourceFilter = plugin.settings?.showcaseSourceFilter || 'current'; // current/open/all/global
     this.showGlobalRules = plugin.settings?.showcaseShowGlobal !== undefined ? plugin.settings?.showcaseShowGlobal : true;
@@ -1360,6 +3232,7 @@ class StyleShowcaseModal extends Modal {
       remark: '20%'
     };
     this.allRules = [];
+    this.columnFilters = {};
   }
 
   async onOpen() {
@@ -1394,7 +3267,7 @@ class StyleShowcaseModal extends Modal {
       loadingEl.style.textAlign = "center";
       loadingEl.style.padding = "40px";
       loadingEl.style.color = "var(--text-muted)";
-      loadingEl.textContent = "加载中...";
+      loadingEl.textContent = t('showcase.loading');
       loadingEl.id = "showcase-loading-indicator";
     }
   }
@@ -1495,7 +3368,7 @@ class StyleShowcaseModal extends Modal {
     }
     
     if (!targetView || !targetView.editor) {
-      new Notice('请先打开一个Markdown文件');
+      new Notice(t('main.openMdFile'));
       return;
     }
     
@@ -1512,13 +3385,13 @@ class StyleShowcaseModal extends Modal {
         editor.setCursor(from);
         editor.scrollIntoView({ from, to }, true);
         editor.setSelection(from, to);
-        new Notice(`已跳转到: ${text}`);
+        new Notice(t('main.jumpedTo') + ': ' + text);
         this.close();
         return;
       }
     }
     
-    new Notice(`未在文档中找到: ${text}`);
+    new Notice(t('main.notFoundInDoc') + ': ' + text);
   }
 
   setupWheelEvents() {
@@ -1661,11 +3534,7 @@ class StyleShowcaseModal extends Modal {
   async loadAllRules() {
     this.allRules = [];
     
-    let styleNamesToLoad = this.styleNames;
-    
-    if (this.showcaseMode === 'count') {
-      styleNamesToLoad = await this.loadStyleNamesByCount();
-    }
+    let styleNamesToLoad = await this.loadStyleNamesByCount();
     
     // 加载全局规则（根据设置决定是否显示）
     if (this.showGlobalRules && this.plugin.globalRules) {
@@ -1685,7 +3554,7 @@ class StyleShowcaseModal extends Modal {
               text: rule.regex,
               styleName: styleName,
               remark: rule.remark || '',
-              source: '全局规则',
+              source: t('main.globalRule'),
               timestamp: rule.timestamp || 0,
               filePath: null,
               isGlobal: true
@@ -1857,23 +3726,9 @@ class StyleShowcaseModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     
-    const titleEl = contentEl.createEl("h2", { text: "高亮列表" });
+    const titleEl = contentEl.createEl("h2", { text: t('showcase.title') });
     titleEl.style.marginBottom = "4px";
     titleEl.style.flexShrink = "0";
-    
-    const hintEl = contentEl.createEl("div");
-    if (this.showcaseMode === 'count') {
-      hintEl.innerHTML = `💡 显示应用次数 ≥ ${this.showcaseMinCount} 的样式所应用的高亮文本`;
-    } else {
-      hintEl.innerHTML = "💡 仅显示已\"加入展示\"的样式所应用的高亮文本. \(在主面板中右键点击样式按钮选择\"加入展示\")";
-    }
-    hintEl.style.fontSize = "12px";
-    hintEl.style.color = "var(--text-muted)";
-    hintEl.style.marginBottom = "12px";
-    hintEl.style.padding = "4px 8px";
-    hintEl.style.backgroundColor = "var(--background-secondary)";
-    hintEl.style.borderRadius = "4px";
-    hintEl.style.flexShrink = "0";
     
     // 手机端：折叠式筛选面板
     if (!_isDesktop) {
@@ -1888,12 +3743,12 @@ class StyleShowcaseModal extends Modal {
       filterHeader.style.backgroundColor = "var(--background-secondary)";
       filterHeader.style.borderRadius = "4px";
       
-      const filterToggleText = filterHeader.createEl("span", { text: "筛选 ▶" });
+      const filterToggleText = filterHeader.createEl("span", { text: t('showcase.filter') + ' ▶' });
       filterToggleText.style.fontSize = "14px";
       filterToggleText.style.fontWeight = "500";
       
       const statsEl = filterHeader.createEl("span");
-      statsEl.textContent = `共 ${this.allRules.length} 条`;
+      statsEl.textContent = t('showcase.totalCount') + ` ${this.allRules.length}`;
       statsEl.style.fontSize = "13px";
       statsEl.style.color = "var(--text-muted)";
       this.statsEl = statsEl;
@@ -1910,7 +3765,7 @@ class StyleShowcaseModal extends Modal {
       filterHeader.addEventListener("click", () => {
         filterExpanded = !filterExpanded;
         filterPanel.style.display = filterExpanded ? "block" : "none";
-        filterToggleText.textContent = filterExpanded ? "筛选 ▼" : "筛选 ▶";
+        filterToggleText.textContent = filterExpanded ? t('main.filter') + ' ▼' : t('main.filter') + ' ▶';
       });
       
       // 手机端：每行一个筛选项，垂直排列
@@ -1925,7 +3780,7 @@ class StyleShowcaseModal extends Modal {
       
       // 筛选来源
       const row1 = makeRow();
-      const sourceLabel = row1.createEl("span", { text: "筛选:" });
+      const sourceLabel = row1.createEl("span", { text: t('showcase.filter') + ':' });
       sourceLabel.style.fontSize = "13px";
       sourceLabel.style.minWidth = "60px";
       
@@ -1934,9 +3789,9 @@ class StyleShowcaseModal extends Modal {
       sourceSelect.style.borderRadius = "4px";
       sourceSelect.style.border = "1px solid var(--background-modifier-border)";
       sourceSelect.style.flex = "1";
-      sourceSelect.createEl("option", { value: 'current', text: '当前文档' });
-      sourceSelect.createEl("option", { value: 'open', text: '所有打开文档' });
-      sourceSelect.createEl("option", { value: 'all', text: '所有文档' });
+      sourceSelect.createEl("option", { value: 'current', text: t('showcase.currentDoc') });
+      sourceSelect.createEl("option", { value: 'open', text: t('showcase.allOpenDocs') });
+      sourceSelect.createEl("option", { value: 'all', text: t('showcase.allDocs') });
       sourceSelect.value = this.sourceFilter;
       
       // 全局高亮
@@ -1951,30 +3806,13 @@ class StyleShowcaseModal extends Modal {
       globalCheckbox.checked = this.showGlobalRules;
       globalCheckbox.style.cursor = "pointer";
       
-      const globalLabel = globalToggle.createEl("span", { text: "显示全局高亮" });
+      const globalLabel = globalToggle.createEl("span", { text: t('showcase.showGlobal') });
       globalLabel.style.fontSize = "13px";
-      
-      // 模式
-      const row3 = makeRow();
-      const modeLabel = row3.createEl("span", { text: "模式:" });
-      modeLabel.style.fontSize = "13px";
-      modeLabel.style.minWidth = "60px";
-      
-      const modeSelect = row3.createEl("select");
-      modeSelect.style.padding = "4px 8px";
-      modeSelect.style.borderRadius = "4px";
-      modeSelect.style.border = "1px solid var(--background-modifier-border)";
-      modeSelect.style.flex = "1";
-      
-      const modeShowcase = modeSelect.createEl("option", { value: 'showcase', text: '加入展示' });
-      const modeCount = modeSelect.createEl("option", { value: 'count', text: '按应用次数' });
-      if (this.showcaseMode === 'count') modeCount.selected = true;
-      else modeShowcase.selected = true;
       
       // 最小次数
       const countRow = makeRow();
-      const countLabel = countRow.createEl("span", { text: "最小次数:" });
-      countLabel.style.fontSize = "13px";
+      const countPrefix = countRow.createEl("span", { text: t('showcase.minCountPrefix') });
+      countPrefix.style.fontSize = "13px";
       
       const countInput = countRow.createEl("input", { type: "number", value: String(this.showcaseMinCount) });
       countInput.style.width = "60px";
@@ -1984,13 +3822,12 @@ class StyleShowcaseModal extends Modal {
       countInput.style.fontSize = "13px";
       countInput.min = "1";
       
-      if (this.showcaseMode !== 'count') {
-        countRow.style.display = "none";
-      }
+      const countSuffix = countRow.createEl("span", { text: t('showcase.minCountSuffix') });
+      countSuffix.style.fontSize = "13px";
       
       // 字数范围
       const lengthRow = makeRow();
-      const minLabel = lengthRow.createEl("span", { text: "字数:" });
+      const minLabel = lengthRow.createEl("span", { text: t('showcase.charCount') });
       minLabel.style.fontSize = "13px";
       minLabel.style.minWidth = "40px";
       
@@ -2015,7 +3852,7 @@ class StyleShowcaseModal extends Modal {
       maxInput.min = "0";
       maxInput.value = this.maxLength || '';
       
-      const maxUnit = lengthRow.createEl("span", { text: "字" });
+      const maxUnit = lengthRow.createEl("span", { text: t('showcase.charUnit') });
       maxUnit.style.fontSize = "13px";
       
       // 列显示切换
@@ -2023,19 +3860,19 @@ class StyleShowcaseModal extends Modal {
       colRow.style.flexWrap = "wrap";
       colRow.style.gap = "12px";
       
-      this.createToggleCheckbox(colRow, "样式名", this.showStyleName, (e) => {
+      this.createToggleCheckbox(colRow, t('showcase.showStyleName'), this.showStyleName, (e) => {
         this.showStyleName = e.target.checked;
         this.renderTable();
       });
-      this.createToggleCheckbox(colRow, "来源", this.showSource, (e) => {
+      this.createToggleCheckbox(colRow, t('showcase.showSource'), this.showSource, (e) => {
         this.showSource = e.target.checked;
         this.renderTable();
       });
-      this.createToggleCheckbox(colRow, "时间", this.showTimestamp, (e) => {
+      this.createToggleCheckbox(colRow, t('showcase.showTimestamp'), this.showTimestamp, (e) => {
         this.showTimestamp = e.target.checked;
         this.renderTable();
       });
-      this.createToggleCheckbox(colRow, "备注", this.showRemark, (e) => {
+      this.createToggleCheckbox(colRow, t('showcase.showRemark'), this.showRemark, (e) => {
         this.showRemark = e.target.checked;
         this.renderTable();
       });
@@ -2050,7 +3887,7 @@ class StyleShowcaseModal extends Modal {
         this.hideLoading();
         this.sortRules();
         this.renderTable();
-        statsEl.textContent = `共 ${this.allRules.length} 条`;
+        statsEl.textContent = t('showcase.totalCount') + ` ${this.allRules.length}`;
       });
       
       globalCheckbox.addEventListener("change", async () => {
@@ -2062,29 +3899,7 @@ class StyleShowcaseModal extends Modal {
         this.hideLoading();
         this.sortRules();
         this.renderTable();
-        statsEl.textContent = `共 ${this.allRules.length} 条`;
-      });
-      
-      modeSelect.addEventListener("change", async () => {
-        this.showcaseMode = modeSelect.value;
-        this.plugin.settings.showcaseMode = this.showcaseMode;
-        await this.plugin.saveData(this.plugin.settings);
-        if (this.showcaseMode === 'count') {
-          countRow.style.display = "flex";
-        } else {
-          countRow.style.display = "none";
-        }
-        this.showLoading();
-        await this.loadAllRules();
-        this.hideLoading();
-        if (this.showcaseMode === 'count') {
-          hintEl.innerHTML = `💡 显示应用次数 ≥ ${this.showcaseMinCount} 的样式所应用的高亮文本`;
-        } else {
-          hintEl.innerHTML = "💡 仅显示已\"加入展示\"的样式所应用的高亮文本. \(在主面板中右键点击样式按钮选择\"加入展示\")";
-        }
-        this.sortRules();
-        this.renderTable();
-        statsEl.textContent = `共 ${this.allRules.length} 条`;
+        statsEl.textContent = t('showcase.totalCount') + ` ${this.allRules.length}`;
       });
       
       countInput.addEventListener("change", async () => {
@@ -2096,15 +3911,12 @@ class StyleShowcaseModal extends Modal {
         this.showcaseMinCount = val;
         this.plugin.settings.showcaseMinCount = val;
         await this.plugin.saveData(this.plugin.settings);
-        if (this.showcaseMode === 'count') {
-          this.showLoading();
-          await this.loadAllRules();
-          this.hideLoading();
-          hintEl.innerHTML = `💡 显示应用次数 ≥ ${this.showcaseMinCount} 的样式所应用的高亮文本`;
-          this.sortRules();
-          this.renderTable();
-          statsEl.textContent = `共 ${this.allRules.length} 条`;
-        }
+        this.showLoading();
+        await this.loadAllRules();
+        this.hideLoading();
+        this.sortRules();
+        this.renderTable();
+        statsEl.textContent = t('showcase.totalCount') + ` ${this.allRules.length}`;
       });
       
       const handleLengthFilter = async () => {
@@ -2131,7 +3943,7 @@ class StyleShowcaseModal extends Modal {
     modeBar.style.flexWrap = "wrap";
     
     // 筛选选择
-    const sourceLabel = modeBar.createEl("span", { text: "筛选:" });
+    const sourceLabel = modeBar.createEl("span", { text: t('showcase.filter') + ':' });
     sourceLabel.style.fontSize = "13px";
     
     const sourceSelect = modeBar.createEl("select");
@@ -2139,9 +3951,9 @@ class StyleShowcaseModal extends Modal {
     sourceSelect.style.borderRadius = "4px";
     sourceSelect.style.border = "1px solid var(--background-modifier-border)";
     
-    sourceSelect.createEl("option", { value: 'current', text: '当前文档' });
-    sourceSelect.createEl("option", { value: 'open', text: '所有打开文档' });
-    sourceSelect.createEl("option", { value: 'all', text: '所有文档' });
+    sourceSelect.createEl("option", { value: 'current', text: t('showcase.currentDoc') });
+    sourceSelect.createEl("option", { value: 'open', text: t('showcase.allOpenDocs') });
+    sourceSelect.createEl("option", { value: 'all', text: t('showcase.allDocs') });
     sourceSelect.value = this.sourceFilter;
     
     // 显示全局规则选框
@@ -2155,7 +3967,7 @@ class StyleShowcaseModal extends Modal {
     globalCheckbox.checked = this.showGlobalRules;
     globalCheckbox.style.cursor = "pointer";
     
-    const globalLabel = globalToggle.createEl("span", { text: "显示全局高亮" });
+    const globalLabel = globalToggle.createEl("span", { text: t('showcase.showGlobal') });
     globalLabel.style.fontSize = "13px";
     
     // 字数范围筛选
@@ -2176,7 +3988,7 @@ class StyleShowcaseModal extends Modal {
     minInput.min = "0";
     minInput.value = this.minLength || '';
     
-    const lengthSeparator = lengthFilter.createEl("span", { text: "字" });
+    const lengthSeparator = lengthFilter.createEl("span", { text: t('showcase.charUnit') });
     lengthSeparator.style.fontSize = "13px";
     
     const maxLabel = lengthFilter.createEl("span", { text: "≤" });
@@ -2191,29 +4003,16 @@ class StyleShowcaseModal extends Modal {
     maxInput.min = "0";
     maxInput.value = this.maxLength || '';
     
-    const maxUnit = lengthFilter.createEl("span", { text: "字" });
+    const maxUnit = lengthFilter.createEl("span", { text: t('showcase.charUnit') });
     maxUnit.style.fontSize = "13px";
-    
-    const modeLabel = modeBar.createEl("span", { text: "模式:" });
-    modeLabel.style.fontSize = "13px";
-    
-    const modeSelect = modeBar.createEl("select");
-    modeSelect.style.padding = "4px 8px";
-    modeSelect.style.borderRadius = "4px";
-    modeSelect.style.border = "1px solid var(--background-modifier-border)";
-    
-    const modeShowcase = modeSelect.createEl("option", { value: 'showcase', text: '加入展示' });
-    const modeCount = modeSelect.createEl("option", { value: 'count', text: '按应用次数' });
-    if (this.showcaseMode === 'count') modeCount.selected = true;
-    else modeShowcase.selected = true;
     
     const countInputWrapper = modeBar.createDiv();
     countInputWrapper.style.display = "flex";
     countInputWrapper.style.alignItems = "center";
     countInputWrapper.style.gap = "4px";
     
-    const countLabel = countInputWrapper.createEl("span", { text: "最小次数:" });
-    countLabel.style.fontSize = "13px";
+    const countPrefix = countInputWrapper.createEl("span", { text: t('showcase.minCountPrefix') });
+    countPrefix.style.fontSize = "13px";
     
     const countInput = countInputWrapper.createEl("input", { type: "number", value: String(this.showcaseMinCount) });
     countInput.style.width = "60px";
@@ -2223,9 +4022,8 @@ class StyleShowcaseModal extends Modal {
     countInput.style.fontSize = "13px";
     countInput.min = "1";
     
-    if (this.showcaseMode !== 'count') {
-      countInputWrapper.style.display = "none";
-    }
+    const countSuffix = countInputWrapper.createEl("span", { text: t('showcase.minCountSuffix') });
+    countSuffix.style.fontSize = "13px";
     
     sourceSelect.addEventListener("change", async () => {
       this.sourceFilter = sourceSelect.value;
@@ -2267,28 +4065,6 @@ class StyleShowcaseModal extends Modal {
     minInput.addEventListener("change", handleLengthFilter);
     maxInput.addEventListener("change", handleLengthFilter);
     
-    modeSelect.addEventListener("change", async () => {
-      this.showcaseMode = modeSelect.value;
-      this.plugin.settings.showcaseMode = this.showcaseMode;
-      await this.plugin.saveData(this.plugin.settings);
-      if (this.showcaseMode === 'count') {
-        countInputWrapper.style.display = "flex";
-      } else {
-        countInputWrapper.style.display = "none";
-      }
-      this.showLoading();
-      await this.loadAllRules();
-      this.hideLoading();
-      if (this.showcaseMode === 'count') {
-        hintEl.innerHTML = `💡 显示应用次数 ≥ ${this.showcaseMinCount} 的样式所应用的高亮文本`;
-      } else {
-        hintEl.innerHTML = "💡 仅显示已\"加入展示\"的样式所应用的高亮文本. \(在主面板中右键点击样式按钮选择\"加入展示\")";
-      }
-      this.sortRules();
-      this.renderTable();
-      statsEl.textContent = `共 ${this.allRules.length} 条`;
-    });
-    
     countInput.addEventListener("change", async () => {
       const val = parseInt(countInput.value, 10);
       if (isNaN(val) || val < 1) {
@@ -2298,15 +4074,12 @@ class StyleShowcaseModal extends Modal {
       this.showcaseMinCount = val;
       this.plugin.settings.showcaseMinCount = val;
       await this.plugin.saveData(this.plugin.settings);
-      if (this.showcaseMode === 'count') {
-        this.showLoading();
-        await this.loadAllRules();
-        this.hideLoading();
-        hintEl.innerHTML = `💡 显示应用次数 ≥ ${this.showcaseMinCount} 的样式所应用的高亮文本`;
-        this.sortRules();
-        this.renderTable();
-        statsEl.textContent = `共 ${this.allRules.length} 条`;
-      }
+      this.showLoading();
+      await this.loadAllRules();
+      this.hideLoading();
+      this.sortRules();
+      this.renderTable();
+      statsEl.textContent = t('showcase.totalCount') + ` ${this.allRules.length}`;
     });
     
     const toolbar = contentEl.createDiv();
@@ -2317,28 +4090,28 @@ class StyleShowcaseModal extends Modal {
     toolbar.style.flexWrap = "wrap";
     toolbar.style.flexShrink = "0";
     
-    this.createToggleCheckbox(toolbar, "样式名", this.showStyleName, (e) => {
+    this.createToggleCheckbox(toolbar, t('showcase.showStyleName'), this.showStyleName, (e) => {
       this.showStyleName = e.target.checked;
       this.renderTable();
     });
     
-    this.createToggleCheckbox(toolbar, "来源", this.showSource, (e) => {
+    this.createToggleCheckbox(toolbar, t('showcase.showSource'), this.showSource, (e) => {
       this.showSource = e.target.checked;
       this.renderTable();
     });
     
-    this.createToggleCheckbox(toolbar, "时间", this.showTimestamp, (e) => {
+    this.createToggleCheckbox(toolbar, t('showcase.showTimestamp'), this.showTimestamp, (e) => {
       this.showTimestamp = e.target.checked;
       this.renderTable();
     });
     
-    this.createToggleCheckbox(toolbar, "备注", this.showRemark, (e) => {
+    this.createToggleCheckbox(toolbar, t('showcase.showRemark'), this.showRemark, (e) => {
       this.showRemark = e.target.checked;
       this.renderTable();
     });
     
     const statsEl = toolbar.createEl("span");
-    statsEl.textContent = `共 ${this.allRules.length} 条`;
+    statsEl.textContent = t('showcase.totalCount') + ` ${this.allRules.length}`;
     statsEl.style.fontSize = "13px";
     statsEl.style.color = "var(--text-muted)";
     statsEl.style.marginLeft = "auto";
@@ -2388,12 +4161,27 @@ class StyleShowcaseModal extends Modal {
       const textLength = rule.text.length;
       if (this.minLength > 0 && textLength < this.minLength) return false;
       if (this.maxLength > 0 && textLength > this.maxLength) return false;
+      for (const [key, filterText] of Object.entries(this.columnFilters)) {
+        if (!filterText) continue;
+        const lowerFilter = filterText.toLowerCase();
+        let cellValue = '';
+        if (key === 'text') cellValue = rule.text;
+        else if (key === 'styleName') {
+          cellValue = rule.styleName;
+          const btnText = this.plugin.buttonTexts?.[rule.styleName] || '';
+          if (btnText) cellValue += ' ' + btnText;
+        }
+        else if (key === 'source') cellValue = rule.source;
+        else if (key === 'timestamp') cellValue = this.formatTimestamp(rule.timestamp);
+        else if (key === 'remark') cellValue = rule.remark || '';
+        if (!cellValue.toLowerCase().includes(lowerFilter)) return false;
+      }
       return true;
     });
     
     if (filteredRules.length === 0) {
       const emptyMsg = this.tableContainer.createEl("div");
-      emptyMsg.textContent = "暂无数据。请先在(主面板)样式按钮右键菜单中选择\"加入展示\"添加样式。";
+      emptyMsg.textContent = t('showcase.noData');
       emptyMsg.style.padding = "20px";
       emptyMsg.style.textAlign = "center";
       emptyMsg.style.color = "var(--text-muted)";
@@ -2432,16 +4220,18 @@ class StyleShowcaseModal extends Modal {
         styledText.style.whiteSpace = "pre-wrap";
         
         // 样式名标签
-        if (this.showStyleName) {
-          const styleTag = textRow.createEl("span");
-          styleTag.textContent = rule.styleName;
-          styleTag.style.fontSize = "10px";
-          styleTag.style.color = "var(--text-muted)";
-          styleTag.style.backgroundColor = "var(--background-secondary)";
-          styleTag.style.padding = "1px 4px";
-          styleTag.style.borderRadius = "3px";
-          styleTag.style.whiteSpace = "nowrap";
-          styleTag.style.flexShrink = "0";
+        const styleTag = textRow.createEl("span");
+        styleTag.textContent = rule.styleName;
+        styleTag.style.fontSize = "10px";
+        styleTag.style.color = "var(--text-muted)";
+        styleTag.style.backgroundColor = "var(--background-secondary)";
+        styleTag.style.padding = "1px 4px";
+        styleTag.style.borderRadius = "3px";
+        styleTag.style.whiteSpace = "nowrap";
+        styleTag.style.flexShrink = "0";
+        const btnText = this.plugin.buttonTexts?.[rule.styleName] || '';
+        if (btnText) {
+          styleTag.textContent = rule.styleName + ' / ' + btnText;
         }
         
         // 来源标签
@@ -2449,7 +4239,7 @@ class StyleShowcaseModal extends Modal {
           const sourceTag = textRow.createEl("span");
           sourceTag.textContent = rule.source;
           sourceTag.style.fontSize = "10px";
-          sourceTag.style.color = rule.source === '全局规则' ? 'var(--text-accent)' : 'var(--text-muted)';
+          sourceTag.style.color = rule.source === t('main.globalRule') ? 'var(--text-accent)' : 'var(--text-muted)';
           sourceTag.style.flexShrink = "0";
         }
         
@@ -2477,7 +4267,7 @@ class StyleShowcaseModal extends Modal {
           if (hasImage) {
             const textPart = rule.remark.replace(/!\[\[.*?\]\]/g, '').replace(/!\[.*?\]\(.*?\)/g, '').trim();
             const imgCount = (rule.remark.match(/!\[\[.*?\]\]/g) || []).length + (rule.remark.match(/!\[.*?\]\(.*?\)/g) || []).length;
-            remarkArea.textContent = textPart ? `${textPart} 📷×${imgCount}` : `📷 图片×${imgCount}`;
+            remarkArea.textContent = textPart ? `${textPart} 📷×${imgCount}` : `📷 ` + t('main.image') + `×${imgCount}`;
           } else {
             remarkArea.textContent = rule.remark;
           }
@@ -2520,11 +4310,11 @@ class StyleShowcaseModal extends Modal {
     headerRow.style.top = "0";
     
     const columns = [
-      { key: "text", text: "文本", show: true },
-      { key: "styleName", text: "样式名", show: this.showStyleName },
-      { key: "source", text: "来源", show: this.showSource },
-      { key: "timestamp", text: "时间", show: this.showTimestamp },
-      { key: "remark", text: "备注", show: this.showRemark }
+      { key: "text", text: t('showcase.text'), show: true },
+      { key: "styleName", text: t('showcase.styleName'), show: this.showStyleName },
+      { key: "source", text: t('showcase.source'), show: this.showSource },
+      { key: "timestamp", text: t('showcase.time'), show: this.showTimestamp },
+      { key: "remark", text: t('showcase.remark'), show: this.showRemark }
     ];
     
     const visibleColumns = columns.filter(col => col.show);
@@ -2544,10 +4334,42 @@ class StyleShowcaseModal extends Modal {
         const headerContent = th.createDiv();
         headerContent.style.display = "flex";
         headerContent.style.alignItems = "center";
-        headerContent.style.justifyContent = "space-between";
+        headerContent.style.gap = "2px";
         
-        // 表头文字
-        const textSpan = headerContent.createEl("span", { text: col.text });
+        // 搜索框替代表头文字
+        const searchInput = headerContent.createEl("input", { type: "text" });
+        searchInput.placeholder = col.text;
+        searchInput.value = this.columnFilters[col.key] || '';
+        searchInput.style.width = "100%";
+        searchInput.style.padding = "2px 6px";
+        searchInput.style.borderRadius = "3px";
+        searchInput.style.border = "1px solid var(--background-modifier-border)";
+        searchInput.style.fontSize = "12px";
+        searchInput.style.backgroundColor = "var(--background-primary)";
+        searchInput.style.color = "var(--text-normal)";
+        searchInput.style.outline = "none";
+        
+        searchInput.addEventListener("input", () => {
+          this.columnFilters[col.key] = searchInput.value;
+          this._activeFilterKey = col.key;
+          this._activeFilterCursor = searchInput.selectionStart;
+          this.renderTable();
+        });
+        
+        searchInput.addEventListener("click", (e) => {
+          e.stopPropagation();
+        });
+        
+        if (this._activeFilterKey === col.key) {
+          requestAnimationFrame(() => {
+            searchInput.focus();
+            if (this._activeFilterCursor != null) {
+              searchInput.setSelectionRange(this._activeFilterCursor, this._activeFilterCursor);
+            }
+          });
+          this._activeFilterKey = null;
+          this._activeFilterCursor = null;
+        }
         
         // 排序按钮 - 使用 span 替代 button，完全去掉按钮样式
         const sortBtn = headerContent.createEl("span");
@@ -2636,14 +4458,6 @@ class StyleShowcaseModal extends Modal {
     
     const tbody = table.createEl("tbody");
     
-    // 应用字数范围筛选
-    const filteredRules = this.allRules.filter(rule => {
-      const textLength = rule.text.length;
-      if (this.minLength > 0 && textLength < this.minLength) return false;
-      if (this.maxLength > 0 && textLength > this.maxLength) return false;
-      return true;
-    });
-    
     filteredRules.forEach((rule, index) => {
       const row = tbody.createEl("tr");
       row.style.backgroundColor = index % 2 === 0 ? "var(--background-primary)" : "var(--background-secondary)";
@@ -2661,7 +4475,7 @@ class StyleShowcaseModal extends Modal {
       textCell.style.borderBottom = "1px solid var(--background-modifier-border)";
       textCell.style.wordBreak = "break-word";
       textCell.style.cursor = "pointer";
-      textCell.title = "双击跳转到文档位置";
+      textCell.title = t('showcase.dblClickJump');
       
       textCell.addEventListener("dblclick", () => {
         this.jumpToText(rule);
@@ -2677,11 +4491,20 @@ class StyleShowcaseModal extends Modal {
       }
       
       if (this.showStyleName) {
-        const styleCell = row.createEl("td", { text: rule.styleName });
-        styleCell.style.padding = "8px 12px";
-        styleCell.style.borderBottom = "1px solid var(--background-modifier-border)";
-        styleCell.style.fontFamily = "monospace";
-        styleCell.style.fontSize = "12px";
+        const styleNameCell = row.createEl("td");
+        styleNameCell.style.padding = "8px 12px";
+        styleNameCell.style.borderBottom = "1px solid var(--background-modifier-border)";
+        styleNameCell.style.fontFamily = "monospace";
+        styleNameCell.style.fontSize = "12px";
+        styleNameCell.style.wordBreak = "break-all";
+        const nameSpan = styleNameCell.createEl("div", { text: rule.styleName });
+        const btnText = this.plugin.buttonTexts?.[rule.styleName] || '';
+        if (btnText) {
+          const displaySpan = styleNameCell.createEl("div", { text: btnText });
+          displaySpan.style.fontSize = "11px";
+          displaySpan.style.color = "var(--text-muted)";
+          displaySpan.style.marginTop = "2px";
+        }
       }
       
       if (this.showSource) {
@@ -2689,7 +4512,7 @@ class StyleShowcaseModal extends Modal {
         sourceCell.style.padding = "8px 12px";
         sourceCell.style.borderBottom = "1px solid var(--background-modifier-border)";
         sourceCell.style.fontSize = "12px";
-        sourceCell.style.color = rule.source === '全局规则' ? 'var(--text-accent)' : 'var(--text-muted)';
+        sourceCell.style.color = rule.source === t('main.globalRule') ? 'var(--text-accent)' : 'var(--text-muted)';
       }
       
       if (this.showTimestamp) {
@@ -2712,7 +4535,7 @@ class StyleShowcaseModal extends Modal {
           if (hasImage) {
             const textPart = rule.remark.replace(/!\[\[.*?\]\]/g, '').replace(/!\[.*?\]\(.*?\)/g, '').trim();
             const imgCount = (rule.remark.match(/!\[\[.*?\]\]/g) || []).length + (rule.remark.match(/!\[.*?\]\(.*?\)/g) || []).length;
-            remarkCell.textContent = textPart ? `${textPart} 📷×${imgCount}` : `📷 图片×${imgCount}`;
+            remarkCell.textContent = textPart ? `${textPart} 📷×${imgCount}` : `📷 ` + t('main.image') + `×${imgCount}`;
           } else {
             remarkCell.textContent = rule.remark;
           }
@@ -2728,9 +4551,24 @@ class StyleShowcaseModal extends Modal {
         const textLength = rule.text.length;
         if (this.minLength > 0 && textLength < this.minLength) return false;
         if (this.maxLength > 0 && textLength > this.maxLength) return false;
+        for (const [key, filterText] of Object.entries(this.columnFilters)) {
+          if (!filterText) continue;
+          const lowerFilter = filterText.toLowerCase();
+          let cellValue = '';
+          if (key === 'text') cellValue = rule.text;
+          else if (key === 'styleName') {
+            cellValue = rule.styleName;
+            const btnText = this.plugin.buttonTexts?.[rule.styleName] || '';
+            if (btnText) cellValue += ' ' + btnText;
+          }
+          else if (key === 'source') cellValue = rule.source;
+          else if (key === 'timestamp') cellValue = this.formatTimestamp(rule.timestamp);
+          else if (key === 'remark') cellValue = rule.remark || '';
+          if (!cellValue.toLowerCase().includes(lowerFilter)) return false;
+        }
         return true;
       }).length;
-      this.statsEl.textContent = `共 ${filteredCount} 条（总计 ${this.allRules.length} 条）`;
+      this.statsEl.textContent = t('showcase.filteredCount') + ` ${filteredCount} ` + t('showcase.totalLabel') + ` ${this.allRules.length}`;
     }
     } // end desktop else
   }
@@ -2794,7 +4632,7 @@ class EntityExtractionModal extends Modal {
     titleContainer.style.marginBottom = "20px";
     
     // 标题
-    const titleEl = titleContainer.createEl("h2", { text: "实体提取与样式应用" });
+    const titleEl = titleContainer.createEl("h2", { text: t('entity.title') });
     titleEl.style.margin = "0";
     
     // 阻止标题行滚动
@@ -2808,7 +4646,7 @@ class EntityExtractionModal extends Modal {
     opacityContainer.style.alignItems = "center";
     opacityContainer.style.gap = "8px";
     
-    const opacityLabel = opacityContainer.createEl("span", { text: "透明度: " });
+    const opacityLabel = opacityContainer.createEl("span", { text: t('main.opacity') + ": " });
     opacityLabel.style.fontSize = "14px";
     
     const opacityInput = opacityContainer.createEl("input", { type: "number", attr: { step: 5, min: 20, max: 100 } });
@@ -2817,7 +4655,7 @@ class EntityExtractionModal extends Modal {
     opacityInput.style.border = "1px solid var(--background-modifier-border)";
     opacityInput.style.borderRadius = "4px";
     opacityInput.style.fontSize = "14px";
-    opacityInput.title = "Ctrl+鼠标滚轮调整透明度";
+    opacityInput.title = t('settings.ctrlScrollOpacity');
     const defaultOpacity = Math.max(20, Math.min(100, this.plugin.settings?.entityModalOpacity || 100));
     opacityInput.value = defaultOpacity;
     
@@ -2892,7 +4730,7 @@ class EntityExtractionModal extends Modal {
     fontSizeContainer.style.alignItems = "center";
     fontSizeContainer.style.gap = "8px";
     
-    const fontSizeLabel = fontSizeContainer.createEl("span", { text: "预览字体大小: " });
+    const fontSizeLabel = fontSizeContainer.createEl("span", { text: t('settings.previewFontSize') + ': ' });
     fontSizeLabel.style.fontSize = "14px";
     
     const fontSizeInput = fontSizeContainer.createEl("input", { type: "number", attr: { step: 1 } });
@@ -2915,7 +4753,7 @@ class EntityExtractionModal extends Modal {
     widthContainer.style.alignItems = "center";
     widthContainer.style.gap = "8px";
     
-    const widthLabel = widthContainer.createEl("span", { text: "宽度: " });
+    const widthLabel = widthContainer.createEl("span", { text: t('main.width') + ": " });
     widthLabel.style.fontSize = "14px";
     
     const widthInput = widthContainer.createEl("input", { type: "number", attr: { step: 5 } });
@@ -2924,7 +4762,7 @@ class EntityExtractionModal extends Modal {
     widthInput.style.border = "1px solid var(--background-modifier-border)";
     widthInput.style.borderRadius = "4px";
     widthInput.style.fontSize = "14px";
-    widthInput.title = "Alt+鼠标滚轮调整宽度";
+    widthInput.title = t('settings.altScrollWidth');
     // 使用plugin.settings.modalWidth作为默认值
     const defaultWidth = this.plugin.settings?.modalWidth || 600;
     widthInput.value = defaultWidth;
@@ -3000,7 +4838,7 @@ class EntityExtractionModal extends Modal {
     
     // 创建加载提示
     const loadingEl = contentEl.createDiv();
-    loadingEl.textContent = "正在提取实体...";
+    loadingEl.textContent = t('entity.extracting');
     loadingEl.style.textAlign = "center";
     loadingEl.style.padding = "20px";
     
@@ -3059,14 +4897,14 @@ class EntityExtractionModal extends Modal {
       await this.renderContent();
     } catch (error) {
       console.error("实体提取错误:", error);
-      loadingEl.textContent = `提取失败: ${error.message}`;
+      loadingEl.textContent = t('main.entityExtractFailed') + ': ' + error.message;
       loadingEl.style.color = "red";
     }
   }
 
   async extractEntities() {
     if (!this.selectedText || !this.selectedText.trim()) {
-      throw new Error("请先选中要提取实体的文本");
+      throw new Error(t('entity.selectTextFirst'));
     }
     
     // 构建提示词
@@ -3210,13 +5048,13 @@ ${this.selectedText}
     entitiesSection.style.marginBottom = "20px";
     entitiesSection.style.flexShrink = "0"; // 不允许收缩
     
-    const entitiesTitle = entitiesSection.createEl("h3", { text: "提取的实体" });
+    const entitiesTitle = entitiesSection.createEl("h3", { text: t('entity.extractedEntities') });
     entitiesTitle.style.marginBottom = "10px";
     entitiesTitle.style.display = "inline";
     
     // 添加实体名称输入框
     const entityNameInput = entitiesSection.createEl("input", { type: "text" });
-    entityNameInput.placeholder = "输入实体名称，按Enter更新";
+    entityNameInput.placeholder = t('entity.inputEntityName');
     entityNameInput.style.marginLeft = "15px";
     entityNameInput.style.padding = "6px 10px";
     entityNameInput.style.border = "1px solid var(--background-modifier-border)";
@@ -3383,7 +5221,7 @@ ${this.selectedText}
         
         const newName = entityNameInput.value.trim();
         if (!newName) {
-          new Notice("请输入实体名称");
+          new Notice(t('main.inputEntityName'));
           return;
         }
         
@@ -3485,7 +5323,7 @@ ${this.selectedText}
               }
             }
             
-            new Notice(`实体名称已更新为: ${newName}`);
+            new Notice(t('main.entityNameUpdated') + ': ' + newName);
           }
         } else {
           // 没有选中实体时，可以添加新实体
@@ -3685,7 +5523,7 @@ ${this.selectedText}
           // 自动选中新添加的实体
           entityBtn.click();
           
-          new Notice(`已添加新实体: ${newName}`);
+          new Notice(t('main.entityAdded') + ': ' + newName);
         }
       }
     });
@@ -3933,7 +5771,7 @@ ${this.selectedText}
     stylesSection.style.overflowX = "hidden"; // 禁止横向滚动
     stylesSection.style.minHeight = "100px"; // 设置最小高度
     
-    const stylesTitle = stylesSection.createEl("h3", { text: "角标为0的样式" });
+    const stylesTitle = stylesSection.createEl("h3", { text: t('entity.stylesWithZeroCount') });
     stylesTitle.style.marginBottom = "10px";
     
     const stylesContainer = stylesSection.createDiv();
@@ -3955,7 +5793,7 @@ ${this.selectedText}
     // 渲染样式按钮
     this.angle0Styles.forEach(style => {
       const styleBtn = stylesContainer.createEl("span");
-      styleBtn.textContent = "预览";
+      styleBtn.textContent = t('entity.preview');
       styleBtn.style.display = "inline-flex";
       styleBtn.style.cursor = "pointer";
       styleBtn.style.margin = "2px 4px";
@@ -3986,7 +5824,7 @@ ${this.selectedText}
               );
               
               if (existingRule) {
-                new Notice(`全局规则中已存在 "${entityName}" → "${className}"`);
+                new Notice(t('main.globalRuleExists'));
               } else {
                 // 添加到全局规则
                 this.plugin.globalRules.push({
@@ -4003,14 +5841,14 @@ ${this.selectedText}
                 this.plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
                 this.plugin.refreshCurrentView();
                 
-                new Notice(`已添加全局规则: "${entityName}" → "${className}"`);
+                new Notice(t('main.globalRuleAdded'));
               }
             } catch (err) {
               console.error('添加全局规则失败:', err);
-              new Notice('添加全局规则失败: ' + err.message);
+              new Notice(t('main.globalRuleAddFailed') + ': ' + err.message);
             }
           } else {
-            new Notice('请先选择一个实体');
+            new Notice(t('main.selectEntity'));
           }
           e.preventDefault();
           return;
@@ -4053,12 +5891,12 @@ ${this.selectedText}
           await this.applyStylesToDocument(true); // 只更新选中的实体
           
           // 显示反馈
-          new Notice(`已为 "${this.selectedEntity.name}" 分配样式 "${style.className}"`);
+          new Notice(t('main.entityStyleAssigned'));
           
           // 清除选中状态，等待选择下一个实体
           this.selectedEntity = null;
         } else {
-          new Notice("请先选择一个实体");
+          new Notice(t('main.selectEntity'));
         }
       });
     });
@@ -4070,7 +5908,7 @@ ${this.selectedText}
     buttonContainer.style.gap = "10px";
     
     const cancelBtn = buttonContainer.createEl("button");
-    cancelBtn.textContent = "关闭";
+    cancelBtn.textContent = t('main.close');
     cancelBtn.style.padding = "8px 16px";
     cancelBtn.style.border = "1px solid var(--background-modifier-border)";
     cancelBtn.style.borderRadius = "4px";
@@ -4084,7 +5922,7 @@ ${this.selectedText}
 
   applyStyles() {
     if (this.entityStyleMap.size === 0) {
-      new Notice("请先为实体分配样式");
+      new Notice(t('main.assignStyleFirst'));
       return;
     }
     
@@ -4093,7 +5931,7 @@ ${this.selectedText}
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     
     if (!activeView?.editor) {
-      new Notice("请先打开一个Markdown文件");
+      new Notice(t('main.openMdFile'));
       return;
     }
     
@@ -4113,11 +5951,11 @@ ${this.selectedText}
       // 更新编辑器内容
       activeView.editor.setValue(newContent);
       
-      new Notice(`已成功为 ${this.entityStyleMap.size} 个实体应用样式`);
+      new Notice(t('main.entityStyleApplied'));
       this.close();
     } catch (error) {
       console.error("应用样式错误:", error);
-      new Notice(`应用样式失败: ${error.message}`);
+      new Notice(t('main.entityStyleApplyFailed') + ': ' + error.message);
     }
   }
   
@@ -4277,7 +6115,7 @@ ${this.selectedText}
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     
     if (!activeView?.editor) {
-      new Notice("请先打开一个Markdown文件");
+      new Notice(t('main.openMdFile'));
       return;
     }
     
@@ -4407,10 +6245,10 @@ ${this.selectedText}
       // 刷新视图（只刷新一次）
       this.plugin.refreshCurrentView();
       
-      new Notice(`已成功为 ${addedCount} 个实体添加样式规则，更新了 ${updatedCount} 个规则`);
+      new Notice(t('main.entityRulesAdded'));
     } catch (error) {
       console.error("应用样式错误:", error);
-      new Notice(`应用样式失败: ${error.message}`);
+      new Notice(t('main.entityStyleApplyFailed') + ': ' + error.message);
     }
   }
 
@@ -4503,7 +6341,7 @@ class CSSEditorModal extends Modal {
     contentEl.style.overflowY = "auto";
     
     // 标题
-    const titleEl = contentEl.createEl("h2", { text: `编辑样式: .${this.className}` });
+    const titleEl = contentEl.createEl("h2", { text: t('cssEditor.editStyle') + ` .${this.className}` });
     titleEl.style.margin = "0 0 15px 0";
     titleEl.style.fontSize = "18px";
     titleEl.style.color = "#333";
@@ -4524,7 +6362,7 @@ class CSSEditorModal extends Modal {
     }
     
     // 将样式预览文本改为"预览"，并移除CSS样式代码标题
-    const previewText = editorSection.createEl("span", { text: "预览" });
+    const previewText = editorSection.createEl("span", { text: t('entity.preview') });
     previewText.style.marginBottom = "8px";
     previewText.style.fontSize = "16px";
     previewText.style.display = "inline-block";
@@ -4595,7 +6433,7 @@ class CSSEditorModal extends Modal {
     const buttonTextSection = contentEl.createDiv();
     buttonTextSection.style.marginBottom = "12px";
     
-    const buttonTextLabel = buttonTextSection.createEl("label", { text: "按钮文字 (留空则显示「示例」或选中文字):" });
+    const buttonTextLabel = buttonTextSection.createEl("label", { text: t('cssEditor.buttonText') });
     buttonTextLabel.style.display = "block";
     buttonTextLabel.style.marginBottom = "4px";
     buttonTextLabel.style.fontSize = "13px";
@@ -4604,7 +6442,7 @@ class CSSEditorModal extends Modal {
     // 创建按钮文字输入框
     const buttonTextInput = buttonTextSection.createEl("input");
     buttonTextInput.type = "text";
-    buttonTextInput.placeholder = "输入按钮显示的文字";
+    buttonTextInput.placeholder = t('cssEditor.inputButtonText');
     buttonTextInput.style.width = "100%";
     buttonTextInput.style.padding = "6px";
     buttonTextInput.style.border = "1px solid #ccc";
@@ -4643,7 +6481,7 @@ class CSSEditorModal extends Modal {
     aiSection.style.borderRadius = "4px";
     aiSection.style.backgroundColor = "#f0f8ff";
     
-    const aiLabel = aiSection.createEl("h3", { text: "AI 样式优化" });
+    const aiLabel = aiSection.createEl("h3", { text: t('cssEditor.aiStyleOptimize') });
     aiLabel.style.margin = "0 0 6px 0";
     aiLabel.style.fontSize = "13px";
     aiLabel.style.color = "#0066cc";
@@ -4671,12 +6509,12 @@ class CSSEditorModal extends Modal {
     
     if (!hasAvailableAI) {
       // 添加红字提示（可点击链接）
-      const noAIWarning = aiSection.createEl("span", { text: "  当前无可用AI，" });
+      const noAIWarning = aiSection.createEl("span", { text: '  ' + t('cssEditor.noAiWarning') });
       noAIWarning.style.color = "red";
       noAIWarning.style.fontSize = "12px";
       noAIWarning.style.marginLeft = "8px";
       
-      const settingsLink = aiSection.createEl("a", { text: "到设置中配置" });
+      const settingsLink = aiSection.createEl("a", { text: t('cssEditor.goToSettings') });
       settingsLink.style.color = "red";
       settingsLink.style.fontSize = "12px";
       settingsLink.style.textDecoration = "underline";
@@ -4696,7 +6534,7 @@ class CSSEditorModal extends Modal {
     
     // 修改要求输入框
     const aiPromptInput = aiSection.createEl("textarea");
-    aiPromptInput.placeholder = "请输入您的样式修改要求，例如：'将背景色改为浅蓝色，添加圆角效果'";
+    aiPromptInput.placeholder = t('cssEditor.inputModifyReq');
     aiPromptInput.style.width = "100%";
     aiPromptInput.style.height = "60px"; // 减小高度
     aiPromptInput.style.fontFamily = "'Microsoft YaHei', sans-serif";
@@ -4708,7 +6546,7 @@ class CSSEditorModal extends Modal {
     aiPromptInput.style.backgroundColor = "white";
     
     // AI发送按钮
-    const aiSendButton = aiSection.createEl("button", { text: "发送到AI优化" });
+    const aiSendButton = aiSection.createEl("button", { text: t('cssEditor.sendToAiOptimize') });
     aiSendButton.style.marginTop = "6px";
     aiSendButton.style.backgroundColor = "#007bff";
     aiSendButton.style.color = "white";
@@ -4725,7 +6563,7 @@ class CSSEditorModal extends Modal {
         const userPrompt = aiPromptInput.value.trim();
         
         if (!userPrompt) {
-          new Notice("请输入样式修改要求");
+          new Notice(t('main.inputStyleModification'));
           return;
         }
         
@@ -4739,7 +6577,7 @@ ${currentCss}
 请仅返回优化后的CSS代码，不要包含其他解释或说明。`;
         
         // 显示加载提示
-        aiSendButton.textContent = "优化中...";
+        aiSendButton.textContent = t('cssEditor.optimizing');
         aiSendButton.disabled = true;
         
         // 获取完整的插件实例
@@ -4793,17 +6631,17 @@ ${currentCss}
         textArea.dispatchEvent(inputEvent);
         
         // 显示成功提示
-        new Notice("AI样式优化完成");
+        new Notice(t('main.aiStyleOptimized'));
         
         // 恢复按钮状态
-        aiSendButton.textContent = "发送到AI优化";
+        aiSendButton.textContent = t('cssEditor.sendToAiOptimize');
         aiSendButton.disabled = false;
       } catch (error) {
         console.error("AI优化出错:", error);
-        new Notice(`AI优化失败: ${error.message}`);
+        new Notice(t('main.aiOptimizeFailed') + ': ' + error.message);
         
         // 恢复按钮状态
-        aiSendButton.textContent = "发送到AI优化";
+        aiSendButton.textContent = t('cssEditor.sendToAiOptimize');
         aiSendButton.disabled = false;
       }
     });
@@ -4818,7 +6656,7 @@ ${currentCss}
     buttonSection.style.borderTop = "1px solid #eee";
     
     // 重置按钮
-    const resetBtn = buttonSection.createEl("button", { text: "重置" });
+    const resetBtn = buttonSection.createEl("button", { text: t('cssEditor.reset') });
     resetBtn.style.padding = "8px 16px";
     resetBtn.style.border = "1px solid #6c757d";
     resetBtn.style.borderRadius = "4px";
@@ -4833,7 +6671,7 @@ ${currentCss}
     });
     
     // 取消按钮
-    const cancelBtn = buttonSection.createEl("button", { text: "取消" });
+    const cancelBtn = buttonSection.createEl("button", { text: t('main.cancel') });
     cancelBtn.style.padding = "8px 16px";
     cancelBtn.style.border = "1px solid #6c757d";
     cancelBtn.style.borderRadius = "4px";
@@ -4847,7 +6685,7 @@ ${currentCss}
     });
     
     // 保存按钮
-    const saveBtn = buttonSection.createEl("button", { text: "保存" });
+    const saveBtn = buttonSection.createEl("button", { text: t('main.save') });
     saveBtn.style.padding = "8px 16px";
     saveBtn.style.border = "1px solid #007bff";
     saveBtn.style.borderRadius = "4px";
@@ -4867,7 +6705,7 @@ ${currentCss}
         console.error("保存样式失败:", error);
         // 显示错误提示
         const errorDiv = contentEl.createDiv();
-        errorDiv.textContent = "保存失败: " + error.message;
+        errorDiv.textContent = t('main.saveFailed') + ': ' + error.message;
         errorDiv.style.color = "#dc3545";
         errorDiv.style.backgroundColor = "#f8d7da";
         errorDiv.style.border = "1px solid #f5c6cb";
@@ -4941,11 +6779,11 @@ ${currentCss}
     // 添加系统提示（只在第一次时添加）
     const systemPrompt = {
       role: "system",
-      content: `你是一个CSS样式生成专家，请为正则表达式高亮功能创建CSS样式。请仅返回CSS代码，包括有效的类选择器和样式规则，不要包含其他解释或说明。示例格式：.my-custom-style { background-color: #ffeb3b; color: #333; padding: 2px 4px; border-radius: 3px; }`
+      content: t('ai.cssExpertPrompt')
     };
     conversationHistory.push(systemPrompt);
     
-    const titleEl = modal.contentEl.createEl("h2", { text: `添加新样式到 "${category}"` });
+    const titleEl = modal.contentEl.createEl("h2", { text: t('main.addNewStyleTo') + ` "${category}"` });
     titleEl.style.margin = "0 0 15px 0";
     titleEl.style.fontSize = "18px";
     titleEl.style.color = "#333";
@@ -5028,7 +6866,7 @@ ${currentCss}
           previewWrapper.style.gap = '8px';
           
           // 预览文本 - 无框设计
-          const previewSpan = previewWrapper.createEl('span', { text: '预览' });
+          const previewSpan = previewWrapper.createEl('span', { text: t('entity.preview') });
           previewSpan.style.display = 'inline-block';
           previewSpan.style.padding = '2px 8px';
           previewSpan.style.borderRadius = '3px';
@@ -5070,7 +6908,7 @@ ${currentCss}
     aiSection.style.borderRadius = "4px";
     aiSection.style.backgroundColor = "#f0f8ff";
     
-    const aiLabel = aiSection.createEl("h3", { text: "AI 样式生成" });
+    const aiLabel = aiSection.createEl("h3", { text: t('cssEditor.aiStyleGenerate') });
     aiLabel.style.margin = "0 0 6px 0";
     aiLabel.style.fontSize = "13px";
     aiLabel.style.color = "#0066cc";
@@ -5082,12 +6920,12 @@ ${currentCss}
     
     if (!hasAvailableAI) {
       // 添加红字提示（可点击链接）
-      const noAIWarning = aiSection.createEl("span", { text: "  当前无可用AI，" });
+      const noAIWarning = aiSection.createEl("span", { text: '  ' + t('cssEditor.noAiWarning') });
       noAIWarning.style.color = "red";
       noAIWarning.style.fontSize = "12px";
       noAIWarning.style.marginLeft = "8px";
       
-      const settingsLink = aiSection.createEl("a", { text: "到设置中配置" });
+      const settingsLink = aiSection.createEl("a", { text: t('cssEditor.goToSettings') });
       settingsLink.style.color = "red";
       settingsLink.style.fontSize = "12px";
       settingsLink.style.textDecoration = "underline";
@@ -5107,7 +6945,7 @@ ${currentCss}
     
     // 样式需求输入框
     const aiPromptInput = aiSection.createEl("textarea");
-    aiPromptInput.placeholder = "请输入您想要的样式效果，例如：'创建5组荧光高亮CSS样式，模拟手写笔记马克笔划线效果,颜色覆盖文字下半部分'";
+    aiPromptInput.placeholder = t('cssEditor.inputStyleEffect');
     aiPromptInput.style.width = "100%";
     aiPromptInput.style.height = "60px";
     aiPromptInput.style.fontFamily = "'Microsoft YaHei', sans-serif";
@@ -5119,7 +6957,7 @@ ${currentCss}
     aiPromptInput.style.backgroundColor = "white";
     
     // AI生成按钮
-    const aiGenerateButton = aiSection.createEl("button", { text: "生成样式" });
+    const aiGenerateButton = aiSection.createEl("button", { text: t('cssEditor.generateStyle') });
     aiGenerateButton.style.marginTop = "6px";
     aiGenerateButton.style.backgroundColor = "#007bff";
     aiGenerateButton.style.color = "white";
@@ -5135,12 +6973,12 @@ ${currentCss}
         const userPrompt = aiPromptInput.value.trim();
         
         if (!userPrompt) {
-          new Notice("请输入样式需求");
+          new Notice(t('main.inputStyleRequirement'));
           return;
         }
         
         // 显示加载提示
-        aiGenerateButton.textContent = "生成中...";
+        aiGenerateButton.textContent = t('cssEditor.generating');
         aiGenerateButton.disabled = true;
         
         // 获取完整的插件实例
@@ -5259,7 +7097,7 @@ ${currentCss}
             previewWrapper.style.gap = '8px';
             
             // 预览文本 - 无框设计
-            const previewSpan = previewWrapper.createEl('span', { text: '预览' });
+            const previewSpan = previewWrapper.createEl('span', { text: t('entity.preview') });
             previewSpan.style.display = 'inline-block';
             previewSpan.style.padding = '2px 8px';
             previewSpan.style.borderRadius = '3px';
@@ -5281,17 +7119,17 @@ ${currentCss}
         }
         
         // 显示成功提示
-        new Notice("AI样式生成完成");
+        new Notice(t('main.aiStyleGenerated'));
         
         // 恢复按钮状态
-        aiGenerateButton.textContent = "生成样式";
+        aiGenerateButton.textContent = t('cssEditor.generateStyle');
         aiGenerateButton.disabled = false;
       } catch (error) {
         console.error("AI生成出错:", error);
-        new Notice(`AI生成失败: ${error.message}`);
+        new Notice(t('main.aiGenerateFailed') + ': ' + error.message);
         
         // 恢复按钮状态
-        aiGenerateButton.textContent = "生成样式";
+        aiGenerateButton.textContent = t('cssEditor.generateStyle');
         aiGenerateButton.disabled = false;
       }
     });
@@ -5308,7 +7146,7 @@ ${currentCss}
    // buttonContainer.style.borderTop = "1px solid #eee";
     
     // 取消按钮
-    const cancelBtn = buttonContainer.createEl("button", { text: "取消" });
+    const cancelBtn = buttonContainer.createEl("button", { text: t('main.cancel') });
     cancelBtn.style.padding = "8px 16px";
     cancelBtn.style.border = "1px solid #6c757d";
     cancelBtn.style.borderRadius = "4px";
@@ -5322,7 +7160,7 @@ ${currentCss}
     });
     
     // 添加按钮
-    const addBtn = buttonContainer.createEl("button", { text: "添加样式" });
+    const addBtn = buttonContainer.createEl("button", { text: t('cssEditor.addStyle') });
     addBtn.style.padding = "8px 16px";
     addBtn.style.border = "1px solid #28a745";
     addBtn.style.borderRadius = "4px";
@@ -5380,7 +7218,7 @@ ${currentCss}
           
           // 检查类名是否已存在
           if (existingClassNames.includes(className)) {
-            new Notice(`类名 ${className} 已存在，将跳过`);
+            new Notice(t('main.classNameExists'));
             continue;
           }
           
@@ -5404,9 +7242,9 @@ ${currentCss}
         // 显示成功消息
         if (selectedStyles.length === 1) {
           const { className } = selectedStyles[0];
-          this.showSuccessMessage(`样式 .${className} 已成功添加到 "${category}" 分类！`);
+          this.showSuccessMessage(t('main.styleAddedToCategorySuccess') + ` .${className} ` + t('main.category') + ` "${category}"`);
         } else {
-          this.showSuccessMessage(`成功添加 ${selectedStyles.length} 个样式到 "${category}" 分类！`);
+          this.showSuccessMessage(t('main.stylesAddedToCategory') + ` ${selectedStyles.length} ` + t('main.category') + ` "${category}"`);
         }
         
         modal.close();
@@ -5702,7 +7540,7 @@ ${currentCss}
       // 如果出错，尝试最简单的刷新方法
       if (this.contentEl) {
         console.log('refreshModalContent: 执行备用刷新');
-        this.contentEl.textContent = '刷新中...';
+        this.contentEl.textContent = t('common.refreshing');
       }
     }
   }
@@ -5775,7 +7613,7 @@ ${currentCss}
     
     // 创建标题
     const title = document.createElement('h3');
-    title.textContent = '感谢支持！';
+    title.textContent = t('donate.thanks');
     title.style.cssText = `
       margin: 0 0 15px 0;
       text-align: center;
@@ -5786,7 +7624,7 @@ ${currentCss}
     
     // 创建图片元素
     const image = document.createElement('img');
-    image.alt = '捐赠二维码';
+    image.alt = t('main.donateQrCode');
     image.style.cssText = `
       width: 100%;
       height: auto;
@@ -5797,7 +7635,7 @@ ${currentCss}
     
     // 创建说明文字
     const description = document.createElement('p');
-    description.textContent = '如有使用问题或建议，欢迎联系 wx: jtugqivi';
+    description.textContent = t('donate.contact');
     description.style.cssText = `
       margin: 0;
       text-align: center;
@@ -5926,7 +7764,7 @@ function showDonateImage() {
 
   // 创建标题
   const title = document.createElement('h3');
-  title.textContent = '感谢支持！';
+  title.textContent = t('donate.thanks');
   title.style.cssText = `
     margin: 0 0 15px 0;
     text-align: center;
@@ -5938,7 +7776,7 @@ function showDonateImage() {
   // 创建图片元素
   const image = document.createElement('img');
   image.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOwAAADmCAYAAADWSGlyAABNr0lEQVR4nO19CZwdVZn9qXr7e70vSWcjIYSQGCBsBmQJmyjIIKDohBFlVRQVR/yDiiIDIjOIjOigwsgIyChuLMIAgqIEAQmbLAkBEiB70nv36+63v6r/79yq6u5U3Rfr5fVrupN7/JUJlftu3bpVX917v3u+82mmaZpQUFCYFNDf7QYoKCj4hzJYBYVJBGWwCgqTCMpgFRQmEZTBKihMIiiDVVCYRFAGq6AwiaAMVkFhEiFYyY+PPfZYTEQsWLAAP/nJTzzn/+3f/g3Lly8f8+udffbZOOecczznjzvuOPjlpfzud79Dc3Pzduf++Mc/4tprr62obYsWLcJNN93kOX/FFVfgySef3O7c9OnT8Ytf/KKi69122234+c9/7jn/l7/8BeOFFStW4Gtf+xomIkq9K+NisI8//jgmIlKplPT8qlWrqtLmo48+WnqeHwfDMHzVkcvlPOfa29srbq+sXmLlypWeuvfaay9Uinfeeeddfy96enre9TaU+674hZoSKyhMIiiDVVCYRFAGq6AwiVDRGlaGWbNmYc6cORgvvPzyy0gmk77KLly4EEcdddR25zKZDJ577jlfv9d1HUcccYT03/761796zh155JEep9OmTZvEOk/mKHE7nXp7ez3tLRd77LGHtG1Tp0711D1jxgzf9RaLRTz99NOe8xs2bJCWl7WhHEyZMgX77LNPRXXst99+aGhowHiAvounnnpq7Cs2KwB/7j6+9rWvmYVCYdyOo446ytOGJUuWSNtbLBY9v1+7dq30PmRHLBaTtuHKK680A4GA58jlcp6y119/vbRuXdc9vz/rrLMq7p+//vWv0rbdfffd0vJ+0d/fL61X0zTp/cnKlnOce+65vtv20EMPSdvwxz/+cdzey1QqJW0D35VKMOYjLEehQCCA8YKmaWW1zY1y2sprlSrPEUdWt/uasjYQpbzJlfYl2yxr247uxS9k9Y5FWRn8etsnyrtZreuM+RpWxcMrKFQP+rs54ikoKJQHNcIqKEwiBMdrhP3kJz+JoaGhna73kEMOweWXX15By4Drr78ef/vb33yxoj796U/jpJNOGvN1yYc//GHsueeenvPnnXce+vr6PEypj3zkI56yN9xwg7SOUjTNe+65x3OeTKA777xzu3NtbW34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'; // 占位符，用户需要替换为实际的base64数据
-  image.alt = '捐赠二维码';
+  image.alt = t('main.donateQrCode');
   image.style.cssText = `
     width: 100%;
     height: auto;
@@ -5949,7 +7787,7 @@ function showDonateImage() {
   
   // 创建说明文字
   const description = document.createElement('p');
-  description.textContent = '如有使用问题或建议，欢迎联系 wx: jtugqivi';
+  description.textContent = t('donate.contact');
   description.style.cssText = `
     margin: 0;
     text-align: center;
@@ -6133,11 +7971,11 @@ class AddRegexRuleModal extends Modal {
     // 添加系统提示（只在第一次时添加）
     const systemPrompt = {
       role: "system",
-      content: `你是一个CSS样式生成专家，请为正则表达式高亮功能创建CSS样式。请仅返回CSS代码，包括有效的类选择器和样式规则，不要包含其他解释或说明。示例格式：.my-custom-style { background-color: #ffeb3b; color: #333; padding: 2px 4px; border-radius: 3px; }`
+      content: t('ai.cssExpertPrompt')
     };
     conversationHistory.push(systemPrompt);
     
-    const titleEl = modal.contentEl.createEl("h2", { text: `添加新样式到 "${category}"` });
+    const titleEl = modal.contentEl.createEl("h2", { text: t('main.addNewStyleTo') + ` "${category}"` });
     titleEl.style.margin = "0 0 15px 0";
     titleEl.style.fontSize = "18px";
     titleEl.style.color = "#333";
@@ -6220,7 +8058,7 @@ class AddRegexRuleModal extends Modal {
           previewWrapper.style.gap = '8px';
           
           // 预览文本 - 无框设计
-          const previewSpan = previewWrapper.createEl('span', { text: '预览' });
+          const previewSpan = previewWrapper.createEl('span', { text: t('entity.preview') });
           previewSpan.style.display = 'inline-block';
           previewSpan.style.padding = '2px 8px';
           previewSpan.style.borderRadius = '3px';
@@ -6262,7 +8100,7 @@ class AddRegexRuleModal extends Modal {
     aiSection.style.borderRadius = "4px";
     aiSection.style.backgroundColor = "#f0f8ff";
     
-    const aiLabel = aiSection.createEl("h3", { text: "AI 样式生成" });
+    const aiLabel = aiSection.createEl("h3", { text: t('cssEditor.aiStyleGenerate') });
     aiLabel.style.margin = "0 0 6px 0";
     aiLabel.style.fontSize = "13px";
     aiLabel.style.color = "#0066cc";
@@ -6274,7 +8112,7 @@ class AddRegexRuleModal extends Modal {
     
     if (!hasAvailableAI) {
       // 添加红字提示
-      const noAIWarning = aiSection.createEl("span", { text: "  当前无可用AI，到设置中配置" });
+      const noAIWarning = aiSection.createEl("span", { text: '  ' + t('cssEditor.noAiWarning') + t('cssEditor.goToSettings') });
       noAIWarning.style.color = "red";
       noAIWarning.style.fontSize = "12px";
       noAIWarning.style.marginLeft = "8px";
@@ -6282,7 +8120,7 @@ class AddRegexRuleModal extends Modal {
     
     // 样式需求输入框
     const aiPromptInput = aiSection.createEl("textarea");
-    aiPromptInput.placeholder = "请输入您想要的样式效果，例如：'创建5组荧光高亮CSS样式，模拟手写笔记马克笔划线效果,颜色覆盖文字下半部分'";
+    aiPromptInput.placeholder = t('cssEditor.inputStyleEffect');
     aiPromptInput.style.width = "100%";
     aiPromptInput.style.height = "60px";
     aiPromptInput.style.fontFamily = "'Microsoft YaHei', sans-serif";
@@ -6294,7 +8132,7 @@ class AddRegexRuleModal extends Modal {
     aiPromptInput.style.backgroundColor = "white";
     
     // AI生成按钮
-    const aiGenerateButton = aiSection.createEl("button", { text: "生成样式" });
+    const aiGenerateButton = aiSection.createEl("button", { text: t('cssEditor.generateStyle') });
     aiGenerateButton.style.marginTop = "6px";
     aiGenerateButton.style.backgroundColor = "#007bff";
     aiGenerateButton.style.color = "white";
@@ -6310,12 +8148,12 @@ class AddRegexRuleModal extends Modal {
         const userPrompt = aiPromptInput.value.trim();
         
         if (!userPrompt) {
-          new Notice("请输入样式需求");
+          new Notice(t('main.inputStyleRequirement'));
           return;
         }
         
         // 显示加载提示
-        aiGenerateButton.textContent = "生成中...";
+        aiGenerateButton.textContent = t('cssEditor.generating');
         aiGenerateButton.disabled = true;
         
         // 获取完整的插件实例
@@ -6434,7 +8272,7 @@ class AddRegexRuleModal extends Modal {
             previewWrapper.style.gap = '8px';
             
             // 预览文本 - 无框设计
-            const previewSpan = previewWrapper.createEl('span', { text: '预览' });
+            const previewSpan = previewWrapper.createEl('span', { text: t('entity.preview') });
             previewSpan.style.display = 'inline-block';
             previewSpan.style.padding = '2px 8px';
             previewSpan.style.borderRadius = '3px';
@@ -6456,17 +8294,17 @@ class AddRegexRuleModal extends Modal {
         }
         
         // 显示成功提示
-        new Notice("AI样式生成完成");
+        new Notice(t('main.aiStyleGenerated'));
         
         // 恢复按钮状态
-        aiGenerateButton.textContent = "生成样式";
+        aiGenerateButton.textContent = t('cssEditor.generateStyle');
         aiGenerateButton.disabled = false;
       } catch (error) {
         console.error("AI生成出错:", error);
-        new Notice(`AI生成失败: ${error.message}`);
+        new Notice(t('main.aiGenerateFailed') + ': ' + error.message);
         
         // 恢复按钮状态
-        aiGenerateButton.textContent = "生成样式";
+        aiGenerateButton.textContent = t('cssEditor.generateStyle');
         aiGenerateButton.disabled = false;
       }
     });
@@ -6483,7 +8321,7 @@ class AddRegexRuleModal extends Modal {
     buttonContainer.style.borderTop = "1px solid #eee";
     
     // 取消按钮
-    const cancelBtn = buttonContainer.createEl("button", { text: "取消" });
+    const cancelBtn = buttonContainer.createEl("button", { text: t('main.cancel') });
     cancelBtn.style.padding = "8px 16px";
     cancelBtn.style.border = "1px solid #6c757d";
     cancelBtn.style.borderRadius = "4px";
@@ -6497,7 +8335,7 @@ class AddRegexRuleModal extends Modal {
     });
     
     // 添加按钮
-    const addBtn = buttonContainer.createEl("button", { text: "添加样式" });
+    const addBtn = buttonContainer.createEl("button", { text: t('cssEditor.addStyle') });
     addBtn.style.padding = "8px 16px";
     addBtn.style.border = "1px solid #28a745";
     addBtn.style.borderRadius = "4px";
@@ -6557,7 +8395,7 @@ class AddRegexRuleModal extends Modal {
           
           // 检查类名是否已存在
           if (existingClassNames.includes(className)) {
-            new Notice(`类名 ${className} 已存在，将跳过`);
+            new Notice(t('main.classNameExists'));
             continue;
           }
           
@@ -6574,7 +8412,7 @@ class AddRegexRuleModal extends Modal {
         }
         
         if (addedCount === 0) {
-          this.showError(modal.contentEl, "没有可添加的新样式");
+          this.showError(modal.contentEl, t('main.noNewStyleToAdd'));
           return;
         }
         
@@ -6587,9 +8425,9 @@ class AddRegexRuleModal extends Modal {
         // 显示成功消息
         if (addedCount === 1) {
           const { className } = selectedStyles[0];
-          this.showSuccessMessage(`样式 .${className} 已成功添加到 "${category}" 分类！`);
+          this.showSuccessMessage(t('main.styleAddedToCategorySuccess') + ` .${className} ` + t('main.category') + ` "${category}"`);
         } else {
-          this.showSuccessMessage(`成功添加 ${addedCount} 个样式到 "${category}" 分类！`);
+          this.showSuccessMessage(t('main.stylesAddedToCategory') + ` ${addedCount} ` + t('main.category') + ` "${category}"`);
         }
         
         modal.close();
@@ -6765,6 +8603,29 @@ class AddRegexRuleModal extends Modal {
     mainTitleContainer.style.flexShrink = "1";
     mainTitleContainer.style.minWidth = "0";
     
+    // 创建语言切换按钮
+    const langSwitch = mainTitleContainer.createEl('span');
+    langSwitch.style.cursor = 'pointer';
+    langSwitch.style.marginRight = '6px';
+    langSwitch.style.userSelect = 'none';
+    langSwitch.style.flexShrink = '0';
+    langSwitch.style.lineHeight = '1';
+    const updateLangSwitch = () => {
+      langSwitch.textContent = _currentLang === 'zh' ? 'CN' : 'EN';
+      langSwitch.className = _currentLang === 'zh' ? 'lang-zh' : 'lang-en';
+      langSwitch.title = _currentLang === 'zh' ? t('main.switchToEn') : t('main.switchToZh');
+    };
+    updateLangSwitch();
+    langSwitch.addEventListener('click', () => {
+      _currentLang = _currentLang === 'zh' ? 'en' : 'zh';
+      if (this.plugin) {
+        this.plugin.settings.language = _currentLang;
+        this.plugin.saveData(this.plugin.settings);
+      }
+      updateLangSwitch();
+      new Notice(t('main.langSwitchNotice'));
+    });
+    
     // 创建标题并设置为inline显示
     const pluginVersion = this.plugin && this.plugin.manifest ? this.plugin.manifest.version : '';
     const titleText = pluginVersion ? `regex css highlighter v${pluginVersion}` : "regex css highlighter";
@@ -6784,7 +8645,7 @@ class AddRegexRuleModal extends Modal {
     
     // 创建"打开插件位置"链接
     const openPluginLink = mainTitleContainer.createEl('span');
-    openPluginLink.textContent = '打开插件位置';
+    openPluginLink.textContent = t('main.openPluginLocation');
     openPluginLink.style.padding = '0 4px';
     openPluginLink.style.fontSize = '12px';
     openPluginLink.style.color = '#0066cc';
@@ -6808,7 +8669,7 @@ class AddRegexRuleModal extends Modal {
       } catch (error) {
         console.error('打开插件位置失败:', error);
         const { Notice } = require('obsidian');
-        new Notice('无法打开插件位置，请检查控制台获取详细信息。');
+        new Notice(t('main.cannotOpenPluginLocation'));
       }
     });
     
@@ -6828,7 +8689,7 @@ class AddRegexRuleModal extends Modal {
     opacityContainer.style.gap = "8px";
     if (!_isDesktop) opacityContainer.style.display = "none"; // 手机端隐藏透明度设置
     
-    const opacityLabel = opacityContainer.createEl("span", { text: "透明度: " });
+    const opacityLabel = opacityContainer.createEl("span", { text: t('main.opacity') + ": " });
     opacityLabel.style.fontSize = "14px";
     
     const opacityInput = opacityContainer.createEl("input", { type: "number", attr: { step: 5, min: 20, max: 100 } });
@@ -6837,7 +8698,7 @@ class AddRegexRuleModal extends Modal {
     opacityInput.style.border = "1px solid var(--background-modifier-border)";
     opacityInput.style.borderRadius = "4px";
     opacityInput.style.fontSize = "14px";
-    opacityInput.title = "Ctrl+鼠标滚轮调整透明度";
+    opacityInput.title = t('settings.ctrlScrollOpacity');
     const defaultOpacity = Math.max(20, Math.min(100, this.plugin.settings?.mainModalOpacity || 100));
     opacityInput.value = defaultOpacity;
     
@@ -6912,7 +8773,7 @@ class AddRegexRuleModal extends Modal {
     widthContainer.style.gap = "8px";
     if (!_isDesktop) widthContainer.style.display = "none"; // 手机端隐藏宽度设置
     
-    const widthLabel = widthContainer.createEl("span", { text: "宽度: " });
+    const widthLabel = widthContainer.createEl("span", { text: t('main.width') + ": " });
     widthLabel.style.fontSize = "14px";
     
     const widthInput = widthContainer.createEl("input", { type: "number", attr: { step: 50, min: 800, max: 2000 } });
@@ -6921,7 +8782,7 @@ class AddRegexRuleModal extends Modal {
     widthInput.style.border = "1px solid var(--background-modifier-border)";
     widthInput.style.borderRadius = "4px";
     widthInput.style.fontSize = "14px";
-    widthInput.title = "Alt+鼠标滚轮调整宽度";
+    widthInput.title = t('settings.altScrollWidth');
     widthInput.value = userWidth;
     
     const widthUnit = widthContainer.createEl("span", { text: "px" });
@@ -7060,7 +8921,7 @@ class AddRegexRuleModal extends Modal {
     
     // 创建标签
     const label = settingContainer.createEl("span");
-    label.textContent = "正则表达式:";
+    label.textContent = t('main.regexLabel') + ":";
     label.style.marginRight = "100px";
     label.style.fontWeight = "bold"; // 保持与Obsidian设置标签一致的样式
     if (!_isDesktop) { label.style.marginRight = "0"; label.style.width = "100%"; } // 手机端标签独占一行
@@ -7079,7 +8940,7 @@ class AddRegexRuleModal extends Modal {
     // 创建输入框
     const inputEl = inputAndButtonContainer.createEl("input");
     inputEl.type = "text";
-    inputEl.placeholder = "如 TODO|FIXME";
+    inputEl.placeholder = t('main.regexPlaceholder');
     inputEl.value = regexValue;
     inputEl.style.width = "calc(100% - 120px)"; // 给按钮留出空间
     inputEl.style.padding = "8px";
@@ -7088,7 +8949,7 @@ class AddRegexRuleModal extends Modal {
     
     // 创建"添加或追加"按钮
     const addOrAppendBtn = inputAndButtonContainer.createEl("button");
-    addOrAppendBtn.textContent = "添加或追加";
+    addOrAppendBtn.textContent = t('main.addOrAppend');
     addOrAppendBtn.style.width = "112px";
     addOrAppendBtn.style.padding = "8px";
     addOrAppendBtn.style.backgroundColor = "var(--interactive-accent)";
@@ -7124,20 +8985,20 @@ class AddRegexRuleModal extends Modal {
               this.currentEditingRule.cssClass, 
               this.currentEditingRule.remark || ''
             );
-            this.showSuccessMessage(`全局规则已更新为: ${trimmedValue}`);
+            this.showSuccessMessage(`${t('main.globalRuleUpdated')}: ${trimmedValue}`);
             return true;
           }
         } else {
           // 更新文件规则
           if (typeof this.editRule === 'function') {
             await this.editRule(this.currentEditingRule.index, trimmedValue, this.currentEditingRule.cssClass, this.currentEditingRule.remark || '');
-            this.showSuccessMessage(`规则已更新为: ${trimmedValue}`);
+            this.showSuccessMessage(`${t('main.ruleUpdated')}: ${trimmedValue}`);
             return true;
           }
         }
       } else {
         // 如果没有明确跟踪的规则，显示错误提示
-        this.showErrorMessage('未找到可更新的规则，请先点击历史记录或全局规则按钮');
+        this.showErrorMessage(t('main.noRuleToUpdate'));
       }
       return false;
     };
@@ -7150,7 +9011,7 @@ class AddRegexRuleModal extends Modal {
         const trimmedClipboardText = clipboardText.trim();
         
         if (!trimmedClipboardText) {
-          this.showErrorMessage(addOrAppendBtn, "剪贴板为空");
+          this.showErrorMessage(addOrAppendBtn, t('main.clipboardEmptyShort'));
           return;
         }
         
@@ -7181,9 +9042,9 @@ class AddRegexRuleModal extends Modal {
           await this.updateCurrentRule(newValue);
         }
         
-        this.showSuccessMessage(`已${currentValue ? '追加' : '添加'}剪贴板内容到正则表达式`);
+        this.showSuccessMessage(currentValue ? t('main.clipboardContentAdded') : t('main.clipboardContentSet'));
       } catch (error) {
-        this.showErrorMessage(addOrAppendBtn, "无法获取剪贴板内容，请手动输入");
+        this.showErrorMessage(addOrAppendBtn, t('main.cannotGetClipboard'));
       }
     });
     
@@ -7525,7 +9386,7 @@ class AddRegexRuleModal extends Modal {
             const categoryTitle = categoryContainer.querySelector('h4');
             if (categoryTitle) {
               categoryTitle.style.backgroundColor = '#007bff';
-              categoryTitle.title = '双击隐藏分组';
+              categoryTitle.title = t('main.dblClickHideGroup');
             }
             
             // 更新插件的折叠状态
@@ -7589,7 +9450,7 @@ class AddRegexRuleModal extends Modal {
               if (inputValue) {
                 // 当有输入值（选中文本）时，分组显示为折叠状态（只显示匹配的按钮）
                 currentToggleBtn.textContent = '>';
-                currentToggleBtn.title = '展开分组内样式按钮';
+                currentToggleBtn.title = t('main.expandGroupStyles');
                 
                 // 保存分组的折叠状态
                 const categoryName = categoryContainer.getAttribute('data-category');
@@ -7598,7 +9459,7 @@ class AddRegexRuleModal extends Modal {
               } else {
                 // 当没有输入值时，保持折叠状态
                 currentToggleBtn.textContent = '>';
-                currentToggleBtn.title = '展开分组内样式按钮';
+                currentToggleBtn.title = t('main.expandGroupStyles');
                 
                 // 保存分组的折叠状态
                 const categoryName = categoryContainer.getAttribute('data-category');
@@ -7698,7 +9559,7 @@ class AddRegexRuleModal extends Modal {
 
       // 如果处于折叠状态，更新按钮显示
       const toggleBtn = this.contentEl.querySelector('.history-section button:first-of-type');
-      if (toggleBtn && toggleBtn.textContent === '展开') {
+      if (toggleBtn && toggleBtn.textContent === t('main.expand')) {
         // 触发一次折叠逻辑更新按钮显示
         const historySection = this.contentEl.querySelector('.history-section');
         const collapseToggleBtn = historySection.querySelector('button:first-of-type');
@@ -7817,7 +9678,7 @@ class AddRegexRuleModal extends Modal {
     titleAndLinkContainer.style.position = "relative"; // 设置为相对定位，作为绝对定位元素的容器
     
     // 创建标题
-    const styleTitle = titleAndLinkContainer.createEl("h3", { text: "样式列表/分组" });
+    const styleTitle = titleAndLinkContainer.createEl("h3", { text: t('main.styleListGroup') });
     styleTitle.style.margin = "0";
     styleTitle.style.fontSize = "14px";
     styleTitle.style.color = "#555";
@@ -7828,7 +9689,7 @@ class AddRegexRuleModal extends Modal {
     
     // 创建打开styles.css链接
     const openStylesCssLink = titleAndLinkContainer.createEl('span');
-    openStylesCssLink.textContent = '打开styles.css';
+    openStylesCssLink.textContent = t('main.openStylesCss');
     openStylesCssLink.style.padding = '0 4px';
     openStylesCssLink.style.fontSize = '12px';
     openStylesCssLink.style.color = '#0066cc';
@@ -7848,13 +9709,13 @@ class AddRegexRuleModal extends Modal {
       } catch (error) {
         console.error('打开styles.css文件失败:', error);
         const { Notice } = require('obsidian');
-        new Notice('无法打开styles.css文件，请检查文件是否存在');
+        new Notice(t('main.cannotOpenFile'));
       }
     });
 
     // 创建打开样式分组文件链接
     const openStyleCategoriesLink = titleAndLinkContainer.createEl('span');
-    openStyleCategoriesLink.textContent = '打开样式分组文件';
+    openStyleCategoriesLink.textContent = t('main.openStyleCategoriesFile');
     openStyleCategoriesLink.style.padding = '0 4px';
     openStyleCategoriesLink.style.fontSize = '12px';
     openStyleCategoriesLink.style.color = '#0066cc';
@@ -7873,13 +9734,13 @@ class AddRegexRuleModal extends Modal {
       } catch (error) {
         console.error('打开样式分组文件失败:', error);
         const { Notice } = require('obsidian');
-        new Notice('无法打开样式分组文件，请检查文件是否存在');
+        new Notice(t('main.cannotOpenFile'));
       }
     });
     
     // 创建添加分组链接
     const addGroupLink = titleAndLinkContainer.createEl('span');
-    addGroupLink.textContent = '添加分组';
+    addGroupLink.textContent = t('main.addGroup');
     addGroupLink.style.padding = '0 4px';
     addGroupLink.style.fontSize = '12px';
     addGroupLink.style.color = '#0066cc';
@@ -7893,14 +9754,14 @@ class AddRegexRuleModal extends Modal {
         // 使用自定义输入模态框
         const modal = new InputModal(
           this.app,
-          "添加分组",
-          "请输入新分组名称",
-          "新分组",
+          t('main.addGroup'),
+          t('main.newGroupName'),
+          t('main.newGroup'),
           async (newGroupName) => {
             try {
               const trimmedName = newGroupName.trim();
               if (!trimmedName) {
-                new Notice("分组名称不能为空!");
+                new Notice(t('main.groupNameEmpty'));
                 return;
               }
               
@@ -7917,7 +9778,7 @@ class AddRegexRuleModal extends Modal {
               }
               
               if (styleCategories[trimmedName]) {
-                new Notice("该分组名称已存在!");
+                new Notice(t('main.groupNameExists'));
                 return;
               }
               
@@ -7927,7 +9788,7 @@ class AddRegexRuleModal extends Modal {
               // 保存更新后的分类
               await this.app.vault.adapter.write(styleCategoriesPath, JSON.stringify(styleCategories, null, 2));
               
-              new Notice(`新分组 "${trimmedName}" 已创建`);
+              new Notice(t('main.groupCreated'));
               
               // 重新加载样式分类配置
               if (this.plugin && typeof this.plugin.loadStyleCategories === 'function') {
@@ -7940,14 +9801,14 @@ class AddRegexRuleModal extends Modal {
               }
             } catch (error) {
               console.error("添加分组时出错:", error);
-              new Notice("添加分组失败，请检查控制台获取详细信息。");
+              new Notice(t('main.groupAddFailed'));
             }
           }
         );
         modal.open();
       } catch (error) {
         console.error("打开添加分组对话框时出错:", error);
-        new Notice("无法打开添加分组对话框，请检查控制台获取详细信息。");
+        new Notice(t('main.cannotOpenEditor'));
       }
     });
     
@@ -7974,7 +9835,7 @@ class AddRegexRuleModal extends Modal {
     styleInstructions.style.color = "#666";
     // 移除背景色
     styleInstructions.style.padding = "0 4px";
-    styleInstructions.textContent = "左键单击应用样式，长按进入多选模式，右键编辑样式，中键单击应用为全局规则，双击分组标题隐藏/显示";
+    styleInstructions.textContent = t('main.styleInstructions');
     styleInstructions.style.visibility = "hidden"; // 默认隐藏文字
     
     // 创建主容器 - 横向排列所有分类
@@ -8003,7 +9864,7 @@ class AddRegexRuleModal extends Modal {
     titleAndToggleContainer.style.position = 'relative';
     
     // 创建标题并设置为inline显示
-    const collapsedGroupsTitle = titleAndToggleContainer.createEl('h4', { text: '已隐藏的分组' });
+    const collapsedGroupsTitle = titleAndToggleContainer.createEl('h4', { text: t('main.hiddenGroups') });
     collapsedGroupsTitle.style.margin = '0';
     collapsedGroupsTitle.style.fontSize = '13px';
     collapsedGroupsTitle.style.color = '#555';
@@ -8019,7 +9880,7 @@ class AddRegexRuleModal extends Modal {
     toggleContainer.style.visibility = 'hidden'; // 默认隐藏
     
     // 开关标签
-    const toggleLabel = toggleContainer.createEl('span', { text: '默认隐藏所有分组' });
+    const toggleLabel = toggleContainer.createEl('span', { text: t('main.defaultHideAllGroups') });
     toggleLabel.style.marginRight = '4px';
     toggleLabel.style.fontSize = '12px';
     toggleLabel.style.color = '#555';
@@ -8040,9 +9901,9 @@ class AddRegexRuleModal extends Modal {
       
       if (e.target.checked) {
         // 如果开启默认隐藏，下次打开模态框时所有分组将隐藏
-        new Notice('已开启默认隐藏功能，下次打开模态框时所有分组将呈隐藏状态');
+        new Notice(t('settings.defaultHideEnabled'));
       } else {
-        new Notice('已关闭默认隐藏功能');
+        new Notice(t('settings.defaultHideDisabled'));
       }
     });
     
@@ -8132,7 +9993,7 @@ class AddRegexRuleModal extends Modal {
           padding: 1px;
           z-index: 101;
         `;
-        groupFloatBtn.title = '悬浮显示此分组';
+        groupFloatBtn.title = t('floating.floatThisGroup');
 
         groupFloatBtn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -8152,7 +10013,7 @@ class AddRegexRuleModal extends Modal {
             }
             this.plugin.saveFloatButtonData();
             this.plugin.renderFloatingOptionButtons();
-            new Notice(`已悬浮显示分组 "${category}"`);
+            new Notice(t('main.floatEnabled'));
           }
         });
 
@@ -8172,7 +10033,7 @@ class AddRegexRuleModal extends Modal {
         // 添加拖拽功能
         categoryTitle.draggable = true;
         categoryTitle.setAttribute('data-category', category);
-        categoryTitle.title = `可拖拽排序分组`;
+        categoryTitle.title = t('main.dragToSortGroup');
         
         // 拖拽开始事件
         categoryTitle.addEventListener('dragstart', (e) => {
@@ -8268,7 +10129,7 @@ class AddRegexRuleModal extends Modal {
             }
           } catch (error) {
             console.error('Error during category drop:', error);
-            new Notice('分组排序时出错: ' + error.message);
+            new Notice(t('settings.groupSortFailed') + ': ' + error.message);
           }
         });
         
@@ -8298,11 +10159,11 @@ class AddRegexRuleModal extends Modal {
             // 显示分组
             categoryContainer.style.display = 'flex';
             categoryTitle.style.backgroundColor = '#007bff';
-            categoryTitle.title = '双击隐藏分组';
+            categoryTitle.title = t('main.dblClickHideGroup');
             
             // 只显示分组内匹配的样式按钮，避免闪烁
             // 先获取输入框的值
-            const inputEl = this.contentEl.querySelector('input[placeholder="如 TODO|FIXME"]');
+            const inputEl = this.contentEl.querySelector('input[placeholder="' + t('main.regexPlaceholder') + '"]');
             const inputValue = inputEl ? inputEl.value.trim() : '';
             
             // 显示样式按钮
@@ -8363,7 +10224,7 @@ class AddRegexRuleModal extends Modal {
                     container.style.display = 'none';
                     if (containerTitle) {
                       containerTitle.style.backgroundColor = '#6c757d';
-                      containerTitle.title = '双击显示分组';
+                      containerTitle.title = t('main.dblClickShowGroup');
                     }
                     
                     // 检查是否已经有对应的重新打开按钮
@@ -8392,7 +10253,7 @@ class AddRegexRuleModal extends Modal {
                       reopenButton.style.textOverflow = 'ellipsis';
                       reopenButton.style.position = 'relative';
                       reopenButton.setAttribute('data-category', containerCategory);
-                      reopenButton.title = `重新打开分组: ${containerCategory}`;
+                      reopenButton.title = t('main.reopenGroup') + `: ${containerCategory}`;
                       
                       // 显示隐藏分类容器
                       collapsedCategoriesContainer.style.display = 'flex';
@@ -8446,7 +10307,7 @@ class AddRegexRuleModal extends Modal {
             // 隐藏分组
             categoryContainer.style.display = 'none';
             categoryTitle.style.backgroundColor = '#6c757d';
-            categoryTitle.title = '双击显示分组';
+            categoryTitle.title = t('main.dblClickShowGroup');
             
             // 创建重新打开按钮
             // 检查是否已经有对应的重新打开按钮
@@ -8474,7 +10335,7 @@ class AddRegexRuleModal extends Modal {
               reopenButton.style.textOverflow = 'ellipsis';
               reopenButton.style.position = 'relative';
               reopenButton.setAttribute('data-category', category);
-              reopenButton.title = `重新打开分组: ${category}`;
+              reopenButton.title = t('main.reopenGroup') + `: ${category}`;
             }
             
             // 显示隐藏分类容器
@@ -8509,21 +10370,21 @@ class AddRegexRuleModal extends Modal {
           // 重命名选项
           menu.addItem((item) => {
             item
-              .setTitle("重命名分组")
+              .setTitle(t('context.renameGroup'))
               .setIcon("pencil")
               .onClick(async () => {
                 try {
                   // 使用自定义输入模态框替代prompt
                   const modal = new InputModal(
                     this.app,
-                    "重命名分组",
-                    "请输入新的分组名称",
+                    t('main.renameGroup'),
+                    t('main.inputNewGroupName'),
                     category,
                     async (newName) => {
                       try {
                         const trimmedName = newName.trim();
                         if (!trimmedName) {
-                          new Notice("分组名称不能为空!");
+                          new Notice(t('main.groupNameEmpty'));
                           return;
                         }
                         
@@ -8532,7 +10393,7 @@ class AddRegexRuleModal extends Modal {
                         }
                         
                         if (styleCategories[trimmedName]) {
-                          new Notice("该分组名称已存在!");
+                          new Notice(t('main.groupNameExists'));
                           return;
                         }
                         
@@ -8545,7 +10406,7 @@ class AddRegexRuleModal extends Modal {
                           const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
                           await this.app.vault.adapter.write(configPath, JSON.stringify(styleCategories, null, 2));
                           
-                          new Notice(`分组 "${category}" 已重命名为 "${trimmedName}"`);
+                          new Notice(t('main.groupRenamed'));
                           
                           // 重新加载插件或刷新UI
                           this.close();
@@ -8558,14 +10419,14 @@ class AddRegexRuleModal extends Modal {
                         }
                       } catch (error) {
                         console.error("重命名分组时出错:", error);
-                        new Notice("重命名分组失败，请检查控制台获取详细信息。");
+                        new Notice(t('main.groupAddFailed'));
                       }
                     }
                   );
                   modal.open();
                 } catch (error) {
                   console.error("打开重命名对话框时出错:", error);
-                  new Notice("无法打开重命名对话框，请检查控制台获取详细信息。");
+                  new Notice(t('main.cannotOpenEditor'));
                 }
               });
           });
@@ -8573,26 +10434,26 @@ class AddRegexRuleModal extends Modal {
           // 添加分组选项
           menu.addItem((item) => {
             item
-              .setTitle("添加分组")
+              .setTitle(t('context.addGroup'))
               .setIcon("folder-plus")
               .onClick(async () => {
                 try {
                   // 使用自定义输入模态框替代prompt
                   const modal = new InputModal(
                     this.app,
-                    "添加分组",
-                    "请输入新分组名称",
-                    "新分组",
+                    t('main.addGroup'),
+                    t('main.newGroupName'),
+                    t('main.newGroup'),
                     async (newGroupName) => {
                       try {
                         const trimmedName = newGroupName.trim();
                         if (!trimmedName) {
-                          new Notice("分组名称不能为空!");
+                          new Notice(t('main.groupNameEmpty'));
                           return;
                         }
                         
                         if (styleCategories[trimmedName]) {
-                          new Notice("该分组名称已存在!");
+                          new Notice(t('main.groupNameExists'));
                           return;
                         }
                         
@@ -8603,7 +10464,7 @@ class AddRegexRuleModal extends Modal {
                         const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
                         await this.app.vault.adapter.write(configPath, JSON.stringify(styleCategories, null, 2));
                         
-                        new Notice(`新分组 "${trimmedName}" 已创建`);
+                        new Notice(t('main.groupCreated'));
                         
                         // 重新加载样式分类配置
                         if (this.plugin && typeof this.plugin.loadStyleCategories === 'function') {
@@ -8616,14 +10477,14 @@ class AddRegexRuleModal extends Modal {
                         }
                       } catch (error) {
                         console.error("添加分组时出错:", error);
-                        new Notice("添加分组失败，请检查控制台获取详细信息。");
+                        new Notice(t('main.groupAddFailed'));
                       }
                     }
                   );
                   modal.open();
                 } catch (error) {
                   console.error("打开添加分组对话框时出错:", error);
-                  new Notice("无法打开添加分组对话框，请检查控制台获取详细信息。");
+                  new Notice(t('main.cannotOpenEditor'));
                 }
               });
           });
@@ -8631,7 +10492,7 @@ class AddRegexRuleModal extends Modal {
           // 删除分组选项
           menu.addItem((item) => {
             item
-              .setTitle("删除分组")
+              .setTitle(t('context.deleteGroup'))
               .setIcon("trash")
               .onClick(async () => {
                 try {
@@ -8640,13 +10501,13 @@ class AddRegexRuleModal extends Modal {
                   
                   // 如果分组不为空，显示警告
                   const confirmMessage = hasStyles 
-                    ? `删除分组 "${category}" 将同时删除其中的所有样式 (${styleCategories[category].length}个)。确定要删除吗？`
-                    : `确定要删除空分组 "${category}" 吗？`;
+                    ? t('main.deleteGroupWithStyles') + ` (${styleCategories[category].length})`
+                    : t('main.deleteEmptyGroup');
                   
                   // 使用自定义确认模态框替代confirm
                   const modal = new ConfirmModal(
                     this.app,
-                    "确认删除分组",
+                    t('main.confirmDeleteGroup'),
                     confirmMessage,
                     async () => {
                       try {
@@ -8657,7 +10518,7 @@ class AddRegexRuleModal extends Modal {
                         const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
                         await this.app.vault.adapter.write(configPath, JSON.stringify(styleCategories, null, 2));
                         
-                        new Notice(`分组 "${category}" 已删除`);
+                        new Notice(t('main.groupDeleted'));
                         
                         // 重新加载样式分类配置
                         if (this.plugin && typeof this.plugin.loadStyleCategories === 'function') {
@@ -8670,14 +10531,14 @@ class AddRegexRuleModal extends Modal {
                         }
                       } catch (error) {
                         console.error("删除分组时出错:", error);
-                        new Notice("删除分组失败，请检查控制台获取详细信息。");
+                        new Notice(t('main.groupAddFailed'));
                       }
                     }
                   );
                   modal.open();
                 } catch (error) {
                   console.error("打开删除确认对话框时出错:", error);
-                  new Notice("无法打开删除确认对话框，请检查控制台获取详细信息。");
+                  new Notice(t('main.cannotOpenEditor'));
                 }
               });
           });
@@ -8688,7 +10549,7 @@ class AddRegexRuleModal extends Modal {
           
           menu.addItem((item) => {
             item
-              .setTitle(isInFloatingBall ? "从悬浮球选项移除" : "添加到悬浮球选项")
+              .setTitle(isInFloatingBall ? t('main.removeFromFloatingBall') : t('main.addToFloatingBall'))
               .setIcon(isInFloatingBall ? "minus-circle" : "plus-circle")
               .onClick(async () => {
                 try {
@@ -8699,24 +10560,24 @@ class AddRegexRuleModal extends Modal {
                       floatingBallGroups.splice(index, 1);
                     }
                     this.plugin.floatButtonData.floatingBallGroups = floatingBallGroups;
-                    new Notice(`分组 "${category}" 已从悬浮球选项移除`);
+                    new Notice(t('main.groupDeleted'));
                   } else {
                     // 添加到悬浮球选项
                     floatingBallGroups.push(category);
                     this.plugin.floatButtonData.floatingBallGroups = floatingBallGroups;
-                    new Notice(`分组 "${category}" 已添加到悬浮球选项`);
+                    new Notice(t('main.groupAdded'));
                   }
                   await this.plugin.saveFloatButtonData();
                 } catch (error) {
                   console.error("设置悬浮球分组时出错:", error);
-                  new Notice("设置悬浮球分组失败，请检查控制台获取详细信息。");
+                  new Notice(t('main.groupAddFailed'));
                 }
               });
           });
 
           menu.addItem((item) => {
             item
-              .setTitle("悬浮显示此分组")
+              .setTitle(t('floating.floatThisGroup'))
               .setIcon("layout-grid")
               .onClick(async () => {
                 try {
@@ -8734,10 +10595,10 @@ class AddRegexRuleModal extends Modal {
                   }
                   await this.plugin.saveFloatButtonData();
                   this.plugin.renderFloatingOptionButtons();
-                  new Notice(`已悬浮显示分组 "${category}"`);
+                  new Notice(t('main.floatEnabled'));
                 } catch (error) {
                   console.error("悬浮显示分组时出错:", error);
-                  new Notice("悬浮显示分组失败，请检查控制台获取详细信息。");
+                  new Notice(t('main.groupAddFailed'));
                 }
               });
           });
@@ -8790,7 +10651,7 @@ class AddRegexRuleModal extends Modal {
           styleOption.setAttribute('data-style-index', index);
           styleOption.setAttribute('data-category', category);
           styleOption.setAttribute('data-class', className); // 添加data-class属性，用于角标显示
-          styleOption.title = `点击应用样式，可拖拽排序`;
+          styleOption.title = t('main.clickApplyStyle');
           styleOption.className = 'style-option'; // 添加类名以便于选择
           
           // 为样式按钮添加鼠标事件监听器，控制操作说明文字的显示和隐藏
@@ -8819,7 +10680,7 @@ class AddRegexRuleModal extends Modal {
             padding: 1px;
             z-index: 101;
           `;
-          floatPinBtn.title = '悬浮显示此样式';
+          floatPinBtn.title = t('floating.floatThisStyle');
           
           floatPinBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -8957,7 +10818,7 @@ class AddRegexRuleModal extends Modal {
           const previewLength = hasChineseChars ? 3 : 10;
           // 优先使用设置的按钮文字，其次是选中的文字，最后是默认的"示例"文字
           const buttonText = this.plugin && typeof this.plugin.getButtonText === 'function' ? this.plugin.getButtonText(styleInfo.class) : '';
-          styleExample.textContent = buttonText || (selectedText.length >= previewLength ? selectedText.substring(0, previewLength) : (selectedText || "示例"));
+          styleExample.textContent = buttonText || (selectedText.length >= previewLength ? selectedText.substring(0, previewLength) : (selectedText || t('main.preview')));
           // 保留内联样式设置以确保基本样式正常，同时通过添加类名支持伪元素和动画效果
           styleExample.setAttribute("style", styleInfo.style);
           fontSizeCheckQueue.push(styleExample);
@@ -9068,7 +10929,7 @@ class AddRegexRuleModal extends Modal {
                     const otherCategoryTitle = container.querySelector('h4');
                     if (otherCategoryTitle) {
                       otherCategoryTitle.style.backgroundColor = '#6c757d';
-                      otherCategoryTitle.title = '双击展开分组';
+                      otherCategoryTitle.title = t('main.dblClickExpandGroup');
                     }
                     
                     // 更新插件的折叠状态
@@ -9093,7 +10954,7 @@ class AddRegexRuleModal extends Modal {
                 console.log('Moving rule to global with Ctrl+click:', currentRegexValue, className);
                 const success = await this.plugin.moveRuleToGlobal(currentRegexValue, className);
                 if (success) {
-                  this.showSuccessMessage(`规则 "${currentRegexValue}" 已移动到全局规则！`);
+                  this.showSuccessMessage(t('main.ruleMovedToGlobalSuccess') + ` "${currentRegexValue}"`);
                   // 按照固定顺序重新加载：当前文件规则 > 全局规则 > 已备注文本
                   this.clearHistorySection();
                   this.clearGlobalRulesSection();
@@ -9116,7 +10977,7 @@ class AddRegexRuleModal extends Modal {
                   await this.updateStyleCountBadges();
                   
                   // 显示成功消息
-                  this.showSuccessMessage(`规则 "${currentRegexValue}" 已重新应用样式 .${className}！`);
+                  this.showSuccessMessage(t('main.ruleReapplied') + ` "${currentRegexValue}" ` + t('main.styleClass') + ` .${className}`);
                   
                   // 按照固定顺序重新加载：当前文件规则 > 全局规则 > 已备注文本
                   this.clearHistorySection();
@@ -9147,8 +11008,8 @@ class AddRegexRuleModal extends Modal {
                 await this.updateStyleCountBadges();
                 
                 const message = isGlobal ? 
-                  `全局规则 "${currentRegexValue}" 已成功应用样式 .${className}！` : 
-                  `规则 "${currentRegexValue}" 已成功应用样式 .${className}！`;
+                  t('main.globalRuleStyleApplied') + ` "${currentRegexValue}" ` + t('main.styleClass') + ` .${className}` : 
+                  t('main.ruleStyleApplied') + ` "${currentRegexValue}" ` + t('main.styleClass') + ` .${className}`;
                 this.showSuccessMessage(message);
                 
                 this.clearHistorySection();
@@ -9190,11 +11051,11 @@ class AddRegexRuleModal extends Modal {
                 
                 if (existingGlobalRuleIndex >= 0) {
                   // 规则已存在于全局，显示提示
-                  this.showSuccessMessage(`规则 "${currentRegexValue}" 已存在于全局规则中！`);
+                  this.showSuccessMessage(t('main.ruleExistsInGlobal') + ` "${currentRegexValue}"`);
                 } else {
                   // 添加为全局规则
                   await this.plugin.addGlobalRule(currentRegexValue, className, this.remark || '');
-                  this.showSuccessMessage(`已将样式 "${className}" 添加到全局规则 "${currentRegexValue}"！`);
+                  this.showSuccessMessage(t('main.styleAddedToGlobalRule') + ` "${className}" -> "${currentRegexValue}"`);
                   
                   // 重新加载规则区域
                   this.clearHistorySection();
@@ -9231,11 +11092,11 @@ class AddRegexRuleModal extends Modal {
                 
                 if (existingGlobalRuleIndex >= 0) {
                   // 规则已存在于全局，显示提示
-                  this.showSuccessMessage(`规则 "${currentRegexValue}" 已存在于全局规则中！`);
+                  this.showSuccessMessage(t('main.ruleExistsInGlobal') + ` "${currentRegexValue}"`);
                 } else {
                   // 添加为全局规则
                   await this.plugin.addGlobalRule(currentRegexValue, className, this.remark || '');
-                  this.showSuccessMessage(`已将样式 "${className}" 添加到全局规则 "${currentRegexValue}"！`);
+                  this.showSuccessMessage(t('main.styleAddedToGlobalRule') + ` "${className}" -> "${currentRegexValue}"`);
                   
                   // 重新加载规则区域
                   this.clearHistorySection();
@@ -9300,7 +11161,7 @@ class AddRegexRuleModal extends Modal {
               
               // 添加删除选项
               const deleteOption = document.createElement('div');
-              deleteOption.textContent = '删除';
+              deleteOption.textContent = t('context.delete');
               deleteOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -9336,7 +11197,7 @@ class AddRegexRuleModal extends Modal {
               
               // 添加移动到分组选项
               const moveOption = document.createElement('div');
-              moveOption.textContent = '移动到分组';
+              moveOption.textContent = t('context.moveToGroup');
               moveOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -9430,7 +11291,7 @@ class AddRegexRuleModal extends Modal {
                         this.exitMultiSelectMode();
                         
                         // 显示成功消息
-                        this.showSuccessMessage(`已将选中样式移动到分组 "${category}"`);
+                        this.showSuccessMessage(t('main.styleMovedToGroup') + ` "${category}"`);
                       } else {
                         // 普通模式下移动单个样式
                         // 从所有分类中查找并移除样式
@@ -9463,7 +11324,7 @@ class AddRegexRuleModal extends Modal {
                   this.onOpen();
                         
                         // 显示成功消息
-                        this.showSuccessMessage(`已将样式移动到分组 "${category}"`);
+                        this.showSuccessMessage(t('main.styleMovedToGroup') + ` "${category}"`);
                       }
                     } catch (error) {
                       console.error('Error moving style to category:', error);
@@ -9526,7 +11387,7 @@ class AddRegexRuleModal extends Modal {
               
               // 添加编辑选项
               const editOption = document.createElement('div');
-              editOption.textContent = '编辑';
+              editOption.textContent = t('context.edit');
               editOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -9553,7 +11414,7 @@ class AddRegexRuleModal extends Modal {
               
               // 添加复制类名选项
               const copyClassNameOption = document.createElement('div');
-              copyClassNameOption.textContent = '复制类名';
+              copyClassNameOption.textContent = t('context.copyClassName');
               copyClassNameOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -9572,7 +11433,7 @@ class AddRegexRuleModal extends Modal {
               copyClassNameOption.addEventListener('click', async () => {
                 try {
                   await navigator.clipboard.writeText(className);
-                  new Notice(`已复制类名 "${className}"`);
+                  new Notice(t('main.classNameCopied'));
                 } catch (err) {
                   // clipboard API 失败时使用备用方法
                   const textarea = document.createElement('textarea');
@@ -9583,7 +11444,7 @@ class AddRegexRuleModal extends Modal {
                   textarea.select();
                   document.execCommand('copy');
                   document.body.removeChild(textarea);
-                  new Notice(`已复制类名 "${className}"`);
+                  new Notice(t('main.classNameCopied'));
                 }
                 if (document.body.contains(menu)) {
                   document.body.removeChild(menu);
@@ -9594,7 +11455,7 @@ class AddRegexRuleModal extends Modal {
               
               // 添加复制完整样式选项
               const copyFullStyleOption = document.createElement('div');
-              copyFullStyleOption.textContent = '复制完整样式';
+              copyFullStyleOption.textContent = t('context.copyFullStyle');
               copyFullStyleOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -9659,7 +11520,7 @@ class AddRegexRuleModal extends Modal {
                 }
                 try {
                   await navigator.clipboard.writeText(fullStyle.trim());
-                  new Notice(`已复制完整样式 ".${className}"`);
+                  new Notice(t('main.fullStyleCopied'));
                 } catch (err) {
                   const textarea = document.createElement('textarea');
                   textarea.value = fullStyle.trim();
@@ -9669,7 +11530,7 @@ class AddRegexRuleModal extends Modal {
                   textarea.select();
                   document.execCommand('copy');
                   document.body.removeChild(textarea);
-                  new Notice(`已复制完整样式 ".${className}"`);
+                  new Notice(t('main.fullStyleCopied'));
                 }
                 if (document.body.contains(menu)) {
                   document.body.removeChild(menu);
@@ -9680,7 +11541,7 @@ class AddRegexRuleModal extends Modal {
               
               // 添加删除选项
               const deleteOption = document.createElement('div');
-              deleteOption.textContent = '删除';
+              deleteOption.textContent = t('context.delete');
               deleteOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -9705,7 +11566,7 @@ class AddRegexRuleModal extends Modal {
                 this.onOpen();
                 
                 // 显示成功消息
-                this.showSuccessMessage(`样式 "${className}" 已删除！`);
+                this.showSuccessMessage(t('main.styleDeleted') + ` "${className}"`);
                 
                 // 关闭菜单
                 document.body.removeChild(menu);
@@ -9715,7 +11576,7 @@ class AddRegexRuleModal extends Modal {
               
               // 添加添加为全局规则选项
               const addGlobalOption = document.createElement('div');
-              addGlobalOption.textContent = '添加为全局规则';
+              addGlobalOption.textContent = t('context.addAsGlobalRule');
               addGlobalOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -9745,11 +11606,11 @@ class AddRegexRuleModal extends Modal {
                   
                   if (existingGlobalRuleIndex >= 0) {
                     // 规则已存在于全局，显示提示
-                    this.showSuccessMessage(`规则 "${currentRegexValue}" 已存在于全局规则中！`);
+                    this.showSuccessMessage(t('main.ruleExistsInGlobal') + ` "${currentRegexValue}"`);
                   } else {
                     // 添加为全局规则
                     await this.plugin.addGlobalRule(currentRegexValue, className, this.remark || '');
-                    this.showSuccessMessage(`已将样式 "${className}" 添加到全局规则 "${currentRegexValue}"！`);
+                    this.showSuccessMessage(t('main.styleAddedToGlobalRule') + ` "${className}" -> "${currentRegexValue}"`);
                     
                     // 重新加载规则区域
                     this.clearHistorySection();
@@ -9770,7 +11631,7 @@ class AddRegexRuleModal extends Modal {
               
               // 添加添加为标题样式选项
               const addHeadingOption = document.createElement('div');
-              addHeadingOption.textContent = '添加为标题样式';
+              addHeadingOption.textContent = t('context.addAsHeadingStyle');
               addHeadingOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -9807,12 +11668,12 @@ class AddRegexRuleModal extends Modal {
               
               // 添加h1~h6选项
               const headings = [
-                { level: 1, text: '一级标题h1' },
-                { level: 2, text: '二级标题h2' },
-                { level: 3, text: '三级标题h3' },
-                { level: 4, text: '四级标题h4' },
-                { level: 5, text: '五级标题h5' },
-                { level: 6, text: '六级标题h6' }
+                { level: 1, text: t('heading.level1') },
+                { level: 2, text: t('heading.level2') },
+                { level: 3, text: t('heading.level3') },
+                { level: 4, text: t('heading.level4') },
+                { level: 5, text: t('heading.level5') },
+                { level: 6, text: t('heading.level6') }
               ];
               
               headings.forEach(heading => {
@@ -9886,7 +11747,7 @@ class AddRegexRuleModal extends Modal {
                     this.addHeadingStylesSection(this.contentEl);
                     
                     // 显示成功消息
-                    this.showSuccessMessage(`已将样式添加为${heading.text}！`);
+                    this.showSuccessMessage(t('main.styleAddedAsHeading') + ` ${heading.text}`);
                   } catch (error) {
                     console.error('Error adding heading style:', error);
                     this.showErrorMessage(styleOption, '添加标题样式失败: ' + error.message);
@@ -9976,7 +11837,7 @@ class AddRegexRuleModal extends Modal {
 
               // 添加悬浮显示选项
               const floatOption = document.createElement('div');
-              floatOption.textContent = '悬浮显示';
+              floatOption.textContent = t('context.floatDisplay');
               floatOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -9997,7 +11858,7 @@ class AddRegexRuleModal extends Modal {
                 // 获取原始样式
                 const originalStyle = this.cssStyles.get(className);
                 if (!originalStyle) {
-                  new Notice('未找到样式定义');
+                  new Notice(t('main.noStyleDefinition'));
                   if (document.body.contains(menu)) {
                     document.body.removeChild(menu);
                   }
@@ -10024,53 +11885,9 @@ class AddRegexRuleModal extends Modal {
 
               menu.appendChild(floatOption);
 
-              // 添加"加入展示"选项
-              const showcaseOption = document.createElement('div');
-              const isInShowcase = this.plugin.settings?.showcaseStyles?.includes(className);
-              showcaseOption.textContent = isInShowcase ? '移出展示' : '加入展示';
-              showcaseOption.style.cssText = `
-                padding: 8px 16px;
-                cursor: pointer;
-                font-size: 14px;
-                color: var(--text-normal);
-                border-top: 1px solid var(--border-color);
-              `;
-
-              showcaseOption.addEventListener('mouseenter', () => {
-                showcaseOption.style.background = 'var(--background-modifier-hover)';
-              });
-
-              showcaseOption.addEventListener('mouseleave', () => {
-                showcaseOption.style.background = 'transparent';
-              });
-
-              showcaseOption.addEventListener('click', async () => {
-                if (!this.plugin.settings.showcaseStyles) {
-                  this.plugin.settings.showcaseStyles = [];
-                }
-                
-                const idx = this.plugin.settings.showcaseStyles.indexOf(className);
-                if (idx >= 0) {
-                  this.plugin.settings.showcaseStyles.splice(idx, 1);
-                  new Notice(`样式 "${className}" 已从展示列表移除`);
-                } else {
-                  this.plugin.settings.showcaseStyles.push(className);
-                  new Notice(`样式 "${className}" 已加入展示列表`);
-                }
-                
-                await this.plugin.saveData(this.plugin.settings);
-                
-                // 关闭菜单
-                if (document.body.contains(menu)) {
-                  document.body.removeChild(menu);
-                }
-              });
-
-              menu.appendChild(showcaseOption);
-
               // 格式替换选项
               const formatReplaceOption = document.createElement('div');
-              formatReplaceOption.textContent = '格式替换';
+              formatReplaceOption.textContent = t('context.formatReplace');
               formatReplaceOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -10090,7 +11907,7 @@ class AddRegexRuleModal extends Modal {
               formatReplaceOption.addEventListener('click', () => {
                 const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
                 if (!activeView) {
-                  new Notice('请先打开一个Markdown文件');
+                  new Notice(t('main.openMdFile'));
                   return;
                 }
                 if (document.body.contains(menu)) {
@@ -10103,7 +11920,7 @@ class AddRegexRuleModal extends Modal {
 
               // 添加移动到分组选项
               const moveOption = document.createElement('div');
-              moveOption.textContent = '移动到分组 ▶';
+              moveOption.textContent = t('context.moveToGroup') + ' ▶';
               moveOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -10186,7 +12003,7 @@ class AddRegexRuleModal extends Modal {
                     this.onOpen();
 
                     // 显示成功消息
-                    this.showSuccessMessage(`已将样式移动到分组 "${category}"`);
+                    this.showSuccessMessage(t('main.styleMovedToGroup') + ` "${category}"`);
                   } catch (error) {
                     console.error('Error moving style to category:', error);
                     this.showErrorMessage(styleOption, '移动样式失败: ' + error.message);
@@ -10302,7 +12119,7 @@ class AddRegexRuleModal extends Modal {
             
             // 根据规则状态显示不同的提示
             const action = existingRule ? '左键: 删除规则' : '左键: 应用样式';
-            styleOption.title = `${action} | 长按: 进入多选模式 | 中键: 应用为全局规则\nCSS类名: ${styleInfo.class}`;
+            styleOption.title = `${action} | ` + t('main.longPressMultiSelect') + ` | ` + t('main.middleClickGlobal') + `\nCSS: ${styleInfo.class}`;
           });
           
           // 鼠标按下时的动态效果
@@ -10339,7 +12156,7 @@ class AddRegexRuleModal extends Modal {
       const wasCollapsed = this.plugin && this.plugin.collapsedCategories && this.plugin.collapsedCategories[category];
       
       // 检查当前输入是否有值
-      const inputEl = this.contentEl.querySelector('input[placeholder="如 TODO|FIXME"]');
+      const inputEl = this.contentEl.querySelector('input[placeholder="' + t('main.regexPlaceholder') + '"]');
       const hasInputValue = inputEl && inputEl.value.trim();
       
       // 检查是否有手动展开的分组存储
@@ -10442,7 +12259,7 @@ class AddRegexRuleModal extends Modal {
         categoryContainer.style.display = 'none';
         // 更新标题的视觉效果
         categoryTitle.style.backgroundColor = '#6c757d';
-        categoryTitle.title = '双击展开分组';
+        categoryTitle.title = t('main.dblClickExpandGroup');
         
         // 如果是默认折叠功能，更新插件的折叠状态
         if (shouldDefaultCollapse) {
@@ -10477,14 +12294,14 @@ class AddRegexRuleModal extends Modal {
         reopenButton.style.textOverflow = 'ellipsis';
         reopenButton.style.position = 'relative';
         reopenButton.setAttribute('data-category', category);
-        reopenButton.title = `重新打开分组: ${category}`;
+        reopenButton.title = t('main.reopenGroup') + `: ${category}`;
         
         // 显示折叠分类容器
         collapsedCategoriesContainer.style.display = 'flex';
       } else {
         // 当分组不应该折叠时，根据输入值控制样式按钮的显示
         const styleButtons = categoryContainer.querySelectorAll('.style-option');
-        const inputEl = this.contentEl.querySelector('input[placeholder="如 TODO|FIXME"]');
+        const inputEl = this.contentEl.querySelector('input[placeholder="' + t('main.regexPlaceholder') + '"]');
         const inputValue = inputEl ? inputEl.value.trim() : '';
         
         if (inputValue) {
@@ -10562,7 +12379,7 @@ class AddRegexRuleModal extends Modal {
         // 确保分组容器可见
         categoryContainer.style.display = 'flex';
         categoryTitle.style.backgroundColor = '#007bff';
-        categoryTitle.title = '双击隐藏分组';
+        categoryTitle.title = t('main.dblClickHideGroup');
       }
       
       // 在每个分组后面添加"添加"按钮
@@ -10581,7 +12398,7 @@ class AddRegexRuleModal extends Modal {
       addBtn.style.alignItems = "center";
       addBtn.style.justifyContent = "center";
       addBtn.style.transition = "all 0.2s";
-      addBtn.title = "添加新样式";
+      addBtn.title = t('main.addNewStyle');
       
       addBtn.addEventListener("mouseenter", () => {
         addBtn.style.backgroundColor = "#218838";
@@ -10619,7 +12436,7 @@ class AddRegexRuleModal extends Modal {
       const styleButtons = categoryContainer.querySelectorAll('.style-option');
       
       // 直接检查输入框是否有值，避免重新声明变量
-      const inputBox = this.contentEl.querySelector('input[placeholder="如 TODO|FIXME"]');
+      const inputBox = this.contentEl.querySelector('input[placeholder="' + t('main.regexPlaceholder') + '"]');
       const isInputEmpty = !inputBox || !inputBox.value.trim();
       
       // 先隐藏所有样式按钮
@@ -10670,22 +12487,22 @@ class AddRegexRuleModal extends Modal {
       // 根据样式按钮的可见性和是否有选中文本设置切换按钮的初始状态
       if (isAutoExpandMode) {
         toggleBtn.textContent = ">";
-        toggleBtn.title = "悬停展开分组内样式按钮";
+        toggleBtn.title = t('main.hoverExpandGroup');
       } else if (!isInputEmpty) {
         // 如果有选中文本，根据分组的折叠状态和可见按钮数量决定切换按钮状态
         if (!isGroupCollapsed) {
           // 如果分组是展开状态，显示为折叠图标
           toggleBtn.textContent = "<";
-          toggleBtn.title = "折叠分组内样式按钮";
+          toggleBtn.title = t('main.collapseGroupStyles');
         } else {
           // 如果分组是折叠状态，显示为展开图标
           toggleBtn.textContent = ">";
-          toggleBtn.title = "展开分组内样式按钮";
+          toggleBtn.title = t('main.expandGroupStyles');
         }
       } else {
         // 如果没有选中文本，根据样式按钮的可见性设置状态
         toggleBtn.textContent = hasVisibleButtons ? "<" : ">";
-        toggleBtn.title = hasVisibleButtons ? "折叠分组内样式按钮" : "展开分组内样式按钮";
+        toggleBtn.title = hasVisibleButtons ? t('main.collapseGroup') : t('main.expandGroup');
       }
       toggleBtn.style.cursor = "pointer";
       toggleBtn.style.padding = "1px 6px";
@@ -10729,7 +12546,7 @@ class AddRegexRuleModal extends Modal {
         if (hasVisibleButtons && !allVisible) {
           // 如果只有部分按钮可见（半展开状态），点击">"展开所有按钮
           toggleBtn.textContent = "<";
-          toggleBtn.title = "折叠分组内样式按钮";
+          toggleBtn.title = t('main.collapseGroupStyles');
           
           // 延迟显示样式按钮，避免手机端同一触摸事件同时触发样式按钮的click
           requestAnimationFrame(() => {
@@ -10747,7 +12564,7 @@ class AddRegexRuleModal extends Modal {
         } else if (hasVisibleButtons && allVisible) {
           // 如果所有按钮都可见（完全展开状态），点击"<"隐藏所有按钮
           toggleBtn.textContent = ">";
-          toggleBtn.title = "展开分组内样式按钮";
+          toggleBtn.title = t('main.expandGroupStyles');
           
           // 隐藏所有样式按钮
           styleButtons.forEach(button => {
@@ -10763,7 +12580,7 @@ class AddRegexRuleModal extends Modal {
         } else {
           // 如果没有可见的样式按钮（完全折叠状态），点击">"展开所有按钮
           toggleBtn.textContent = "<";
-          toggleBtn.title = "折叠分组内样式按钮";
+          toggleBtn.title = t('main.collapseGroupStyles');
           
           // 延迟显示样式按钮，避免手机端同一触摸事件同时触发样式按钮的click
           requestAnimationFrame(() => {
@@ -10824,14 +12641,14 @@ class AddRegexRuleModal extends Modal {
           const toggleBtn = categoryContainer.querySelector('.style-toggle-btn');
           if (toggleBtn) {
             toggleBtn.textContent = "<";
-            toggleBtn.title = "折叠分组内样式按钮";
+            toggleBtn.title = t('main.collapseGroupStyles');
           }
           
           // 找到分类标题并更新视觉效果
           const categoryTitle = categoryContainer.querySelector('h4');
           if (categoryTitle) {
             categoryTitle.style.backgroundColor = '#007bff';
-            categoryTitle.title = '双击隐藏分组';
+            categoryTitle.title = t('main.dblClickHideGroup');
           }
           
           // 如果默认折叠功能开启，只折叠那些已经展开的分组
@@ -10854,7 +12671,7 @@ class AddRegexRuleModal extends Modal {
                   // 更新标题的视觉效果
                   if (containerTitle) {
                     containerTitle.style.backgroundColor = '#6c757d';
-                    containerTitle.title = '双击展开分组';
+                    containerTitle.title = t('main.dblClickExpandGroup');
                   }
                   
                   // 检查是否已经有对应的重新打开按钮
@@ -10883,7 +12700,7 @@ class AddRegexRuleModal extends Modal {
                     reopenButton.style.textOverflow = 'ellipsis';
                     reopenButton.style.position = 'relative';
                     reopenButton.setAttribute('data-category', containerCategory);
-                    reopenButton.title = `重新打开分组: ${containerCategory}`;
+                    reopenButton.title = t('main.reopenGroup') + `: ${containerCategory}`;
                   }
                   
                   // 更新插件的折叠状态
@@ -11000,7 +12817,7 @@ class AddRegexRuleModal extends Modal {
             });
           });
           toggleBtn.textContent = "<";
-          toggleBtn.title = "折叠分组内样式按钮";
+          toggleBtn.title = t('main.collapseGroupStyles');
         };
         toggleBtn.addEventListener('mouseenter', toggleBtn._autoExpandHandler);
       }
@@ -11020,7 +12837,7 @@ class AddRegexRuleModal extends Modal {
           });
           if (toggleBtn) {
             toggleBtn.textContent = ">";
-            toggleBtn.title = "悬停展开分组内样式按钮";
+            toggleBtn.title = t('main.hoverExpandGroup');
           }
         }, 50);
       };
@@ -11168,7 +12985,7 @@ class AddRegexRuleModal extends Modal {
       // 获取当前活动文件路径
       const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (!activeView || !activeView.file) {
-        styleCategoriesCountEl.textContent = "(未打开文件)";
+        styleCategoriesCountEl.textContent = t('main.noFileOpen');
         styleCategoriesCountEl.style.cursor = "default";
         styleCategoriesCountEl.style.textDecoration = "none";
         styleCategoriesCountEl.onclick = null;
@@ -11193,10 +13010,10 @@ class AddRegexRuleModal extends Modal {
             styleCategoriesCount += styleCategories[category].length;
           }
         }
-        styleCategoriesCountEl.textContent = `样式类别: ${styleCategoriesCount}个`;
+        styleCategoriesCountEl.textContent = t('main.styleCategoryCount') + `: ${styleCategoriesCount}`;
       } catch (error) {
         console.error('Error loading style categories:', error);
-        styleCategoriesCountEl.textContent = "(无法加载样式类别)";
+        styleCategoriesCountEl.textContent = t('main.cannotLoadCategories');
         styleCategoriesCountEl.style.cursor = "default";
         styleCategoriesCountEl.style.textDecoration = "none";
         styleCategoriesCountEl.onclick = null;
@@ -11215,10 +13032,10 @@ class AddRegexRuleModal extends Modal {
             countFileCount += Math.floor(countData[category].length / 2);
           }
         }
-        countFileCountEl.innerHTML = `计数文件: ${countFileCount}个类名 <span style="font-size: 14px; color: var(--text-faint);">(数量不一致可能导致计数显示偏移)</span>`;
+        countFileCountEl.innerHTML = t('cssEditor.countFileLabel') + `: ${countFileCount} ` + t('cssEditor.classCount') + ` <span style="font-size: 14px; color: var(--text-faint);">` + t('cssEditor.countMismatch') + `</span>`;
       } catch (error) {
         // 如果文件不存在，显示0
-        countFileCountEl.innerHTML = "计数文件: 0个类名 (未生成) <span style=\"font-size: 10px; color: var(--text-faint);\">(数量不一致可能导致计数显示偏移)</span>";
+        countFileCountEl.innerHTML = t('cssEditor.countFileZero') + ` <span style="font-size: 10px; color: var(--text-faint);">` + t('cssEditor.countMismatch') + `</span>`;
         countFileCountEl.style.cursor = "default";
         countFileCountEl.style.textDecoration = "none";
         countFileCountEl.onclick = null;
@@ -11279,7 +13096,7 @@ class AddRegexRuleModal extends Modal {
     settingsTitleContainer.style.display = "flex";
     settingsTitleContainer.style.alignItems = "center";
     
-    const settingsTitle = settingsTitleContainer.createEl("h3", { text: "设置 ▶" });
+    const settingsTitle = settingsTitleContainer.createEl("h3", { text: t('settings.settingsTitle') + " ▶" });
     settingsTitle.style.margin = "0";
     settingsTitle.style.fontSize = "14px";
     settingsTitle.style.color = "#666";
@@ -11290,7 +13107,7 @@ class AddRegexRuleModal extends Modal {
     
     // 创建打开data.json文件链接
     const openDataFileLink = settingsTitleContainer.createEl('span');
-    openDataFileLink.textContent = '打开data.json';
+    openDataFileLink.textContent = t('main.openDataJson');
     openDataFileLink.style.padding = '0 4px';
     openDataFileLink.style.fontSize = '12px';
     openDataFileLink.style.color = '#0066cc';
@@ -11310,7 +13127,7 @@ class AddRegexRuleModal extends Modal {
       } catch (error) {
         console.error('打开data.json文件失败:', error);
         const { Notice } = require('obsidian');
-        new Notice('无法打开data.json文件，请检查文件是否存在');
+        new Notice(t('main.cannotOpenFile'));
       }
     });
     
@@ -11400,7 +13217,7 @@ class AddRegexRuleModal extends Modal {
     };
     
     // 添加显示设置大纲组
-    const displayOutline = createOutlineSection(settingsContent, '显示', { isCollapsed: true });
+    const displayOutline = createOutlineSection(settingsContent, t('settings.display'), { isCollapsed: true });
     const displayContent = displayOutline.content;
     
     // 添加显示使用次数的开关和相关控件
@@ -11412,7 +13229,7 @@ class AddRegexRuleModal extends Modal {
     
     // 1. 首先创建标签
     const showCountLabel = showCountSettingRow.createEl("span");
-    showCountLabel.textContent = "样式使用次数角标: ";
+    showCountLabel.textContent = t('settings.styleUsageCount') + ": ";
     showCountLabel.style.marginRight = "10px";
     showCountLabel.style.fontSize = "14px";
     
@@ -11424,7 +13241,7 @@ class AddRegexRuleModal extends Modal {
     
     // 4. 创建更新计数按钮
     const updateCountBtn = showCountSettingRow.createEl("button");
-    updateCountBtn.textContent = "更新计数";
+    updateCountBtn.textContent = t('settings.updateCount');
     updateCountBtn.style.marginRight = "10px";
     updateCountBtn.style.padding = "4px 8px";
     updateCountBtn.style.backgroundColor = "var(--interactive-accent)";
@@ -11485,7 +13302,7 @@ class AddRegexRuleModal extends Modal {
     ruleSourceBadgeRow.style.flexWrap = "wrap";
     
     const ruleSourceBadgeLabel = ruleSourceBadgeRow.createEl("span");
-    ruleSourceBadgeLabel.textContent = "规则来源标记(g/l): ";
+    ruleSourceBadgeLabel.textContent = t('settings.ruleSourceBadge') + ": ";
     ruleSourceBadgeLabel.style.marginRight = "10px";
     ruleSourceBadgeLabel.style.fontSize = "14px";
     
@@ -11494,7 +13311,7 @@ class AddRegexRuleModal extends Modal {
     ruleSourceBadgeInput.checked = this.plugin.settings && this.plugin.settings.showRuleSourceBadge !== false;
     
     const ruleSourceBadgeHint = ruleSourceBadgeRow.createEl("span");
-    ruleSourceBadgeHint.textContent = "悬停高亮文本时显示g(全局)/l(局部)标记";
+    ruleSourceBadgeHint.textContent = t('settings.ruleSourceBadgeHint');
     ruleSourceBadgeHint.style.fontSize = "12px";
     ruleSourceBadgeHint.style.color = "var(--text-muted)";
     ruleSourceBadgeHint.style.marginLeft = "8px";
@@ -11515,7 +13332,7 @@ class AddRegexRuleModal extends Modal {
     ruleSourceBadgeThresholdRow.style.marginLeft = "20px";
     
     const ruleSourceBadgeThresholdLabel = ruleSourceBadgeThresholdRow.createEl("span");
-    ruleSourceBadgeThresholdLabel.textContent = "字数阈值: ";
+    ruleSourceBadgeThresholdLabel.textContent = t('settings.ruleSourceBadgeThreshold') + ": ";
     ruleSourceBadgeThresholdLabel.style.marginRight = "10px";
     ruleSourceBadgeThresholdLabel.style.fontSize = "14px";
     
@@ -11529,7 +13346,7 @@ class AddRegexRuleModal extends Modal {
     ruleSourceBadgeThresholdInput.style.fontSize = "14px";
     
     const ruleSourceBadgeThresholdHint = ruleSourceBadgeThresholdRow.createEl("span");
-    ruleSourceBadgeThresholdHint.textContent = "匹配文本字数大于此值时显示标记(0=始终显示)";
+    ruleSourceBadgeThresholdHint.textContent = t('settings.ruleSourceBadgeThresholdHint');
     ruleSourceBadgeThresholdHint.style.fontSize = "12px";
     ruleSourceBadgeThresholdHint.style.color = "var(--text-muted)";
     ruleSourceBadgeThresholdHint.style.marginLeft = "8px";
@@ -11544,7 +13361,7 @@ class AddRegexRuleModal extends Modal {
     });
     
     // 添加标题设置分类
-    const headingOutline = createOutlineSection(settingsContent, '标题', { isCollapsed: true, icon: '📌' });
+    const headingOutline = createOutlineSection(settingsContent, t('settings.heading'), { isCollapsed: true, icon: '📌' });
     const headingSettingsContent = headingOutline.content;
 
     // 添加标题层级标签的开关
@@ -11554,7 +13371,7 @@ class AddRegexRuleModal extends Modal {
     showHeadingLabelRow.style.marginBottom = "5px";
     
     const showHeadingLabelLabel = showHeadingLabelRow.createEl("span");
-    showHeadingLabelLabel.textContent = "标题层级标签(h1/h2...): ";
+    showHeadingLabelLabel.textContent = t('settings.headingLevelLabel') + ": ";
     showHeadingLabelLabel.style.marginRight = "10px";
     showHeadingLabelLabel.style.fontSize = "14px";
     
@@ -11583,7 +13400,7 @@ class AddRegexRuleModal extends Modal {
     disableHeadingStyleRow.style.marginBottom = "5px";
     
     const disableHeadingStyleLabel = disableHeadingStyleRow.createEl("span");
-    disableHeadingStyleLabel.textContent = "禁用标题样式: ";
+    disableHeadingStyleLabel.textContent = t('settings.disableHeadingStyle') + ": ";
     disableHeadingStyleLabel.style.marginRight = "10px";
     disableHeadingStyleLabel.style.fontSize = "14px";
     
@@ -11615,7 +13432,7 @@ class AddRegexRuleModal extends Modal {
     autoExpandRow.style.marginBottom = "5px";
     
     const autoExpandLabel = autoExpandRow.createEl("span");
-    autoExpandLabel.textContent = "自动展开模式: ";
+    autoExpandLabel.textContent = t('settings.autoExpandMode') + ": ";
     autoExpandLabel.style.marginRight = "10px";
     autoExpandLabel.style.fontSize = "14px";
     
@@ -11642,7 +13459,7 @@ class AddRegexRuleModal extends Modal {
     showRecentRulesRow.style.marginBottom = "5px";
     
     const showRecentRulesLabel = showRecentRulesRow.createEl("span");
-    showRecentRulesLabel.textContent = "折叠时显示最近规则: ";
+    showRecentRulesLabel.textContent = t('settings.showRecentRules') + ": ";
     showRecentRulesLabel.style.marginRight = "10px";
     showRecentRulesLabel.style.fontSize = "14px";
     
@@ -11665,7 +13482,7 @@ class AddRegexRuleModal extends Modal {
         // 获取当前活动文件路径
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!activeView || !activeView.file) {
-          new Notice("请先打开一个Markdown文件");
+          new Notice(t('main.openMdFile'));
           return;
         }
         
@@ -11687,11 +13504,11 @@ class AddRegexRuleModal extends Modal {
         await this.loadClassCounts();
         
         // 显示成功提示
-        new Notice("样式使用次数文件更新成功");
+        new Notice(t('settings.styleUsageUpdated'));
         
       } catch (error) {
         console.error("更新样式使用次数文件时出错:", error);
-        new Notice("更新失败，请检查控制台获取详细信息");
+        new Notice(t('settings.styleUsageUpdateFailed'));
       }
     });
     
@@ -11707,7 +13524,7 @@ class AddRegexRuleModal extends Modal {
     debugLogSettingRow.style.marginBottom = "5px";
 
     const debugLogLabel = debugLogSettingRow.createEl("span");
-    debugLogLabel.textContent = "调试耗时日志: ";
+    debugLogLabel.textContent = t('settings.debugLog') + ": ";
     debugLogLabel.style.marginRight = "10px";
     debugLogLabel.style.fontSize = "14px";
 
@@ -11731,12 +13548,12 @@ class AddRegexRuleModal extends Modal {
     cleanMissingHeader.style.marginBottom = "5px";
 
     const cleanMissingLabel = cleanMissingHeader.createEl("span");
-    cleanMissingLabel.textContent = "清理分类文件中不存在样式: ";
+    cleanMissingLabel.textContent = t('settings.cleanMissingStyles') + ": ";
     cleanMissingLabel.style.fontSize = "14px";
     cleanMissingLabel.style.marginRight = "10px";
 
     const scanMissingBtn = cleanMissingHeader.createEl("button");
-    scanMissingBtn.textContent = "扫描";
+    scanMissingBtn.textContent = t('settings.scan');
     scanMissingBtn.style.padding = "4px 10px";
     scanMissingBtn.style.fontSize = "12px";
     scanMissingBtn.style.borderRadius = "4px";
@@ -11752,7 +13569,7 @@ class AddRegexRuleModal extends Modal {
     cleanMissingResult.style.display = "none";
 
     const cleanMissingBtn = cleanMissingRow.createEl("button");
-    cleanMissingBtn.textContent = "清除不存在的样式";
+    cleanMissingBtn.textContent = t('settings.cleanNonExistent');
     cleanMissingBtn.style.padding = "4px 10px";
     cleanMissingBtn.style.fontSize = "12px";
     cleanMissingBtn.style.borderRadius = "4px";
@@ -11773,7 +13590,7 @@ class AddRegexRuleModal extends Modal {
           categories = JSON.parse(categoriesContent) || {};
         } catch (e) {
           cleanMissingResult.style.display = "block";
-          cleanMissingResult.innerHTML = '<span style="color:#e74c3c">无法读取 style-categories.json</span>';
+          cleanMissingResult.innerHTML = `<span style="color:#e74c3c">${t('main.cannotReadCategories')}</span>`;
           return;
         }
 
@@ -11789,7 +13606,7 @@ class AddRegexRuleModal extends Modal {
           });
         } catch (e) {
           cleanMissingResult.style.display = "block";
-          cleanMissingResult.innerHTML = '<span style="color:#e74c3c">无法读取 styles.css</span>';
+          cleanMissingResult.innerHTML = `<span style="color:#e74c3c">${t('main.cannotReadStyles')}</span>`;
           return;
         }
 
@@ -11807,10 +13624,10 @@ class AddRegexRuleModal extends Modal {
         cleanMissingResult.style.display = "block";
 
         if (totalMissing === 0) {
-          cleanMissingResult.innerHTML = '<span style="color:#27ae60">✓ 所有分类中的样式在 styles.css 中均存在，无需清理</span>';
+          cleanMissingResult.innerHTML = `<span style="color:#27ae60">${t('main.allStylesExist')}</span>`;
           cleanMissingBtn.style.display = "none";
         } else {
-          let html = `<span style="color:#e67e22">发现 ${totalMissing} 个样式在 styles.css 中不存在:</span><br>`;
+          let html = `<span style="color:#e67e22">` + t('main.foundMissingStyles') + ` ${totalMissing} ` + t('main.missingInCss') + `</span><br>`;
           html += '<div style="margin-top:4px;max-height:200px;overflow-y:auto;padding:6px;background:var(--background-secondary);border-radius:4px;font-size:12px;line-height:1.6">';
           for (const category in missingMap) {
             html += `<div><strong>${category}</strong>: <span style="color:var(--text-muted)">${missingMap[category].join('</span>, <span style="color:var(--text-muted)">')}</span></div>`;
@@ -11833,16 +13650,16 @@ class AddRegexRuleModal extends Modal {
             if (this.plugin && typeof this.plugin.loadStyleCategories === 'function') {
               await this.plugin.loadStyleCategories();
             }
-            cleanMissingResult.innerHTML = `<span style="color:#27ae60">✓ 已清理 ${totalMissing} 个不存在的样式</span>`;
+            cleanMissingResult.innerHTML = `<span style="color:#27ae60">✓ ` + t('main.cleanedMissingStyles') + ` ${totalMissing} ` + t('main.missingStyles') + `</span>`;
             cleanMissingBtn.style.display = "none";
             await this.loadClassCounts();
-            new Notice(`已清理 ${totalMissing} 个不存在的样式`);
+            new Notice(t('settings.cleanedMissing'));
           };
         }
       } catch (error) {
         console.error('扫描不存在样式时出错:', error);
         cleanMissingResult.style.display = "block";
-        cleanMissingResult.innerHTML = '<span style="color:#e74c3c">扫描失败，请检查控制台</span>';
+        cleanMissingResult.innerHTML = '<span style="color:#e74c3c">' + t('settings.scanFailed') + '</span>';
       }
     });
 
@@ -11857,7 +13674,7 @@ class AddRegexRuleModal extends Modal {
       lineHeightRow.style.alignItems = "center";
       lineHeightRow.style.marginBottom = "5px";
 
-      const lineHeightLabel = lineHeightRow.createEl("span", { text: "行距: " });
+      const lineHeightLabel = lineHeightRow.createEl("span", { text: t('settings.lineHeight') + ": " });
       lineHeightLabel.style.fontSize = "14px";
       lineHeightLabel.style.marginRight = "8px";
       lineHeightLabel.style.minWidth = "55px";
@@ -11869,7 +13686,7 @@ class AddRegexRuleModal extends Modal {
       lineHeightInput.style.borderRadius = "4px";
       lineHeightInput.style.fontSize = "14px";
       lineHeightInput.value = this.plugin.settings?.mobilePreviewLineHeight ?? '';
-      lineHeightInput.placeholder = "如1.8";
+      lineHeightInput.placeholder = t('settings.lineHeightExample');
 
       const lineHeightUnit = lineHeightRow.createEl("span", { text: "" });
       lineHeightUnit.style.fontSize = "12px";
@@ -11882,7 +13699,7 @@ class AddRegexRuleModal extends Modal {
       leftMarginRow.style.alignItems = "center";
       leftMarginRow.style.marginBottom = "5px";
 
-      const leftMarginLabel = leftMarginRow.createEl("span", { text: "左边距: " });
+      const leftMarginLabel = leftMarginRow.createEl("span", { text: t('settings.leftMargin') + ": " });
       leftMarginLabel.style.fontSize = "14px";
       leftMarginLabel.style.marginRight = "8px";
       leftMarginLabel.style.minWidth = "55px";
@@ -11907,7 +13724,7 @@ class AddRegexRuleModal extends Modal {
       rightMarginRow.style.alignItems = "center";
       rightMarginRow.style.marginBottom = "5px";
 
-      const rightMarginLabel = rightMarginRow.createEl("span", { text: "右边距: " });
+      const rightMarginLabel = rightMarginRow.createEl("span", { text: t('settings.rightMargin2') + ": " });
       rightMarginLabel.style.fontSize = "14px";
       rightMarginLabel.style.marginRight = "8px";
       rightMarginLabel.style.minWidth = "55px";
@@ -11930,10 +13747,10 @@ class AddRegexRuleModal extends Modal {
       marginDesc.style.fontSize = "12px";
       marginDesc.style.color = "#888";
       marginDesc.style.marginTop = "4px";
-      marginDesc.textContent = "调整阅读模式内容区域的行距和左右边距";
+      marginDesc.textContent = t('settings.marginDesc');
 
       // 应用按钮
-      const applyMarginBtn = mobileMarginContainer.createEl("button", { text: "应用" });
+      const applyMarginBtn = mobileMarginContainer.createEl("button", { text: t('main.save') });
       applyMarginBtn.style.marginTop = "6px";
       applyMarginBtn.style.padding = "4px 12px";
       applyMarginBtn.style.fontSize = "13px";
@@ -11952,7 +13769,7 @@ class AddRegexRuleModal extends Modal {
         this.plugin.settings.mobilePreviewLineHeight = lineHVal;
         await this.plugin.saveData(this.plugin.settings);
         this.plugin.applyMobilePreviewMargins();
-        new Notice(`阅读模式行、边距已更新：行距 ${lineHVal || '默认'}，左 ${leftVal}px，右 ${rightVal}px`);
+        new Notice(t('settings.lineMarginUpdated'));
       });
     }
 
@@ -11967,7 +13784,7 @@ class AddRegexRuleModal extends Modal {
       mainOpacityRow.style.alignItems = "center";
       mainOpacityRow.style.marginBottom = "5px";
 
-      const mainOpacityLabel = mainOpacityRow.createEl("span", { text: "主面板透明度: " });
+      const mainOpacityLabel = mainOpacityRow.createEl("span", { text: t('settings.mainPanelOpacity') + ": " });
       mainOpacityLabel.style.fontSize = "14px";
       mainOpacityLabel.style.marginRight = "8px";
       mainOpacityLabel.style.minWidth = "100px";
@@ -11993,7 +13810,7 @@ class AddRegexRuleModal extends Modal {
       entityOpacityRow.style.alignItems = "center";
       entityOpacityRow.style.marginBottom = "5px";
 
-      const entityOpacityLabel = entityOpacityRow.createEl("span", { text: "按钮面板透明度: " });
+      const entityOpacityLabel = entityOpacityRow.createEl("span", { text: t('settings.entityPanelOpacity') + ": " });
       entityOpacityLabel.style.fontSize = "14px";
       entityOpacityLabel.style.marginRight = "8px";
       entityOpacityLabel.style.minWidth = "100px";
@@ -12014,7 +13831,7 @@ class AddRegexRuleModal extends Modal {
       entityOpacityUnit.style.marginLeft = "4px";
 
       // 应用透明度按钮
-      const applyOpacityBtn = mobileOpacityContainer.createEl("button", { text: "应用" });
+      const applyOpacityBtn = mobileOpacityContainer.createEl("button", { text: t('main.save') });
       applyOpacityBtn.style.marginTop = "6px";
       applyOpacityBtn.style.padding = "4px 12px";
       applyOpacityBtn.style.fontSize = "13px";
@@ -12030,12 +13847,12 @@ class AddRegexRuleModal extends Modal {
         this.plugin.settings.mainModalOpacity = mainVal;
         this.plugin.settings.entityModalOpacity = entityVal;
         await this.plugin.saveData(this.plugin.settings);
-        new Notice(`面板透明度已更新：主面板 ${mainVal}%，按钮面板 ${entityVal}%`);
+        new Notice(t('settings.panelOpacityUpdated'));
       });
     }
 
     // 添加备注弹窗设置区域
-    const popupOutline = createOutlineSection(settingsContent, '备注弹窗', { isCollapsed: true, icon: '📝' });
+    const popupOutline = createOutlineSection(settingsContent, t('settings.popup'), { isCollapsed: true, icon: '📝' });
     const popupSettingsContainer = popupOutline.section;
     const popupSettingsContent = popupOutline.content;
     popupSettingsContent.className = "popup-settings-content";
@@ -12047,7 +13864,7 @@ class AddRegexRuleModal extends Modal {
     remarkKeepOpenRow.style.marginBottom = "5px";
 
     const remarkKeepOpenLabel = remarkKeepOpenRow.createEl("span");
-    remarkKeepOpenLabel.textContent = "确认后不自动关闭: ";
+    remarkKeepOpenLabel.textContent = t('settings.remarkKeepOpen') + ': ';
     remarkKeepOpenLabel.style.marginRight = "10px";
     remarkKeepOpenLabel.style.fontSize = "14px";
 
@@ -12070,7 +13887,7 @@ class AddRegexRuleModal extends Modal {
     fontSizeSettingRow.style.alignItems = "center";
     fontSizeSettingRow.style.marginBottom = "5px";
 
-    const fontSizeLabel = fontSizeSettingRow.createEl("span", { text: "备注弹窗字体大小: " });
+    const fontSizeLabel = fontSizeSettingRow.createEl("span", { text: t('settings.remarkPopupFontSize') + ': ' });
     fontSizeLabel.style.marginRight = "10px";
     fontSizeLabel.style.fontSize = "14px";
 
@@ -12095,7 +13912,7 @@ class AddRegexRuleModal extends Modal {
     spacingSettingRow.style.alignItems = "center";
     spacingSettingRow.style.marginBottom = "5px";
 
-    const spacingLabel = spacingSettingRow.createEl("span", { text: "备注弹窗内边距: " });
+    const spacingLabel = spacingSettingRow.createEl("span", { text: t('settings.remarkPopupPadding') + ': ' });
     spacingLabel.style.marginRight = "10px";
     spacingLabel.style.fontSize = "14px";
 
@@ -12120,7 +13937,7 @@ class AddRegexRuleModal extends Modal {
     lineHeightSettingRow.style.alignItems = "center";
     lineHeightSettingRow.style.marginBottom = "5px";
 
-    const lineHeightLabel = lineHeightSettingRow.createEl("span", { text: "备注弹窗行间距: " });
+    const lineHeightLabel = lineHeightSettingRow.createEl("span", { text: t('settings.remarkLineSpacing') + ': ' });
     lineHeightLabel.style.marginRight = "10px";
     lineHeightLabel.style.fontSize = "14px";
 
@@ -12135,7 +13952,7 @@ class AddRegexRuleModal extends Modal {
     lineHeightInput.style.border = "1px solid var(--background-modifier-border)";
     lineHeightInput.style.borderRadius = "4px";
 
-    const lineHeightUnit = lineHeightSettingRow.createEl("span", { text: "倍" });
+    const lineHeightUnit = lineHeightSettingRow.createEl("span", { text: t('settings.times') });
     lineHeightUnit.style.marginLeft = "5px";
     lineHeightUnit.style.fontSize = "14px";
 
@@ -12145,7 +13962,7 @@ class AddRegexRuleModal extends Modal {
     popupSizeSettingRow.style.alignItems = "center";
     popupSizeSettingRow.style.marginBottom = "5px";
 
-    const popupSizeLabel = popupSizeSettingRow.createEl("span", { text: "备注弹窗宽度: " });
+    const popupSizeLabel = popupSizeSettingRow.createEl("span", { text: t('settings.remarkPopupWidth') + ": " });
     popupSizeLabel.style.marginRight = "10px";
     popupSizeLabel.style.fontSize = "14px";
 
@@ -12170,7 +13987,7 @@ class AddRegexRuleModal extends Modal {
     popupBorderWidthSettingRow.style.alignItems = "center";
     popupBorderWidthSettingRow.style.marginBottom = "5px";
 
-    const popupBorderWidthLabel = popupBorderWidthSettingRow.createEl("span", { text: "备注弹窗边框宽度: " });
+    const popupBorderWidthLabel = popupBorderWidthSettingRow.createEl("span", { text: t('settings.remarkPopupBorderWidth') + ": " });
     popupBorderWidthLabel.style.marginRight = "10px";
     popupBorderWidthLabel.style.fontSize = "14px";
 
@@ -12195,7 +14012,7 @@ class AddRegexRuleModal extends Modal {
     popupBorderColorSettingRow.style.alignItems = "center";
     popupBorderColorSettingRow.style.marginBottom = "5px";
 
-    const popupBorderColorLabel = popupBorderColorSettingRow.createEl("span", { text: "备注弹窗边框颜色: " });
+    const popupBorderColorLabel = popupBorderColorSettingRow.createEl("span", { text: t('settings.remarkPopupBorderColor') + ': ' });
     popupBorderColorLabel.style.marginRight = "10px";
     popupBorderColorLabel.style.fontSize = "14px";
 
@@ -12220,7 +14037,7 @@ class AddRegexRuleModal extends Modal {
     remarkPopupOnlyOnSelectionCheckbox.style.marginRight = "8px";
     remarkPopupOnlyOnSelectionCheckbox.style.cursor = "pointer";
 
-    const remarkPopupOnlyOnSelectionLabel = remarkPopupOnlyOnSelectionRow.createEl("span", { text: "仅在选中文本时弹出" });
+    const remarkPopupOnlyOnSelectionLabel = remarkPopupOnlyOnSelectionRow.createEl("span", { text: t('settings.remarkPopupOnlyOnSelection') });
     remarkPopupOnlyOnSelectionLabel.style.fontSize = "14px";
     remarkPopupOnlyOnSelectionLabel.style.cursor = "pointer";
 
@@ -12231,7 +14048,7 @@ class AddRegexRuleModal extends Modal {
     savePopupSettingsButtonRow.style.marginTop = "10px";
     savePopupSettingsButtonRow.style.marginBottom = "5px";
 
-    const savePopupSettingsButton = savePopupSettingsButtonRow.createEl("button", { text: "保存" });
+    const savePopupSettingsButton = savePopupSettingsButtonRow.createEl("button", { text: t('main.save') });
     savePopupSettingsButton.style.padding = "6px 16px";
     savePopupSettingsButton.style.backgroundColor = "#007bff";
     savePopupSettingsButton.style.color = "white";
@@ -12253,16 +14070,16 @@ class AddRegexRuleModal extends Modal {
         this.plugin.settings.popupBorderColor = popupBorderColorInput.value;
         this.plugin.settings.remarkPopupOnlyOnSelection = remarkPopupOnlyOnSelectionCheckbox.checked;
         await this.plugin.saveData(this.plugin.settings);
-        new Notice("备注弹窗设置已保存");
+        new Notice(t('settings.remarkPopupSaved'));
         this.plugin.refreshCurrentView();
       } catch (error) {
         console.error("保存备注弹窗设置时出错:", error);
-        new Notice("保存失败，请检查控制台获取详细信息");
+        new Notice(t('settings.saveFailedDetail'));
       }
     });
 
     // 添加悬浮球设置区域
-    const floatingBallOutline = createOutlineSection(settingsContent, '悬浮球', { isCollapsed: true, icon: '⚪' });
+    const floatingBallOutline = createOutlineSection(settingsContent, t('settings.floatingBall'), { isCollapsed: true, icon: '⚪' });
     const floatingBallSettingsContainer = floatingBallOutline.section;
     const floatingBallSettingsContent = floatingBallOutline.content;
     floatingBallSettingsContent.className = "floating-ball-settings-content";
@@ -12273,7 +14090,7 @@ class AddRegexRuleModal extends Modal {
     floatingBallModeRow.style.alignItems = "center";
     floatingBallModeRow.style.marginBottom = "5px";
 
-    const floatingBallModeLabel = floatingBallModeRow.createEl("span", { text: "悬浮球模式: " });
+    const floatingBallModeLabel = floatingBallModeRow.createEl("span", { text: t('settings.floatingBallMode') + ': ' });
     floatingBallModeLabel.style.marginRight = "10px";
     floatingBallModeLabel.style.fontSize = "14px";
 
@@ -12285,8 +14102,8 @@ class AddRegexRuleModal extends Modal {
     floatingBallModeSelect.style.backgroundColor = "var(--background-primary)";
     floatingBallModeSelect.style.color = "var(--text-normal)";
 
-    const alwaysOption = floatingBallModeSelect.createEl("option", { text: "常显模式", value: "always" });
-    const followSelectionOption = floatingBallModeSelect.createEl("option", { text: "跟随选中模式", value: "followSelection" });
+    const alwaysOption = floatingBallModeSelect.createEl("option", { text: t('settings.alwaysShow'), value: "always" });
+    const followSelectionOption = floatingBallModeSelect.createEl("option", { text: t('settings.followSelection'), value: "followSelection" });
 
     // 设置当前选中的值
     const currentFloatingBallMode = this.plugin.floatButtonData?.floatingBallMode || 'always';
@@ -12298,9 +14115,9 @@ class AddRegexRuleModal extends Modal {
     floatingBallModeDesc.style.color = "#666";
     floatingBallModeDesc.style.marginBottom = "10px";
     floatingBallModeDesc.innerHTML = `
-      <div>• 常显模式：悬浮球始终显示在屏幕上</div>
-      <div>• 跟随选中模式：选中文字时悬浮球出现在鼠标位置附近</div>
-      <div style="margin-top: 8px; color: #888;">💡 鼠标移到悬浮球上Ctrl+鼠标滚轮调整透明度</div>
+      <div>• ${t('floating.alwaysModeDesc')}</div>
+      <div>• ${t('floating.followModeDesc')}</div>
+      <div style="margin-top: 8px; color: #888;">💡 ${t('floating.opacityTip')}</div>
     `;
 
     // 悬浮球模式切换事件
@@ -12311,7 +14128,7 @@ class AddRegexRuleModal extends Modal {
       }
       this.plugin.floatButtonData.floatingBallMode = newMode;
       await this.plugin.saveFloatButtonData();
-      new Notice(`悬浮球模式已切换为: ${newMode === 'always' ? '常显模式' : '跟随选中模式'}`);
+      new Notice(t('main.modeSwitched') + ': ' + (newMode === 'always' ? t('main.alwaysMode') : t('main.followMode')));
       
       // 重新创建悬浮球以应用新模式
       const existingBall = document.getElementById('regex-highlighter-floating-ball');
@@ -12328,27 +14145,27 @@ class AddRegexRuleModal extends Modal {
     floatingBallOptionManagerTitle.style.fontWeight = "bold";
     floatingBallOptionManagerTitle.style.marginTop = "10px";
     floatingBallOptionManagerTitle.style.marginBottom = "8px";
-    floatingBallOptionManagerTitle.textContent = "管理悬浮球选项";
+    floatingBallOptionManagerTitle.textContent = t('settings.manageFloatingOptions');
 
     const floatingBallOptionManagerDesc = floatingBallSettingsContent.createDiv();
     floatingBallOptionManagerDesc.style.fontSize = "12px";
     floatingBallOptionManagerDesc.style.color = "#666";
     floatingBallOptionManagerDesc.style.marginBottom = "8px";
-    floatingBallOptionManagerDesc.textContent = "勾选的选项会在悬浮球菜单中显示，取消勾选则隐藏";
+    floatingBallOptionManagerDesc.textContent = t('settings.manageFloatingOptionsDesc');
 
     const floatingBallOptionItems = [
-      { id: 'openMainPanel', label: '打开主面板' },
-      { id: 'formatReplace', label: '格式替换' },
-      { id: 'addRemark', label: '添加备注' },
-      { id: 'removeHighlight', label: '移除高亮' },
-      { id: 'pinyin', label: '注音' },
-      { id: 'aiAssistant', label: 'AI回复' },
-      { id: 'extractEntities', label: '实体提取' },
-      { id: 'styleShowcase', label: '高亮列表' },
-      { id: 'fontSwitch', label: '切换字体' },
-      { id: 'switchMode', label: '模式切换' },
-      { id: 'hideFloatingBtns', label: '隐藏悬浮按钮' },
-      { id: 'hideTextStyles', label: '隐藏/显示文本样式' }
+      { id: 'openMainPanel', label: t('floating.openMainPanel') },
+      { id: 'formatReplace', label: t('floating.formatReplace') },
+      { id: 'addRemark', label: t('floating.addRemark') },
+      { id: 'removeHighlight', label: t('floating.removeHighlight') },
+      { id: 'pinyin', label: t('floating.pinyin') },
+      { id: 'aiAssistant', label: t('floating.aiAssistant') },
+      { id: 'extractEntities', label: t('floating.extractEntities') },
+      { id: 'styleShowcase', label: t('floating.styleShowcase') },
+      { id: 'fontSwitch', label: t('floating.fontSwitch') },
+      { id: 'switchMode', label: t('floating.switchMode') },
+      { id: 'hideFloatingBtns', label: t('floating.hideFloatingBtns') },
+      { id: 'hideTextStyles', label: t('floating.hideTextStyles') }
     ];
 
     const visibleOptions = this.plugin.floatButtonData?.floatingBallVisibleOptions || {};
@@ -12381,7 +14198,7 @@ class AddRegexRuleModal extends Modal {
     saveVisibleOptionsButtonRow.style.marginTop = "8px";
     saveVisibleOptionsButtonRow.style.marginBottom = "5px";
 
-    const saveVisibleOptionsButton = saveVisibleOptionsButtonRow.createEl("button", { text: "保存" });
+    const saveVisibleOptionsButton = saveVisibleOptionsButtonRow.createEl("button", { text: t('main.save') });
     saveVisibleOptionsButton.style.padding = "6px 16px";
     saveVisibleOptionsButton.style.backgroundColor = "#007bff";
     saveVisibleOptionsButton.style.color = "white";
@@ -12399,7 +14216,7 @@ class AddRegexRuleModal extends Modal {
         });
         this.plugin.floatButtonData.floatingBallVisibleOptions = newVisibleOptions;
         await this.plugin.saveFloatButtonData();
-        new Notice("悬浮球选项设置已保存");
+        new Notice(t('settings.floatingBallOptionsSaved'));
 
         const existingBall = document.getElementById('regex-highlighter-floating-ball');
         if (existingBall) {
@@ -12408,13 +14225,13 @@ class AddRegexRuleModal extends Modal {
         this.plugin.createFloatingBall();
       } catch (error) {
         console.error("保存悬浮球选项设置时出错:", error);
-        new Notice("保存失败");
+        new Notice(t('settings.saveFailed'));
       }
     });
 
 
     // 添加字体切换设置区域
-    const fontOutline = createOutlineSection(settingsContent, '字体切换', { isCollapsed: true, icon: '🔤' });
+    const fontOutline = createOutlineSection(settingsContent, t('settings.fontSwitch'), { isCollapsed: true, icon: '🔤' });
     const fontSettingsContainer = fontOutline.section;
     if (!_isDesktop) fontSettingsContainer.style.display = "none"; // 手机端隐藏字体切换设置
     const fontSettingsContent = fontOutline.content;
@@ -12432,7 +14249,7 @@ class AddRegexRuleModal extends Modal {
     enableFontSwitchCheckbox.style.marginRight = "8px";
     enableFontSwitchCheckbox.style.cursor = "pointer";
 
-    const enableFontSwitchLabel = enableFontSwitchRow.createEl("span", { text: "启用字体切换功能" });
+    const enableFontSwitchLabel = enableFontSwitchRow.createEl("span", { text: t('settings.enableFontSwitch') });
     enableFontSwitchLabel.style.fontSize = "14px";
     enableFontSwitchLabel.style.cursor = "pointer";
 
@@ -12442,9 +14259,9 @@ class AddRegexRuleModal extends Modal {
     fontSwitchDesc.style.color = "#666";
     fontSwitchDesc.style.marginBottom = "10px";
     fontSwitchDesc.innerHTML = `
-      <div>• 开启后，悬浮球菜单中会显示"切换字体"选项</div>
-      <div>• 直接读取系统已安装字体，点击星标可收藏常用字体</div>
-      <div style="margin-top: 4px; color: #888;">💡 仅桌面端支持</div>
+      <div>• ${t('settings.fontSwitchDesc1')}</div>
+      <div>• ${t('settings.fontSwitchDesc2')}</div>
+      <div style="margin-top: 4px; color: #888;">💡 ${t('settings.desktopOnly')}</div>
     `;
 
     // 保存字体设置按钮
@@ -12454,7 +14271,7 @@ class AddRegexRuleModal extends Modal {
     saveFontSettingsButtonRow.style.marginTop = "10px";
     saveFontSettingsButtonRow.style.marginBottom = "5px";
 
-    const saveFontSettingsButton = saveFontSettingsButtonRow.createEl("button", { text: "保存" });
+    const saveFontSettingsButton = saveFontSettingsButtonRow.createEl("button", { text: t('main.save') });
     saveFontSettingsButton.style.padding = "6px 16px";
     saveFontSettingsButton.style.backgroundColor = "#007bff";
     saveFontSettingsButton.style.color = "white";
@@ -12468,7 +14285,7 @@ class AddRegexRuleModal extends Modal {
         if (!this.plugin.settings) this.plugin.settings = {};
         this.plugin.settings.enableFontSwitch = enableFontSwitchCheckbox.checked;
         await this.plugin.saveData(this.plugin.settings);
-        new Notice("字体切换设置已保存");
+        new Notice(t('settings.fontSwitchSaved'));
 
         // 如果启用了字体切换，立即加载字体
         if (enableFontSwitchCheckbox.checked) {
@@ -12482,12 +14299,12 @@ class AddRegexRuleModal extends Modal {
         this.plugin.renderFloatingOptionButtons();
       } catch (error) {
         console.error("保存字体切换设置时出错:", error);
-        new Notice("保存失败");
+        new Notice(t('settings.saveFailed'));
       }
     });
 
     // 添加AI设置区域
-    const aiOutline = createOutlineSection(settingsContent, 'AI 设置', { isCollapsed: true, icon: '🤖' });
+    const aiOutline = createOutlineSection(settingsContent, t('settings.aiSettings'), { isCollapsed: true, icon: '🤖' });
     const aiSettingsContainer = aiOutline.section;
     aiSettingsContainer.id = "ai-settings-section";
     const aiSettingsContent = aiOutline.content;
@@ -12500,7 +14317,7 @@ class AddRegexRuleModal extends Modal {
 
     // AI列表标题
     const aiListTitle = aiListContainer.createEl("p");
-    aiListTitle.textContent = "已添加的AI: ";
+    aiListTitle.textContent = t('settings.aiList') + ': ';
     aiListTitle.style.margin = "0 0 8px 0";
     aiListTitle.style.fontSize = "12px";
     aiListTitle.style.color = "#666";
@@ -12512,7 +14329,7 @@ class AddRegexRuleModal extends Modal {
     aiButtonsContainer.style.gap = "8px";
 
     // 添加AI按钮
-    const addAIButton = aiButtonsContainer.createEl("button", { text: "添加AI" });
+    const addAIButton = aiButtonsContainer.createEl("button", { text: t('settings.addAi') });
     addAIButton.style.padding = "4px 8px";
     addAIButton.style.backgroundColor = "#28a745";
     addAIButton.style.color = "white";
@@ -12531,7 +14348,7 @@ class AddRegexRuleModal extends Modal {
 
     // AI编辑标题
     const aiEditTitle = aiEditContainer.createEl("h4");
-    aiEditTitle.textContent = "编辑AI设置";
+    aiEditTitle.textContent = t('settings.editAi');
     aiEditTitle.style.margin = "0 0 12px 0";
     aiEditTitle.style.fontSize = "13px";
     aiEditTitle.style.color = "#333";
@@ -12545,14 +14362,14 @@ class AddRegexRuleModal extends Modal {
     aiNameSettingRow.style.alignItems = "center";
     aiNameSettingRow.style.marginBottom = "10px";
 
-    const aiNameLabel = aiNameSettingRow.createEl("span", { text: "AI名称: " });
+    const aiNameLabel = aiNameSettingRow.createEl("span", { text: t('settings.aiName') + ': ' });
     aiNameLabel.style.marginRight = "10px";
     aiNameLabel.style.fontSize = "14px";
     aiNameLabel.style.minWidth = "80px";
 
     const aiNameInput = aiNameSettingRow.createEl("input");
     aiNameInput.type = "text";
-    aiNameInput.placeholder = "例如: OpenAI GPT-4";
+    aiNameInput.placeholder = t('settings.aiNameExample');
     aiNameInput.value = "";
     aiNameInput.style.flex = "1";
     aiNameInput.style.padding = "4px";
@@ -12565,14 +14382,14 @@ class AddRegexRuleModal extends Modal {
     aiModelSettingRow.style.alignItems = "center";
     aiModelSettingRow.style.marginBottom = "10px";
 
-    const aiModelLabel = aiModelSettingRow.createEl("span", { text: "AI模型: " });
+    const aiModelLabel = aiModelSettingRow.createEl("span", { text: t('settings.aiModel') + ': ' });
     aiModelLabel.style.marginRight = "10px";
     aiModelLabel.style.fontSize = "14px";
     aiModelLabel.style.minWidth = "80px";
 
     const aiModelInput = aiModelSettingRow.createEl("input");
     aiModelInput.type = "text";
-    aiModelInput.placeholder = "例如: gpt-4-turbo, claude-3-sonnet-20240229, deepseek-chat (DeepSeek正确模型名)";
+    aiModelInput.placeholder = t('settings.aiModelExample');
     aiModelInput.value = "gpt-4-turbo";
     aiModelInput.style.flex = "1";
     aiModelInput.style.padding = "4px";
@@ -12650,7 +14467,7 @@ class AddRegexRuleModal extends Modal {
     };
 
     const apiProviderLink = apiProviderLinkRow.createEl("a", {
-      text: "获取API Key",
+      text: t('settings.getApiKey'),
       href: getApiKeyUrl()
     });
     apiProviderLink.style.color = "var(--interactive-accent)";
@@ -12669,7 +14486,7 @@ class AddRegexRuleModal extends Modal {
     temperatureSettingRow.style.alignItems = "center";
     temperatureSettingRow.style.marginBottom = "10px";
 
-    const temperatureLabel = temperatureSettingRow.createEl("span", { text: "温度参数: " });
+    const temperatureLabel = temperatureSettingRow.createEl("span", { text: t('settings.temperature') + ': ' });
     temperatureLabel.style.marginRight = "10px";
     temperatureLabel.style.fontSize = "14px";
     temperatureLabel.style.minWidth = "80px";
@@ -12693,7 +14510,7 @@ class AddRegexRuleModal extends Modal {
     temperatureInfo.style.fontSize = "12px";
     temperatureInfo.style.color = "#6c757d";
     temperatureInfo.style.lineHeight = "1.4";
-    temperatureInfo.innerHTML = "温度参数控制AI输出的随机性。值越低（0-0.5）输出越确定、保守；值越高（1.5-2）输出越多样、创新。";
+    temperatureInfo.innerHTML = t('settings.temperatureDesc');
 
     // API测试输入框
     const testApiRow = aiEditContainer.createDiv();
@@ -12701,15 +14518,15 @@ class AddRegexRuleModal extends Modal {
     testApiRow.style.alignItems = "flex-start";
     testApiRow.style.marginBottom = "10px";
 
-    const testApiLabel = testApiRow.createEl("span", { text: "测试API: " });
+    const testApiLabel = testApiRow.createEl("span", { text: t('settings.testApi') + ': ' });
     testApiLabel.style.marginRight = "10px";
     testApiLabel.style.fontSize = "14px";
     testApiLabel.style.minWidth = "80px";
     testApiLabel.style.paddingTop = "4px";
 
     const testApiInput = testApiRow.createEl("textarea");
-    testApiInput.placeholder = "输入测试文本...";
-    testApiInput.value = "你好，AI";
+    testApiInput.placeholder = t('settings.inputTestText');
+    testApiInput.value = t('settings.testApiValue');
     testApiInput.style.flex = "1";
     testApiInput.style.padding = "4px";
     testApiInput.style.border = "1px solid var(--background-modifier-border)";
@@ -12719,7 +14536,7 @@ class AddRegexRuleModal extends Modal {
     testApiInput.style.minHeight = "80px";
 
     // 测试API按钮
-    const testApiButton = testApiRow.createEl("button", { text: "测试" });
+    const testApiButton = testApiRow.createEl("button", { text: t('settings.test') });
     testApiButton.style.padding = "4px 12px";
     testApiButton.style.backgroundColor = "#007bff";
     testApiButton.style.color = "white";
@@ -12732,7 +14549,7 @@ class AddRegexRuleModal extends Modal {
     testApiButton.addEventListener("click", async () => {
       const testText = testApiInput.value.trim();
       if (!testText) {
-        new Notice("请输入测试文本");
+        new Notice(t('settings.inputTestText'));
         return;
       }
 
@@ -12741,7 +14558,7 @@ class AddRegexRuleModal extends Modal {
       const apiKey = apiKeyInput.value.trim();
 
       if (!model || !apiUrl || !apiKey) {
-        new Notice("请填写完整的AI配置信息");
+        new Notice(t('settings.completeAiConfig'));
         return;
       }
       
@@ -12750,14 +14567,14 @@ class AddRegexRuleModal extends Modal {
         // DeepSeek API模型名称建议
         const validDeepSeekModels = ["deepseek-chat", "deepseek-coder-v2", "deepseek-reasoner-v1"];
         if (!validDeepSeekModels.includes(model.toLowerCase())) {
-          new Notice(`DeepSeek模型名称可能不正确，建议使用: ${validDeepSeekModels.join(", ")}`);
+          new Notice(t('settings.deepSeekModelHint') + ': ' + validDeepSeekModels.join(', '));
         }
       }
 
       try {
         testApiButton.disabled = true;
-        testApiButton.textContent = "测试中...";
-        new Notice("正在测试API连接...");
+        testApiButton.textContent = t('settings.testingApi');
+        new Notice(t('settings.testingApi'));
 
         // 根据不同的API提供商设置不同的请求参数
         const temperature = parseFloat(temperatureInput.value) || 0.7;
@@ -12785,16 +14602,16 @@ class AddRegexRuleModal extends Modal {
         if (response.ok) {
           const data = await response.json();
           if (data.choices && data.choices[0]?.message?.content) {
-            new Notice("API测试成功！");
+            new Notice(t('settings.apiTestSuccess'));
             console.log("API测试响应:", data.choices[0].message.content);
             // 将AI返回的内容追加到测试API文本框中
             testApiInput.value += `\n\nAI: ${data.choices[0].message.content}`;
           } else {
-            new Notice("API响应格式异常");
+            new Notice(t('settings.apiResponseError'));
           }
         } else {
           const errorData = await response.text();
-          new Notice(`API测试失败: ${response.status} - ${errorData.substring(0, 100)}...`);
+          new Notice(t('settings.apiTestFailed') + ': ' + response.status + ' - ' + errorData.substring(0, 100) + '...');
           console.error("API测试错误详情:", {
             status: response.status,
             statusText: response.statusText,
@@ -12811,11 +14628,11 @@ class AddRegexRuleModal extends Modal {
           });
         }
       } catch (error) {
-        new Notice(`API测试失败: ${error.message}`);
+        new Notice(t('settings.apiTestFailed') + ': ' + error.message);
         console.error("API测试错误:", error);
       } finally {
         testApiButton.disabled = false;
-        testApiButton.textContent = "测试";
+        testApiButton.textContent = t('settings.test');
       }
     });
 
@@ -12829,7 +14646,7 @@ class AddRegexRuleModal extends Modal {
     setAsCurrentCheckbox.type = "checkbox";
     setAsCurrentCheckbox.id = "set-as-current-ai";
     
-    const setAsCurrentLabel = setAsCurrentRow.createEl("label", { text: "设为当前AI" });
+    const setAsCurrentLabel = setAsCurrentRow.createEl("label", { text: t('settings.setAsCurrentAi') });
     setAsCurrentLabel.style.marginLeft = "8px";
     setAsCurrentLabel.style.fontSize = "13px";
     setAsCurrentLabel.htmlFor = "set-as-current-ai";
@@ -12842,7 +14659,7 @@ class AddRegexRuleModal extends Modal {
     editButtonsContainer.style.marginTop = "16px";
 
     // 取消按钮
-    const cancelEditButton = editButtonsContainer.createEl("button", { text: "取消" });
+    const cancelEditButton = editButtonsContainer.createEl("button", { text: t('main.cancel') });
     cancelEditButton.style.padding = "4px 12px";
     cancelEditButton.style.backgroundColor = "var(--background-modifier-border)";
     cancelEditButton.style.color = "var(--text-normal)";
@@ -12852,7 +14669,7 @@ class AddRegexRuleModal extends Modal {
     cancelEditButton.style.fontSize = "13px";
 
     // 完成编辑按钮
-    const finishEditButton = editButtonsContainer.createEl("button", { text: "完成编辑" });
+    const finishEditButton = editButtonsContainer.createEl("button", { text: t('settings.finishEdit') });
     finishEditButton.style.padding = "4px 12px";
     finishEditButton.style.backgroundColor = "#28a745";
     finishEditButton.style.color = "white";
@@ -12943,7 +14760,7 @@ class AddRegexRuleModal extends Modal {
           apiUrlInput.value = aiConfig.base_url;
           apiKeyInput.value = aiConfig.apiKey;
           temperatureInput.value = aiConfig.temperature || 0.7;
-          testApiInput.value = "你好，AI";
+          testApiInput.value = t('settings.testApiValue');
           setAsCurrentCheckbox.checked = (index === (this.plugin.settings.currentAI || 0));
           apiProviderLink.href = getApiKeyUrl();
         });
@@ -12951,7 +14768,7 @@ class AddRegexRuleModal extends Modal {
         // 如果未设置API Key，添加提示
         if (!aiConfig.apiKey || aiConfig.apiKey.trim() === "") {
           const apiKeyHint = aiButtonsContainer.createEl("div");
-          apiKeyHint.textContent = "未设置API Key";
+          apiKeyHint.textContent = t('settings.noApiKey');
           apiKeyHint.style.color = "#dc3545";
           apiKeyHint.style.fontSize = "10px";
           apiKeyHint.style.marginTop = "2px";
@@ -12978,7 +14795,7 @@ class AddRegexRuleModal extends Modal {
           
           // 创建删除选项
           const deleteOption = document.createElement("div");
-          deleteOption.textContent = "删除";
+          deleteOption.textContent = t('context.delete');
           deleteOption.style.padding = "4px 12px";
           deleteOption.style.cursor = "pointer";
           deleteOption.style.fontSize = "12px";
@@ -12987,7 +14804,7 @@ class AddRegexRuleModal extends Modal {
           // 删除选项点击事件
           deleteOption.addEventListener("click", async () => {
             // 确认删除
-            if (confirm(`确定要删除AI "${aiConfig.name}"吗？`)) {
+            if (confirm(t('main.confirmDeleteAi') + ` "${aiConfig.name}"?`)) {
               // 从配置中删除AI
               this.plugin.settings.aiConfigs.splice(index, 1);
               
@@ -13010,7 +14827,7 @@ class AddRegexRuleModal extends Modal {
                 aiEditContainer.style.display = "none";
               }
               
-              new Notice(`已删除AI "${aiConfig.name}"`);
+              new Notice(t('settings.aiDeleted'));
             }
             
             // 移除右键菜单
@@ -13050,7 +14867,7 @@ class AddRegexRuleModal extends Modal {
       apiUrlInput.value = "";
       apiKeyInput.value = "";
       temperatureInput.value = "0.7";
-      testApiInput.value = "你好，AI";
+      testApiInput.value = t('settings.testApiValue');
       setAsCurrentCheckbox.checked = false;
       apiProviderLink.href = getApiKeyUrl();
     });
@@ -13059,7 +14876,7 @@ class AddRegexRuleModal extends Modal {
     finishEditButton.addEventListener("click", async () => {
       const aiName = aiNameInput.value.trim();
       if (!aiName) {
-        new Notice("请输入AI名称");
+        new Notice(t('settings.inputAiName'));
         return;
       }
 
@@ -13092,7 +14909,7 @@ class AddRegexRuleModal extends Modal {
 
         await this.plugin.saveData(this.plugin.settings);
 
-        new Notice("AI设置已保存");
+        new Notice(t('settings.aiSettingsSaved'));
 
         // 如果勾选了设为当前AI
         if (setAsCurrentCheckbox.checked) {
@@ -13109,7 +14926,7 @@ class AddRegexRuleModal extends Modal {
         aiModelInput.value = "gpt-4-turbo";
         apiUrlInput.value = "https://api.openai.com/v1/chat/completions";
         apiKeyInput.value = "";
-        testApiInput.value = "你好，AI";
+        testApiInput.value = t('settings.testApiValue');
         setAsCurrentCheckbox.checked = false;
         
         // 隐藏编辑界面
@@ -13117,7 +14934,7 @@ class AddRegexRuleModal extends Modal {
 
       } catch (error) {
         console.error("保存AI设置时出错:", error);
-        new Notice("保存失败，请检查控制台获取详细信息");
+        new Notice(t('settings.saveFailedDetail'));
       }
     });
 
@@ -13129,7 +14946,7 @@ class AddRegexRuleModal extends Modal {
       aiModelInput.value = "gpt-4-turbo";
       apiUrlInput.value = "https://api.openai.com/v1/chat/completions";
       apiKeyInput.value = "";
-      testApiInput.value = "你好，AI";
+      testApiInput.value = t('settings.testApiValue');
       
       // 隐藏编辑界面
       aiEditContainer.style.display = "none";
@@ -13137,7 +14954,7 @@ class AddRegexRuleModal extends Modal {
 
 
     // 添加拼音样式设置区域
-    const pinyinOutline = createOutlineSection(settingsContent, '拼音样式', { isCollapsed: true });
+    const pinyinOutline = createOutlineSection(settingsContent, t('settings.pinyinStyle'), { isCollapsed: true });
     const pinyinSettingsContainer = pinyinOutline.section;
     const pinyinSettingsContent = pinyinOutline.content;
     pinyinSettingsContent.className = "pinyin-settings-content";
@@ -13152,7 +14969,7 @@ class AddRegexRuleModal extends Modal {
     const globalPinyinCol = pinyinCssContainer.createDiv();
     globalPinyinCol.style.flex = "1";
 
-    const globalPinyinLabel = globalPinyinCol.createEl("label", { text: "全局拼音样式:" });
+    const globalPinyinLabel = globalPinyinCol.createEl("label", { text: t('settings.globalPinyinStyle') + ':' });
     globalPinyinLabel.style.display = "block";
     globalPinyinLabel.style.marginBottom = "5px";
     globalPinyinLabel.style.fontSize = "13px";
@@ -13174,7 +14991,7 @@ class AddRegexRuleModal extends Modal {
     const localPinyinCol = pinyinCssContainer.createDiv();
     localPinyinCol.style.flex = "1";
 
-    const localPinyinLabel = localPinyinCol.createEl("label", { text: "局部拼音样式:" });
+    const localPinyinLabel = localPinyinCol.createEl("label", { text: t('settings.localPinyinStyle') + ':' });
     localPinyinLabel.style.display = "block";
     localPinyinLabel.style.marginBottom = "5px";
     localPinyinLabel.style.fontSize = "13px";
@@ -13298,7 +15115,7 @@ class AddRegexRuleModal extends Modal {
     buttonContainer.style.gap = "8px";
 
     // 重置按钮
-    const resetPinyinCssButton = buttonContainer.createEl("button", { text: "重置为默认" });
+    const resetPinyinCssButton = buttonContainer.createEl("button", { text: t('settings.resetToDefault') });
     resetPinyinCssButton.style.padding = "4px 12px";
     resetPinyinCssButton.style.backgroundColor = "#6c757d";
     resetPinyinCssButton.style.color = "white";
@@ -13313,7 +15130,7 @@ class AddRegexRuleModal extends Modal {
     });
 
     // 保存按钮
-    const savePinyinCssButton = buttonContainer.createEl("button", { text: "保存样式" });
+    const savePinyinCssButton = buttonContainer.createEl("button", { text: t('settings.saveStyle') });
     savePinyinCssButton.style.padding = "4px 12px";
     savePinyinCssButton.style.backgroundColor = "#28a745";
     savePinyinCssButton.style.color = "white";
@@ -13337,10 +15154,10 @@ class AddRegexRuleModal extends Modal {
         // 触发拼音更新事件
         this.plugin.pinyinUpdateEmitter.dispatchEvent(new Event('update'));
 
-        new Notice("拼音样式已保存");
+        new Notice(t('settings.pinyinSaved'));
       } catch (error) {
         console.error("保存拼音样式时出错:", error);
-        new Notice("保存失败，请检查控制台获取详细信息");
+        new Notice(t('settings.saveFailedDetail'));
       }
     });
 
@@ -13352,7 +15169,7 @@ class AddRegexRuleModal extends Modal {
     const readmeContent = readmeOutline.content;
     
     // 在标题行添加更新链接
-    const updateLink = readmeHeader.createEl("a", { text: "查看更新", attr: { href: "https://forum-zh.obsidian.md/t/topic/55548", target: "_blank" } });
+    const updateLink = readmeHeader.createEl("a", { text: t('settings.viewUpdates'), attr: { href: "https://forum-zh.obsidian.md/t/topic/55548", target: "_blank" } });
     updateLink.style.marginLeft = "8px";
     updateLink.style.fontSize = "12px";
     updateLink.style.color = "#007bff";
@@ -13383,7 +15200,14 @@ class AddRegexRuleModal extends Modal {
 
         <div style="margin-bottom: 12px;">
             <div style="margin-bottom: 12px; background-color: #e8f5e9; padding: 8px; border-radius: 4px;">
-              <h3 style="margin: 0 0 6px 0; font-size: 14px;">🆕 v1.5.6 (2026-05-31) 更新内容</h3>
+              <h3 style="margin: 0 0 6px 0; font-size: 14px;">🆕 v1.5.7 (2026-05-31) 更新内容</h3>
+              <ul style="margin: 0 0 6px 20px; padding-left: 10px;">
+                <li><strong>管理悬浮球选项新增"隐藏/显示文本样式"</strong> - 可在设置中控制该选项是否在悬浮球菜单中显示</li>
+                <li><strong>修复分组子菜单中键点击触发自动滚动</strong> - 中键点击添加全局规则时不再进入自动滚动状态</li>
+              </ul>
+            </div>
+            <div style="margin-bottom: 12px; background-color: #e3f2fd; padding: 8px; border-radius: 4px;">
+              <h3 style="margin: 0 0 6px 0; font-size: 14px;">v1.5.6 (2026-05-31) 更新内容</h3>
               <ul style="margin: 0 0 6px 20px; padding-left: 10px;">
                 <li><strong>悬浮子菜单右键选项</strong> - 悬浮按钮子菜单样式右键添加"修改显示文字"、"复制类名"、"复制完整样式"选项</li>
                 <li><strong>子菜单右键体验修复</strong> - 修复鼠标移动到右键选项时子菜单会隐藏的问题</li>
@@ -14178,7 +16002,7 @@ class AddRegexRuleModal extends Modal {
     titleContainer.style.marginBottom = '8px';
     titleContainer.style.position = 'relative'; // 设置为相对定位，作为绝对定位元素的容器
     
-    const globalTitle = titleContainer.createEl("h3", { text: "全局高亮规则 ▼" });
+    const globalTitle = titleContainer.createEl("h3", { text: t('main.globalRules') + ' ▼' });
     globalTitle.style.margin = "0";
     globalTitle.style.fontSize = "14px";
     globalTitle.style.color = "#333";
@@ -14197,7 +16021,7 @@ class AddRegexRuleModal extends Modal {
     globalDescription.style.fontSize = "12px";
     globalDescription.style.color = "#666";
     globalDescription.style.padding = "0 4px";
-    globalDescription.textContent = "单击输入到表达式编辑框 | 长按移动到当前文件规则 | 中键点击删除 | 右键编辑备注 | Shift+右键禁用规则";
+    globalDescription.textContent = t('global.description');
     globalDescription.style.visibility = "hidden"; // 默认隐藏文字
     if (!_isDesktop) globalDescription.style.display = "none"; // 手机端隐藏提示
 
@@ -14209,7 +16033,7 @@ class AddRegexRuleModal extends Modal {
     
     // 创建打开全局规则文件链接
     const openGlobalFileLink = titleContainer.createEl('span');
-    openGlobalFileLink.textContent = '打开全局规则文件';
+    openGlobalFileLink.textContent = t('main.openGlobalRulesFile');
     openGlobalFileLink.style.padding = '0 4px';
     openGlobalFileLink.style.fontSize = '12px';
     openGlobalFileLink.style.color = '#0066cc';
@@ -14228,7 +16052,7 @@ class AddRegexRuleModal extends Modal {
       } catch (error) {
         console.error('打开全局规则文件失败:', error);
         const { Notice } = require('obsidian');
-        new Notice('无法打开全局规则文件，请检查文件是否存在');
+        new Notice(t('main.cannotOpenFile'));
       }
     });
     
@@ -14368,7 +16192,7 @@ class AddRegexRuleModal extends Modal {
       globalContent.style.maxHeight = "0";
       
       const emptyMessage = globalList.createDiv();
-      emptyMessage.textContent = "暂无全局高亮规则";
+      emptyMessage.textContent = t('main.noHighlightRule');
       emptyMessage.style.color = "#999";
       emptyMessage.style.fontStyle = "italic";
       emptyMessage.style.padding = "10px";
@@ -14479,12 +16303,12 @@ class AddRegexRuleModal extends Modal {
         }
         
         // 添加tooltip提示功能，显示正则规则、样式名称和备注
-        let tooltipText = `全局规则\n正则: ${rule.regex}\n样式: .${rule.cssClass}\n点击: 编辑(编辑后按Ctrl+Enter更新)\n长按: 移动到当前文件`;
+        let tooltipText = t('main.globalRule') + `\n` + t('main.regex') + `: ${rule.regex}\n` + t('main.styleClass') + `: .${rule.cssClass}\n` + t('main.clickToEdit') + `\n` + t('main.longPressMove');
         // 添加remark到tooltip中
-        tooltipText += `\n备注: ${rule.remark || '空'}`;
+        tooltipText += `\n` + t('main.remark') + `: ${rule.remark || t('main.empty')}`;
         // 添加禁用状态提示
-        tooltipText += `\n状态: ${isDisabled ? '已禁用' : '已启用'}`;
-        tooltipText += `\nShift+右键: ${isDisabled ? '启用' : '禁用'}规则`;
+        tooltipText += `\n` + t('main.status') + `: ${isDisabled ? t('main.disabled') : t('main.enabled')}`;
+        tooltipText += `\nShift+` + t('main.rightClick') + `: ${isDisabled ? t('main.enable') : t('main.disable')} ` + t('main.rule');
         globalButton.setAttribute("title", tooltipText);
         
         // 创建样式预览区域
@@ -14557,7 +16381,7 @@ class AddRegexRuleModal extends Modal {
               await this.plugin.addFileRule(rule.regex, rule.cssClass);
               
               // 显示成功消息
-              this.showSuccessMessage(`规则 "${rule.regex}" 已通过长按移动到当前文件！`);
+              this.showSuccessMessage(t('main.ruleMovedByLongPress') + ` "${rule.regex}"`);
               
               // 更新显示
               // 先清除所有相关区域
@@ -14606,7 +16430,7 @@ class AddRegexRuleModal extends Modal {
             this.addRemarkSection(contentEl);
             
             // 显示成功消息
-            this.showSuccessMessage(`全局规则已删除！`);
+            this.showSuccessMessage(t('main.globalRuleDeleted'));
           }
         });
         
@@ -14625,7 +16449,7 @@ class AddRegexRuleModal extends Modal {
             await this.plugin.saveGlobalRules(this.plugin.globalRules);
             
             // 显示成功消息
-            this.showSuccessMessage(`规则 "${rule.regex}" 已${newDisabledState ? '禁用' : '启用'}！`);
+            this.showSuccessMessage(t('main.ruleToggled') + ` "${rule.regex}" ${newDisabledState ? t('main.disabled') : t('main.enabled')}`);
             
             // 刷新全局规则显示
             this.clearGlobalRulesSection();
@@ -14655,7 +16479,7 @@ class AddRegexRuleModal extends Modal {
             
             // 添加编辑备注选项
             const editRemarkOption = document.createElement('div');
-            editRemarkOption.textContent = '编辑备注';
+            editRemarkOption.textContent = t('context.editRemark');
             editRemarkOption.style.cssText = `
               padding: 8px 16px;
               cursor: pointer;
@@ -14682,7 +16506,7 @@ class AddRegexRuleModal extends Modal {
 
             // 添加删除规则选项
             const deleteOption = document.createElement('div');
-            deleteOption.textContent = '删除规则';
+            deleteOption.textContent = t('context.deleteRule');
             deleteOption.style.cssText = `
               padding: 8px 16px;
               cursor: pointer;
@@ -14705,7 +16529,7 @@ class AddRegexRuleModal extends Modal {
               this.plugin.refreshCurrentView();
               this.clearGlobalRulesSection();
               this.addGlobalRulesSection(contentEl);
-              this.showSuccessMessage(`已删除全局规则: ${rule.regex}`);
+              this.showSuccessMessage(t('main.globalRuleDeleted') + `: ${rule.regex}`);
               document.body.removeChild(menu);
             });
             
@@ -14713,7 +16537,7 @@ class AddRegexRuleModal extends Modal {
 
             // 添加移动到当前文件规则选项
             const moveToFileOption = document.createElement('div');
-            moveToFileOption.textContent = '移动到当前文件规则';
+            moveToFileOption.textContent = t('context.moveToCurrentFile');
             moveToFileOption.style.cssText = `
               padding: 8px 16px;
               cursor: pointer;
@@ -14751,7 +16575,7 @@ class AddRegexRuleModal extends Modal {
               this.clearGlobalRulesSection();
               this.addHistorySection(this.contentEl);
               this.addGlobalRulesSection(contentEl);
-              this.showSuccessMessage(`已移动到当前文件规则: ${rule.regex}`);
+              this.showSuccessMessage(t('main.movedToLocalRule') + `: ${rule.regex}`);
               document.body.removeChild(menu);
             });
             
@@ -14849,7 +16673,7 @@ class AddRegexRuleModal extends Modal {
     titleContainer.style.marginBottom = '8px';
     titleContainer.style.position = 'relative'; // 设置为相对定位，作为绝对定位元素的容器
     
-    const headingTitle = titleContainer.createEl("h3", { text: "标题样式 ▼" });
+    const headingTitle = titleContainer.createEl("h3", { text: t('main.headingStyles') + ' ▼' });
     headingTitle.style.margin = "0";
     headingTitle.style.fontSize = "14px";
     headingTitle.style.color = "#333";
@@ -14867,7 +16691,7 @@ class AddRegexRuleModal extends Modal {
     headingDescription.style.fontSize = "12px";
     headingDescription.style.color = "#666";
     headingDescription.style.padding = "0 4px";
-    headingDescription.textContent = "自动应用到Obsidian原生标题元素";
+    headingDescription.textContent = t('heading.autoApply');
     headingDescription.style.visibility = "hidden"; // 默认隐藏文字
 
     // 修改标题样式为inline
@@ -15035,7 +16859,7 @@ class AddRegexRuleModal extends Modal {
       
       // 左键点击：显示已应用
       stylePreview.addEventListener('click', () => {
-        new Notice(`标题样式 .${className} 已应用到所有对应级别标题`);
+        new Notice(t('heading.styleApplied'));
       });
       
       // 中键点击：删除标题样式
@@ -15070,7 +16894,7 @@ class AddRegexRuleModal extends Modal {
               await this.plugin.injectCSSContent(existingCss);
             }
             
-            new Notice(`标题样式 .${className} 已删除`);
+            new Notice(t('heading.styleDeleted'));
           }
         }
       });
@@ -15121,20 +16945,20 @@ class AddRegexRuleModal extends Modal {
         };
         
         // 编辑选项
-        const editOption = createMenuItem('编辑', () => {
+        const editOption = createMenuItem(t('main.edit'), () => {
           // 调用打开CSS编辑器的函数
           if (typeof this.plugin.openCSSEditor === 'function') {
             this.plugin.openCSSEditor(className, styleContent);
           } else if (typeof this.openCSSEditor === 'function') {
             this.openCSSEditor(className, styleContent);
           } else {
-            new Notice('无法打开编辑器');
+            new Notice(t('main.cannotOpenEditor'));
           }
         });
         menu.appendChild(editOption);
         
         // 删除选项
-        const deleteOption = createMenuItem('删除标题样式', async () => {
+        const deleteOption = createMenuItem(t('context.deleteHeadingStyle'), async () => {
           // 从"标题样式"分类中移除
           const index = this.plugin.config.styleCategories['标题样式'].indexOf(className);
           if (index > -1) {
@@ -15161,7 +16985,7 @@ class AddRegexRuleModal extends Modal {
               await this.plugin.injectCSSContent(existingCss);
             }
             
-            new Notice(`标题样式 .${className} 已删除`);
+            new Notice(t('heading.styleDeleted'));
           }
         });
         
@@ -15203,7 +17027,7 @@ class AddRegexRuleModal extends Modal {
       noStyles.style.fontSize = "12px";
       noStyles.style.textAlign = "center";
       noStyles.style.padding = "10px";
-      noStyles.textContent = "暂无标题样式，右键样式按钮选择「添加为标题样式」来创建";
+      noStyles.textContent = t('heading.noStyles');
     }
   }
 
@@ -15274,7 +17098,7 @@ class AddRegexRuleModal extends Modal {
     titleContainer.style.marginBottom = '8px';
     titleContainer.style.position = 'relative'; // 设置为相对定位，作为绝对定位元素的容器
     
-    const historyTitle = titleContainer.createEl("h3", { text: "当前文件的高亮规则 ▼" });
+    const historyTitle = titleContainer.createEl("h3", { text: t('main.currentRules') + ' ▼' });
     historyTitle.style.margin = "0";
     historyTitle.style.fontSize = "14px";
     historyTitle.style.color = "#333";
@@ -15296,7 +17120,7 @@ class AddRegexRuleModal extends Modal {
     historyDescription.style.fontSize = "12px";
     historyDescription.style.color = "#666";
     historyDescription.style.padding = "0 4px";
-    historyDescription.textContent = "单击输入到表达式编辑框 | 长按移动到全局规则 | 中键点击删除 | 右键编辑备注";
+    historyDescription.textContent = t('history.description');
     historyDescription.style.visibility = "hidden"; // 默认隐藏文字
     if (!_isDesktop) historyDescription.style.display = "none"; // 手机端隐藏提示
 
@@ -15308,7 +17132,7 @@ class AddRegexRuleModal extends Modal {
     
     // 创建打开规则文件链接
     const openFileLink = titleContainer.createEl('span');
-    openFileLink.textContent = '打开规则文件';
+    openFileLink.textContent = t('main.openRulesFile');
     openFileLink.style.padding = '0 4px';
     openFileLink.style.fontSize = '12px';
     openFileLink.style.color = '#0066cc';
@@ -15333,7 +17157,7 @@ class AddRegexRuleModal extends Modal {
       } catch (error) {
         console.error('打开规则文件失败:', error);
         const { Notice } = require('obsidian');
-        new Notice('无法打开规则文件，请检查文件是否存在');
+        new Notice(t('main.cannotOpenFile'));
       }
     });
     
@@ -15472,7 +17296,7 @@ class AddRegexRuleModal extends Modal {
       historyContent.style.maxHeight = "0";
       
       const emptyMessage = historyList.createDiv();
-      emptyMessage.textContent = "暂无高亮规则";
+      emptyMessage.textContent = t('main.noHighlightRule');
       emptyMessage.style.color = "#999";
       emptyMessage.style.fontStyle = "italic";
       emptyMessage.style.padding = "10px";
@@ -15573,9 +17397,9 @@ class AddRegexRuleModal extends Modal {
         historyButton.dataset.ruleCssClass = rule.cssClass;
         
         // 添加tooltip提示功能，显示正则规则、样式名称和备注
-        let tooltipText = `当前文件规则\n正则: ${rule.regex}\n样式: .${rule.cssClass}\n点击: 应用规则(编辑后按Ctrl+Enter更新)\nCtrl+点击: 移动到全局规则\n备注: ${rule.remark || '空'}`;
+        let tooltipText = t('main.localRule') + `\n` + t('main.regex') + `: ${rule.regex}\n` + t('main.styleClass') + `: .${rule.cssClass}\n` + t('main.clickToApply') + `\nCtrl+` + t('main.clickToGlobal') + `\n` + t('main.remark') + `: ${rule.remark || t('main.empty')}`;
         // 总是添加remark到tooltip中
-        // tooltipText += `\n备注: ${rule.remark || '空'}`;
+        // tooltipText += `\n` + t('main.remark') + `: ${rule.remark || t('main.empty')}`;
         historyButton.setAttribute("title", tooltipText);
         
         // 创建样式预览区域 - 使用与样式按钮相同的结构
@@ -15609,7 +17433,7 @@ class AddRegexRuleModal extends Modal {
             console.log('Adding history rule to global with Ctrl+click:', rule.regex, rule.cssClass);
             const success = await this.plugin.moveRuleToGlobal(rule.regex, rule.cssClass);
             if (success) {
-              this.showSuccessMessage(`规则 "${rule.regex}" 已移动到全局规则！`);
+              this.showSuccessMessage(t('main.ruleMovedToGlobal') + ` "${rule.regex}"`);
               // 按照固定顺序重新加载：当前文件规则 > 全局规则 > 已备注文本
               this.clearHistorySection();
               this.clearGlobalRulesSection();
@@ -15654,7 +17478,7 @@ class AddRegexRuleModal extends Modal {
               console.log('Long press detected on history button, adding to global:', rule.regex, rule.cssClass);
               const success = await this.plugin.moveRuleToGlobal(rule.regex, rule.cssClass);
               if (success) {
-                this.showSuccessMessage(`规则 "${rule.regex}" 已通过长按添加到全局规则！`);
+                this.showSuccessMessage(t('main.ruleAddedToGlobalByLongPress') + ` "${rule.regex}"`);
                 // 按照固定顺序重新加载：当前文件规则 > 全局规则 > 已备注文本
                 this.clearHistorySection();
                 this.clearGlobalRulesSection();
@@ -15734,7 +17558,7 @@ class AddRegexRuleModal extends Modal {
           historyButton.style.borderColor = "#007bff";
           historyButton.style.transform = "translateY(-2px)";
           historyButton.style.boxShadow = "0 2px 3px rgba(0,123,255,0.2)";
-          historyButton.title = `左键: 编辑(Ctrl+Enter更新) | 中键: 应用为全局规则\n正则: ${rule.regex}\n样式: ${rule.cssClass}\n备注: ${rule.remark || '空'}`;
+          historyButton.title = t('main.leftClickEdit') + ` | ` + t('main.middleClickGlobal') + `\n` + t('main.regex') + `: ${rule.regex}\n` + t('main.styleClass') + `: ${rule.cssClass}\n` + t('main.remark') + `: ${rule.remark || t('main.empty')}`;
           // 显示说明文字
           historyDescription.style.visibility = "visible";
         });
@@ -15800,7 +17624,7 @@ class AddRegexRuleModal extends Modal {
           
           // 添加编辑备注选项
           const editRemarkOption = document.createElement('div');
-          editRemarkOption.textContent = '编辑备注';
+          editRemarkOption.textContent = t('context.editRemark');
           editRemarkOption.style.cssText = `
             padding: 8px 16px;
             cursor: pointer;
@@ -15827,7 +17651,7 @@ class AddRegexRuleModal extends Modal {
 
           // 添加删除规则选项
           const deleteOption = document.createElement('div');
-          deleteOption.textContent = '删除规则';
+          deleteOption.textContent = t('context.deleteRule');
           deleteOption.style.cssText = `
             padding: 8px 16px;
             cursor: pointer;
@@ -15855,7 +17679,7 @@ class AddRegexRuleModal extends Modal {
 
           // 添加移动到全局规则选项
           const moveToGlobalOption = document.createElement('div');
-          moveToGlobalOption.textContent = '移动到全局规则';
+          moveToGlobalOption.textContent = t('context.moveToGlobalRules');
           moveToGlobalOption.style.cssText = `
             padding: 8px 16px;
             cursor: pointer;
@@ -15890,7 +17714,7 @@ class AddRegexRuleModal extends Modal {
             this.clearGlobalRulesSection();
             this.addHistorySection(this.contentEl);
             this.addGlobalRulesSection(this.contentEl);
-            this.showSuccessMessage(`已移动到全局规则: ${rule.regex}`);
+            this.showSuccessMessage(t('main.movedToGlobalRule') + `: ${rule.regex}`);
             document.body.removeChild(menu);
           });
           
@@ -16527,7 +18351,7 @@ class AddRegexRuleModal extends Modal {
         }
         
         // 显示成功提示
-        this.showSuccessMessage(`样式 .${className} 已成功更新！`);
+        this.showSuccessMessage(t('main.styleUpdated') + ` .${className}`);
         
       } catch (error) {
         console.error('Error saving CSS style:', error);
@@ -16654,7 +18478,7 @@ class AddRegexRuleModal extends Modal {
   
   // 生成Obsidian标题样式
   generateObsidianHeadingStyles(cssContent) {
-    let headingStyles = '\n/* Obsidian 标题样式支持 */';
+    let headingStyles = '\n/* ' + t('heading.styleSupport') + ' */';
     
     // 从this.plugin.settings.headingStyles读取标题样式（存储在data.json中）
     const storedHeadingStyles = this.plugin && this.plugin.settings && this.plugin.settings.headingStyles ? this.plugin.settings.headingStyles : {};
@@ -17024,8 +18848,8 @@ class AddRegexRuleModal extends Modal {
     // 使用与"添加备注"按钮相同的AddRemarkModal类，确保行为一致，包括光标闪烁
     const modal = new AddRemarkModal(
       this.app,
-      '编辑备注信息',
-      '请输入备注内容...',
+      t('main.editRemark'),
+      t('main.inputRemarkContent'),
       rule.remark || '', // 使用已有的备注内容作为默认值
       async (remark) => {
         const newRemark = remark.trim();
@@ -17205,7 +19029,7 @@ class AddRegexRuleModal extends Modal {
             
             // 添加删除选项
             const deleteOption = document.createElement('div');
-            deleteOption.textContent = '删除';
+            deleteOption.textContent = t('context.delete');
             deleteOption.style.cssText = `
               padding: 8px 16px;
               cursor: pointer;
@@ -17241,7 +19065,7 @@ class AddRegexRuleModal extends Modal {
             
             // 添加移动到分组选项
             const moveOption = document.createElement('div');
-            moveOption.textContent = '移动到分组';
+            moveOption.textContent = t('context.moveToGroup');
             moveOption.style.cssText = `
               padding: 8px 16px;
               cursor: pointer;
@@ -17333,7 +19157,7 @@ class AddRegexRuleModal extends Modal {
                     this.exitMultiSelectMode();
                     
                     // 显示成功消息
-                    this.showSuccessMessage(`已将选中样式移动到分组 "${category}"`);
+                    this.showSuccessMessage(t('main.styleMovedToGroup') + ` "${category}"`);
                   } catch (error) {
                     console.error('Error moving style to category:', error);
                     this.showErrorMessage(clone, '移动样式失败: ' + error.message);
@@ -17552,7 +19376,7 @@ class AddRegexRuleModal extends Modal {
                     const otherCategoryTitle = container.querySelector('h4');
                     if (otherCategoryTitle) {
                       otherCategoryTitle.style.backgroundColor = '#6c757d';
-                      otherCategoryTitle.title = '双击展开分组';
+                      otherCategoryTitle.title = t('main.dblClickExpandGroup');
                     }
                     
                     // 更新插件的折叠状态
@@ -17586,7 +19410,7 @@ class AddRegexRuleModal extends Modal {
                 console.log('Moving rule to global with Ctrl+click:', currentRegexValue, className);
                 const success = await this.plugin.moveRuleToGlobal(currentRegexValue, className);
                 if (success) {
-                  this.showSuccessMessage(`规则 "${currentRegexValue}" 已移动到全局规则！`);
+                  this.showSuccessMessage(t('main.ruleMovedToGlobalSuccess') + ` "${currentRegexValue}"`);
                   // 按照固定顺序重新加载：当前文件规则 > 全局规则 > 已备注文本
                   this.clearHistorySection();
                   this.clearGlobalRulesSection();
@@ -17609,7 +19433,7 @@ class AddRegexRuleModal extends Modal {
                   await this.updateStyleCountBadges();
                   
                   // 显示成功消息
-                  this.showSuccessMessage(`规则 "${currentRegexValue}" 已重新应用样式 .${className}！`);
+                  this.showSuccessMessage(t('main.ruleReapplied') + ` "${currentRegexValue}" ` + t('main.styleClass') + ` .${className}`);
                   
                   // 按照固定顺序重新加载：当前文件规则 > 全局规则 > 已备注文本
                   this.clearHistorySection();
@@ -17648,8 +19472,8 @@ class AddRegexRuleModal extends Modal {
                 
                 // 显示成功消息
                 const message = isGlobal ? 
-                  `全局规则 "${currentRegexValue}" 已成功应用样式 .${className}！` : 
-                  `规则 "${currentRegexValue}" 已成功应用样式 .${className}！`;
+                  t('main.globalRuleStyleApplied') + ` "${currentRegexValue}" ` + t('main.styleClass') + ` .${className}` : 
+                  t('main.ruleStyleApplied') + ` "${currentRegexValue}" ` + t('main.styleClass') + ` .${className}`;
                 this.showSuccessMessage(message);
                 
                 // 按照固定顺序重新加载：当前文件规则 > 全局规则 > 已备注文本
@@ -17721,7 +19545,7 @@ class AddRegexRuleModal extends Modal {
               
               // 添加删除选项
               const deleteOption = document.createElement('div');
-              deleteOption.textContent = '删除';
+              deleteOption.textContent = t('context.delete');
               deleteOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -17757,7 +19581,7 @@ class AddRegexRuleModal extends Modal {
               
               // 添加移动到分组选项
               const moveOption = document.createElement('div');
-              moveOption.textContent = '移动到分组';
+              moveOption.textContent = t('context.moveToGroup');
               moveOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -17851,7 +19675,7 @@ class AddRegexRuleModal extends Modal {
                         this.exitMultiSelectMode();
                         
                         // 显示成功消息
-                        this.showSuccessMessage(`已将选中样式移动到分组 "${category}"`);
+                        this.showSuccessMessage(t('main.styleMovedToGroup') + ` "${category}"`);
                       } else {
                         // 普通模式下移动单个样式
                         // 从所有分类中查找并移除样式
@@ -17884,7 +19708,7 @@ class AddRegexRuleModal extends Modal {
                   this.onOpen();
                         
                         // 显示成功消息
-                        this.showSuccessMessage(`已将样式移动到分组 "${category}"`);
+                        this.showSuccessMessage(t('main.styleMovedToGroup') + ` "${category}"`);
                       }
                     } catch (error) {
                       console.error('Error moving style to category:', error);
@@ -17947,7 +19771,7 @@ class AddRegexRuleModal extends Modal {
               
               // 添加编辑选项
               const editOption = document.createElement('div');
-              editOption.textContent = '编辑';
+              editOption.textContent = t('context.edit');
               editOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -17975,7 +19799,7 @@ class AddRegexRuleModal extends Modal {
               
               // 添加添加为全局规则选项
               const addGlobalOption = document.createElement('div');
-              addGlobalOption.textContent = '添加为全局规则';
+              addGlobalOption.textContent = t('context.addAsGlobalRule');
               addGlobalOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -18001,7 +19825,7 @@ class AddRegexRuleModal extends Modal {
                   await this.plugin.addRule(currentRegexValue, className, true, this.remark);
                   
                   // 显示成功消息
-                  this.showSuccessMessage(`已添加全局规则 "${currentRegexValue}" 样式 .${className}！`);
+                  this.showSuccessMessage(t('main.globalRuleStyleAdded') + ` "${currentRegexValue}" .${className}`);
                   
                   // 按照固定顺序重新加载：当前文件规则 > 全局规则 > 已备注文本
                   this.clearHistorySection();
@@ -18023,7 +19847,7 @@ class AddRegexRuleModal extends Modal {
               
               // 添加添加为标题样式选项
               const addHeadingOption = document.createElement('div');
-              addHeadingOption.textContent = '添加为标题样式';
+              addHeadingOption.textContent = t('context.addAsHeadingStyle');
               addHeadingOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -18060,12 +19884,12 @@ class AddRegexRuleModal extends Modal {
               
               // 添加h1~h6选项
               const headings = [
-                { level: 1, text: '一级标题h1' },
-                { level: 2, text: '二级标题h2' },
-                { level: 3, text: '三级标题h3' },
-                { level: 4, text: '四级标题h4' },
-                { level: 5, text: '五级标题h5' },
-                { level: 6, text: '六级标题h6' }
+                { level: 1, text: t('heading.level1') },
+                { level: 2, text: t('heading.level2') },
+                { level: 3, text: t('heading.level3') },
+                { level: 4, text: t('heading.level4') },
+                { level: 5, text: t('heading.level5') },
+                { level: 6, text: t('heading.level6') }
               ];
               
               headings.forEach(heading => {
@@ -18142,7 +19966,7 @@ class AddRegexRuleModal extends Modal {
                       this.onOpen();
                       
                       // 显示成功消息
-                      this.showSuccessMessage(`已将样式添加为${heading.text}！`);
+                      this.showSuccessMessage(t('main.styleAddedAsHeading') + ` ${heading.text}`);
                     } catch (error) {
                       console.error('Error adding heading style:', error);
                       this.showErrorMessage(clone, '添加标题样式失败: ' + error.message);
@@ -18450,7 +20274,7 @@ class AddRegexRuleModal extends Modal {
         }, 300);
       }
       
-      new Notice(`分组 "${draggedCategory}" 已重新排序`);
+      new Notice(t('settings.groupReordered'));
       
     } catch (error) {
       console.error('Error during category drag move:', error);
@@ -18567,7 +20391,7 @@ class AddRegexRuleModal extends Modal {
           // 如果所有方法都失败，显示错误
           if (!sourceCategoryContainer) {
             console.error('Source category container not found:', draggedCategory);
-            this.showError(this.contentEl, `无法找到分类容器: "${draggedCategory}"，操作已取消`);
+            this.showError(this.contentEl, t('main.cannotFindCategory') + ` "${draggedCategory}"`);
             return;
           }
           
@@ -18657,7 +20481,7 @@ class AddRegexRuleModal extends Modal {
             console.error('Dragged button not found with category:', draggedCategory, 'and index:', draggedIndex);
             console.log(`Available buttons in document: ${allDocButtons.length}`);
             console.log(`Available buttons in source grid: ${allSourceButtons.length}`);
-            this.showError(this.contentEl, `无法找到要拖拽的样式按钮: ${draggedCategory}[${draggedIndex}]`);
+            this.showError(this.contentEl, t('main.cannotFindDragBtn') + ` ${draggedCategory}[${draggedIndex}]`);
             return;
           }
           
@@ -19068,6 +20892,12 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     if (settingsCleaned) {
       await this.saveData(this.settings);
     }
+
+    if (this.settings.language === undefined) {
+      this.settings.language = 'zh';
+      await this.saveData(this.settings);
+    }
+    _currentLang = this.settings.language || 'zh';
 
     if (this.settings.showStyleUsageCount === undefined) {
       this.settings.showStyleUsageCount = true;
@@ -19768,7 +21598,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     if (styleEl) styleEl.remove();
     this.settings.customFontFamily = '';
     this.saveData(this.settings);
-    new Notice('已恢复默认字体');
+    new Notice(t('font.defaultRestored'));
   }
 
   toggleFontCustomization() {
@@ -19776,11 +21606,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     if (this._fontCustomizationDisabled) {
       const styleEl = document.getElementById('Regex-Css-Highlighter-custom-font');
       if (styleEl) styleEl.remove();
-      new Notice('已临时禁用自定义字体、行间距和边距');
+      new Notice(t('font.tempDisabled'));
     } else {
       this.applyCustomFont(this.settings.customFontFamily);
       this.applyLineSpacingAndMargin();
-      new Notice('已启用自定义字体、行间距和边距');
+      new Notice(t('font.tempEnabled'));
     }
   }
 
@@ -19788,7 +21618,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   showFontSwitchMenu() {
     const fonts = this._customFonts || [];
     if (fonts.length === 0) {
-      new Notice('未找到可用字体');
+      new Notice(t('font.noFont'));
       return;
     }
 
@@ -19796,7 +21626,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
     // 创建字体选择弹窗
     const modal = new Modal(this.app);
-    modal.titleEl.textContent = '切换正文字体';
+    modal.titleEl.textContent = t('font.switchBodyFont');
     modal.contentEl.addClass('font-switch-modal');
 
     // 搜索框
@@ -19844,7 +21674,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       // 当前使用标记
       if (isActive) {
         const activeBadge = nameRow.createSpan();
-        activeBadge.textContent = '使用中';
+        activeBadge.textContent = t('font.inUse');
         activeBadge.className = 'font-active-badge';
         activeBadge.style.cssText = `
           font-size: 10px; padding: 1px 7px; line-height: 1.5;
@@ -19887,7 +21717,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       // 预览文本
       const previewText = item.createDiv();
-      previewText.textContent = '天地玄黄，宇宙洪荒。The quick brown fox jumps.';
+      previewText.textContent = t('font.previewText');
       previewText.style.fontFamily = `"${font.family}", var(--font-text), sans-serif`;
       previewText.style.cssText = `
         font-family: "${font.family}", var(--font-text), sans-serif;
@@ -19908,7 +21738,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       });
       item.addEventListener('click', () => {
         this.applyCustomFont(font.family);
-        new Notice(`已切换字体为: ${font.name}`);
+        new Notice(t('font.switchedTo') + ': ' + font.name);
         rebuildList();
       });
 
@@ -19937,11 +21767,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       const defaultTop = defaultItem.createDiv();
       defaultTop.style.cssText = 'display: flex; align-items: center; justify-content: space-between;';
       const defaultLabel = defaultTop.createSpan();
-      defaultLabel.textContent = '默认字体（恢复）';
+      defaultLabel.textContent = t('font.defaultFontRestore');
       defaultLabel.style.cssText = 'font-size: 13px; color: var(--text-normal); font-weight: 500;';
       if (!curFont) {
         const defaultBadge = defaultTop.createSpan();
-        defaultBadge.textContent = '使用中';
+        defaultBadge.textContent = t('font.inUse');
         defaultBadge.style.cssText = `
           font-size: 10px; padding: 1px 7px; line-height: 1.5;
           color: var(--text-on-accent); background: var(--interactive-accent);
@@ -19979,7 +21809,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         favIcon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="#e8b230" stroke="#e8b230" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
         favIcon.style.cssText = 'display: flex; align-items: center;';
         const favLabel = favHeader.createSpan();
-        favLabel.textContent = '收藏字体';
+        favLabel.textContent = t('font.favoriteFonts');
         favLabel.style.cssText = 'font-size: 12px; font-weight: 600; color: #e8b230;';
 
         for (const font of favFonts) {
@@ -19999,7 +21829,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       allIcon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';
       allIcon.style.cssText = 'display: flex; align-items: center;';
       const allLabel = allHeader.createSpan();
-      allLabel.textContent = '全部字体';
+      allLabel.textContent = t('font.allFonts');
       allLabel.style.cssText = 'font-size: 12px; font-weight: 600; color: var(--text-muted);';
 
       for (const font of otherFonts) {
@@ -20047,7 +21877,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     `;
 
     const layoutTitle = layoutSettings.createEl('div');
-    layoutTitle.textContent = '排版设置';
+    layoutTitle.textContent = t('font.layoutSettings');
     layoutTitle.style.cssText = 'font-size: 13px; font-weight: 600; color: var(--text-normal); margin-bottom: 8px;';
 
     // 创建设置行的辅助函数
@@ -20106,7 +21936,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       margin-top: 8px; padding: 8px 12px; font-size: 12px;
       color: var(--text-muted); border-top: 1px solid var(--background-modifier-border);
     `;
-    hint.textContent = '点击星标收藏字体，收藏字体将显示在列表顶部';
+    hint.textContent = t('font.clickStarHint');
 
     // 初始构建
     rebuildList();
@@ -20604,7 +22434,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         pinBtn.style.marginLeft = '8px';
         pinBtn.style.cursor = 'pointer';
         pinBtn.style.fontSize = '0.85em';
-        pinBtn.title = isFloating ? '取消悬浮显示' : '悬浮显示';
+        pinBtn.title = isFloating ? t('floating.cancelFloat') : t('floating.floatDisplay');
         pinBtn.onclick = async (e) => {
           e.stopPropagation();
           if (!this.floatButtonData.floatingBallOptions) {
@@ -20614,11 +22444,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           if (idx >= 0) {
             this.floatButtonData.floatingBallOptions.splice(idx, 1);
             pinBtn.textContent = '📌';
-            pinBtn.title = '悬浮显示';
+            pinBtn.title = t('floating.floatDisplay');
           } else {
             this.floatButtonData.floatingBallOptions.push(optionId);
             pinBtn.textContent = '📍';
-            pinBtn.title = '取消悬浮显示';
+            pinBtn.title = t('floating.cancelFloat');
           }
           await this.saveFloatButtonData();
           this.renderFloatingOptionButtons();
@@ -20642,7 +22472,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       const isOptionVisible = (optionId) => visibleOptions[optionId] !== false;
       
       // 打开主面板选项
-      const mainModalOption = createMenuOptionWithFloat('openMainPanel', '打开主面板', () => {
+      const mainModalOption = createMenuOptionWithFloat('openMainPanel', t('floating.openMainPanel'), () => {
         new AddRegexRuleModal(this.app, this).open();
         if (document.body.contains(menu)) {
           document.body.removeChild(menu);
@@ -20653,7 +22483,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (isOptionVisible('openMainPanel')) menu.appendChild(mainModalOption);
       
       // 格式替换选项
-      const formatReplaceOption = createMenuOptionWithFloat('formatReplace', '格式替换', () => {
+      const formatReplaceOption = createMenuOptionWithFloat('formatReplace', t('floating.formatReplace'), () => {
         new FormatReplaceModal(this.app, this).open();
         if (document.body.contains(menu)) {
           document.body.removeChild(menu);
@@ -20664,16 +22494,16 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (isOptionVisible('formatReplace')) menu.appendChild(formatReplaceOption);
       
       // 添加备注选项
-      const addRemarkOption = createMenuOptionWithFloat('addRemark', '添加备注', () => {
+      const addRemarkOption = createMenuOptionWithFloat('addRemark', t('floating.addRemark'), () => {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!activeView) {
-          new Notice('请先打开一个Markdown文件');
+          new Notice(t('main.openMdFile'));
           return;
         }
         
         const selectedText = this.getSelectedText().trim();
         if (!selectedText) {
-          new Notice('请先选中要添加备注的文本');
+          new Notice(t('main.selectTextToRemark'));
           return;
         }
         
@@ -20704,8 +22534,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         const modal = new AddRemarkModal(
           this.app,
-          currentRemark ? (isGlobalRule ? '编辑备注（全局规则）' : '编辑备注') : (isGlobalRule ? '添加备注（全局规则）' : '添加备注'),
-          '请输入备注内容...',
+          currentRemark ? (isGlobalRule ? t('main.editRemarkGlobal') : t('main.editRemark')) : (isGlobalRule ? t('main.addRemarkGlobal') : t('main.addRemark')),
+          t('main.inputRemarkContent'),
           currentRemark,
           async (remark) => {
             const trimmedRemark = remark.trim();
@@ -20717,7 +22547,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               this.rulesVersion++;
               this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
               this.refreshCurrentView();
-              new Notice(trimmedRemark ? '备注已更新（全局规则）' : '备注已清除（全局规则）');
+              new Notice(trimmedRemark ? t('main.remarkUpdated') : t('main.remarkCleared'));
               return;
             }
             
@@ -20741,10 +22571,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 this.rulesVersion++;
                 this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
                 this.refreshCurrentView();
-                new Notice(trimmedRemark ? '备注已更新' : '备注已清除');
+                new Notice(trimmedRemark ? t('main.remarkUpdated') : t('main.remarkCleared'));
               } else {
                 await this.addFileRule(selectedText, '', trimmedRemark);
-                new Notice(trimmedRemark ? '备注已添加' : '备注已清除');
+                new Notice(trimmedRemark ? t('main.remarkAdded') : t('main.remarkCleared'));
               }
             }
           },
@@ -20756,16 +22586,16 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (isOptionVisible('addRemark')) menu.appendChild(addRemarkOption);
       
       // 移除高亮选项
-      const removeHighlightOption = createMenuOptionWithFloat('removeHighlight', '移除高亮', () => {
+      const removeHighlightOption = createMenuOptionWithFloat('removeHighlight', t('floating.removeHighlight'), () => {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!activeView) {
-          new Notice('请先打开一个Markdown文件');
+          new Notice(t('main.openMdFile'));
           return;
         }
         
         const selectedText = this.getSelectedText().trim();
         if (!selectedText) {
-          new Notice('请先选中要移除高亮的文本');
+          new Notice(t('main.selectTextToRemove'));
           return;
         }
         
@@ -20781,7 +22611,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }) : -1;
         
         if (globalRuleIndex === -1 && fileRuleIndex === -1) {
-          new Notice('未找到匹配的高亮规则');
+          new Notice(t('main.noMatchingRule'));
           return;
         }
         
@@ -20803,7 +22633,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           this.rulesVersion++;
           this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
           this.refreshCurrentView();
-          new Notice('已移除全局高亮规则');
+          new Notice(t('main.globalRuleRemoved'));
         }
         
         // 移除文件规则中的匹配
@@ -20835,7 +22665,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             this.rulesVersion++;
             this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
             this.refreshCurrentView();
-            new Notice('已移除文件高亮规则');
+            new Notice(t('main.fileRuleRemoved'));
           }
         }
         
@@ -20861,7 +22691,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       `;
       
       const pinyinText = document.createElement('span');
-      pinyinText.textContent = '注音 ▶';
+      pinyinText.textContent = t('main.pinyin') + ' ▶';
       pinyinText.style.flex = '1';
       
       const isPinyinFloating = this.floatButtonData.floatingBallOptions && this.floatButtonData.floatingBallOptions.includes('pinyin');
@@ -20870,7 +22700,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       pinyinPinBtn.style.marginLeft = '8px';
       pinyinPinBtn.style.cursor = 'pointer';
       pinyinPinBtn.style.fontSize = '0.85em';
-      pinyinPinBtn.title = isPinyinFloating ? '取消悬浮显示' : '悬浮显示';
+      pinyinPinBtn.title = isPinyinFloating ? t('floating.cancelFloat') : t('floating.floatDisplay');
       pinyinPinBtn.onclick = async (e) => {
         e.stopPropagation();
         if (!this.floatButtonData.floatingBallOptions) {
@@ -20880,11 +22710,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         if (idx >= 0) {
           this.floatButtonData.floatingBallOptions.splice(idx, 1);
           pinyinPinBtn.textContent = '📌';
-          pinyinPinBtn.title = '悬浮显示';
+          pinyinPinBtn.title = t('floating.floatDisplay');
         } else {
           this.floatButtonData.floatingBallOptions.push('pinyin');
           pinyinPinBtn.textContent = '📍';
-          pinyinPinBtn.title = '取消悬浮显示';
+          pinyinPinBtn.title = t('floating.cancelFloat');
         }
         await this.saveFloatButtonData();
         this.renderFloatingOptionButtons();
@@ -20912,7 +22742,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       // 添加注音(局部)选项
       const addPinyinLocalSubOption = document.createElement('div');
-      addPinyinLocalSubOption.textContent = '添加注音(局部)';
+      addPinyinLocalSubOption.textContent = t('pinyin.addLocal');
       addPinyinLocalSubOption.style.cssText = `
         padding: 8px 16px;
         cursor: pointer;
@@ -20941,7 +22771,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       // 添加注音(全局)选项
       const addPinyinSubOption = document.createElement('div');
-      addPinyinSubOption.textContent = '添加注音(全局)';
+      addPinyinSubOption.textContent = t('pinyin.addGlobal');
       addPinyinSubOption.style.cssText = `
         padding: 8px 16px;
         cursor: pointer;
@@ -20970,7 +22800,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       // 编辑注音文件选项
       const editPinyinFileOption = document.createElement('div');
-      editPinyinFileOption.textContent = '编辑注音文件';
+      editPinyinFileOption.textContent = t('pinyin.editFile');
       editPinyinFileOption.style.cssText = `
         padding: 8px 16px;
         cursor: pointer;
@@ -20999,7 +22829,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       // 删除注音选项（同时删除全局和局部）
       const removePinyinSubOption = document.createElement('div');
-      removePinyinSubOption.textContent = '删除注音';
+      removePinyinSubOption.textContent = t('pinyin.remove');
       removePinyinSubOption.style.cssText = `
         padding: 8px 16px;
         cursor: pointer;
@@ -21053,7 +22883,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       pinyinOption.appendChild(pinyinSubmenu);
       if (isOptionVisible('pinyin')) menu.appendChild(pinyinOption);
       
-      const aiOption = createMenuOptionWithFloat('aiAssistant', 'AI回复', () => {
+      const aiOption = createMenuOptionWithFloat('aiAssistant', t('floating.aiAssistant'), () => {
         this.aiAssistant();
         if (document.body.contains(menu)) {
           document.body.removeChild(menu);
@@ -21063,7 +22893,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       if (isOptionVisible('aiAssistant')) menu.appendChild(aiOption);
       
-      const entityOption = createMenuOptionWithFloat('extractEntities', '实体提取', () => {
+      const entityOption = createMenuOptionWithFloat('extractEntities', t('floating.extractEntities'), () => {
         this.extractEntities();
         if (document.body.contains(menu)) {
           document.body.removeChild(menu);
@@ -21074,7 +22904,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (isOptionVisible('extractEntities')) menu.appendChild(entityOption);
 
       // 高亮列表选项
-      const showcaseOption = createMenuOptionWithFloat('styleShowcase', '高亮列表', () => {
+      const showcaseOption = createMenuOptionWithFloat('styleShowcase', t('floating.styleShowcase'), () => {
         const showcaseStyles = this.settings.showcaseStyles || [];
         new StyleShowcaseModal(this.app, this, showcaseStyles, this.settings.showcaseMode || 'showcase').open();
         if (document.body.contains(menu)) {
@@ -21087,7 +22917,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       // 字体切换选项（仅在启用时显示）
       if (this.settings.enableFontSwitch) {
-        const fontSwitchOption = createMenuOptionWithFloat('fontSwitch', '切换字体', () => {
+        const fontSwitchOption = createMenuOptionWithFloat('fontSwitch', t('floating.fontSwitch'), () => {
           const fontSubmenu = document.createElement('div');
           fontSubmenu.style.cssText = `
             position: fixed;
@@ -21129,9 +22959,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             return itemEl;
           };
 
-          fontSubmenu.appendChild(createSubmenuItem('切换字体', () => this.showFontSwitchMenu()));
+          fontSubmenu.appendChild(createSubmenuItem(t('floating.fontSwitch'), () => this.showFontSwitchMenu()));
           fontSubmenu.appendChild(createSubmenuItem(
-            this._fontCustomizationDisabled ? '启用自定义样式' : '禁用自定义样式',
+            this._fontCustomizationDisabled ? t('floating.enableCustomStyle') : t('floating.disableCustomStyle'),
             () => { this.toggleFontCustomization(); this.renderFloatingOptionButtons(); }
           ));
 
@@ -21158,7 +22988,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       const switchModeOption = document.createElement('div');
       const currentMode = this.floatButtonData.floatingBallMode || 'always';
-      switchModeOption.textContent = `模式: ${currentMode === 'always' ? '常显' : '跟随'}`;
+      switchModeOption.textContent = t('floating.mode') + `: ${currentMode === 'always' ? t('floating.alwaysShow') : t('floating.follow')}`;
       switchModeOption.style.cssText = `
         padding: 8px 16px;
         cursor: pointer;
@@ -21237,7 +23067,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           floatingBall.style.top = `${this.floatButtonData.floatingBallPosition.y}px`;
         }
 
-        new Notice(`悬浮球模式已切换为: ${newMode === 'always' ? '常显模式' : '跟随选中模式'}`);
+        new Notice(t('main.modeSwitched') + ': ' + (newMode === 'always' ? t('main.alwaysMode') : t('main.followMode')));
 
         if (document.body.contains(menu)) {
           document.body.removeChild(menu);
@@ -21249,7 +23079,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       const hideFloatingBtnsOption = document.createElement('div');
       const isHideFloatingBtns = this.floatButtonData.hideFloatingOptionButtons || false;
-      hideFloatingBtnsOption.textContent = isHideFloatingBtns ? '显示悬浮按钮' : '隐藏悬浮按钮';
+      hideFloatingBtnsOption.textContent = isHideFloatingBtns ? t('main.showFloatingBtns') : t('main.hideFloatingBtns');
       hideFloatingBtnsOption.style.cssText = `
         padding: 8px 16px;
         cursor: pointer;
@@ -21269,7 +23099,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         this.floatButtonData.hideFloatingOptionButtons = !this.floatButtonData.hideFloatingOptionButtons;
         await this.saveFloatButtonData();
         this.renderFloatingOptionButtons();
-        new Notice(this.floatButtonData.hideFloatingOptionButtons ? '悬浮按钮已隐藏' : '悬浮按钮已显示');
+        new Notice(this.floatButtonData.hideFloatingOptionButtons ? t('main.floatingBtnsHidden') : t('main.floatingBtnsShown'));
         if (document.body.contains(menu)) {
           document.body.removeChild(menu);
         }
@@ -21280,7 +23110,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       const hideTextStylesOption = document.createElement('div');
       const isHideTextStyles = this.settings?.hideAllStyles === true;
-      hideTextStylesOption.textContent = isHideTextStyles ? '显示文本样式' : '隐藏文本样式';
+      hideTextStylesOption.textContent = isHideTextStyles ? t('main.showTextStyles') : t('main.hideTextStyles');
       hideTextStylesOption.style.cssText = `
         padding: 8px 16px;
         cursor: pointer;
@@ -21300,7 +23130,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         this.rulesVersion++;
         this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
         this.refreshCurrentView();
-        new Notice(isHideTextStyles ? '已显示文本样式' : '已隐藏文本样式');
+        new Notice(isHideTextStyles ? t('main.textStylesShown') : t('main.textStylesHidden'));
         if (document.body.contains(menu)) {
           document.body.removeChild(menu);
         }
@@ -21333,7 +23163,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         groupPinBtn.style.marginLeft = '8px';
         groupPinBtn.style.cursor = 'pointer';
         groupPinBtn.style.fontSize = '0.85em';
-        groupPinBtn.title = isGroupFloating ? '取消悬浮显示' : '悬浮显示';
+        groupPinBtn.title = isGroupFloating ? t('floating.cancelFloat') : t('floating.floatDisplay');
         groupPinBtn.onclick = async (e) => {
           e.stopPropagation();
           if (!this.floatButtonData.floatingBallGroupOptions) {
@@ -21343,11 +23173,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           if (idx >= 0) {
             this.floatButtonData.floatingBallGroupOptions.splice(idx, 1);
             groupPinBtn.textContent = '📌';
-            groupPinBtn.title = '悬浮显示';
+            groupPinBtn.title = t('floating.floatDisplay');
           } else {
             this.floatButtonData.floatingBallGroupOptions.push(groupName);
             groupPinBtn.textContent = '📍';
-            groupPinBtn.title = '取消悬浮显示';
+            groupPinBtn.title = t('floating.cancelFloat');
           }
           await this.saveFloatButtonData();
           this.renderFloatingOptionButtons();
@@ -21426,7 +23256,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           const pinIcon = document.createElement('span');
           pinIcon.textContent = '🔓';
-          pinIcon.title = '固定子菜单（保持展开并可拖动）';
+          pinIcon.title = t('floating.pinMenuDesc');
           pinIcon.style.cssText = `
             position: absolute;
             top: 4px;
@@ -21454,14 +23284,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             if (isPinned) {
               styleSubMenu.dataset.pinned = 'false';
               pinIcon.textContent = '🔓';
-              pinIcon.title = '固定子菜单（保持展开并可拖动）';
+              pinIcon.title = t('floating.pinMenuDesc');
               pinIcon.style.opacity = '0.6';
               styleSubMenu.style.cursor = '';
               styleSubMenu.style.borderColor = 'var(--border-color)';
             } else {
               styleSubMenu.dataset.pinned = 'true';
               pinIcon.textContent = '🔒';
-              pinIcon.title = '取消固定';
+              pinIcon.title = t('floating.unpinMenu');
               pinIcon.style.opacity = '1';
               styleSubMenu.style.cursor = 'grab';
               styleSubMenu.style.borderColor = 'var(--interactive-accent)';
@@ -21526,7 +23356,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             
             // 获取按钮文字
             const buttonText = this.getButtonText ? this.getButtonText(className) : '';
-            styleExample.textContent = buttonText || '示例';
+            styleExample.textContent = buttonText || t('main.preview');
             
             // 获取内联样式（如果存在）
             const inlineStyle = this.cssStyles?.get(className) || '';
@@ -21590,7 +23420,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               border-radius: 50%;
               padding: 1px;
             `;
-            floatBtn.title = '悬浮显示此样式';
+            floatBtn.title = t('floating.floatThisStyle');
             
             const classNameLabel = document.createElement('span');
             classNameLabel.className = 'floating-style-classname-label';
@@ -21662,7 +23492,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 if (selection && selection.trim()) {
                   await this.applyStyleToSelection(activeView.editor, className, selection);
                 } else {
-                  new Notice('请先选中要应用样式的文字');
+                  new Notice(t('main.selectTextToStyle'));
                 }
               }
               
@@ -21689,7 +23519,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const hasGroupFloating = this.floatingStyleWindows && this.floatingStyleWindows.some(win => win.dataset.group === groupName);
           if (hasGroupFloating) {
             const hideBtn = document.createElement('div');
-            hideBtn.textContent = '隐藏本组悬浮样式';
+            hideBtn.textContent = t('floating.hideGroupFloat');
             hideBtn.style.cssText = `
               cursor: pointer;
               padding: 6px 8px;
@@ -22078,13 +23908,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       addRemark: () => {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!activeView) {
-          new Notice('请先打开一个Markdown文件');
+          new Notice(t('main.openMdFile'));
           return;
         }
         
         const selectedText = this.getSelectedText().trim();
         if (!selectedText) {
-          new Notice('请先选中要添加备注的文本');
+          new Notice(t('main.selectTextToRemark'));
           return;
         }
         
@@ -22110,8 +23940,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         const modal = new AddRemarkModal(
           this.app,
-          currentRemark ? (isGlobalRule ? '编辑备注（全局规则）' : '编辑备注') : (isGlobalRule ? '添加备注（全局规则）' : '添加备注'),
-          '请输入备注内容...',
+          currentRemark ? (isGlobalRule ? t('main.editRemarkGlobal') : t('main.editRemark')) : (isGlobalRule ? t('main.addRemarkGlobal') : t('main.addRemark')),
+          t('main.inputRemarkContent'),
           currentRemark,
           async (remark) => {
             const trimmedRemark = remark.trim();
@@ -22123,7 +23953,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               this.rulesVersion++;
               this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
               this.refreshCurrentView();
-              new Notice(trimmedRemark ? '备注已更新（全局规则）' : '备注已清除（全局规则）');
+              new Notice(trimmedRemark ? t('main.remarkUpdated') : t('main.remarkCleared'));
               return;
             }
             
@@ -22147,10 +23977,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 this.rulesVersion++;
                 this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
                 this.refreshCurrentView();
-                new Notice(trimmedRemark ? '备注已更新' : '备注已清除');
+                new Notice(trimmedRemark ? t('main.remarkUpdated') : t('main.remarkCleared'));
               } else {
                 await this.addFileRule(selectedText, '', trimmedRemark);
-                new Notice(trimmedRemark ? '备注已添加' : '备注已清除');
+                new Notice(trimmedRemark ? t('main.remarkAdded') : t('main.remarkCleared'));
               }
             }
           },
@@ -22174,13 +24004,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       removeHighlight: () => {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!activeView) {
-          new Notice('请先打开一个Markdown文件');
+          new Notice(t('main.openMdFile'));
           return;
         }
         
         const selectedText = this.getSelectedText().trim();
         if (!selectedText) {
-          new Notice('请先选中要移除高亮的文本');
+          new Notice(t('main.selectTextToRemove'));
           return;
         }
         
@@ -22196,7 +24026,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }) : -1;
         
         if (globalRuleIndex === -1 && fileRuleIndex === -1) {
-          new Notice('未找到匹配的高亮规则');
+          new Notice(t('main.noMatchingRule'));
           return;
         }
         
@@ -22219,7 +24049,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           this.rulesVersion++;
           this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
           this.refreshCurrentView();
-          new Notice('已移除全局高亮规则');
+          new Notice(t('main.globalRuleRemoved'));
         }
         
         // 移除文件规则中的匹配
@@ -22252,7 +24082,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             this.rulesVersion++;
             this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
             this.refreshCurrentView();
-            new Notice('已移除文件高亮规则');
+            new Notice(t('main.fileRuleRemoved'));
           }
         }
         
@@ -22265,27 +24095,27 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     };
 
     const optionLabels = {
-      openMainPanel: '打开主面板',
-      formatReplace: '格式替换',
-      addRemark: '添加备注',
-      aiAssistant: 'AI回复',
-      extractEntities: '实体提取',
-      pinyin: '注音',
-      styleShowcase: '高亮列表',
-      removeHighlight: '移除高亮',
-      fontSwitch: '切换字体'
+      openMainPanel: t('floating.openMainPanel'),
+      formatReplace: t('floating.formatReplace'),
+      addRemark: t('floating.addRemark'),
+      aiAssistant: t('floating.aiAssistant'),
+      extractEntities: t('floating.extractEntities'),
+      pinyin: t('floating.pinyin'),
+      styleShowcase: t('floating.styleShowcase'),
+      removeHighlight: t('floating.removeHighlight'),
+      fontSwitch: t('floating.fontSwitch')
     };
 
     const optionSubmenus = {
       pinyin: [
-        { id: 'pinyinLocal', label: '添加注音(局部)', action: () => this.addPinyinToSelection('local') },
-        { id: 'pinyinGlobal', label: '添加注音(全局)', action: () => this.addPinyinToSelection('global') },
-        { id: 'editPinyin', label: '编辑注音文件', action: () => this.openPinyinFileEditor() },
-        { id: 'removePinyin', label: '删除注音', action: () => this.removePinyinFromSelection() }
+        { id: 'pinyinLocal', label: t('floating.addPinyinLocal'), action: () => this.addPinyinToSelection('local') },
+        { id: 'pinyinGlobal', label: t('floating.addPinyinGlobal'), action: () => this.addPinyinToSelection('global') },
+        { id: 'editPinyin', label: t('floating.editPinyinFile'), action: () => this.openPinyinFileEditor() },
+        { id: 'removePinyin', label: t('floating.removePinyin'), action: () => this.removePinyinFromSelection() }
       ],
       fontSwitch: [
-        { id: 'fontSwitchMenu', label: '切换字体', action: () => this.showFontSwitchMenu() },
-        { id: 'toggleFontCustomization', label: this._fontCustomizationDisabled ? '启用自定义样式' : '禁用自定义样式', action: () => { this.toggleFontCustomization(); this.renderFloatingOptionButtons(); } }
+        { id: 'fontSwitchMenu', label: t('floating.fontSwitch'), action: () => this.showFontSwitchMenu() },
+        { id: 'toggleFontCustomization', label: this._fontCustomizationDisabled ? t('floating.enableCustomStyle') : t('floating.disableCustomStyle'), action: () => { this.toggleFontCustomization(); this.renderFloatingOptionButtons(); } }
       ]
     };
 
@@ -22598,7 +24428,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             styleExample.className = `${className} style-example style-option-preview`;
             
             const buttonText = this.getButtonText ? this.getButtonText(className) : '';
-            styleExample.textContent = buttonText || '示例';
+            styleExample.textContent = buttonText || t('main.preview');
             
             const inlineStyle = this.cssStyles?.get(className) || '';
             if (inlineStyle) {
@@ -22628,7 +24458,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               border-radius: 50%;
               padding: 1px;
             `;
-            floatBtn.title = '悬浮显示此样式';
+            floatBtn.title = t('floating.floatThisStyle');
             
             const classNameLabel = document.createElement('span');
             classNameLabel.className = 'floating-style-classname-label';
@@ -22692,7 +24522,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 if (selection && selection.trim()) {
                   await this.applyStyleToSelection(activeView.editor, className, selection);
                 } else {
-                  new Notice('请先选中要应用样式的文字');
+                  new Notice(t('main.selectTextToStyle'));
                 }
               }
               if (currentSubmenu && currentSubmenu.dataset.pinned === 'true') return;
@@ -22715,7 +24545,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               e.stopPropagation();
               const selectedText = this.getSelectedText().trim();
               if (!selectedText) {
-                new Notice('请先选中文字，中键点击将其添加为全局规则');
+                new Notice(t('main.middleClickHint'));
                 return;
               }
               try {
@@ -22723,7 +24553,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                   rule => rule.regex === selectedText && rule.cssClass === className
                 );
                 if (existingRule) {
-                  new Notice(`全局规则中已存在 "${selectedText}" → "${className}"`);
+                  new Notice(t('main.globalRuleExists'));
                 } else {
                   this.globalRules.push({
                     regex: selectedText,
@@ -22731,11 +24561,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                     remark: ''
                   });
                   await this.saveGlobalRules(this.globalRules);
-                  new Notice(`已添加全局规则: "${selectedText}" → "${className}"`);
+                  new Notice(t('main.globalRuleAdded'));
                 }
               } catch (err) {
                 console.error('添加全局规则失败:', err);
-                new Notice('添加全局规则失败: ' + err.message);
+                new Notice(t('main.globalRuleAddFailed') + ': ' + err.message);
               }
             });
             
@@ -22785,29 +24615,29 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 return item;
               };
               
-              ctxMenu.appendChild(createCtxItem('修改显示文字', () => {
+              ctxMenu.appendChild(createCtxItem(t('context.modifyDisplayText'), () => {
                 const currentText = this.getButtonText ? this.getButtonText(className) : '';
                 new InputModal(
                   this.app,
-                  '修改显示文字',
-                  '请输入显示文字',
+                  t('main.modifyDisplayText'),
+                  t('floating.inputDisplayText'),
                   currentText || buttonText || className,
                   async (newText) => {
                     const trimmed = newText.trim();
                     if (trimmed) {
                       await this.setButtonText(className, trimmed);
                       styleExample.textContent = trimmed;
-                      new Notice(`显示文字已更新为 "${trimmed}"`);
+                      new Notice(t('main.displayTextChanged'));
                     }
                   },
-                  `类名: ${className}`
+                  t('main.styleClass') + `: ${className}`
                 ).open();
               }));
               
-              ctxMenu.appendChild(createCtxItem('复制类名', async () => {
+              ctxMenu.appendChild(createCtxItem(t('context.copyClassName'), async () => {
                 try {
                   await navigator.clipboard.writeText(className);
-                  new Notice(`已复制类名 "${className}"`);
+                  new Notice(t('main.classNameCopied'));
                 } catch (err) {
                   const textarea = document.createElement('textarea');
                   textarea.value = className;
@@ -22817,11 +24647,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                   textarea.select();
                   document.execCommand('copy');
                   document.body.removeChild(textarea);
-                  new Notice(`已复制类名 "${className}"`);
+                  new Notice(t('main.classNameCopied'));
                 }
               }));
               
-              ctxMenu.appendChild(createCtxItem('复制完整样式', async () => {
+              ctxMenu.appendChild(createCtxItem(t('context.copyFullStyle'), async () => {
                 let fullStyle = '';
                 const styleEl = document.getElementById('Regex-Css-Highlighter-dynamic-styles');
                 if (styleEl) {
@@ -22865,7 +24695,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 }
                 try {
                   await navigator.clipboard.writeText(fullStyle.trim());
-                  new Notice(`已复制完整样式 ".${className}"`);
+                  new Notice(t('main.fullStyleCopied'));
                 } catch (err) {
                   const textarea = document.createElement('textarea');
                   textarea.value = fullStyle.trim();
@@ -22875,7 +24705,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                   textarea.select();
                   document.execCommand('copy');
                   document.body.removeChild(textarea);
-                  new Notice(`已复制完整样式 ".${className}"`);
+                  new Notice(t('main.fullStyleCopied'));
                 }
               }));
               
@@ -22909,7 +24739,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const hasGroupFloating = this.floatingStyleWindows && this.floatingStyleWindows.some(win => win.dataset.group === groupName);
           if (hasGroupFloating) {
             const hideBtn = document.createElement('div');
-            hideBtn.textContent = '隐藏本组悬浮样式';
+            hideBtn.textContent = t('floating.hideGroupFloat');
             hideBtn.style.cssText = `
               cursor: pointer;
               padding: 6px 8px;
@@ -23031,7 +24861,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           if (optionId.startsWith('group_')) {
             const pinIcon2 = document.createElement('span');
             pinIcon2.textContent = '🔓';
-            pinIcon2.title = '固定子菜单（保持展开并可拖动）';
+            pinIcon2.title = t('floating.pinMenuDesc');
             pinIcon2.style.cssText = `
               position: absolute;
               top: 4px;
@@ -23059,14 +24889,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               if (isPinned) {
                 currentSubmenu.dataset.pinned = 'false';
                 pinIcon2.textContent = '🔓';
-                pinIcon2.title = '固定子菜单（保持展开并可拖动）';
+                pinIcon2.title = t('floating.pinMenuDesc');
                 pinIcon2.style.opacity = '0.6';
                 currentSubmenu.style.cursor = '';
                 currentSubmenu.style.borderColor = 'var(--background-modifier-border)';
               } else {
                 currentSubmenu.dataset.pinned = 'true';
                 pinIcon2.textContent = '🔒';
-                pinIcon2.title = '取消固定';
+                pinIcon2.title = t('floating.unpinMenu');
                 pinIcon2.style.opacity = '1';
                 currentSubmenu.style.cursor = 'grab';
                 currentSubmenu.style.borderColor = 'var(--interactive-accent)';
@@ -23198,12 +25028,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         };
 
         // 编辑选项
-        const editOption = createMenuItem('编辑', () => {
+        const editOption = createMenuItem(t('main.edit'), () => {
           const currentLabel = btn.dataset.customLabel || label;
           const currentStyleClass = btn.dataset.styleClass || '';
 
           const modal = new Modal(this.app);
-          modal.titleEl.textContent = '编辑悬浮选项';
+          modal.titleEl.textContent = t('floating.editTitle');
           modal.contentEl.addClass('input-modal');
 
           // 显示文字输入
@@ -23211,14 +25041,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           labelDiv.style.marginBottom = '12px';
 
           const labelName = labelDiv.createEl('label');
-          labelName.textContent = '显示文字: ';
+          labelName.textContent = t('floating.displayTextLabel') + ': ';
           labelName.style.display = 'block';
           labelName.style.marginBottom = '4px';
           labelName.style.fontWeight = 'bold';
 
           const labelInput = labelDiv.createEl('input');
           labelInput.type = 'text';
-          labelInput.placeholder = '请输入显示文字';
+          labelInput.placeholder = t('floating.inputDisplayText');
           labelInput.value = currentLabel;
           labelInput.style.width = '100%';
           labelInput.style.padding = '8px';
@@ -23230,13 +25060,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           styleDiv.style.marginBottom = '16px';
 
           const styleName = styleDiv.createEl('label');
-          styleName.textContent = '样式类名: ';
+          styleName.textContent = t('floating.styleClassNameLabel') + ': ';
           styleName.style.display = 'block';
           styleName.style.marginBottom = '4px';
           styleName.style.fontWeight = 'bold';
 
           const styleHint = styleDiv.createEl('span');
-          styleHint.textContent = '主面板样式按钮长按/右键→复制类名';
+          styleHint.textContent = t('floating.styleClassHint');
           styleHint.style.fontSize = '12px';
           styleHint.style.color = 'var(--text-muted)';
           styleHint.style.display = 'block';
@@ -23244,7 +25074,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
           const styleInput = styleDiv.createEl('input');
           styleInput.type = 'text';
-          styleInput.placeholder = '输入CSS类名（可选，用于自定义按钮外观）';
+          styleInput.placeholder = t('floating.inputCssClass');
           styleInput.value = currentStyleClass;
           styleInput.style.width = '100%';
           styleInput.style.padding = '8px';
@@ -23258,12 +25088,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           buttonContainer.style.gap = '8px';
 
           const cancelBtn = buttonContainer.createEl('button');
-          cancelBtn.textContent = '取消';
+          cancelBtn.textContent = t('main.cancel');
           cancelBtn.style.padding = '6px 16px';
           cancelBtn.addEventListener('click', () => modal.close());
 
           const confirmBtn = buttonContainer.createEl('button');
-          confirmBtn.textContent = '确认';
+          confirmBtn.textContent = t('main.confirm');
           confirmBtn.style.padding = '6px 16px';
           confirmBtn.style.backgroundColor = 'var(--interactive-accent)';
           confirmBtn.style.color = 'white';
@@ -23346,7 +25176,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             this.floatButtonData.floatingBallOptionStyleClasses[optionId] = newStyleClass;
 
             await this.saveFloatButtonData();
-            new Notice('悬浮选项已更新');
+            new Notice(t('main.floatOptionUpdated'));
             modal.close();
           });
 
@@ -23355,7 +25185,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         });
 
         // 关闭悬浮显示选项
-        const closeOption = createMenuItem('关闭悬浮显示', async () => {
+        const closeOption = createMenuItem(t('floating.closeFloat'), async () => {
           if (optionId.startsWith('group_')) {
             const groupName = optionId.replace('group_', '');
             const idx = this.floatButtonData.floatingBallGroupOptions.indexOf(groupName);
@@ -23368,7 +25198,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 currentSubmenu.remove();
                 currentSubmenu = null;
               }
-              new Notice(`已取消分组"${groupName}"的悬浮显示`);
+              new Notice(t('main.floatGroupCancelled'));
             }
           } else {
             const idx = this.floatButtonData.floatingBallOptions.indexOf(optionId);
@@ -23381,7 +25211,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 currentSubmenu.remove();
                 currentSubmenu = null;
               }
-              new Notice(`已取消"${label}"的悬浮显示`);
+              new Notice(t('main.floatOptionCancelled'));
             }
           }
         });
@@ -23503,7 +25333,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     });
     this.floatingStyleWindows = this.floatingStyleWindows.filter(win => win.dataset.group !== groupName);
     this.saveFloatingStyleWindows();
-    new Notice(`已隐藏分组 "${groupName}" 的悬浮样式`);
+    new Notice(t('main.styleHidden'));
   }
 
   // 悬浮显示样式
@@ -23516,7 +25346,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     }
 
     if (this.floatingStyleWindows.some(win => win.dataset.className === className)) {
-      new Notice(`样式 "${displayText || className}" 已在悬浮显示中`);
+      new Notice(t('main.styleAlreadyFloating'));
       return;
     }
 
@@ -23757,19 +25587,19 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (!activeView) {
-        new Notice('请先打开一个Markdown文件');
+        new Notice(t('main.openMdFile'));
         return;
       }
 
       const selection = this.getSelectedText();
 
       if (!selection || !selection.trim()) {
-        new Notice('请先选中要应用样式的文本');
+        new Notice(t('main.selectTextToStyleApply'));
         return;
       }
 
       await this.applyStyleToSelection(activeView.editor, className, selection);
-      new Notice(`已将样式 "${displayText || className}" 应用到选中文本`);
+      new Notice(t('main.styleApplied'));
     });
 
     // 中键点击应用样式到全局规则
@@ -23783,14 +25613,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!activeView) {
-          new Notice('请先打开一个Markdown文件');
+          new Notice(t('main.openMdFile'));
           return;
         }
 
         const selectedText = this.getSelectedText();
 
         if (!selectedText || !selectedText.trim()) {
-          new Notice('请先选中要应用样式的文本');
+          new Notice(t('main.selectTextToStyleApply'));
           return;
         }
 
@@ -23803,11 +25633,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         if (existingGlobalRuleIndex >= 0) {
           // 规则已存在于全局，显示提示
-          new Notice(`规则 "${regexValue}" 已存在于全局规则中！`);
+          new Notice(t('main.globalRuleExists'));
         } else {
           // 添加为全局规则
           await this.addGlobalRule(regexValue, className, '');
-          new Notice(`全局规则 "${regexValue}" 已添加！`);
+          new Notice(t('main.globalRuleAdded'));
         }
       }
     });
@@ -23823,14 +25653,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!activeView) {
-          new Notice('请先打开一个Markdown文件');
+          new Notice(t('main.openMdFile'));
           return;
         }
 
         const selectedText = this.getSelectedText();
 
         if (!selectedText || !selectedText.trim()) {
-          new Notice('请先选中要应用样式的文本');
+          new Notice(t('main.selectTextToStyleApply'));
           return;
         }
 
@@ -23843,11 +25673,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         if (existingGlobalRuleIndex >= 0) {
           // 规则已存在于全局，显示提示
-          new Notice(`规则 "${regexValue}" 已存在于全局规则中！`);
+          new Notice(t('main.globalRuleExists'));
         } else {
           // 添加为全局规则
           await this.addGlobalRule(regexValue, className, '');
-          new Notice(`全局规则 "${regexValue}" 已添加！`);
+          new Notice(t('main.globalRuleAdded'));
         }
       }
     });
@@ -23895,12 +25725,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       };
 
       // 编辑名称选项
-      const editNameOption = createMenuItem('编辑名称', () => {
+      const editNameOption = createMenuItem(t('floating.editName'), () => {
         const currentText = floatingWindow.dataset.displayText || className;
         const modal = new InputModal(
           this.app,
-          '编辑悬浮按钮名称',
-          '请输入新的显示名称',
+          t('floating.editBtnName'),
+          t('floating.inputNewDisplayName'),
           currentText,
           async (newName) => {
             if (newName && newName.trim()) {
@@ -23911,16 +25741,16 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 previewEl.textContent = trimmedName;
               }
               this.saveFloatingStyleWindows();
-              new Notice(`悬浮按钮名称已更新为 "${trimmedName}"`);
+              new Notice(t('main.floatNameUpdated'));
             }
           },
-          `类名: ${className}`
+          t('main.styleClass') + `: ${className}`
         );
         modal.open();
       });
 
       // 关闭悬浮显示选项
-      const closeOption = createMenuItem('关闭悬浮显示', () => {
+      const closeOption = createMenuItem(t('floating.closeFloat'), () => {
         const index = this.floatingStyleWindows.indexOf(floatingWindow);
         if (index > -1) {
           this.floatingStyleWindows.splice(index, 1);
@@ -23954,7 +25784,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       menu.appendChild(editNameOption);
       menu.appendChild(closeOption);
       if (floatingWindow.dataset.group) {
-        const hideGroupOption = createMenuItem('隐藏同组所有样式', () => {
+        const hideGroupOption = createMenuItem(t('floating.hideGroupStyles'), () => {
           this.hideGroupFloatingStyles(floatingWindow.dataset.group);
         });
         menu.appendChild(hideGroupOption);
@@ -23986,7 +25816,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }, 0);
     });
 
-    new Notice('悬浮显示已启用，按住拖动位置，左键点击应用样式到选中文本');
+    new Notice(t('main.floatEnabled'));
   }
 
   async loadFloatButtonData() {
@@ -24309,19 +26139,19 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (!activeView) {
-        new Notice('请先打开一个Markdown文件');
+        new Notice(t('main.openMdFile'));
         return;
       }
 
       const selection = this.getSelectedText();
 
       if (!selection || !selection.trim()) {
-        new Notice('请先选中要应用样式的文本');
+        new Notice(t('main.selectTextToStyleApply'));
         return;
       }
 
       await this.applyStyleToSelection(activeView.editor, className, selection);
-      new Notice(`已将样式 "${displayText || className}" 应用到选中文本`);
+      new Notice(t('main.styleApplied'));
     });
 
     // 中键点击应用样式到全局规则
@@ -24333,14 +26163,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!activeView) {
-          new Notice('请先打开一个Markdown文件');
+          new Notice(t('main.openMdFile'));
           return;
         }
 
         const selectedText = this.getSelectedText();
 
         if (!selectedText || !selectedText.trim()) {
-          new Notice('请先选中要应用样式的文本');
+          new Notice(t('main.selectTextToStyleApply'));
           return;
         }
 
@@ -24353,11 +26183,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         if (existingGlobalRuleIndex >= 0) {
           // 规则已存在于全局，显示提示
-          new Notice(`规则 "${regexValue}" 已存在于全局规则中！`);
+          new Notice(t('main.globalRuleExists'));
         } else {
           // 添加为全局规则
           await this.addGlobalRule(regexValue, className, '');
-          new Notice(`全局规则 "${regexValue}" 已添加！`);
+          new Notice(t('main.globalRuleAdded'));
         }
       }
     });
@@ -24371,14 +26201,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!activeView) {
-          new Notice('请先打开一个Markdown文件');
+          new Notice(t('main.openMdFile'));
           return;
         }
 
         const selectedText = this.getSelectedText();
 
         if (!selectedText || !selectedText.trim()) {
-          new Notice('请先选中要应用样式的文本');
+          new Notice(t('main.selectTextToStyleApply'));
           return;
         }
 
@@ -24392,11 +26222,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         if (existingGlobalRuleIndex >= 0) {
           // 规则已存在于全局，显示提示
-          new Notice(`规则 "${regexValue}" 已存在于全局规则中！`);
+          new Notice(t('main.globalRuleExists'));
         } else {
           // 添加为全局规则
           await this.addGlobalRule(regexValue, className, '');
-          new Notice(`全局规则 "${regexValue}" 已添加！`);
+          new Notice(t('main.globalRuleAdded'));
         }
       }
     });
@@ -24444,12 +26274,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       };
 
       // 编辑名称选项
-      const editNameOption = createMenuItem('编辑名称', () => {
+      const editNameOption = createMenuItem(t('floating.editName'), () => {
         const currentText = floatingWindow.dataset.displayText || className;
         const modal = new InputModal(
           this.app,
-          '编辑悬浮按钮名称',
-          '请输入新的显示名称',
+          t('floating.editBtnName'),
+          t('floating.inputNewDisplayName'),
           currentText,
           async (newName) => {
             if (newName && newName.trim()) {
@@ -24460,15 +26290,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 previewEl.textContent = trimmedName;
               }
               this.saveFloatingStyleWindows();
-              new Notice(`悬浮按钮名称已更新为 "${trimmedName}"`);
+              new Notice(t('main.floatNameUpdated'));
             }
           },
-          `类名: ${className}`
+          t('main.styleClass') + `: ${className}`
         );
         modal.open();
       });
 
-      const closeOption = createMenuItem('关闭悬浮显示', () => {
+      const closeOption = createMenuItem(t('floating.closeFloat'), () => {
         const index = this.floatingStyleWindows.indexOf(floatingWindow);
         if (index > -1) {
           this.floatingStyleWindows.splice(index, 1);
@@ -24502,7 +26332,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       menu.appendChild(editNameOption);
       menu.appendChild(closeOption);
       if (floatingWindow.dataset.group) {
-        const hideGroupOption = createMenuItem('隐藏同组所有样式', () => {
+        const hideGroupOption = createMenuItem(t('floating.hideGroupStyles'), () => {
           this.hideGroupFloatingStyles(floatingWindow.dataset.group);
         });
         menu.appendChild(hideGroupOption);
@@ -24541,13 +26371,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     try {
       const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (!activeView) {
-        new Notice('请先打开一个Markdown文件');
+        new Notice(t('main.openMdFile'));
         return;
       }
       
       const selectedText = this.getSelectedText().trim();
       if (!selectedText) {
-        new Notice('请先选中要注音的文本');
+        new Notice(t('main.selectTextToPinyin'));
         return;
       }
       
@@ -24563,10 +26393,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         const startPos = Math.max(0, cursorPos - 10);
         const endPos = Math.min(lineText.length, cursorPos + 11);
         const surroundingText = lineText.substring(startPos, endPos);
-        context = `${surroundingText}\n[上文中${cursorPos - startPos}号位置为待注音字: ${selectedText}]`;
+        context = `${surroundingText}\n[` + t('main.pinyinContext') + `${cursorPos - startPos}` + t('main.pinyinPosition') + `: ${selectedText}]`;
       }
       
-      new Notice('正在获取拼音...');
+      new Notice(t('main.pinyinGetting'));
       
       const pinyinMode = mode || this.settings?.pinyinMode || 'global';
       let pinyinText;
@@ -24586,7 +26416,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             const charCount = selectedText.replace(/[\s\p{P}]/gu, '').length;
             
             if (pinyinCount !== charCount) {
-              new Notice(`拼音数量(${pinyinCount})与文字数量(${charCount})不匹配，请重试`);
+              new Notice(t('main.pinyinMismatch'));
               return;
             }
             
@@ -24598,7 +26428,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       } else {
         const filePath = activeView.file?.path;
         if (!filePath) {
-          new Notice('无法获取文件路径');
+          new Notice(t('main.cannotGetFilePath'));
           return;
         }
         
@@ -24620,14 +26450,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             const charCount = selectedText.replace(/[\s\p{P}]/gu, '').length;
             
             if (pinyinCount !== charCount) {
-              new Notice(`拼音数量(${pinyinCount})与文字数量(${charCount})不匹配，请重试`);
+              new Notice(t('main.pinyinMismatch'));
               return;
             }
             
             // 使用 CodeMirror 6 的 API 获取选区位置
             const cm = editor.cm;
             if (!cm) {
-              new Notice('无法获取编辑器实例');
+              new Notice(t('main.cannotGetEditor'));
               return;
             }
             const selection = cm.state.selection.main;
@@ -24645,11 +26475,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       if (pinyinText) {
         await this.applyPinyinToText(activeView, selectedText, pinyinText);
-        new Notice('拼音已添加');
+        new Notice(t('main.pinyinAdded'));
       }
     } catch (error) {
       console.error('注音失败:', error);
-      new Notice('注音失败: ' + error.message);
+      new Notice(t('main.pinyinFailed') + ': ' + error.message);
     }
   }
   
@@ -24661,13 +26491,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     try {
       const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (!activeView) {
-        new Notice('请先打开一个Markdown文件');
+        new Notice(t('main.openMdFile'));
         return;
       }
 
       const selectedText = this.getSelectedText().trim();
       if (!selectedText) {
-        new Notice('请先选中要删除注音的文本');
+        new Notice(t('main.selectTextToDeletePinyin'));
         return;
       }
 
@@ -24698,12 +26528,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
 
       if (deletedCount === 0) {
-        new Notice('选中的文本没有注音');
+        new Notice(t('main.noPinyin'));
         return;
       }
 
       await this.savePinyinData(pinyinData);
-      new Notice(`已删除 ${deletedCount} 个注音`);
+      new Notice(t('main.pinyinDeleted'));
 
       // 触发拼音更新
       this.pinyinUpdateEmitter.dispatchEvent(new Event('update'));
@@ -24712,7 +26542,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       this.refreshCurrentView();
     } catch (error) {
       console.error('删除注音失败:', error);
-      new Notice('删除注音失败: ' + error.message);
+      new Notice(t('main.pinyinDeleteFailed') + ': ' + error.message);
     }
   }
   
@@ -24753,7 +26583,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       `;
       
       const title = document.createElement('span');
-      title.textContent = '编辑注音文件';
+      title.textContent = t('pinyin.editTitle');
       title.style.cssText = `
         font-size: 14px;
         font-weight: 600;
@@ -24809,7 +26639,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       `;
       
       const toneLabel = document.createElement('span');
-      toneLabel.textContent = '声调:';
+      toneLabel.textContent = t('pinyin.tone');
       toneLabel.style.cssText = `
         font-size: 12px;
         color: var(--text-muted);
@@ -24881,7 +26711,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       `;
       
       const saveBtn = document.createElement('button');
-      saveBtn.textContent = '保存';
+      saveBtn.textContent = t('main.save');
       saveBtn.style.cssText = `
         padding: 6px 16px;
         background: #28a745;
@@ -24896,15 +26726,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const newData = JSON.parse(textarea.value);
           await this.savePinyinData(newData);
           this.pinyinUpdateEmitter.dispatchEvent(new Event('update'));
-          new Notice('注音文件已保存');
+          new Notice(t('main.pinyinSaved'));
           document.body.removeChild(editorWindow);
         } catch (e) {
-          new Notice('JSON格式错误: ' + e.message);
+          new Notice(t('main.jsonFormatError') + ': ' + e.message);
         }
       });
       
       const cancelBtn = document.createElement('button');
-      cancelBtn.textContent = '取消';
+      cancelBtn.textContent = t('main.cancel');
       cancelBtn.style.cssText = `
         padding: 6px 16px;
         background: #6c757d;
@@ -24926,7 +26756,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
     } catch (error) {
       console.error('打开注音文件编辑器失败:', error);
-      new Notice('打开编辑器失败: ' + error.message);
+      new Notice(t('main.openEditorFailed') + ': ' + error.message);
     }
   }
 
@@ -25080,7 +26910,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     
     // 如果提供了上下文，添加到提示词中
     if (context) {
-      prompt += `\n\n上下文（用于确定多音字和通假字的正确读音，注意：上下文仅供参考，不要为上下文中的文字标注拼音）：\n${context}`;
+      prompt += `\n\n` + t('main.pinyinContextPrompt') + `：\n${context}`;
     }
 
     const controller = new AbortController();
@@ -25105,7 +26935,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       clearTimeout(timeoutId);
       
       if (!response.ok) {
-        throw new Error(`API请求失败: ${response.status}`);
+        throw new Error(t('main.apiRequestFailed') + `: ${response.status}`);
       }
       
       const data = await response.json();
@@ -25639,7 +27469,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 try {
                   this.addCommand({
                     id: commandId,
-                    name: `应用"${actualName}"分类样式`,
+                    name: t('main.applyCategoryStyle') + ` "${actualName}"`,
                     callback: () => {
                       this.applyCategoryStyleWithClipboard(actualName, categoryName);
                     },
@@ -25737,7 +27567,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       console.log('📄 活动视图:', activeView);
       if (!activeView) {
         console.warn('⚠️ 没有打开的Markdown文件');
-        new Notice('请先打开一个Markdown文件');
+        new Notice(t('main.openMdFile'));
         return;
       }
 
@@ -25772,7 +27602,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           console.log('🔑 检查API Key...');
           if (!currentAIConfig.apiKey) {
             console.warn('⚠️ 未配置API Key');
-            new Notice('请先在设置中配置AI的API Key');
+            new Notice(t('main.configureAiFirst'));
             return;
           }
           
@@ -25789,7 +27619,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 获取当前文档信息
           const { MarkdownView } = require('obsidian');
           const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-          let documentName = "未知文档";
+          let documentName = t('ai.unknownDoc');
           
           if (activeView && activeView.file) {
             // 获取完整的文件名（包含扩展名）
@@ -25801,12 +27631,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 找到默认提示词
           const defaultPrompt = templates.find(t => t.id === this.settings.defaultPromptId);
           const promptContent = defaultPrompt ? defaultPrompt.content : (this.settings?.aiPrompt || "请分析以下内容：");
-          const fullPrompt = `${promptContent}\n\n文档名称: ${documentName}\n\n${selectedText}`;
+          const fullPrompt = `${promptContent}\n\n` + t('ai.docName') + `: ${documentName}\n\n${selectedText}`;
           
           console.log('💬 准备发送的提示词长度:', fullPrompt.length);
           console.log('📝 使用的默认提示词:', defaultPrompt ? defaultPrompt.name : '全局提示词');
 
-          new Notice('正在发送请求到AI...');
+          new Notice(t('main.sendingToAi'));
           console.log('📡 开始调用AI API...');
 
           // 创建对话历史
@@ -25854,7 +27684,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     } catch (error) {
       console.error('❌ AI助手错误:', error);
       console.error('❌ 错误堆栈:', error.stack);
-      new Notice(`AI助手出错: ${error.message}`);
+      new Notice(t('main.aiError') + ': ' + error.message);
     }
   }
 
@@ -25868,7 +27698,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       console.log('📄 活动视图:', activeView);
       if (!activeView?.editor) {
         console.warn('⚠️ 没有打开的Markdown文件或编辑器');
-        new Notice('请先打开一个Markdown文件');
+        new Notice(t('main.openMdFile'));
         return;
       }
 
@@ -25878,7 +27708,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       if (!selectedText || !selectedText.trim()) {
         console.warn('⚠️ 没有选中的文本');
-        new Notice('请先选中要提取实体的文本');
+        new Notice(t('main.selectTextToEntity'));
         return;
       }
 
@@ -25889,7 +27719,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       if (!currentAIConfig.apiKey) {
         console.warn('⚠️ 未配置API Key');
-        new Notice('请先在设置中配置AI的API Key');
+        new Notice(t('main.configureAiFirst'));
         // 打开主面板并跳到底部设置
         const mainModal = new AddRegexRuleModal(this.app, this);
         mainModal.open();
@@ -25910,7 +27740,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     } catch (error) {
       console.error('❌ 实体提取错误:', error);
       console.error('❌ 错误堆栈:', error.stack);
-      new Notice(`实体提取出错: ${error.message}`);
+      new Notice(t('main.aiError') + ': ' + error.message);
     }
   }
 
@@ -26048,7 +27878,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (!response.ok) {
         const errorData = await response.text();
         console.error('❌ API错误详情(初始):', errorData);
-        throw new Error(`API请求失败: ${response.status} - ${errorData}`);
+        throw new Error(t('main.apiRequestFailed') + `: ${response.status} - ${errorData}`);
       }
 
       const data = await response.json();
@@ -26133,18 +27963,18 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 // 其他三国人物的通用搜索结果
                 detailedResults = [
                   {
-                    "title": `关于${searchQuery}的搜索结果1`,
-                    "snippet": `这是关于"${searchQuery}"的详细信息，包含丰富的内容和相关背景知识。`,
+                    "title": t('ai.searchResult') + ` 1 - ${searchQuery}`,
+                    "snippet": t('ai.searchResultSnippet') + ` "${searchQuery}"`,
                     "url": "https://example.com/result1"
                   },
                   {
-                    "title": `关于${searchQuery}的搜索结果2`,
-                    "snippet": `这是另一个关于"${searchQuery}"的详细信息，提供了不同角度的分析和解读。`,
+                    "title": t('ai.searchResult') + ` 2 - ${searchQuery}`,
+                    "snippet": t('ai.searchResultSnippetAlt') + ` "${searchQuery}"`,
                     "url": "https://example.com/result2"
                   },
                   {
-                    "title": `关于${searchQuery}的搜索结果3`,
-                    "snippet": `这是第三个关于"${searchQuery}"的详细信息，包含最新的研究成果和数据。`,
+                    "title": t('ai.searchResult') + ` 3 - ${searchQuery}`,
+                    "snippet": t('ai.searchResultSnippet3') + ` "${searchQuery}"`,
                     "url": "https://example.com/result3"
                   }
                 ];
@@ -26153,18 +27983,18 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               // 通用搜索结果
               detailedResults = [
                 {
-                  "title": `关于${searchQuery}的搜索结果1`,
-                  "snippet": `这是关于"${searchQuery}"的详细信息，包含丰富的内容和相关背景知识。`,
+                  "title": t('ai.searchResult') + ` 1 - ${searchQuery}`,
+                  "snippet": t('ai.searchResultSnippet') + ` "${searchQuery}"`,
                   "url": "https://example.com/result1"
                 },
                 {
-                  "title": `关于${searchQuery}的搜索结果2`,
-                  "snippet": `这是另一个关于"${searchQuery}"的详细信息，提供了不同角度的分析和解读。`,
+                  "title": t('ai.searchResult') + ` 2 - ${searchQuery}`,
+                  "snippet": t('ai.searchResultSnippetAlt') + ` "${searchQuery}"`,
                   "url": "https://example.com/result2"
                 },
                 {
-                  "title": `关于${searchQuery}的搜索结果3`,
-                  "snippet": `这是第三个关于"${searchQuery}"的详细信息，包含最新的研究成果和数据。`,
+                  "title": t('ai.searchResult') + ` 3 - ${searchQuery}`,
+                  "snippet": t('ai.searchResultSnippet3') + ` "${searchQuery}"`,
                   "url": "https://example.com/result3"
                 }
               ];
@@ -26202,7 +28032,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             if (!finalResponse.ok) {
               const errorData = await finalResponse.text();
               console.error('❌ 最终API错误详情:', errorData);
-              throw new Error(`API请求失败: ${finalResponse.status} - ${errorData}`);
+              throw new Error(t('main.apiRequestFailed') + `: ${finalResponse.status} - ${errorData}`);
             }
             
             const finalData = await finalResponse.json();
@@ -26225,7 +28055,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 `${result.title}: ${result.snippet}`
               ).join('\n\n');
               
-              const defaultResponse = `根据搜索结果，我为您总结了关于"${searchQuery}"的信息：\n\n${summary}`;
+              const defaultResponse = t('ai.searchSummary') + ` "${searchQuery}":\n\n${summary}`;
               console.log('📝 使用基于搜索结果的默认响应');
               return defaultResponse;
             }
@@ -26240,7 +28070,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 `${result.title}: ${result.snippet}`
               ).join('\n\n');
               
-              const defaultResponse = `根据搜索结果，我为您总结了关于"${searchQuery}"的信息：\n\n${summary}`;
+              const defaultResponse = t('ai.searchSummary') + ` "${searchQuery}":\n\n${summary}`;
               console.log('📝 使用基于搜索结果的默认响应');
               return defaultResponse;
             }
@@ -26409,7 +28239,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (!response.ok) {
         const errorData = await response.text();
         console.error('❌ API错误详情:', errorData);
-        throw new Error(`API请求失败: ${response.status} - ${errorData}`);
+        throw new Error(t('main.apiRequestFailed') + `: ${response.status} - ${errorData}`);
       }
 
       const data = await response.json();
@@ -26500,18 +28330,18 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 // 其他三国人物的通用搜索结果
                 detailedResults = [
                   {
-                    "title": `关于${searchQuery}的搜索结果1`,
-                    "snippet": `这是关于"${searchQuery}"的详细信息，包含丰富的内容和相关背景知识。`,
+                    "title": t('ai.searchResult') + ` 1 - ${searchQuery}`,
+                    "snippet": t('ai.searchResultSnippet') + ` "${searchQuery}"`,
                     "url": "https://example.com/result1"
                   },
                   {
-                    "title": `关于${searchQuery}的搜索结果2`,
-                    "snippet": `这是另一个关于"${searchQuery}"的详细信息，提供了不同角度的分析和解读。`,
+                    "title": t('ai.searchResult') + ` 2 - ${searchQuery}`,
+                    "snippet": t('ai.searchResultSnippetAlt') + ` "${searchQuery}"`,
                     "url": "https://example.com/result2"
                   },
                   {
-                    "title": `关于${searchQuery}的搜索结果3`,
-                    "snippet": `这是第三个关于"${searchQuery}"的详细信息，包含最新的研究成果和数据。`,
+                    "title": t('ai.searchResult') + ` 3 - ${searchQuery}`,
+                    "snippet": t('ai.searchResultSnippet3') + ` "${searchQuery}"`,
                     "url": "https://example.com/result3"
                   }
                 ];
@@ -26520,18 +28350,18 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               // 通用搜索结果
               detailedResults = [
                 {
-                  "title": `关于${searchQuery}的搜索结果1`,
-                  "snippet": `这是关于"${searchQuery}"的详细信息，包含丰富的内容和相关背景知识。`,
+                  "title": t('ai.searchResult') + ` 1 - ${searchQuery}`,
+                  "snippet": t('ai.searchResultSnippet') + ` "${searchQuery}"`,
                   "url": "https://example.com/result1"
                 },
                 {
-                  "title": `关于${searchQuery}的搜索结果2`,
-                  "snippet": `这是另一个关于"${searchQuery}"的详细信息，提供了不同角度的分析和解读。`,
+                  "title": t('ai.searchResult') + ` 2 - ${searchQuery}`,
+                  "snippet": t('ai.searchResultSnippetAlt') + ` "${searchQuery}"`,
                   "url": "https://example.com/result2"
                 },
                 {
-                  "title": `关于${searchQuery}的搜索结果3`,
-                  "snippet": `这是第三个关于"${searchQuery}"的详细信息，包含最新的研究成果和数据。`,
+                  "title": t('ai.searchResult') + ` 3 - ${searchQuery}`,
+                  "snippet": t('ai.searchResultSnippet3') + ` "${searchQuery}"`,
                   "url": "https://example.com/result3"
                 }
               ];
@@ -26580,7 +28410,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             if (!finalResponse.ok) {
               const errorData = await finalResponse.text();
               console.error('❌ 最终API错误详情:', errorData);
-              throw new Error(`API请求失败: ${finalResponse.status} - ${errorData}`);
+              throw new Error(t('main.apiRequestFailed') + `: ${finalResponse.status} - ${errorData}`);
             }
             
             const finalData = await finalResponse.json();
@@ -26603,7 +28433,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 `${result.title}: ${result.snippet}`
               ).join('\n\n');
               
-              const defaultResponse = `根据搜索结果，我为您总结了关于"${searchQuery}"的信息：\n\n${summary}`;
+              const defaultResponse = t('ai.searchSummary') + ` "${searchQuery}":\n\n${summary}`;
               console.log('📝 使用基于搜索结果的默认响应');
               return defaultResponse;
             }
@@ -26618,7 +28448,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 `${result.title}: ${result.snippet}`
               ).join('\n\n');
               
-              const defaultResponse = `根据搜索结果，我为您总结了关于"${searchQuery}"的信息：\n\n${summary}`;
+              const defaultResponse = t('ai.searchSummary') + ` "${searchQuery}":\n\n${summary}`;
               console.log('📝 使用基于搜索结果的默认响应');
               return defaultResponse;
             }
@@ -26708,7 +28538,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         // 对话历史标题
         const historyTitle = historyContainer.createDiv();
-        historyTitle.textContent = "对话历史";
+        historyTitle.textContent = t('ai.chatHistory');
         historyTitle.style.padding = "8px";
         historyTitle.style.fontWeight = "bold";
         historyTitle.style.borderBottom = "1px solid var(--background-modifier-border)";
@@ -26736,11 +28566,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
         const titleEl = modalEl.querySelector('.modal-title');
         if (titleEl) {
-          titleEl.textContent = "AI 回复";
+          titleEl.textContent = t('ai.reply');
           
           // 添加滚轮事件监听，用于调整窗口透明度
           titleEl.style.cursor = 'ns-resize'; // 显示垂直调整大小光标
-          titleEl.title = '滚动滚轮调整窗口透明度'; // 添加提示
+          titleEl.title = t('settings.ctrlScrollOpacity');
           
           titleEl.addEventListener('wheel', (e) => {
             e.preventDefault(); // 阻止页面滚动
@@ -26783,10 +28613,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           noAIWarning.style.marginBottom = "15px";
           noAIWarning.style.fontSize = "13px";
           
-          const warningText = noAIWarning.createEl("span", { text: "⚠️ 当前无可用AI，" });
+          const warningText = noAIWarning.createEl("span", { text: '⚠️ ' + t('cssEditor.noAiWarning') });
           warningText.style.color = "red";
           
-          const settingsLink = noAIWarning.createEl("a", { text: "到设置中配置" });
+          const settingsLink = noAIWarning.createEl("a", { text: t('cssEditor.goToSettings') });
           settingsLink.style.color = "red";
           settingsLink.style.textDecoration = "underline";
           settingsLink.style.cursor = "pointer";
@@ -26835,7 +28665,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         searchCheckbox.style.marginRight = "8px";
         searchCheckbox.style.cursor = "pointer";
         
-        const searchLabel = searchContainer.createEl("span", { text: "启用网络搜索" });
+        const searchLabel = searchContainer.createEl("span", { text: t('ai.enableWebSearch') });
         searchLabel.style.fontSize = "13px";
         searchLabel.style.color = "var(--text-muted)";
         searchLabel.style.cursor = "pointer";
@@ -26873,7 +28703,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         responseTextarea.style.fontSize = "13px";
         responseTextarea.id = "ai-response";
         responseTextarea.disabled = true; // 流式显示期间禁用编辑
-        responseTextarea.placeholder = "AI响应将显示在这里...输入您的问题或修改要求以继续对话。";
+        responseTextarea.placeholder = t('ai.responsePlaceholder');
 
         // 监听textarea内容变化，实时更新预览
         responseTextarea.addEventListener("input", () => {
@@ -26899,7 +28729,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         remarkContainer.style.gap = "5px";
 
         const remarkLabel = remarkContainer.createDiv();
-        remarkLabel.textContent = "备注（可选）:";
+        remarkLabel.textContent = t('ai.remarkOptional') + ':';
         remarkLabel.style.fontSize = "12px";
         remarkLabel.style.color = "var(--text-muted)";
         remarkLabel.style.fontWeight = "bold";
@@ -26907,7 +28737,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         // 选中文字添加到备注功能
         // 创建可点击文字
         const addToRemarkText = document.createElement('span');
-        addToRemarkText.textContent = '添加到备注';
+        addToRemarkText.textContent = t('ai.addToRemark');
         addToRemarkText.style.cursor = 'pointer';
         addToRemarkText.style.color = 'var(--interactive-accent)';
         addToRemarkText.style.fontSize = '12px';
@@ -26927,7 +28757,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         keywordContainer.style.marginLeft = "20px";
         
         const keywordLabel = keywordContainer.appendChild(keywordContainer.ownerDocument.createElement("span"));
-        keywordLabel.textContent = "关键词:";
+        keywordLabel.textContent = t('ai.keyword') + ':';
         keywordLabel.style.fontSize = "12px";
         keywordLabel.style.color = "var(--text-muted)";
         keywordLabel.style.fontWeight = "bold";
@@ -26989,13 +28819,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           if (selectedText && selectedText.trim()) {
             if (this.isRemarkAdded) {
               // 已有备注，显示替换备注
-              addToRemarkText.textContent = '替换备注';
+              addToRemarkText.textContent = t('ai.replaceRemark');
               addToRemarkText.style.color = 'var(--interactive-accent)';
               addToRemarkText.style.textDecoration = 'underline';
               addToRemarkText.style.cursor = 'pointer';
             } else {
               // 没有备注，显示添加到备注
-              addToRemarkText.textContent = '添加到备注';
+              addToRemarkText.textContent = t('ai.addToRemark');
               addToRemarkText.style.color = 'var(--interactive-accent)';
               addToRemarkText.style.textDecoration = 'underline';
               addToRemarkText.style.cursor = 'pointer';
@@ -27050,7 +28880,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         previewSection.style.gap = "10px";
         
         // 应用样式按钮
-        const applyButton = previewSection.createEl("button", { text: "应用样式" });
+        const applyButton = previewSection.createEl("button", { text: t('ai.applyStyle') });
         applyButton.style.padding = "6px 12px";
         applyButton.style.backgroundColor = "var(--interactive-accent)";
         applyButton.style.color = "var(--text-on-accent)";
@@ -27067,7 +28897,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         applyButton.addEventListener("mouseenter", () => {
           const savedDefaultGroup = this.plugin.settings?.defaultAddToGroup || "";
           if (!savedDefaultGroup) {
-            applyButton.title = "未设置默认分组";
+            applyButton.title = t('main.noDefaultGroup');
           } else {
             applyButton.title = "";
           }
@@ -27090,7 +28920,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         sendButtonContainer.style.justifyContent = "flex-end";
         
         // 发送按钮
-        const sendButton = sendButtonContainer.createEl("button", { text: "发送" });
+        const sendButton = sendButtonContainer.createEl("button", { text: t('ai.send') });
         sendButton.style.padding = "8px 16px";
         sendButton.style.backgroundColor = "var(--interactive-accent)";
         sendButton.style.color = "var(--text-on-accent)";
@@ -27112,7 +28942,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         defaultGroupContainer.style.alignItems = "center";
         defaultGroupContainer.style.gap = "8px";
 
-        const defaultGroupLabel = defaultGroupContainer.createEl("span", { text: "默认添加到分组:" });
+        const defaultGroupLabel = defaultGroupContainer.createEl("span", { text: t('ai.defaultGroup') + ':' });
         defaultGroupLabel.style.fontSize = "12px";
         defaultGroupLabel.style.color = "var(--text-muted)";
         defaultGroupLabel.style.whiteSpace = "nowrap";
@@ -27130,7 +28960,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         const categories = allCategories.filter(cat => cat !== "标题样式");
 
         if (categories.length === 0) {
-          const option = defaultGroupSelect.createEl("option", { text: "请先创建分组" });
+          const option = defaultGroupSelect.createEl("option", { text: t('ai.createGroupFirst') });
           option.value = "";
         } else {
           // 添加"-"选项
@@ -27184,7 +29014,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         autoSendContainer.style.alignItems = "center";
         autoSendContainer.style.gap = "8px";
 
-        const autoSendLabel = autoSendContainer.createEl("span", { text: "按下快捷键即发送(有默认提示词及选中文本状态下)" });
+        const autoSendLabel = autoSendContainer.createEl("span", { text: t('ai.autoSendDesc') });
         autoSendLabel.style.fontSize = "12px";
         autoSendLabel.style.color = "var(--text-muted)";
 
@@ -27193,7 +29023,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         autoSendCheckbox.checked = this.plugin.settings?.aiAutoSend || false;
         autoSendCheckbox.style.cursor = "pointer";
 
-        const autoSendHint = autoSendContainer.createEl("span", { text: "未勾选则仅弹出窗口" });
+        const autoSendHint = autoSendContainer.createEl("span", { text: t('ai.autoSendHint') });
         autoSendHint.style.fontSize = "11px";
         autoSendHint.style.color = "var(--text-muted)";
 
@@ -27216,7 +29046,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         this.sendButton = sendButton;
 
         // 显示加载状态
-        this.statusEl.textContent = "正在等待AI响应...";
+        this.statusEl.textContent = t('ai.waitingResponse');
 
         // 开始流式显示
         this.startStreaming();
@@ -27241,7 +29071,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             }
             
             // 使用emoji和颜色区分用户输入
-            this.responseEl.value = `👤 用户: ${userPrompt}\n\n🤖 AI: `;
+            this.responseEl.value = `👤 ` + t('ai.user') + `: ${userPrompt}\n\n🤖 AI: `;
             this.responseContent = this.responseEl.value;
             this.updatePreview();
           }
@@ -27254,7 +29084,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
           if (content) {
             // 如果有内容，显示完成状态
-            this.statusEl.textContent = "完成 ✓";
+            this.statusEl.textContent = t('ai.done');
           this.statusEl.style.color = "var(--text-success)";
           this.updateApplyButtonState();
           
@@ -27264,7 +29094,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           }
           } else {
             // 如果没有内容（仅显示窗口），显示提示
-            this.statusEl.textContent = "请在下方输入消息并发送";
+            this.statusEl.textContent = t('ai.inputMessage');
             this.statusEl.style.color = "var(--text-muted)";
             // 按钮初始状态禁用，但用户可以手动输入CSS后通过其他方式启用
             this.applyButton.disabled = true;
@@ -27275,7 +29105,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           this.sendButton.disabled = false;
           this.responseEl.focus();
         } catch (error) {
-          this.statusEl.textContent = `错误: ${error.message}`;
+          this.statusEl.textContent = t('main.error') + ': ' + error.message;
           this.statusEl.style.color = "var(--text-error)";
           this.responseEl.value = "";
           this.responseEl.disabled = false;
@@ -27339,13 +29169,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 禁用输入
           this.responseEl.disabled = true;
           this.sendButton.disabled = true;
-          this.statusEl.textContent = "正在发送...";
+          this.statusEl.textContent = t('main.sendingToAi');
           this.statusEl.style.color = "var(--text-muted)";
           
           // 获取当前文档信息
           const { MarkdownView } = require('obsidian');
           const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
-          let documentName = "未知文档";
+          let documentName = t('ai.unknownDoc');
           
           if (activeView && activeView.file) {
             // 获取完整的文件名（包含扩展名）
@@ -27355,7 +29185,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           }
           
           // 构建包含文档名称的完整消息
-          const fullUserMessage = `文档名称: ${documentName}\n\n${userMessage}`;
+          const fullUserMessage = t('ai.docName') + `: ${documentName}\n\n${userMessage}`;
 
           // 将用户消息添加到历史记录
           this.conversationHistory.push({
@@ -27366,7 +29196,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 显示用户输入（如果是第一条消息或当前没有AI回复）
           if (this.conversationHistory.length === 1 || !this.responseContent) {
             // 使用emoji和颜色区分用户输入，只显示原始用户消息
-            this.responseEl.value = `👤 用户: ${userMessage}\n\n🤖 AI: `;
+            this.responseEl.value = `👤 ` + t('ai.user') + `: ${userMessage}\n\n🤖 AI: `;
             this.responseContent = this.responseEl.value;
             this.updatePreview();
           }
@@ -27442,16 +29272,16 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           this.responseEl.disabled = false;
           this.sendButton.disabled = false;
           this.updateApplyButtonState();
-          this.statusEl.textContent = "完成 ✓";
+          this.statusEl.textContent = t('ai.done');
           this.statusEl.style.color = "var(--text-success)";
           this.responseEl.focus();
 
-          new Notice("回复已收到");
+          new Notice(t('main.replyReceived'));
 
         } catch (error) {
           console.error("发送消息失败:", error);
-          new Notice(`发送失败: ${error.message}`);
-          this.statusEl.textContent = `错误: ${error.message}`;
+          new Notice(t('main.sendFailed') + ': ' + error.message);
+          this.statusEl.textContent = t('main.error') + ': ' + error.message;
           this.statusEl.style.color = "var(--text-error)";
 
           // 恢复输入
@@ -27481,7 +29311,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         // 如果文件夹名为空、只包含下划线或只包含数字，但原始文件名有实际内容，保留处理后的名称
         if ((!finalFolderName || /^_+$/.test(finalFolderName) || /^\d+$/.test(finalFolderName)) && !meaningfulContent) {
-          finalFolderName = '未命名文档';
+          finalFolderName = t('ai.untitledDoc');
         }
         
         return `${baseDir}/${finalFolderName}`;
@@ -27527,7 +29357,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           }
           
           // 提取关键词和文档名作为标题
-          let conversationTitle = '新对话';
+          let conversationTitle = t('ai.newConversation');
           
           // 优先使用关键词输入框中的内容
           let keyword = this.keywordInput?.value.trim();
@@ -27542,7 +29372,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             conversationTitle = `${keyword} - ${this.currentDocument.name}`;
           } else {
             // 如果没有关键词，使用文档名
-            conversationTitle = `${this.currentDocument.name} - 新对话`;
+            conversationTitle = `${this.currentDocument.name} - ` + t('ai.newConversation');
           }
           
           // 创建对话元数据，包含文档信息
@@ -27635,7 +29465,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         // 添加新对话按钮
         const newConversationBtn = this.historyList.createEl('button');
-        newConversationBtn.textContent = '+ 新对话';
+        newConversationBtn.textContent = '+ ' + t('ai.newConversation');
         newConversationBtn.style.width = '100%';
         newConversationBtn.style.padding = '8px';
         newConversationBtn.style.marginBottom = '4px';
@@ -27659,7 +29489,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         // 如果没有对话，显示提示
         if (this.conversationList.length === 0) {
           const emptyHint = this.historyList.createDiv();
-          emptyHint.textContent = '暂无对话历史';
+          emptyHint.textContent = t('ai.noChatHistory');
           emptyHint.style.textAlign = 'center';
           emptyHint.style.color = 'var(--text-muted)';
           emptyHint.style.fontSize = '12px';
@@ -27727,7 +29557,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 对话数量
           const countText = groupTitle.createEl('span');
-          countText.textContent = `${conversations.length} 条`;
+          countText.textContent = `${conversations.length} ` + t('ai.conversations');
           countText.style.fontSize = '11px';
           countText.style.color = 'var(--text-muted)';
           
@@ -27826,7 +29656,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 检查最终的文件夹名是否为空、只包含下划线或无效
           if (!safeDocumentName || /^_+$/.test(safeDocumentName) || /^\d+$/.test(safeDocumentName)) {
-            safeDocumentName = '未命名文档';
+            safeDocumentName = t('ai.untitledDoc');
           }
           
           const filePath = `.obsidian/plugins/Regex-Css-Highlighter/data_AI/${safeDocumentName}/${conversationId}.json`;
@@ -27848,7 +29678,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           this.responseEl.value = this.responseContent;
           
           // 更新状态
-          this.statusEl.textContent = '完成 ✓';
+          this.statusEl.textContent = t('ai.done');
           this.statusEl.style.color = 'var(--text-success)';
           
           // 更新预览
@@ -27914,7 +29744,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         this.conversationHistory = [];
         this.responseContent = '';
         this.responseEl.value = '';
-        this.statusEl.textContent = '请在下方输入消息并发送';
+        this.statusEl.textContent = t('ai.inputMessage');
         this.statusEl.style.color = 'var(--text-muted)';
         this.applyButton.disabled = true;
         this.responseEl.focus();
@@ -27939,7 +29769,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 检查最终的文件夹名是否为空、只包含下划线或无效
           if (!safeDocumentName || /^_+$/.test(safeDocumentName) || /^\d+$/.test(safeDocumentName)) {
-            safeDocumentName = '未命名文档';
+            safeDocumentName = t('ai.untitledDoc');
           }
           
           const filePath = `.obsidian/plugins/Regex-Css-Highlighter/data_AI/${safeDocumentName}/${conversationId}.json`;
@@ -28073,7 +29903,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               
               // 创建"添加到样式分组"选项
               const addToGroupOption = document.createElement('div');
-              addToGroupOption.textContent = '添加到样式分组';
+              addToGroupOption.textContent = t('context.addGroup');
               addToGroupOption.style.padding = '8px 12px';
               addToGroupOption.style.cursor = 'pointer';
               addToGroupOption.style.borderRadius = '3px';
@@ -28111,7 +29941,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 
                 if (categories.length === 0) {
                   const noGroupOption = document.createElement('div');
-                  noGroupOption.textContent = '暂无样式分组';
+                  noGroupOption.textContent = t('ai.noStyleGroup');
                   noGroupOption.style.padding = '8px 12px';
                   noGroupOption.style.color = 'var(--text-muted)';
                   noGroupOption.style.fontSize = '12px';
@@ -28142,7 +29972,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                         const className = classNameMatch ? classNameMatch[1] : null;
                         
                         if (!className) {
-                          new Notice("无法提取CSS类名");
+                          new Notice(t('main.cannotExtractClass'));
                           return;
                         }
                         
@@ -28209,13 +30039,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                             this.plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
                           }
                           
-                          new Notice(`样式已添加到分组: ${category}`);
+                          new Notice(t('main.groupAdded'));
                         } else {
-                          new Notice(`样式已存在于分组: ${category}`);
+                          new Notice(t('main.groupExists'));
                         }
                       } catch (error) {
                         console.error('添加样式到分组失败:', error);
-                        new Notice('添加样式到分组失败');
+                        new Notice(t('main.groupAddFailed'));
                       }
                       
                       // 移除菜单容器
@@ -28269,7 +30099,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         } else {
           // 如果没有CSS，显示默认文本
           const defaultPreview = this.previewContainer.createSpan();
-          defaultPreview.textContent = "等待CSS样式...";
+          defaultPreview.textContent = t('ai.waitingCss');
           defaultPreview.style.fontSize = "16px";
         }
       }
@@ -28286,7 +30116,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const cssMatches = [...content.matchAll(cssPattern)];
 
           if (cssMatches.length === 0) {
-            new Notice("未找到CSS样式代码");
+            new Notice(t('main.noCssFound'));
             return;
           }
 
@@ -28301,7 +30131,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               selectedCssCode = cssMatches[this.selectedStyleIndex][0];
             } else {
               // 没有选中样式，提示用户
-              new Notice("请先选择一个样式");
+              new Notice(t('main.selectStyleFirst'));
               return;
             }
           }
@@ -28313,7 +30143,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const className = classNameMatch ? classNameMatch[1] : null;
 
           if (!className) {
-            new Notice("无法提取CSS类名");
+            new Notice(t('main.cannotExtractClass'));
             return;
           }
 
@@ -28323,7 +30153,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 获取当前选中的文本或关键词输入框中的内容
           const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
           if (!activeView || !activeView.editor) {
-            new Notice("无法获取当前编辑器");
+            new Notice(t('main.cannotGetEditor'));
             return;
           }
 
@@ -28334,7 +30164,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             targetText = this.keywordInput ? this.keywordInput.value.trim() : "";
             
             if (!targetText) {
-              new Notice("请先选中要应用样式的文本或在输入框中输入关键词");
+              new Notice(t('main.selectTextOrKeyword'));
               return;
             }
           }
@@ -28357,7 +30187,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             if (briefText) {
               this.plugin.rules[existingRuleIndex].remark = briefText;
             }
-            new Notice('已更新样式规则');
+            new Notice(t('main.styleRuleUpdated'));
           } else {
             // 创建新的规则，同时包含样式和备注
             const newRule = {
@@ -28368,7 +30198,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
             // 添加新规则
             this.plugin.rules.push(newRule);
-            new Notice('已为选中文本创建样式规则');
+            new Notice(t('main.styleRuleCreated'));
           }
 
           // 保存CSS到CSS文件
@@ -28399,7 +30229,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
           if (!defaultGroup) {
             // 没有选择默认分组时提示用户
-            new Notice("未设置默认分组");
+            new Notice(t('main.noDefaultGroup'));
             return;
           }
 
@@ -28445,12 +30275,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             this.plugin.refreshCurrentView();
           }, 100);
 
-          new Notice(briefText ? "样式和备注已应用！" : "样式已应用！");
+          new Notice(briefText ? t('main.styleAndRemarkApplied') : t('main.styleApplied'));
           this.close();
 
         } catch (error) {
           console.error("应用样式失败:", error);
-          new Notice(`应用样式失败: ${error.message}`);
+          new Notice(t('main.entityStyleApplyFailed') + ': ' + error.message);
         }
       }
 
@@ -28486,7 +30316,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       async savePromptTemplate(promptText) {
         try {
           if (!promptText || !promptText.trim()) {
-            new Notice('提示词不能为空');
+            new Notice(t('main.promptEmpty'));
             return;
           }
           
@@ -28499,9 +30329,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 使用InputModal替代prompt()函数
           const modal = new InputModal(
             this.app,
-            '保存提示词',
-            '请为提示词命名',
-            `提示词-${templates.length + 1}`,
+            t('main.savePrompt'),
+            t('remark.inputPromptName'),
+            t('remark.promptDefaultName') + `-${templates.length + 1}`,
             async (templateName) => {
               if (!templateName) {
                 return; // 用户取消了操作
@@ -28521,14 +30351,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               // 更新选择器
               this.updatePromptTemplateSelector();
               
-              new Notice('提示词已保存');
+              new Notice(t('main.promptSaved'));
             }
           );
           
           modal.open();
         } catch (error) {
           console.error('保存提示词模板失败:', error);
-          new Notice('保存提示词失败');
+          new Notice(t('main.promptSaveFailed'));
         }
       }
 
@@ -28544,7 +30374,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 选择器标签
           const selectorLabel = selectorContainer.createEl('label');
-          selectorLabel.textContent = '提示词模板:';
+          selectorLabel.textContent = t('ai.promptTemplate') + ':';
           selectorLabel.style.fontSize = '12px';
           selectorLabel.style.color = 'var(--text-muted)';
           
@@ -28559,7 +30389,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 添加默认选项
           const defaultOption = selector.createEl('option', { value: '' });
-          defaultOption.textContent = '选择提示词模板...';
+          defaultOption.textContent = t('ai.selectPromptTemplate');
           
           // 加载模板并填充选择器
           const templates = await this.loadPromptTemplates();
@@ -28574,7 +30404,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           });
           
           // 添加管理按钮
-          const manageButton = selectorContainer.createEl('button', { text: '管理' });
+          const manageButton = selectorContainer.createEl('button', { text: t('ai.manage') });
           manageButton.style.padding = '4px 8px';
           manageButton.style.fontSize = '12px';
           manageButton.style.backgroundColor = 'var(--background-modifier-accent)';
@@ -28608,7 +30438,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 添加默认选项
           const aiDefaultOption = aiSelector.createEl('option', { value: '-1' });
-          aiDefaultOption.textContent = '当前AI';
+          aiDefaultOption.textContent = t('ai.currentAi');
           
           // 添加所有AI配置
           let hasSelectedOption = false;
@@ -28653,7 +30483,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 添加默认选项
           const defaultOption = this.promptTemplateSelector.createEl('option', { value: '' });
-          defaultOption.textContent = '选择提示词模板...';
+          defaultOption.textContent = t('ai.selectPromptTemplate');
           
           // 加载模板并填充选择器
           const templates = await this.loadPromptTemplates();
@@ -28681,11 +30511,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           if (template) {
             this.responseEl.value = template.content;
             this.responseEl.focus();
-            new Notice(`已加载提示词: ${template.name}`);
+            new Notice(t('main.promptLoaded') + ': ' + template.name);
           }
         } catch (error) {
           console.error('应用提示词模板失败:', error);
-          new Notice('应用提示词失败');
+          new Notice(t('main.promptApplyFailed'));
         }
       }
 
@@ -28696,14 +30526,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 生成管理界面
           const modal = new Modal(this.plugin.app);
-          modal.titleEl.textContent = '管理提示词模板';
+          modal.titleEl.textContent = t('ai.managePromptTemplate');
           
           const contentEl = modal.contentEl;
           contentEl.style.padding = '20px';
           contentEl.style.width = '500px';
           
           // 添加新提示词按钮
-          const newButton = contentEl.createEl('button', { text: '添加新提示词' });
+          const newButton = contentEl.createEl('button', { text: t('ai.addNewPrompt') });
           newButton.style.padding = '8px 16px';
           newButton.style.backgroundColor = 'var(--interactive-accent)';
           newButton.style.color = 'var(--text-on-accent)';
@@ -28716,7 +30546,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             // 使用新的PromptTemplateModal同时设置名称和内容
             const newModal = new PromptTemplateModal(
               this.app,
-              '新增提示词',
+              t('remark.addPrompt'),
               null,
               (templateData) => {
                 if (templateData && templateData.name) {
@@ -28743,7 +30573,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           if (templates.length === 0) {
             const emptyText = contentEl.createDiv();
-            emptyText.textContent = '暂无提示词模板';
+            emptyText.textContent = t('ai.noPromptTemplate');
             emptyText.style.textAlign = 'center';
             emptyText.style.color = 'var(--text-muted)';
             emptyText.style.marginTop = '20px';
@@ -28758,17 +30588,17 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             const headerRow = thead.createEl('tr');
             
             const nameHeader = headerRow.createEl('th');
-            nameHeader.textContent = '名称';
+            nameHeader.textContent = t('ai.nameCol');
             nameHeader.style.padding = '8px';
             nameHeader.style.borderBottom = '1px solid var(--background-modifier-border)';
             
             const createdAtHeader = headerRow.createEl('th');
-            createdAtHeader.textContent = '创建时间';
+            createdAtHeader.textContent = t('ai.createdAtCol');
             createdAtHeader.style.padding = '8px';
             createdAtHeader.style.borderBottom = '1px solid var(--background-modifier-border)';
             
             const actionsHeader = headerRow.createEl('th');
-            actionsHeader.textContent = '操作';
+            actionsHeader.textContent = t('ai.actionsCol');
             actionsHeader.style.padding = '8px';
             actionsHeader.style.borderBottom = '1px solid var(--background-modifier-border)';
             actionsHeader.style.textAlign = 'right';
@@ -28799,7 +30629,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               actionsCell.style.gap = '5px';
               
               // 编辑按钮
-              const editButton = actionsCell.createEl('button', { text: '编辑' });
+              const editButton = actionsCell.createEl('button', { text: t('context.edit') });
               editButton.style.padding = '4px 8px';
               editButton.style.fontSize = '12px';
               editButton.style.backgroundColor = 'var(--background-modifier-accent)';
@@ -28812,7 +30642,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 // 使用新的PromptTemplateModal同时编辑名称和内容
                 const editModal = new PromptTemplateModal(
                   this.app,
-                  '编辑提示词',
+                  t('remark.editPrompt'),
                   template,
                   (templateData) => {
                     if (templateData && templateData.name) {
@@ -28829,7 +30659,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               });
               
               // 删除按钮
-              const deleteButton = actionsCell.createEl('button', { text: '删除' });
+              const deleteButton = actionsCell.createEl('button', { text: t('context.delete') });
               deleteButton.style.padding = '4px 8px';
               deleteButton.style.fontSize = '12px';
               deleteButton.style.backgroundColor = 'var(--background-modifier-error)';
@@ -28842,8 +30672,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 // 使用ConfirmModal替代confirm()函数
                 const confirmModal = new ConfirmModal(
                   this.app,
-                  '删除提示词',
-                  '确定要删除此提示词吗?',
+                  t('main.deletePrompt'),
+                  t('main.confirmDeletePrompt'),
                   () => {
                     const updatedTemplates = templates.filter(t => t.id !== template.id);
                     this.savePromptTemplates(updatedTemplates);
@@ -28888,7 +30718,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           modal.open();
         } catch (error) {
           console.error('管理提示词模板失败:', error);
-          new Notice('管理提示词失败');
+          new Notice(t('main.managePromptFailed'));
         }
       }
 
@@ -28897,10 +30727,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         try {
           const configPath = '.obsidian/plugins/Regex-Css-Highlighter/prompt-templates.json';
           await this.plugin.app.vault.adapter.write(configPath, JSON.stringify(templates, null, 2));
-          new Notice('提示词模板已保存');
+          new Notice(t('main.promptTemplateSaved'));
         } catch (error) {
           console.error('保存提示词模板失败:', error);
-          new Notice('保存提示词失败');
+          new Notice(t('main.promptSaveFailed'));
         }
       }
 
@@ -28938,7 +30768,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       console.log(`📋 剪贴板内容长度: ${clipboardText ? clipboardText.length : 0}, 是否为CSS: ${this.isClipboardContentCSS(clipboardText)}`);
       
       if (!clipboardText.trim()) {
-        new Notice('剪贴板内容为空，请先复制CSS样式或备注内容');
+        new Notice(t('main.clipboardEmpty'));
         return;
       }
       
@@ -28975,7 +30805,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         // 验证CSS代码是否有效
         if (!this.isClipboardContentCSS(cssRule)) {
-          new Notice('剪贴板中的CSS代码格式无效');
+          new Notice(t('main.invalidCssFormat'));
           return;
         }
       } else if (this.isClipboardContentCSS(clipboardText)) {
@@ -28989,7 +30819,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           await this.addRemarkToSelection(selectedText, clipboardText);
           return;
         } else {
-          new Notice('请先选中要添加备注的文字，或复制CSS样式');
+          new Notice(t('main.selectTextToRemark'));
           return;
         }
       }
@@ -29073,7 +30903,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       // 显示成功消息
       console.log(`🎉 操作完成: 已将CSS样式添加到 "${categoryName}" 分类`);
-      new Notice(`已将CSS样式添加到 "${categoryName}" 分类`);
+      new Notice(t('main.styleAddedToCategory'));
       
       // 重新加载样式分类配置
       console.log('🔄 重新加载样式分类配置...');
@@ -29154,23 +30984,23 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                   // 显示成功通知
                   const { Notice } = require('obsidian');
                   if (hasBothDescriptionAndCSS) {
-                    new Notice(`已为选中文本创建样式规则并添加备注: "${currentSelection}"`);
+                    new Notice(t('main.styleRuleCreated'));
                   } else {
-                    new Notice(`已为选中文本创建样式规则: "${currentSelection}"`);
+                    new Notice(t('main.styleRuleCreated'));
                   }
                 } else {
                   const { Notice } = require('obsidian');
-                  new Notice('选中的文本已改变，无法自动应用新样式。请重新选择文本并手动应用样式。');
+                  new Notice(t('main.textChanged'));
                 }
               } else {
                 const { Notice } = require('obsidian');
-                new Notice('无法获取当前活动的编辑器，无法自动应用样式。');
+                new Notice(t('main.cannotGetActiveEditor'));
               }
             }, 300);
           } catch (error) {
             console.error('应用新样式到选中文本时出错:', error);
             const { Notice } = require('obsidian');
-            new Notice('应用新样式到选中文本时出错: ' + error.message);
+            new Notice(t('main.applyNewStyleFailed') + ': ' + error.message);
           }
         }, 500); // 500ms初始延时
       }
@@ -29179,7 +31009,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       console.error('❌ 从剪贴板添加样式失败:', error);
       console.error('❌ 错误详情:', error.stack);
       const { Notice } = require('obsidian');
-      new Notice('从剪贴板添加样式失败: ' + error.message);
+      new Notice(t('main.addFromClipboardFailed') + ': ' + error.message);
       console.log('💡 请检查以下几点:');
       console.log('1. 浏览器权限是否允许访问剪贴板');
       console.log('2. CSS文件是否可写');
@@ -29226,7 +31056,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       if (existingExactMatch >= 0) {
         const { Notice } = require('obsidian');
-        new Notice('该文本的样式规则已存在');
+        new Notice(t('main.ruleExists'));
         return;
       }
       
@@ -29264,11 +31094,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       this.refreshOpenModal();
       
       const { Notice } = require('obsidian');
-      new Notice(`已为选中文本添加样式规则: "${selection}"`);
+      new Notice(t('main.ruleAdded'));
     } catch (error) {
       console.error('应用样式到选中文本时出错:', error);
       const { Notice } = require('obsidian');
-      new Notice('应用样式失败: ' + error.message);
+      new Notice(t('main.applyStyleFailed') + ': ' + error.message);
     }
   }
   
@@ -29281,7 +31111,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       // 获取当前文件路径
       const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (!activeView || !activeView.file) {
-        new Notice('无法获取当前文件路径');
+        new Notice(t('main.cannotGetFilePath'));
         return;
       }
       
@@ -29301,7 +31131,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (existingRuleIndex >= 0) {
         // 更新现有规则的备注
         this.rules[existingRuleIndex].remark = remarkText;
-        new Notice('已更新选中文本的备注');
+        new Notice(t('main.remarkUpdated'));
       } else {
         // 检查是否有规则部分匹配选中文本（例如：规则是「张昭|子布」，选中文本是「张昭」）
         const partialMatchingRules = this.rules.filter(
@@ -29321,7 +31151,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 const { contentEl } = this;
                 
                 // 设置标题
-                this.titleEl.textContent = '检测到部分匹配的规则';
+                this.titleEl.textContent = t('main.partialMatchDetected');
                 
                 // 构建消息内容
                 const ruleList = partialMatchingRules.map(rule => `${rule.regex}${rule.remark ? ` (当前备注: ${rule.remark})` : ''}`).join('\n');
@@ -29338,7 +31168,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 buttonContainer.style.gap = '10px';
                 
                 // 确认按钮
-                const confirmBtn = buttonContainer.createEl('button', { text: '合并' });
+                const confirmBtn = buttonContainer.createEl('button', { text: t('main.merge') });
                 confirmBtn.style.backgroundColor = 'var(--interactive-accent)';
                 confirmBtn.style.color = 'white';
                 confirmBtn.style.border = 'none';
@@ -29352,7 +31182,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 });
                 
                 // 取消按钮
-                const cancelBtn = buttonContainer.createEl('button', { text: '创建新规则' });
+                const cancelBtn = buttonContainer.createEl('button', { text: t('main.createNewRule') });
                 cancelBtn.style.backgroundColor = 'var(--background-modifier-hover)';
                 cancelBtn.style.color = 'var(--text-normal)';
                 cancelBtn.style.border = '1px solid var(--background-modifier-border)';
@@ -29381,7 +31211,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               rule.remark = remarkText;
             });
             
-            new Notice(`已将备注合并到 ${partialMatchingRules.length} 条规则中`);
+            new Notice(t('main.remarkMerged'));
           } else {
             const newRule = {
               regex: escapedText,
@@ -29391,7 +31221,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             };
             
             this.rules.push(newRule);
-            new Notice('已为选中文本添加新规则和备注');
+            new Notice(t('main.remarkAddedNew'));
           }
         } else {
           const newRule = {
@@ -29402,7 +31232,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           };
           
           this.rules.push(newRule);
-          new Notice('已为选中文本添加备注');
+          new Notice(t('main.remarkAdded'));
         }
       }
       
@@ -29429,7 +31259,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     } catch (error) {
       console.error('添加备注到选中文本时出错:', error);
       const { Notice } = require('obsidian');
-      new Notice('添加备注失败: ' + error.message);
+      new Notice(t('main.remarkAddFailed') + ': ' + error.message);
     }
   }
 
@@ -29472,13 +31302,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       titleContainer.style.marginBottom = '15px';
       
       // 创建规则列表标题
-      const rulesTitle = titleContainer.createEl('h3', { text: '当前文件的高亮规则' });
+      const rulesTitle = titleContainer.createEl('h3', { text: t('main.currentRules') });
       rulesTitle.style.margin = '0';
       rulesTitle.style.color = '#333';
       
       // 创建打开规则文件按钮
       const openFileBtn = titleContainer.createEl('button');
-      openFileBtn.textContent = '打开规则文件';
+      openFileBtn.textContent = t('main.openRulesFile');
       openFileBtn.style.padding = '4px 8px';
       openFileBtn.style.fontSize = '12px';
       openFileBtn.style.backgroundColor = '#28a745';
@@ -29503,13 +31333,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         } catch (error) {
           console.error('打开规则文件失败:', error);
           const { Notice } = require('obsidian');
-          new Notice('无法打开规则文件，请检查文件是否存在');
+          new Notice(t('main.cannotOpenFile'));
         }
       });
       
       // 创建打开样式分组文件按钮
       const openStyleCategoriesBtn = titleContainer.createEl('button');
-      openStyleCategoriesBtn.textContent = '打开样式分组文件';
+      openStyleCategoriesBtn.textContent = t('main.openStyleCategoriesFile');
       openStyleCategoriesBtn.style.padding = '4px 8px';
       openStyleCategoriesBtn.style.fontSize = '12px';
       openStyleCategoriesBtn.style.backgroundColor = '#28a745';
@@ -29530,7 +31360,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         } catch (error) {
           console.error('打开样式分组文件失败:', error);
           const { Notice } = require('obsidian');
-          new Notice('无法打开样式分组文件，请检查文件是否存在');
+          new Notice(t('main.cannotOpenFile'));
         }
       });
       
@@ -29557,12 +31387,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           ruleInfo.style.flexGrow = '1';
           
           const regexLabel = ruleInfo.createEl('span');
-          regexLabel.textContent = `正则: ${rule.regex}`;
+          regexLabel.textContent = t('main.regex') + `: ${rule.regex}`;
           regexLabel.style.fontWeight = 'bold';
           regexLabel.style.marginRight = '10px';
           
           const classLabel = ruleInfo.createEl('span');
-          classLabel.textContent = `类名: ${rule.cssClass}`;
+          classLabel.textContent = t('main.className') + `: ${rule.cssClass}`;
           
           // 操作按钮
           const buttonContainer = ruleItem.createDiv();
@@ -29571,7 +31401,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 编辑按钮
           const editBtn = buttonContainer.createEl('button');
-          editBtn.textContent = '编辑';
+          editBtn.textContent = t('context.edit');
           editBtn.style.padding = '4px 8px';
           editBtn.style.fontSize = '12px';
           editBtn.style.backgroundColor = '#007bff';
@@ -29588,7 +31418,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 删除按钮
           const deleteBtn = buttonContainer.createEl('button');
-          deleteBtn.textContent = '删除';
+          deleteBtn.textContent = t('context.delete');
           deleteBtn.style.padding = '4px 8px';
           deleteBtn.style.fontSize = '12px';
           deleteBtn.style.backgroundColor = '#dc3545';
@@ -29606,7 +31436,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       } else {
         // 没有规则时显示提示
         const noRulesMessage = rulesListContainer.createEl('p');
-        noRulesMessage.textContent = '当前文件没有高亮规则';
+        noRulesMessage.textContent = t('main.noHighlightRule');
         noRulesMessage.style.color = '#666';
         noRulesMessage.style.fontStyle = 'italic';
         noRulesMessage.style.textAlign = 'center';
@@ -29656,13 +31486,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       titleContainer.style.marginBottom = '15px';
       
       // 创建规则列表标题
-      const rulesTitle = titleContainer.createEl('h3', { text: '当前文件的高亮规则' });
+      const rulesTitle = titleContainer.createEl('h3', { text: t('main.currentRules') });
       rulesTitle.style.margin = '0';
       rulesTitle.style.color = '#333';
       
       // 创建打开规则文件按钮
       const openFileBtn = titleContainer.createEl('button');
-      openFileBtn.textContent = '打开规则文件';
+      openFileBtn.textContent = t('main.openRulesFile');
       openFileBtn.style.padding = '4px 8px';
       openFileBtn.style.fontSize = '12px';
       openFileBtn.style.backgroundColor = '#28a745';
@@ -29687,13 +31517,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         } catch (error) {
           console.error('打开规则文件失败:', error);
           const { Notice } = require('obsidian');
-          new Notice('无法打开规则文件，请检查文件是否存在');
+          new Notice(t('main.cannotOpenFile'));
         }
       });
       
       // 创建打开样式分组文件按钮
       const openStyleCategoriesBtn = titleContainer.createEl('button');
-      openStyleCategoriesBtn.textContent = '打开样式分组文件';
+      openStyleCategoriesBtn.textContent = t('main.openStyleCategoriesFile');
       openStyleCategoriesBtn.style.padding = '4px 8px';
       openStyleCategoriesBtn.style.fontSize = '12px';
       openStyleCategoriesBtn.style.backgroundColor = '#28a745';
@@ -29714,7 +31544,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         } catch (error) {
           console.error('打开样式分组文件失败:', error);
           const { Notice } = require('obsidian');
-          new Notice('无法打开样式分组文件，请检查文件是否存在');
+          new Notice(t('main.cannotOpenFile'));
         }
       });
       
@@ -29741,12 +31571,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           ruleInfo.style.flexGrow = '1';
           
           const regexLabel = ruleInfo.createEl('span');
-          regexLabel.textContent = `正则: ${rule.regex}`;
+          regexLabel.textContent = t('main.regex') + `: ${rule.regex}`;
           regexLabel.style.fontWeight = 'bold';
           regexLabel.style.marginRight = '10px';
           
           const classLabel = ruleInfo.createEl('span');
-          classLabel.textContent = `类名: ${rule.cssClass}`;
+          classLabel.textContent = t('main.className') + `: ${rule.cssClass}`;
           
           // 操作按钮
           const buttonContainer = ruleItem.createDiv();
@@ -29755,7 +31585,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 编辑按钮
           const editBtn = buttonContainer.createEl('button');
-          editBtn.textContent = '编辑';
+          editBtn.textContent = t('context.edit');
           editBtn.style.padding = '4px 8px';
           editBtn.style.fontSize = '12px';
           editBtn.style.backgroundColor = '#007bff';
@@ -29772,7 +31602,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 删除按钮
           const deleteBtn = buttonContainer.createEl('button');
-          deleteBtn.textContent = '删除';
+          deleteBtn.textContent = t('context.delete');
           deleteBtn.style.padding = '4px 8px';
           deleteBtn.style.fontSize = '12px';
           deleteBtn.style.backgroundColor = '#dc3545';
@@ -29790,7 +31620,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       } else {
         // 没有规则时显示提示
         const noRulesMessage = rulesListContainer.createEl('p');
-        noRulesMessage.textContent = '当前文件没有高亮规则';
+        noRulesMessage.textContent = t('main.noHighlightRule');
         noRulesMessage.style.color = '#666';
         noRulesMessage.style.fontStyle = 'italic';
         noRulesMessage.style.textAlign = 'center';
@@ -30813,19 +32643,19 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       const trimmedClipboard = clipboardText.trim();
       
       if (!trimmedClipboard) {
-        new Notice('剪贴板为空');
+        new Notice(t('main.clipboardEmptyShort'));
         return;
       }
       
       const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (!activeView) {
-        new Notice('请先打开一个Markdown文件');
+        new Notice(t('main.openMdFile'));
         return;
       }
       
       const selectedText = this.getSelectedText();
       if (!selectedText || !selectedText.trim()) {
-        new Notice('请先选中要合并的文本');
+        new Notice(t('main.selectTextToMerge'));
         return;
       }
       
@@ -30860,7 +32690,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
       
       if (foundRuleIndex === -1) {
-        new Notice(`选中的文本 "${trimmedSelection}" 不在高亮规则中`);
+        new Notice(t('main.mergeTarget'));
         return;
       }
       
@@ -30870,12 +32700,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (originalRegex.includes('|')) {
         const parts = originalRegex.split('|');
         if (parts.includes(trimmedClipboard)) {
-          new Notice(`"${trimmedClipboard}" 已存在于规则中`);
+          new Notice(`"${trimmedClipboard}" ` + t('main.alreadyExistsInRules'));
           return;
         }
       } else {
         if (originalRegex === trimmedClipboard) {
-          new Notice(`"${trimmedClipboard}" 已存在于规则中`);
+          new Notice(`"${trimmedClipboard}" ` + t('main.alreadyExistsInRules'));
           return;
         }
       }
@@ -30893,12 +32723,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
       this.refreshCurrentView();
       
-      const ruleType = isGlobalRule ? '全局规则' : '文件规则';
-      new Notice(`已合并(${ruleType}): "${originalRegex}" → "${newRegex}"`);
+      const ruleType = isGlobalRule ? t('main.globalRule') : t('main.fileRule');
+      new Notice(t('main.merged'));
       
     } catch (error) {
       console.error('合并剪贴板与选中文本失败:', error);
-      new Notice('操作失败: ' + error.message);
+      new Notice(t('main.operationFailed') + ': ' + error.message);
     }
   }
 
@@ -30964,20 +32794,20 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     try {
       const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (!activeView) {
-        new Notice('请先打开一个Markdown文件');
+        new Notice(t('main.openMdFile'));
         return;
       }
       
       const selectedText = this.getSelectedText();
       if (!selectedText || !selectedText.trim()) {
-        new Notice('请先选中要高亮的文本');
+        new Notice(t('main.selectTextToHighlight'));
         return;
       }
       
       const trimmedSelection = selectedText.trim();
       
       if (!this.currentFilePath) {
-        new Notice('无法获取当前文件路径');
+        new Notice(t('main.cannotGetFilePath'));
         return;
       }
       
@@ -31006,9 +32836,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       if (availableStyles.length === 0) {
         if (unusedStyles.length === 0) {
-          new Notice('没有可用的未使用样式');
+          new Notice(t('main.noUnusedStyle'));
         } else {
-          new Notice('已尝试所有未使用样式，重新开始');
+          new Notice(t('main.allStylesTried'));
           this.randomHighlightState.triedStyles = [];
         }
         return;
@@ -31021,7 +32851,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       if (existingRuleIndex !== -1) {
         this.rules[existingRuleIndex].cssClass = selectedStyle;
-        new Notice(`更换样式: ${selectedStyle}`);
+        new Notice(t('main.styleChanged') + ': ' + selectedStyle);
       } else {
         this.rules.push({
           regex: trimmedSelection,
@@ -31030,7 +32860,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           timestamp: Date.now()
         });
         this.randomHighlightState.currentRuleIndex = this.rules.length - 1;
-        new Notice(`添加高亮: ${trimmedSelection} → ${selectedStyle}`);
+        new Notice(t('main.highlightAdded'));
       }
       
       await this.saveFileRules(this.currentFilePath, this.rules);
@@ -31042,7 +32872,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
     } catch (error) {
       console.error('随机高亮失败:', error);
-      new Notice('操作失败: ' + error.message);
+      new Notice(t('main.operationFailed') + ': ' + error.message);
     }
   }
 
@@ -31052,13 +32882,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     try {
       const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (!activeView) {
-        new Notice('请先打开一个Markdown文件');
+        new Notice(t('main.openMdFile'));
         return;
       }
       
       const selectedText = this.getSelectedText();
       if (!selectedText || !selectedText.trim()) {
-        new Notice('请先选中要高亮的文本');
+        new Notice(t('main.selectTextToHighlight'));
         return;
       }
       
@@ -31099,9 +32929,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       if (availableStyles.length === 0) {
         if (unusedStyles.length === 0) {
-          new Notice('没有可用的未使用样式');
+          new Notice(t('main.noUnusedStyle'));
         } else {
-          new Notice('已尝试所有未使用样式，重新开始');
+          new Notice(t('main.allStylesTried'));
           this.randomHighlightGlobalState.triedStyles = [];
         }
         return;
@@ -31114,14 +32944,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       if (existingRuleIndex !== -1) {
         this.globalRules[existingRuleIndex].cssClass = selectedStyle;
-        new Notice(`更换全局样式: ${selectedStyle}`);
+        new Notice(t('main.styleChanged') + ': ' + selectedStyle);
       } else {
         this.globalRules.push({
           regex: trimmedSelection,
           cssClass: selectedStyle,
           remark: ''
         });
-        new Notice(`添加全局高亮: ${trimmedSelection} → ${selectedStyle}`);
+        new Notice(t('main.globalHighlightAdded'));
       }
       
       await this.saveGlobalRules(this.globalRules);
@@ -31132,7 +32962,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
     } catch (error) {
       console.error('随机高亮到全局规则失败:', error);
-      new Notice('操作失败: ' + error.message);
+      new Notice(t('main.operationFailed') + ': ' + error.message);
     }
   }
 
@@ -31142,25 +32972,25 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     try {
       const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (!activeView) {
-        new Notice('请先打开一个Markdown文件');
+        new Notice(t('main.openMdFile'));
         return;
       }
       
       const selectedText = this.getSelectedText();
       if (!selectedText || !selectedText.trim()) {
-        new Notice('请先选中要移除样式的文本');
+        new Notice(t('main.selectTextToRemove'));
         return;
       }
       
       const trimmedSelection = selectedText.trim();
       
       if (!this.currentFilePath) {
-        new Notice('无法获取当前文件路径');
+        new Notice(t('main.cannotGetFilePath'));
         return;
       }
       
       if (!this.rules || this.rules.length === 0) {
-        new Notice('当前文件没有高亮规则');
+        new Notice(t('main.noHighlightRule'));
         return;
       }
       
@@ -31176,7 +33006,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
       
       if (foundRuleIndex === -1) {
-        new Notice(`未找到选中文本 "${trimmedSelection}" 对应的高亮规则`);
+        new Notice(t('main.noMatchingRule'));
         return;
       }
       
@@ -31190,11 +33020,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
       this.refreshCurrentView();
       
-      new Notice(`已移除样式: "${removedRule.regex}" (${removedRule.cssClass})`);
+      new Notice(t('main.styleRemoved'));
       
     } catch (error) {
       console.error('移除样式失败:', error);
-      new Notice('操作失败: ' + error.message);
+      new Notice(t('main.operationFailed') + ': ' + error.message);
     }
   }
 
@@ -31973,7 +33803,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         previewDiv.innerHTML = '';
 
         if (!content.trim()) {
-          previewDiv.innerHTML = '<em style="color: var(--text-muted)">（空）</em>';
+          previewDiv.innerHTML = `<em style="color: var(--text-muted)">${t('main.empty')}</em>`;
           return;
         }
 
@@ -32277,7 +34107,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   // 显示清理通知
   showCleanupNotification(cleanedCount) {
     const notification = document.createElement('div');
-    notification.textContent = `CSS清理完成：删除了 ${cleanedCount} 个孤立样式`;
+    notification.textContent = t('main.cssCleaned', { count: cleanedCount });
     notification.style.cssText = `
       position: fixed;
       top: 20px;
@@ -33871,7 +35701,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             
             menu.addItem((item) => {
               item
-                .setTitle("保存为文件")
+                .setTitle(t('main.saveAsFile'))
                 .setIcon("file-plus")
                 .onClick(async () => {
                   try {
@@ -33879,7 +35709,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                     const noteContent = textarea.value || '';
                     
                     if (!matchedText.trim()) {
-                      new Notice('无法获取匹配文本');
+                      new Notice(t('main.cannotGetMatchText'));
                       return;
                     }
                     
@@ -33890,10 +35720,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                     
                     if (existingFile) {
                       const choiceModal = new Modal(plugin.app);
-                      choiceModal.titleEl.setText('文件已存在');
+                      choiceModal.titleEl.setText(t('main.fileExistsTitle'));
                       
                       const messageEl = choiceModal.contentEl.createEl('p');
-                      messageEl.textContent = `文件 "${fileName}.md" 已存在，请选择操作：`;
+                      messageEl.textContent = t('main.fileExistsDesc');
                       messageEl.style.marginBottom = '16px';
                       
                       const buttonContainer = choiceModal.contentEl.createEl('div');
@@ -33903,31 +35733,31 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                       buttonContainer.style.flexWrap = 'wrap';
                       
                       const cancelBtn = buttonContainer.createEl('button');
-                      cancelBtn.textContent = '取消';
+                      cancelBtn.textContent = t('main.cancel');
                       cancelBtn.addEventListener('click', () => choiceModal.close());
                       
                       const newBtn = buttonContainer.createEl('button');
-                      newBtn.textContent = '新建不同名称';
+                      newBtn.textContent = t('main.createDiffName');
                       newBtn.addEventListener('click', async () => {
                         choiceModal.close();
                         const inputModal = new InputModal(
                           plugin.app,
-                          '输入新文件名',
-                          '请输入新文件名（不含.md）',
-                          `${fileName}_备注`,
+                          t('main.inputNewFileName'),
+                          t('main.inputNewFileNameHint'),
+                          `${fileName}_${t('main.remark')}`,
                           async (newName) => {
                             if (!newName.trim()) {
-                              new Notice('文件名不能为空');
+                              new Notice(t('main.fileNameEmpty'));
                               return;
                             }
                             const newFilePath = `${newName.trim()}.md`;
                             const checkFile = plugin.app.vault.getAbstractFileByPath(newFilePath);
                             if (checkFile) {
-                              new Notice(`文件 "${newName.trim()}.md" 也已存在`);
+                              new Notice(t('main.fileExists'));
                               return;
                             }
                             await plugin.app.vault.create(newFilePath, noteContent);
-                            new Notice(`已保存到文件: ${newName.trim()}.md`);
+                            new Notice(t('main.savedToFile'));
                             const ruleRegex = targetEl.dataset.ruleRegex;
                             if (ruleRegex) {
                               const cssClass = targetEl.className.split(' ').find(c => c !== 'highlight-tooltip-text' && c !== 'highlight-regex-text') || '';
@@ -33941,7 +35771,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                       });
                       
                       const mergeBtn = buttonContainer.createEl('button');
-                      mergeBtn.textContent = '合并内容';
+                      mergeBtn.textContent = t('main.mergeContent');
                       mergeBtn.style.backgroundColor = 'var(--interactive-accent)';
                       mergeBtn.style.color = 'white';
                       mergeBtn.style.border = 'none';
@@ -33951,7 +35781,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                           const existingContent = await plugin.app.vault.read(existingFile);
                           const newContent = existingContent + '\n\n---\n\n' + noteContent;
                           await plugin.app.vault.modify(existingFile, newContent);
-                          new Notice(`已合并到文件: ${fileName}.md`);
+                          new Notice(t('main.mergedToFile'));
                           const ruleRegex = targetEl.dataset.ruleRegex;
                           if (ruleRegex) {
                             const cssClass = targetEl.className.split(' ').find(c => c !== 'highlight-tooltip-text' && c !== 'highlight-regex-text') || '';
@@ -33961,7 +35791,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                           }
                           choiceModal.close();
                         } catch (err) {
-                          new Notice(`合并失败: ${err.message}`);
+                          new Notice(t('main.mergeFailed') + ': ' + err.message);
                         }
                       });
                       
@@ -33970,7 +35800,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                     }
                     
                     await plugin.app.vault.create(filePath, noteContent);
-                    new Notice(`已保存到文件: ${fileName}.md`);
+                    new Notice(t('main.savedToFile'));
                     const ruleRegex = targetEl.dataset.ruleRegex;
                     if (ruleRegex) {
                       const cssClass = targetEl.className.split(' ').find(c => c !== 'highlight-tooltip-text' && c !== 'highlight-regex-text') || '';
@@ -33980,7 +35810,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                     }
                   } catch (error) {
                     console.error('保存文件时出错:', error);
-                    new Notice(`保存失败: ${error.message}`);
+                    new Notice(t('main.saveFailed') + ': ' + error.message);
                   }
                 });
             });
@@ -34144,7 +35974,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       badge.className = 'rule-source-badge';
       const label = ruleSource === 'global' ? 'g' : 'l';
       badge.textContent = label;
-      badge.title = ruleSource === 'global' ? '全局规则 - 点击移动到局部规则' : '局部规则 - 点击移动到全局规则';
+      badge.title = ruleSource === 'global' ? t('main.globalRuleClickToLocal') : t('main.localRuleClickToGlobal');
       badge.style.cssText = `
         position: fixed;
         transform: translateX(-50%);
@@ -34183,7 +36013,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         const ruleRegex = target.dataset.ruleRegex;
         if (!ruleRegex) {
-          new Notice('无法获取规则信息');
+          new Notice(t('main.cannotGetRuleInfo'));
           return;
         }
         
@@ -34192,14 +36022,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         if (ruleSource === 'global') {
           const ruleIndex = plugin.globalRules.findIndex(r => r.regex === ruleRegex && r.cssClass === cssClass);
           if (ruleIndex === -1) {
-            new Notice('未找到对应的全局规则');
+            new Notice(t('main.globalRuleNotFound'));
             return;
           }
           const rule = plugin.globalRules[ruleIndex];
           if (!plugin.rules) plugin.rules = [];
           const existsInLocal = plugin.rules.find(r => r.regex === rule.regex && r.cssClass === rule.cssClass);
           if (existsInLocal) {
-            new Notice('局部规则中已存在相同规则');
+            new Notice(t('main.localRuleExists'));
             return;
           }
           plugin.rules.push({ regex: rule.regex, cssClass: rule.cssClass, remark: rule.remark || '' });
@@ -34209,17 +36039,17 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           plugin.rulesVersion++;
           plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
           plugin.refreshCurrentView();
-          new Notice(`已将规则 "${ruleRegex}" 从全局移动到局部`);
+          new Notice(t('main.ruleMovedToLocal'));
         } else {
           const ruleIndex = plugin.rules.findIndex(r => r.regex === ruleRegex && r.cssClass === cssClass);
           if (ruleIndex === -1) {
-            new Notice('未找到对应的局部规则');
+            new Notice(t('main.localRuleNotFound'));
             return;
           }
           const rule = plugin.rules[ruleIndex];
           const existsInGlobal = plugin.globalRules.find(r => r.regex === rule.regex && r.cssClass === rule.cssClass);
           if (existsInGlobal) {
-            new Notice('全局规则中已存在相同规则');
+            new Notice(t('main.globalRuleExistsShort'));
             return;
           }
           plugin.globalRules.push({ regex: rule.regex, cssClass: rule.cssClass, remark: rule.remark || '' });
@@ -34229,7 +36059,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           plugin.rulesVersion++;
           plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
           plugin.refreshCurrentView();
-          new Notice(`已将规则 "${ruleRegex}" 从局部移动到全局`);
+          new Notice(t('main.ruleMovedToGlobal'));
         }
         
         hideBadge();

@@ -1,4 +1,4 @@
-中文 | [English](#english)
+中文 | [English](#english-version)
 
 # Regex CSS Highlighter
 
@@ -287,9 +287,9 @@
 
 ---
 
-<a id="english"></a>
+## English Version
 
-[中文](#中文) | English
+[↑ 回到中文](#regex-css-highlighter) | English
 
 # Regex CSS Highlighter
 

@@ -1,7 +1,7 @@
 
-[中文](#Regex CSS Highlighter_zh) | English
-(#english-version)
-# Regex CSS Highlighter
+[中文](ch-version) | English
+#english-version
+# Regex CSS Highlighter_en
 
 An Obsidian plugin that matches text via regular expressions and applies custom CSS styles for highlighting.
 
@@ -289,9 +289,8 @@ An Obsidian plugin that matches text via regular expressions and applies custom 
 ---
 
 中文 | [English](#english-version)
-
-# Regex CSS Highlighter_zh
-
+#ch-version
+# Regex CSS Highlighter
 一个 Obsidian 插件，通过正则表达式匹配文本并应用自定义 CSS 样式高亮显示。
 
 ## 功能特性

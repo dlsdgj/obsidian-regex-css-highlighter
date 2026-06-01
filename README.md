@@ -289,6 +289,7 @@ An Obsidian plugin that matches text via regular expressions and applies custom 
 ---
 
 #zh 
+---
  [English](#English)
 
 Regex CSS Highlighter

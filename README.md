@@ -1,5 +1,5 @@
 
-[中文](ch-version) | English
+[中文](#ch-version) | English
 #english-version
 # Regex CSS Highlighter_en
 

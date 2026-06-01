@@ -3,7 +3,7 @@
   "name": "Regex Css Highlighter",
   "version": "1.5.8",
   "minAppVersion": "0.15.0",
-  "description": "正则匹配+CSS高亮，支持实时预览和即时生效",
+  "description": "Regex matching + CSS highlighting with real-time preview and instant effects",
   "author": "nilmarko",
   "authorUrl": "",
   "isDesktopOnly": false

@@ -20409,6 +20409,8 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
           const activeLeaf = this.app.workspace.getActiveViewOfType(MarkdownView);
           if (activeLeaf && activeLeaf.getMode() === 'preview') {
             this.checkAndApplyHighlights();
+          } else if (activeLeaf && activeLeaf.getMode() === 'source' && activeLeaf.editor?.cm?.dom) {
+            this.applyHighlightsToLivePreviewCallouts(activeLeaf.editor.cm.dom);
           }
         }, 200);
       })
@@ -20424,6 +20426,8 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
         const activeLeaf = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (activeLeaf && activeLeaf.getMode() === 'preview') {
           this.checkAndApplyHighlights();
+        } else if (activeLeaf && activeLeaf.getMode() === 'source' && activeLeaf.editor?.cm?.dom) {
+          this.applyHighlightsToLivePreviewCallouts(activeLeaf.editor.cm.dom);
         }
       }, 300);
     }, true);
@@ -32200,9 +32204,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     }
     // 处理编辑模式 - 实时预览模式
     else if (activeLeaf.getMode() === 'source' && activeLeaf.editor) {
-      // 实时预览模式的拼音由CodeMirror ViewPlugin处理
-      // 触发更新以确保拼音装饰器生效
       this.pinyinUpdateEmitter.dispatchEvent(new Event('update'));
+      if (activeLeaf.editor?.cm?.dom) {
+        this.applyHighlightsToLivePreviewCallouts(activeLeaf.editor.cm.dom);
+      }
     }
   }
   
@@ -32727,6 +32732,35 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           }
         } catch (e) {
           console.error('Error processing table/callout rule:', regex, e);
+        }
+      }
+    });
+  }
+  
+  applyHighlightsToLivePreviewCallouts(viewDom) {
+    if (!viewDom || !(viewDom instanceof Element)) return;
+    if (this.settings?.hideAllStyles) return;
+    
+    const fileRules = Array.isArray(this.rules) ? this.rules : [];
+    const globalRules = Array.isArray(this.globalRules) ? this.globalRules : [];
+    const rules = [...fileRules, ...globalRules].filter(rule => !rule.disabled);
+    
+    if (rules.length === 0) return;
+    
+    const calloutElements = viewDom.querySelectorAll('.callout');
+    
+    calloutElements.forEach((callout) => {
+      const contentEl = callout.querySelector('.callout-content');
+      if (contentEl) {
+        this.highlightRegexText(contentEl, { clearExisting: true });
+      }
+      
+      const titleEl = callout.querySelector('.callout-title');
+      if (titleEl) {
+        const iconEl = titleEl.querySelector('.callout-icon');
+        this.highlightRegexText(titleEl, { clearExisting: true });
+        if (iconEl && !iconEl.parentNode) {
+          titleEl.prepend(iconEl);
         }
       }
     });
@@ -33454,6 +33488,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         destroy() {
           plugin.rulesUpdateEmitter.removeEventListener('update', this.onRulesUpdate);
           plugin.pinyinUpdateEmitter.removeEventListener('update', this.onPinyinUpdate);
+          if (this._calloutHighlightTimer) {
+            clearTimeout(this._calloutHighlightTimer);
+            this._calloutHighlightTimer = null;
+          }
         }
         
         update(update) {
@@ -33475,6 +33513,22 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             this.decorations = this.buildDecorations(update.view);
             decorationsChanged = true;
           }
+          
+          this.scheduleCalloutHighlight(update.view);
+        }
+        
+        scheduleCalloutHighlight(view) {
+          if (this._calloutHighlightTimer) {
+            clearTimeout(this._calloutHighlightTimer);
+          }
+          this._calloutHighlightTimer = setTimeout(() => {
+            requestAnimationFrame(() => {
+              if (view.dom) {
+                plugin.applyHighlightsToLivePreviewCallouts(view.dom);
+              }
+              this._calloutHighlightTimer = null;
+            });
+          }, 100);
         }
         
         buildDecorations(view) {
@@ -33677,10 +33731,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           ranges.sort((a, b) => {
             if (!a || a.from === undefined) return 1;
             if (!b || b.from === undefined) return -1;
-            return a.from - b.from;
+            return a.from - b.from || a.to - b.to;
           });
           
-          return ranges.length > 0 ? cmView.Decoration.set(ranges) : cmView.Decoration.none;
+          const validRanges = ranges.filter(r => r && r.from !== undefined && r.to !== undefined && r.from <= r.to);
+          
+          return validRanges.length > 0 ? cmView.Decoration.set(validRanges, true) : cmView.Decoration.none;
         }
       }, {
         decorations: v => v.decorations

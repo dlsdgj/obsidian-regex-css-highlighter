@@ -650,6 +650,10 @@ const i18n = {
     'settings.ruleSourceBadgeHint': '悬停高亮文本时显示g(全局)/l(局部)标记',
     'settings.ruleSourceBadgeThreshold': '字数阈值',
     'settings.ruleSourceBadgeThresholdHint': '匹配文本字数大于此值时显示标记(0=始终显示)',
+    'settings.defaultPreviewText': '默认预览文本',
+    'settings.defaultPreviewTextCN': '中文预览文本',
+    'settings.defaultPreviewTextEN': '英文预览文本',
+    'settings.defaultPreviewTextHint': '未选中文字时样式按钮显示的文本(留空则使用默认值)',
     'settings.headingLevelLabel': '标题层级标签(h1/h2...)',
     'settings.autoExpandMode': '自动展开模式',
     'settings.scan': '扫描',
@@ -1571,6 +1575,10 @@ const i18n = {
     'settings.ruleSourceBadgeHint': 'Show g(global)/l(local) badge when hovering highlighted text',
     'settings.ruleSourceBadgeThreshold': 'Character Threshold',
     'settings.ruleSourceBadgeThresholdHint': 'Show badge when matched text length exceeds this value (0=always show)',
+    'settings.defaultPreviewText': 'Default Preview Text',
+    'settings.defaultPreviewTextCN': 'Chinese Preview Text',
+    'settings.defaultPreviewTextEN': 'English Preview Text',
+    'settings.defaultPreviewTextHint': 'Text shown on style buttons when no text is selected (leave empty for default)',
     'settings.headingLevelLabel': 'Heading Level Label (h1/h2...)',
     'settings.autoExpandMode': 'Auto Expand Mode',
     'settings.scan': 'Scan',
@@ -2046,6 +2054,16 @@ function sortRegexByLength(regex) {
     return parts.join('|');
   }
   return regex;
+}
+
+function getDefaultPreviewText(plugin) {
+  if (_currentLang === 'zh') {
+    const custom = plugin?.settings?.defaultPreviewTextCN;
+    return (custom !== undefined && custom !== '') ? custom : t('main.preview');
+  } else {
+    const custom = plugin?.settings?.defaultPreviewTextEN;
+    return (custom !== undefined && custom !== '') ? custom : t('main.preview');
+  }
 }
 
 function t(key, params) {
@@ -4178,17 +4196,16 @@ class StyleShowcaseModal extends Modal {
       return true;
     });
     
-    if (filteredRules.length === 0) {
-      const emptyMsg = this.tableContainer.createEl("div");
-      emptyMsg.textContent = t('showcase.noData');
-      emptyMsg.style.padding = "20px";
-      emptyMsg.style.textAlign = "center";
-      emptyMsg.style.color = "var(--text-muted)";
-      return;
-    }
-    
     // 手机端：列表式布局，备注折叠
     if (!_isDesktop) {
+      if (filteredRules.length === 0) {
+        const emptyMsg = this.tableContainer.createEl("div");
+        emptyMsg.textContent = t('showcase.noData');
+        emptyMsg.style.padding = "20px";
+        emptyMsg.style.textAlign = "center";
+        emptyMsg.style.color = "var(--text-muted)";
+        return;
+      }
       filteredRules.forEach((rule, index) => {
         const item = this.tableContainer.createDiv();
         item.style.padding = "8px 12px";
@@ -4413,32 +4430,47 @@ class StyleShowcaseModal extends Modal {
         
         const resizer = th.createDiv();
         resizer.style.position = "absolute";
-        resizer.style.right = "0";
+        resizer.style.right = "-2px";
         resizer.style.top = "0";
         resizer.style.bottom = "0";
-        resizer.style.width = "5px";
+        resizer.style.width = "4px";
         resizer.style.cursor = "col-resize";
-        resizer.style.backgroundColor = "transparent";
+        resizer.style.backgroundColor = "var(--background-modifier-border)";
+        resizer.style.zIndex = "1";
         
         resizer.addEventListener("mouseenter", () => {
           resizer.style.backgroundColor = "var(--interactive-accent)";
+          resizer.style.width = "4px";
         });
         
         resizer.addEventListener("mouseleave", () => {
-          resizer.style.backgroundColor = "transparent";
+          resizer.style.backgroundColor = "var(--background-modifier-border)";
         });
         
-        let startX, startWidth;
+        let startX, startWidth, nextTh, nextStartWidth;
         
         resizer.addEventListener("mousedown", (e) => {
           startX = e.pageX;
           startWidth = th.offsetWidth;
+          nextTh = th.nextElementSibling;
+          nextStartWidth = nextTh ? nextTh.offsetWidth : 0;
+          
+          const tableWidth = table.offsetWidth;
           
           const onMouseMove = (e) => {
-            const newWidth = Math.max(50, startWidth + (e.pageX - startX));
-            const percentWidth = `${(newWidth / table.offsetWidth * 100).toFixed(1)}%`;
-            th.style.width = percentWidth;
-            this.columnWidths[col.key] = percentWidth;
+            const dx = e.pageX - startX;
+            const newWidth = Math.max(50, startWidth + dx);
+            const newNextWidth = nextTh ? Math.max(50, nextStartWidth - dx) : 0;
+            if (nextTh && newNextWidth < 50) return;
+            th.style.width = newWidth + 'px';
+            this.columnWidths[col.key] = (newWidth / tableWidth * 100).toFixed(1) + '%';
+            if (nextTh) {
+              const nextCol = columns.find(c => c.key === nextTh.dataset.column);
+              if (nextCol) {
+                nextTh.style.width = newNextWidth + 'px';
+                this.columnWidths[nextCol.key] = (newNextWidth / tableWidth * 100).toFixed(1) + '%';
+              }
+            }
           };
           
           const onMouseUp = async () => {
@@ -4457,30 +4489,33 @@ class StyleShowcaseModal extends Modal {
     
     const tbody = table.createEl("tbody");
     
+    if (filteredRules.length === 0) {
+      const emptyRow = tbody.createEl("tr");
+      const emptyCell = emptyRow.createEl("td");
+      emptyCell.colSpan = visibleColumns.length;
+      emptyCell.textContent = t('showcase.noData');
+      emptyCell.style.padding = "20px";
+      emptyCell.style.textAlign = "center";
+      emptyCell.style.color = "var(--text-muted)";
+    }
+    
+    const fragment = document.createDocumentFragment();
+    
     filteredRules.forEach((rule, index) => {
-      const row = tbody.createEl("tr");
+      const row = document.createElement("tr");
+      row.dataset.index = index;
       row.style.backgroundColor = index % 2 === 0 ? "var(--background-primary)" : "var(--background-secondary)";
       
-      row.addEventListener("mouseenter", () => {
-        row.style.backgroundColor = "var(--background-modifier-hover)";
-      });
-      
-      row.addEventListener("mouseleave", () => {
-        row.style.backgroundColor = index % 2 === 0 ? "var(--background-primary)" : "var(--background-secondary)";
-      });
-      
-      const textCell = row.createEl("td");
+      const textCell = document.createElement("td");
       textCell.style.padding = "8px 12px";
       textCell.style.borderBottom = "1px solid var(--background-modifier-border)";
       textCell.style.wordBreak = "break-word";
       textCell.style.cursor = "pointer";
       textCell.title = t('showcase.dblClickJump');
+      textCell.dataset.action = "jump";
+      textCell.dataset.ruleIndex = index;
       
-      textCell.addEventListener("dblclick", () => {
-        this.jumpToText(rule);
-      });
-      
-      const styledText = textCell.createEl("span");
+      const styledText = document.createElement("span");
       styledText.textContent = rule.text;
       styledText.className = rule.styleName;
       
@@ -4488,42 +4523,53 @@ class StyleShowcaseModal extends Modal {
       if (inlineStyle) {
         styledText.setAttribute("style", inlineStyle);
       }
+      textCell.appendChild(styledText);
+      row.appendChild(textCell);
       
       if (this.showStyleName) {
-        const styleNameCell = row.createEl("td");
+        const styleNameCell = document.createElement("td");
         styleNameCell.style.padding = "8px 12px";
         styleNameCell.style.borderBottom = "1px solid var(--background-modifier-border)";
         styleNameCell.style.fontFamily = "monospace";
         styleNameCell.style.fontSize = "12px";
         styleNameCell.style.wordBreak = "break-all";
-        const nameSpan = styleNameCell.createEl("div", { text: rule.styleName });
+        const nameSpan = document.createElement("div");
+        nameSpan.textContent = rule.styleName;
+        styleNameCell.appendChild(nameSpan);
         const btnText = this.plugin.buttonTexts?.[rule.styleName] || '';
         if (btnText) {
-          const displaySpan = styleNameCell.createEl("div", { text: btnText });
+          const displaySpan = document.createElement("div");
+          displaySpan.textContent = btnText;
           displaySpan.style.fontSize = "11px";
           displaySpan.style.color = "var(--text-muted)";
           displaySpan.style.marginTop = "2px";
+          styleNameCell.appendChild(displaySpan);
         }
+        row.appendChild(styleNameCell);
       }
       
       if (this.showSource) {
-        const sourceCell = row.createEl("td", { text: rule.source });
+        const sourceCell = document.createElement("td");
+        sourceCell.textContent = rule.source;
         sourceCell.style.padding = "8px 12px";
         sourceCell.style.borderBottom = "1px solid var(--background-modifier-border)";
         sourceCell.style.fontSize = "12px";
         sourceCell.style.color = rule.source === t('main.globalRule') ? 'var(--text-accent)' : 'var(--text-muted)';
+        row.appendChild(sourceCell);
       }
       
       if (this.showTimestamp) {
-        const timeCell = row.createEl("td", { text: this.formatTimestamp(rule.timestamp) });
+        const timeCell = document.createElement("td");
+        timeCell.textContent = this.formatTimestamp(rule.timestamp);
         timeCell.style.padding = "8px 12px";
         timeCell.style.borderBottom = "1px solid var(--background-modifier-border)";
         timeCell.style.fontSize = "12px";
         timeCell.style.color = "var(--text-muted)";
+        row.appendChild(timeCell);
       }
       
       if (this.showRemark) {
-        const remarkCell = row.createEl("td");
+        const remarkCell = document.createElement("td");
         remarkCell.style.padding = "8px 12px";
         remarkCell.style.borderBottom = "1px solid var(--background-modifier-border)";
         remarkCell.style.fontSize = "12px";
@@ -4541,33 +4587,41 @@ class StyleShowcaseModal extends Modal {
         } else {
           remarkCell.textContent = '-';
         }
+        row.appendChild(remarkCell);
+      }
+      
+      fragment.appendChild(row);
+    });
+    
+    tbody.appendChild(fragment);
+    
+    tbody.addEventListener("mouseover", (e) => {
+      const row = e.target.closest("tr");
+      if (row && row.dataset.index !== undefined) {
+        row.style.backgroundColor = "var(--background-modifier-hover)";
+      }
+    });
+    
+    tbody.addEventListener("mouseout", (e) => {
+      const row = e.target.closest("tr");
+      if (row && row.dataset.index !== undefined) {
+        row.style.backgroundColor = parseInt(row.dataset.index) % 2 === 0 ? "var(--background-primary)" : "var(--background-secondary)";
+      }
+    });
+    
+    tbody.addEventListener("dblclick", (e) => {
+      const cell = e.target.closest("td[data-action='jump']");
+      if (cell) {
+        const idx = parseInt(cell.dataset.ruleIndex);
+        if (filteredRules[idx]) {
+          this.jumpToText(filteredRules[idx]);
+        }
       }
     });
     
     // 更新统计显示
     if (this.statsEl) {
-      const filteredCount = this.allRules.filter(rule => {
-        const textLength = rule.text.length;
-        if (this.minLength > 0 && textLength < this.minLength) return false;
-        if (this.maxLength > 0 && textLength > this.maxLength) return false;
-        for (const [key, filterText] of Object.entries(this.columnFilters)) {
-          if (!filterText) continue;
-          const lowerFilter = filterText.toLowerCase();
-          let cellValue = '';
-          if (key === 'text') cellValue = rule.text;
-          else if (key === 'styleName') {
-            cellValue = rule.styleName;
-            const btnText = this.plugin.buttonTexts?.[rule.styleName] || '';
-            if (btnText) cellValue += ' ' + btnText;
-          }
-          else if (key === 'source') cellValue = rule.source;
-          else if (key === 'timestamp') cellValue = this.formatTimestamp(rule.timestamp);
-          else if (key === 'remark') cellValue = rule.remark || '';
-          if (!cellValue.toLowerCase().includes(lowerFilter)) return false;
-        }
-        return true;
-      }).length;
-      this.statsEl.textContent = t('showcase.filteredCount') + ` ${filteredCount} ` + t('showcase.totalLabel') + ` ${this.allRules.length}`;
+      this.statsEl.textContent = t('showcase.filteredCount') + ` ${filteredRules.length} ` + t('showcase.totalLabel') + ` ${this.allRules.length}`;
     }
     } // end desktop else
   }
@@ -10435,7 +10489,7 @@ class AddRegexRuleModal extends Modal {
           const previewLength = hasChineseChars ? 3 : 10;
           // 优先使用设置的按钮文字，其次是选中的文字，最后是默认的"示例"文字
           const buttonText = this.plugin && typeof this.plugin.getButtonText === 'function' ? this.plugin.getButtonText(styleInfo.class) : '';
-          styleExample.textContent = buttonText || (selectedText.length >= previewLength ? selectedText.substring(0, previewLength) : (selectedText || t('main.preview')));
+          styleExample.textContent = buttonText || (selectedText.length >= previewLength ? selectedText.substring(0, previewLength) : (selectedText || getDefaultPreviewText(this.plugin)));
           // 保留内联样式设置以确保基本样式正常，同时通过添加类名支持伪元素和动画效果
           styleExample.setAttribute("style", styleInfo.style);
           fontSizeCheckQueue.push(styleExample);
@@ -12979,7 +13033,77 @@ class AddRegexRuleModal extends Modal {
       this.plugin.settings.ruleSourceBadgeThreshold = val;
       await this.plugin.saveData(this.plugin.settings);
     });
-    
+
+    // 默认预览文本设置
+    const defaultPreviewTextTitle = displayContent.createDiv();
+    defaultPreviewTextTitle.style.display = "flex";
+    defaultPreviewTextTitle.style.alignItems = "center";
+    defaultPreviewTextTitle.style.marginBottom = "5px";
+
+    const defaultPreviewTextLabel = defaultPreviewTextTitle.createEl("span");
+    defaultPreviewTextLabel.textContent = t('settings.defaultPreviewText') + ": ";
+    defaultPreviewTextLabel.style.marginRight = "10px";
+    defaultPreviewTextLabel.style.fontSize = "14px";
+
+    const defaultPreviewTextHint = defaultPreviewTextTitle.createEl("span");
+    defaultPreviewTextHint.textContent = t('settings.defaultPreviewTextHint');
+    defaultPreviewTextHint.style.fontSize = "12px";
+    defaultPreviewTextHint.style.color = "var(--text-muted)";
+
+    const defaultPreviewTextCNRow = displayContent.createDiv();
+    defaultPreviewTextCNRow.style.display = "flex";
+    defaultPreviewTextCNRow.style.alignItems = "center";
+    defaultPreviewTextCNRow.style.marginBottom = "5px";
+    defaultPreviewTextCNRow.style.marginLeft = "20px";
+
+    const defaultPreviewTextCNLabel = defaultPreviewTextCNRow.createEl("span");
+    defaultPreviewTextCNLabel.textContent = t('settings.defaultPreviewTextCN') + ": ";
+    defaultPreviewTextCNLabel.style.marginRight = "10px";
+    defaultPreviewTextCNLabel.style.fontSize = "14px";
+
+    const defaultPreviewTextCNInput = defaultPreviewTextCNRow.createEl("input");
+    defaultPreviewTextCNInput.type = "text";
+    defaultPreviewTextCNInput.value = this.plugin.settings?.defaultPreviewTextCN || '';
+    defaultPreviewTextCNInput.placeholder = '示例';
+    defaultPreviewTextCNInput.style.width = "120px";
+    defaultPreviewTextCNInput.style.padding = "4px 8px";
+    defaultPreviewTextCNInput.style.border = "1px solid var(--background-modifier-border)";
+    defaultPreviewTextCNInput.style.borderRadius = "4px";
+    defaultPreviewTextCNInput.style.fontSize = "14px";
+
+    defaultPreviewTextCNInput.addEventListener("change", async (e) => {
+      if (!this.plugin.settings) this.plugin.settings = {};
+      this.plugin.settings.defaultPreviewTextCN = e.target.value;
+      await this.plugin.saveData(this.plugin.settings);
+    });
+
+    const defaultPreviewTextENRow = displayContent.createDiv();
+    defaultPreviewTextENRow.style.display = "flex";
+    defaultPreviewTextENRow.style.alignItems = "center";
+    defaultPreviewTextENRow.style.marginBottom = "5px";
+    defaultPreviewTextENRow.style.marginLeft = "20px";
+
+    const defaultPreviewTextENLabel = defaultPreviewTextENRow.createEl("span");
+    defaultPreviewTextENLabel.textContent = t('settings.defaultPreviewTextEN') + ": ";
+    defaultPreviewTextENLabel.style.marginRight = "10px";
+    defaultPreviewTextENLabel.style.fontSize = "14px";
+
+    const defaultPreviewTextENInput = defaultPreviewTextENRow.createEl("input");
+    defaultPreviewTextENInput.type = "text";
+    defaultPreviewTextENInput.value = this.plugin.settings?.defaultPreviewTextEN || '';
+    defaultPreviewTextENInput.placeholder = 'Preview';
+    defaultPreviewTextENInput.style.width = "120px";
+    defaultPreviewTextENInput.style.padding = "4px 8px";
+    defaultPreviewTextENInput.style.border = "1px solid var(--background-modifier-border)";
+    defaultPreviewTextENInput.style.borderRadius = "4px";
+    defaultPreviewTextENInput.style.fontSize = "14px";
+
+    defaultPreviewTextENInput.addEventListener("change", async (e) => {
+      if (!this.plugin.settings) this.plugin.settings = {};
+      this.plugin.settings.defaultPreviewTextEN = e.target.value;
+      await this.plugin.saveData(this.plugin.settings);
+    });
+
     // 添加标题设置分类
     const headingOutline = createOutlineSection(settingsContent, t('settings.heading'), { isCollapsed: true, icon: '📌' });
     const headingSettingsContent = headingOutline.content;
@@ -14991,11 +15115,13 @@ class AddRegexRuleModal extends Modal {
     globalDescription.style.color = "#666";
     globalDescription.style.padding = "0 4px";
     globalDescription.textContent = t('global.description');
-    globalDescription.style.visibility = "hidden"; // 默认隐藏文字
-    if (!_isDesktop) globalDescription.style.display = "none"; // 手机端隐藏提示
+    globalDescription.style.visibility = "hidden";
+    globalDescription.style.pointerEvents = "none";
+    if (!_isDesktop) globalDescription.style.display = "none";
 
     // 修改标题样式为inline
     globalTitle.style.display = "inline";
+    globalTitle.style.pointerEvents = "none";
     
     // 添加空格
     titleContainer.createEl('span', { text: " " });
@@ -16104,13 +16230,13 @@ class AddRegexRuleModal extends Modal {
     historyDescription.style.color = "#666";
     historyDescription.style.padding = "0 4px";
     historyDescription.textContent = t('history.description');
-    historyDescription.style.visibility = "hidden"; // 默认隐藏文字
-    if (!_isDesktop) historyDescription.style.display = "none"; // 手机端隐藏提示
+    historyDescription.style.visibility = "hidden";
+    historyDescription.style.pointerEvents = "none";
+    if (!_isDesktop) historyDescription.style.display = "none";
 
     // 修改标题样式为inline
     historyTitle.style.display = "inline";
-    
-    // 添加空格
+    historyTitle.style.pointerEvents = "none";
     titleContainer.createEl('span', { text: " " });
     
     // 创建打开规则文件链接
@@ -19981,6 +20107,12 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     if (this.settings.remarkBadgeThreshold === undefined) {
       this.settings.remarkBadgeThreshold = 1;
     }
+    if (this.settings.defaultPreviewTextCN === undefined) {
+      this.settings.defaultPreviewTextCN = '';
+    }
+    if (this.settings.defaultPreviewTextEN === undefined) {
+      this.settings.defaultPreviewTextEN = '';
+    }
     if (this.floatButtonData.floatingBallMode === undefined) {
       this.floatButtonData.floatingBallMode = 'always';
     }
@@ -22375,7 +22507,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             
             // 获取按钮文字
             const buttonText = this.getButtonText ? this.getButtonText(className) : '';
-            styleExample.textContent = buttonText || t('main.preview');
+            styleExample.textContent = buttonText || getDefaultPreviewText(this.plugin);
             
             // 获取内联样式（如果存在）
             const inlineStyle = this.cssStyles?.get(className) || '';
@@ -23498,7 +23630,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             styleExample.className = `${className} style-example style-option-preview`;
             
             const buttonText = this.getButtonText ? this.getButtonText(className) : '';
-            styleExample.textContent = buttonText || t('main.preview');
+            styleExample.textContent = buttonText || getDefaultPreviewText(this.plugin);
             
             const inlineStyle = this.cssStyles?.get(className) || '';
             if (inlineStyle) {

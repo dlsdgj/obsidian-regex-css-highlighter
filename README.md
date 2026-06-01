@@ -1,8 +1,6 @@
 [English](#english-version) | 中文
 
-## English Version
-
-[↑ 回到中文](#regex-css-highlighter) | English
+[中文](#ch-ver) | English
 
 # Regex CSS Highlighter
 
@@ -85,7 +83,8 @@ An Obsidian plugin that matches text via regular expressions and applies custom 
 See [CHANGELOG.md](./CHANGELOG.md) for all version history.
 
 ---
-
+#ch-ver
+---
 中文 | [English](#english-version)
 
 # Regex CSS Highlighter

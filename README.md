@@ -1,3 +1,296 @@
+[English](#english-version) | 中文
+
+## English Version
+
+[↑ 回到中文](#regex-css-highlighter) | English
+
+# Regex CSS Highlighter
+
+An Obsidian plugin that matches text via regular expressions and applies custom CSS styles for highlighting.
+
+## Features
+
+### 🎨 Style Highlighting
+
+- **Regex Matching + CSS Styles** — Match text using regular expressions and apply custom CSS styles to matched content
+- **Style Category Management** — Styles organized by groups, with support for adding, editing, and deleting
+- **Instant Style Application** — Styles take effect immediately after adding/editing/deleting, no restart required
+- **Floating Style Buttons** — Right-click a style button to create a draggable floating button with adjustable size and opacity
+- **Style Button Context Menu** — Copy class name, copy full style, float display, and other quick actions
+
+### 📝 Rule Management
+
+- **Current File / Global Rules** — Support for both file-level and global rule scopes
+- **Rule Source Markers** — Hover over matched text to see rule source (g=global/l=local), click to jump to the rule
+- **Highlight List** — View all matched highlight rules in the current file, with per-column search and filtering
+- **Clipboard Merge** — Merge clipboard content with selected text to add as a highlight rule
+
+### 🔮 Floating Ball
+
+- **Quick Access** — Floating ball provides quick style application: left-click for current file rules, middle-click for global rules
+- **Group Submenu** — Hover over a group option to expand a submenu showing all styles in that group
+- **Floating Option Buttons** — Menu options can be pinned as independent floating buttons for instant access
+- **Show/Hide Text Styles** — One-click toggle to show or hide all text style highlights
+
+### 🌐 Internationalization
+
+- **Chinese/English Switch** — CN/EN toggle button in top-left corner of main panel, full i18n support
+- **Bilingual Translation** — All UI text including settings, floating ball options, and group style buttons
+
+### 📱 Mobile Adaptation
+
+- **Touch Dragging** — Floating ball and floating buttons support touch dragging for position adjustment
+- **Mobile Layout Settings** — Line height and margins for mobile reading mode, independent from desktop
+- **Panel Opacity** — Adjustable opacity for main panel and button panels on mobile
+- **Collapsible Filters** — Highlight list filter panel collapsed by default on mobile to save screen space
+
+### ✏️ Typography & Fonts
+
+- **System Font Switching** — Direct access to installed system fonts, no font files needed
+- **Font Favorites** — Star favorite fonts to pin them to the top for quick access
+- **Line Height & Margins** — Support for line height, left margin, and right margin settings, working in both edit and reading mode
+- **Scroll Wheel Adjustment** — Numeric input fields support mouse wheel for quick value adjustment
+
+### 📌 Notes
+
+- **Text Notes** — Add notes to highlighted text with Markdown rendering support
+- **Image Support** — Note popup supports uploading images and pasting from clipboard
+- **Table Rendering** — Notes support Markdown tables with borders and zebra striping
+
+### 🤖 AI Integration
+
+- **Multiple AI Configs** — Support for multiple AI services (OpenAI, DeepSeek, etc.) with custom API endpoints and models
+- **AI Entity Extraction** — Automatically identify entities in text using AI and batch add highlight rules
+
+### ⌨️ Keyboard Shortcuts
+
+| Shortcut | Function |
+|----------|----------|
+| `Ctrl+Alt+R` | Open main window |
+| `Ctrl+Alt+H` | Randomly highlight selected text |
+| `Ctrl+Alt+M` | Merge clipboard and selected text to highlight rules |
+| `Ctrl+Alt+D` | Remove highlight styles from selected text |
+| `Alt+Scroll` | Adjust floating button/main panel size |
+| `Ctrl+Scroll` | Adjust floating button/main panel opacity |
+
+## Installation
+
+1. Download `main.js` and `manifest.json`
+2. Create a `Regex-Css-Highlighter` folder in your Obsidian vault's `.obsidian/plugins/` directory
+3. Place the downloaded files in that folder
+4. Enable "Regex Css Highlighter" in Obsidian Settings → Community Plugins
+
+## Changelog
+
+### 🆕 v1.5.8 (2026-06-01)
+
+- **Removed "About" Section** - Removed "About" section from bottom of main panel; version changelog migrated to readme.md
+- **Cleaned Up Donation Code** - Removed showDonateImage class methods and standalone functions, setupDonateText function, donation button CSS styles, and related translation keys
+- **Cleaned Up Unused Translation Keys** - Removed main.tab.about, settings.about, settings.updateHistory, settings.viewUpdates and other unused translation keys
+- **Removed DONATE_QR_CODE Constant** - Removed base64-encoded donation QR code image constant
+
+### v1.5.7 (2026-05-31)
+
+- **Internationalization Support** - Added CN/EN language switch button in main panel, supports switching between Chinese and English interfaces
+- **Full i18n Coverage** - All UI text including settings titles, floating ball options, and group style buttons fully internationalized
+- **"Show/Hide Text Styles" in Floating Ball Management** - Added option to control whether this feature appears in floating ball menu
+- **Fixed Auto-Scroll on Middle-Click in Group Submenu** - Middle-click to add global rules no longer triggers auto-scroll state
+- **Style Name Column in Highlight List** - Added style name column to highlight list; display text shown on separate line when present; toggleable visibility
+- **Per-Column Header Search** - Added search box to each table header with placeholder showing header text, supports real-time per-column filtering
+- **Removed "Add to Highlight List" Feature** - Removed style button right-click "Add to Highlight List" option and highlight list filters: show style name, by style name
+- **Min Count Always Visible** - Removed mode dropdown; min count input always visible; Chinese label changed to "样式最少被应用 [X] 次"
+
+### v1.5.6 (2026-05-31)
+
+- **Floating Submenu Right-Click Options** - Added "Modify Display Text", "Copy Class Name", "Copy Full Style" options to floating group submenu style right-click menu
+- **Submenu Right-Click UX Fix** - Fixed issue where submenu would hide when mouse moved to right-click menu options
+- **Middle-Click for Global Rules** - Middle-click on floating group submenu style adds selected text as global rule
+- **Rule Source Markers (g/l)** - Hover over matched rule text to show global/local marker "g/l", click to jump to corresponding rule; supports character count threshold setting
+- **Edit Mode Marker Fix** - Fixed bug where "g/l" markers were added as text content in edit mode
+- **Floating Submenu Class Name Hint** - Hover over floating group submenu style items to display class name hint
+- **Text Style Show/Hide** - Added "Show Text Styles"/"Hide Text Styles" options to floating ball hover menu; hides all text style matches when hidden
+
+### v1.5.5 (2026-05-29)
+
+- **Hidden Position Data Preservation** - Saves position data when hiding floating style buttons; automatically restores to original position on next show
+- **Floating Display Button in Main Panel** - Added 📌 button that appears on hover over style buttons in main panel; click to float display that style
+
+### v1.5.4 (2026-05-28)
+
+- **Clean Up Non-Existent Styles** - Added "Clean Up Non-Existent Styles in Category Files" feature under Settings → Display; scans and removes styles present in style-categories.json but missing from styles.css
+- **Scrollbar for Group Submenus** - Added scrollbars to floating ball menu and floating option button group style submenus; prevents overflow when many styles exist
+- **Light Blue Background for Settings Headers** - Added light blue background to all level headers in main panel settings for better visual hierarchy
+
+### v1.5.3 (2026-05-27)
+
+- **Mobile Reading Mode Line Height** - Added line height setting in mobile "Display" settings; merged with margin settings into "Mobile Reading Mode Line/Margin"
+- **Mobile Panel Opacity** - Added main panel and button panel opacity settings in mobile "Display" settings
+- **Mobile Typography Settings Separated** - Mobile no longer applies desktop line height and margin settings; controlled by mobile-specific settings
+- **Mobile Auto-Expand Fix** - Fixed bug where first style was incorrectly applied to text when group expanded in mobile auto-expand mode
+- **Header Settings Category** - Moved "Header Level Tags" and "Disable Header Styles" to newly created "Headers" settings category
+- **Count Info Fix** - Fixed bug where "Style Categories" and "Count Files" count info not displayed on same line; removed link styling
+- **Floating Ball Menu Opacity** - Floating ball menu supports Ctrl+scroll to adjust opacity; preserved after restart
+- **Right-Click Menu Improvements** - Auto-closes previous menu when right-clicking another style; added "Move to Group" option in normal mode right-click menu
+
+### v1.5.2 (2026-05-26)
+
+- **Settings Outline Reorganization** - Changed settings from flat separator line format to outline-style indentation with collapse/expand, better visual hierarchy
+- **Show Recent Rules When Collapsed** - Added setting to control whether to show recently added rules when main panel opened with no text selected and highlight rules collapsed
+- **Hide Font Switch on Mobile** - Hidden font switching feature area on mobile devices
+- **Hide Open File Link on Mobile** - Hidden open data.json file link next to "Settings" header on mobile
+
+### v1.5.1 (2026-05-25)
+
+- **Typography Settings** - Added line height, left margin, and right margin settings in "Switch Body Font" popup; works in both edit and reading mode
+- **Scroll Wheel Value Adjustment** - Line height and margin input fields support mouse wheel for quick value adjustment
+- **Edit Mode Margin Fix** - Fixed issue where left/right margins not working in edit mode
+
+### v1.5.0 (2026-05-25)
+
+- **Disable Header Styles** - Added "Disable Header Styles" toggle in settings; when disabled, custom header styles not applied but header level tags preserved; "Header Styles" area hidden in main panel when disabled
+- **Level Tags Compatible with Gradient Text** - Fixed issue where level tags invisible when using gradient text CSS snippet; reset inherited transparent text and background-clip properties in pseudo-element
+- **Removed Usage Instructions** - Removed "Usage Instructions" content from main panel for cleaner UI
+
+### v1.4.9 (2026-05-25)
+
+- **Instant Style Application** - Fixed issue where adding/editing/deleting styles required Obsidian restart to display; new styles now take effect immediately
+- **Style Refresh Mechanism Optimized** - Removed destructive forceStyleRefresh call to avoid clearing newly injected CSS; directly update dynamic style elements after writing CSS file, no re-read needed
+- **CSS Read/Write Consistency Fix** - Changed injectCSSContent to use vault.adapter.read for consistency with write API, avoiding cache desynchronization
+- **Modal Refresh Acceleration** - Removed multi-layer setTimeout delays (500ms+200ms) after adding styles; popup refreshes instantly
+- **Delete Style Instant Refresh** - Removed 1-second delay after deleting styles; immediately re-inject CSS and refresh view
+
+### v1.4.7 (2026-05-24)
+
+- **System Font Switching** - Font switching now directly reads installed system fonts, no font files needed; eliminates CSP/OTS compatibility issues
+- **Font Favorites Feature** - Font list supports starring to favorite; favorited fonts pinned to top for easy access
+- **Font Search** - Added search box to font selection popup for quick font filtering and positioning
+- **Font List Styling** - Card-style layout, SVG star icons, "In Use" label, hover interaction optimizations
+
+### v1.4.6 (2026-05-22)
+
+- **DeepSeek Default Config Update** - For new plugin installations, DeepSeek default base_url changed to https://api.deepseek.com/chat/completions, model changed to deepseek-v4-flash
+- **Style Class Name Hint** - Added hint to style class name input field in edit floating option window: "Long-press/right-click main panel style button → Copy Class Name"
+
+### v1.4.5 (2026-05-22)
+
+- **Floating Ball Remove Highlight** - Added "Remove Highlight" option to floating ball; click after selecting highlighted text to remove corresponding rule; supports intelligent multi-part rule splitting
+- **Rule Right-Click Menu Enhanced** - Current file rule and global rule buttons right-click menu added "Delete Rule" and "Move to Global/Current File Rule" options
+- **Reading Mode Selected Text Fix** - Fixed issue where selecting text in reading mode then opening main panel couldn't get selected text; save selection before modal opens
+- **Floating Option Arrow Fix** - Fixed issue with two arrows appearing on floating option button after editing style; arrow moved inside style area to save space
+- **Mobile Main Panel Optimization** - Hidden opacity/width controls and title hint message/link on mobile; regular expression label displayed on separate line
+- **Removed Add Note Button** - Removed "Add Note" button from main panel; note feature still accessible via right-click menu and floating ball
+
+### v1.4.4 (2026-05-22)
+
+- **Floating Button Zoom Offset Fix** - Fixed bug where floating style button would move left/right when clicked after Alt+scroll zoom adjustment
+- **About Panel Height Fix** - Changed "About" section height from fixed 300px to 70vh adaptive to window height
+- **Copy Class Name Feature** - Added "Copy Class Name" option to style button right-click menu; one-click copy CSS class name to clipboard
+
+### v1.4.3 (2026-05-22)
+
+- **Reading Mode Cross-Element Highlighting** - Rewrote highlight matching logic to support matching long text across DOM element boundaries; solves issue where text with existing highlights or global rule modifiers couldn't apply new styles in reading mode
+- **Right-Click Menu Overflow Fix** - Floating option button and floating style button right-click menus automatically adjust position when at screen right/bottom edges; no longer overflow screen
+
+### v1.4.2 (2026-05-21)
+
+- **Mobile Floating Style Button Dragging** - Fixed issue where restored floating style buttons couldn't be dragged to adjust position on mobile
+- **Touch Drag Anti-Misoperation** - Floating style button touch drag no longer accidentally triggers style application
+
+### v1.4.1 (2026-05-21)
+
+- **Floating Option Right-Click Menu** - Changed floating option button right-click to popup menu (Edit/Close); no longer closes directly
+- **Floating Option Edit Feature** - Right-click "Edit" allows modifying display text and style class name; style class name supports full pseudo-element rendering
+- **Floating Option Scroll Wheel Adjustment** - Alt+scroll adjusts size, Ctrl+scroll adjusts opacity; preserved after restart
+- **Floating Style Button Edit Name** - Added "Edit Name" option to floating style button right-click menu; allows modifying display text
+- **Style Class Name Rendering Optimization** - Removed default border frame after setting style class name; fully injects CSS rules including pseudo-elements; supports complex styles
+
+### v1.4.0 (2026-05-21)
+
+- **Mobile Floating Ball Adaptation** - Increased floating ball size to 36px, adjusted default position, added position safety check to ensure visibility
+- **Mobile Floating Ball Menu** - Clicking floating ball pops up option menu instead of direct highlighting; differentiated from desktop behavior
+- **Mobile Floating Button Dragging** - Added touch event support to floating style buttons and floating option buttons; draggable to adjust position
+- **Mobile Reading Mode Line/Margin** - Added mobile reading mode line height and left/right margin settings; moved to "Display" category; separated from desktop typography settings
+- **Mobile Collapsible Filter Panel** - Changed highlight list filter area to collapsible panel; collapsed by default, click to expand
+- **Mobile List-Style Highlight Display** - Changed highlight list to card-style layout on mobile; notes collapsed into highlight text, click to expand
+- **Highlight List Performance Optimization** - Parallelized file reading, memory cache priority, eliminated redundant exists calls, global rule Map indexing
+- **Loading State Indicator** - Shows "Loading..." indicator when highlight list opens and when filter switches; renders UI first then loads data
+
+### v1.3.9 (2026-05-20)
+
+- **Mobile Compatibility** - Encapsulated cross-platform file operation utility class; desktop uses Node.js fs module (high performance), mobile uses Vault Adapter (compatibility)
+- **Reading Mode Scroll Highlighting** - Fixed issue where highlights lost after scrolling; added scroll event listener to automatically re-apply highlights in viewport
+- **Delay Handling Race Condition Fix** - Fixed timer race condition in PostProcessor delayed batch processing
+
+### v1.3.8 (2026-05-14)
+
+- **Reading Mode Highlight Fix** - Fixed issue where some matched text didn't display styles in reading mode; recursively processes text nodes in nested inline elements
+- **Floating Button Border Following** - Floating option buttons and floating style buttons use right positioning when at screen right edge; automatically follow movement when window border dragged
+- **Disabled Rule Filtering** - Automatically filters out disabled rules during highlight processing to avoid invalid matches
+
+### v1.3.7 (2026-05-13)
+
+- **Image Support in Notes** - Note popup supports uploading images and pasting from clipboard; images automatically saved to attachments directory
+- **Table Support in Notes** - Note popup supports Markdown table rendering with borders, header highlighting, and zebra striping
+- **Note Popup Auto-Resize** - Popup automatically adjusts size based on actual image dimensions; arrow indicator position synchronized
+- **Table and Callout Highlighting** - Fixed issue where highlight rules didn't display styles in tables and callouts
+
+### v1.3.6 (2026-05-09)
+
+- **Floating Button Boundary Constraints** - Floating ball, floating option buttons, and floating style buttons automatically inset inward when window shrinks; constrained to viewport range during dragging
+- **Level-2 Submenu Overflow Fix** - Floating option level-2 submenus automatically flip direction when at right screen edge; no longer overflow window boundary
+- **Window Resize Content Following** - When resizing main panel via bottom-right corner handle, internal buttons immediately re-arrange to follow
+
+### v1.3.5 (2026-05-08)
+
+- **Highlight List by Application Count Mode** - Added "By Application Count" display mode; allows setting minimum count threshold; automatically displays all style highlights with application count ≥ threshold
+- **Window Resize Handle** - Added draggable window resize handle to bottom-right corner of main panel and entity extraction popup
+- **Jump Function Fix** - Fixed error when double-clicking to jump in highlight list
+- **Performance Optimization** - CSS style loading switched to Node.js fs module direct reading for improved speed
+
+### v1.3.4 (2026-05-06)
+
+- **Default Pinyin Style Optimization** - Default pinyin style more aesthetically pleasing for new plugin installations (red text, FangZheng ShuSong font)
+- **AI Settings Link Fix** - Fixed issue where "Get API Key" link always showed OpenAI address when editing AI config
+
+### v1.3.3 (2026-05-03)
+
+- **Floating Ball Middle-Click** - Mouse middle-click on floating ball randomly applies style to global rules (left-click for current file rules)
+
+### v1.3.2 (2026-05-01)
+
+- **Floating Button Pseudo-Element Fix** - Fixed issue where floating button pseudo-element styles didn't display after restart
+
+### v1.3.1 (2026-04-28)
+
+- **Floating Options Feature** - Added "Float Display" button to all floating ball menu options; click to create floating button
+- **Phonetic Notation Floating Button** - Phonetic notation options support float display; hover to show submenu (local/global notation, edit, delete)
+- **Group Floating Button** - Group options support float display; hover to show all styles in that group
+- **Style Quick Float** - Each style button in style submenu has 📌 button in top-right corner to float display that style individually
+- **Settings Separation Optimization** - Group menu display and float display use independent settings; don't interfere with each other
+
+### v1.3.0.0 (2026-04-21)
+
+- **Float Display Feature** - Added "Float Display" option to style button right-click menu; creates draggable floating style button
+- **Multiple Floating Windows** - Supports displaying multiple floating buttons simultaneously; position, opacity, and size preserved after restart
+- **Main Panel Interaction Optimization** - Added Alt+mouse wheel to adjust main panel width, Ctrl+scroll to adjust opacity
+- **Input Field Hints** - Shows operation hints when hovering over opacity/width input fields
+
+### v1.2.9.9 (2026-04-21)
+
+- **Floating Button Interaction Optimization** - Fixed issue where highlighting accidentally triggered during dragging; added movement threshold check
+- **Cursor Display Optimization** - Floating buttons display hand pointer by default; displays grabbing cursor during dragging
+- **Drag Logic Fix** - Fixed issue where button continuously followed mouse movement; now only responds to dragging when mouse is pressed
+
+### v1.2.9.8 (2026-04-21)
+
+- **Float Display Feature** - Added "Float Display" option to style button right-click menu; creates draggable floating style button
+- **Multiple Floating Windows** - Supports displaying multiple floating buttons simultaneously; each click of "Float Display" creates a new window
+- **Position Memory** - Floating button position, opacity, and size preserved after plugin restart
+- **Interaction Features** - Hold to drag position, left-click to apply style to selected text, Ctrl+scroll to adjust opacity, Alt+scroll to adjust size
+- **Right-Click Menu** - Added "Close Floating Display" option to floating button right-click menu
+
+---
+
 中文 | [English](#english-version)
 
 # Regex CSS Highlighter
@@ -80,10 +373,10 @@
 
 ### 🆕 v1.5.8 (2026-06-01)
 
-- **移除"关于"部分** - 移除主面板底部"关于"section，版本更新日志统一迁移至readme.md
-- **清理捐赠功能代码** - 移除showDonateImage类方法和独立函数、setupDonateText函数、捐赠按钮CSS样式及相关翻译键
-- **清理无用翻译键** - 移除main.tab.about、settings.about、settings.updateHistory、settings.viewUpdates等不再使用的翻译键
-- **清理DONATE_QR_CODE常量** - 移除base64编码的捐赠二维码图片常量
+- **移除"关于"部分** - 移除主面板底部"关于"section，版本更新日志统一迁移至 readme.md
+- **清理捐赠功能代码** - 移除 showDonateImage 类方法和独立函数、setupDonateText 函数、捐赠按钮 CSS 样式及相关翻译键
+- **清理无用翻译键** - 移除 main.tab.about、settings.about、settings.updateHistory、settings.viewUpdates 等不再使用的翻译键
+- **清理 DONATE_QR_CODE 常量** - 移除 base64 编码的捐赠二维码图片常量
 
 ### v1.5.7 (2026-05-31)
 
@@ -92,16 +385,16 @@
 - **管理悬浮球选项新增"隐藏/显示文本样式"** - 可在设置中控制该选项是否在悬浮球菜单中显示
 - **修复分组子菜单中键点击触发自动滚动** - 中键点击添加全局规则时不再进入自动滚动状态
 - **高亮列表样式名列** - 高亮列表添加样式名列，有显示文字时分行显示，支持显示/隐藏切换
-- **高亮列表表头搜索** - 每个表头添加搜索框，placeholder显示表头文字，支持按列实时搜索过滤
-- **移除"加入展示"功能** - 移除样式按钮右键"加入展示"选项及高亮列表filter的show style name、by style name
-- **min count始终显示** - 移除mode下拉框，min count输入框始终显示，中文标签改为"样式最少被应用[X]次"
+- **高亮列表表头搜索** - 每个表头添加搜索框，placeholder 显示表头文字，支持按列实时搜索过滤
+- **移除"加入展示"功能** - 移除样式按钮右键"加入展示"选项及高亮列表 filter 的 show style name、by style name
+- **min count 始终显示** - 移除 mode 下拉框，min count 输入框始终显示，中文标签改为"样式最少被应用 [X] 次"
 
 ### v1.5.6 (2026-05-31)
 
 - **悬浮子菜单右键选项** - 悬浮按钮子菜单样式右键添加"修改显示文字"、"复制类名"、"复制完整样式"选项
 - **子菜单右键体验修复** - 修复鼠标移动到右键选项时子菜单会隐藏的问题
 - **中键添加全局规则** - 中键点击悬浮分组子菜单样式可将选中文字添加为全局规则
-- **规则来源标记(g/l)** - 鼠标悬停匹配规则文本时显示全局/局部标记"g/l"，点击可跳转到对应规则，支持字数阈值设置
+- **规则来源标记 (g/l)** - 鼠标悬停匹配规则文本时显示全局/局部标记"g/l"，点击可跳转到对应规则，支持字数阈值设置
 - **编辑模式标记修复** - 修复编辑模式下"g/l"标记被添加为文本内容的问题
 - **悬浮子菜单类名提示** - 悬浮分组子菜单样式项悬停时显示类名提示
 - **文本样式显示/隐藏** - 悬浮球悬停菜单添加"显示文本样式"/"隐藏文本样式"选项，隐藏时所有文本中匹配的规则样式都禁止显示
@@ -109,11 +402,11 @@
 ### v1.5.5 (2026-05-29)
 
 - **隐藏保留位置数据** - 隐藏悬浮样式按钮时保存位置数据，下次显示时自动恢复到原位置
-- **主面板悬浮显示按钮** - 主面板样式按钮hover时显示📌按钮，点击即可悬浮显示该样式
+- **主面板悬浮显示按钮** - 主面板样式按钮 hover 时显示📌按钮，点击即可悬浮显示该样式
 
 ### v1.5.4 (2026-05-28)
 
-- **清理不存在样式** - 设置-显示下新增"清理分类文件中不存在样式"功能，可扫描并一键清除 style-categories.json 中有但 styles.css 中没有的样式
+- **清理不存在样式** - 设置 - 显示下新增"清理分类文件中不存在样式"功能，可扫描并一键清除 style-categories.json 中有但 styles.css 中没有的样式
 - **分组子菜单滚动条** - 悬浮球菜单和悬浮选项按钮的分组样式子菜单添加滚动条，样式过多时不再超出软件界面
 - **设置标题淡蓝背景** - 主面板设置中各级标题添加淡蓝色背景，占满整行，层级更清晰
 
@@ -122,10 +415,9 @@
 - **手机版阅读模式行距** - 手机版"显示"设置中新增行距设定，与边距设置合并为"手机版阅读模式行、边距"
 - **手机版面板透明度** - 手机版"显示"设置中新增主面板和按钮面板透明度设置
 - **手机版排版设置分离** - 手机端不再应用桌面版的行间距和边距设置，由手机版独立设置控制
-- **手机版自动展开修复** - 修复手机端自动展开模式下分组展开时第一个样式被误应用到文字的bug
-- **标题设置分类** - 将"标题层级标签"和"禁用标题样式"移至新建的"标题"设置分类下
-- **计数信息修复** - 修复"样式类别"和"计数文件"计数不在同一行显示的bug，移除链接样式
-- **悬浮球菜单透明度** - 悬浮球菜单支持Ctrl+滚轮调整透明度，设置重启后保留
+- **手机版自动展开修复** - 修复手机端自动展开模式下分组展开时第一个样式被误应用到文字的 bug
+- **计数信息修复** - 修复"样式类别"和"计数文件"计数不在同一行显示的 bug，移除链接样式
+- **悬浮球菜单透明度** - 悬浮球菜单支持 Ctrl+ 滚轮调整透明度，设置重启后保留
 - **右键菜单改进** - 右键另一个样式时自动关闭之前的菜单；普通模式右键菜单新增"移动到分组"选项
 
 ### v1.5.2 (2026-05-26)
@@ -133,7 +425,7 @@
 - **设置大纲式重组** - 将设置区域从扁平分隔线形式改为大纲笔记缩进折叠形式，层级更清晰
 - **折叠时显示最近规则** - 新增设置选项，控制未选中文字打开主面板且高亮规则折叠时是否显示最近添加的规则
 - **手机端隐藏字体切换** - 手机端隐藏设置中的字体切换功能区域
-- **手机端隐藏打开文件链接** - 手机端隐藏"设置"标题旁的打开data.json文件链接
+- **手机端隐藏打开文件链接** - 手机端隐藏"设置"标题旁的打开 data.json 文件链接
 
 ### v1.5.1 (2026-05-25)
 
@@ -144,27 +436,27 @@
 ### v1.5.0 (2026-05-25)
 
 - **禁用标题样式** - 设置中新增"禁用标题样式"开关，禁用后不应用自定义标题样式，但保留标题层级标签；禁用时主面板隐藏"标题样式"区域
-- **层级标签兼容渐变文字** - 修复使用渐变文字CSS片段时层级标签不可见的问题，在伪元素中重置继承的透明文字和背景裁剪属性
+- **层级标签兼容渐变文字** - 修复使用渐变文字 CSS 片段时层级标签不可见的问题，在伪元素中重置继承的透明文字和背景裁剪属性
 - **移除使用方法** - 移除主面板中"使用方法"相关内容，精简界面
 
 ### v1.4.9 (2026-05-25)
 
-- **添加样式即时生效** - 修复添加/编辑/删除样式后需要重启Obsidian才能显示的问题，新样式现在立即生效
-- **样式刷新机制优化** - 移除破坏性的forceStyleRefresh调用，避免新注入的CSS被清空；写入CSS文件后直接更新动态样式元素，无需重新读取文件
-- **CSS读写一致性修复** - injectCSSContent改用vault.adapter.read，与写入API保持一致，避免缓存不同步
-- **模态框刷新加速** - 移除添加样式后的多层setTimeout延迟（500ms+200ms），弹窗即时刷新
-- **删除样式即时刷新** - 删除样式后移除1秒延迟，立即重新注入CSS并刷新视图
+- **添加样式即时生效** - 修复添加/编辑/删除样式后需要重启 Obsidian 才能显示的问题，新样式现在立即生效
+- **样式刷新机制优化** - 移除破坏性的 forceStyleRefresh 调用，避免新注入的 CSS 被清空；写入 CSS 文件后直接更新动态样式元素，无需重新读取文件
+- **CSS 读写一致性修复** - injectCSSContent 改用 vault.adapter.read，与写入 API 保持一致，避免缓存不同步
+- **模态框刷新加速** - 移除添加样式后的多层 setTimeout 延迟（500ms+200ms），弹窗即时刷新
+- **删除样式即时刷新** - 删除样式后移除 1 秒延迟，立即重新注入 CSS 并刷新视图
 
 ### v1.4.7 (2026-05-24)
 
-- **系统字体切换** - 字体切换改为直接读取系统已安装字体，无需放入字体文件，告别CSP/OTS兼容问题
+- **系统字体切换** - 字体切换改为直接读取系统已安装字体，无需放入字体文件，告别 CSP/OTS 兼容问题
 - **字体收藏功能** - 字体列表支持星标收藏，收藏字体置顶显示，方便快速切换常用字体
 - **字体搜索** - 字体选择弹窗新增搜索框，快速过滤定位字体
-- **字体列表美化** - 卡片式布局、SVG星标图标、使用中标签、hover交互优化
+- **字体列表美化** - 卡片式布局、SVG 星标图标、使用中标签、hover 交互优化
 
 ### v1.4.6 (2026-05-22)
 
-- **DeepSeek默认配置更新** - 新装插件时DeepSeek默认base_url改为https://api.deepseek.com/chat/completions，模型改为deepseek-v4-flash
+- **DeepSeek 默认配置更新** - 新装插件时 DeepSeek 默认 base_url 改为 https://api.deepseek.com/chat/completions，模型改为 deepseek-v4-flash
 - **样式类名提示** - 编辑悬浮选项窗口的样式类名输入框添加提示"主面板样式按钮长按/右键→复制类名"
 
 ### v1.4.5 (2026-05-22)
@@ -178,13 +470,13 @@
 
 ### v1.4.4 (2026-05-22)
 
-- **悬浮按钮缩放偏移修复** - 修复Alt+滚轮缩放悬浮样式按钮后，点击时按钮会左右移动的bug
-- **关于面板高度修复** - 展开"关于"区域高度从固定300px改为70vh自适应窗口高度
-- **复制类名功能** - 样式按钮右键菜单添加"复制类名"选项，一键复制CSS类名到剪贴板
+- **悬浮按钮缩放偏移修复** - 修复 Alt+ 滚轮缩放悬浮样式按钮后，点击时按钮会左右移动的 bug
+- **关于面板高度修复** - 展开"关于"区域高度从固定 300px 改为 70vh 自适应窗口高度
+- **复制类名功能** - 样式按钮右键菜单添加"复制类名"选项，一键复制 CSS 类名到剪贴板
 
 ### v1.4.3 (2026-05-22)
 
-- **阅读模式跨元素高亮** - 重写高亮匹配逻辑，支持跨DOM元素边界匹配长文本，解决阅读模式下含已有高亮或全局规则修饰的文本无法应用新样式的问题
+- **阅读模式跨元素高亮** - 重写高亮匹配逻辑，支持跨 DOM 元素边界匹配长文本，解决阅读模式下含已有高亮或全局规则修饰的文本无法应用新样式的问题
 - **右键菜单溢出修复** - 悬浮选项按钮和悬浮样式按钮的右键菜单在屏幕右侧/底部时自动调整位置，不再溢出屏幕
 
 ### v1.4.2 (2026-05-21)
@@ -196,39 +488,39 @@
 
 - **悬浮选项右键菜单** - 悬浮选项按钮右键改为弹出菜单（编辑/关闭），不再直接关闭
 - **悬浮选项编辑功能** - 右键"编辑"可修改显示文字和样式类名，样式类名支持伪元素完整渲染
-- **悬浮选项滚轮调整** - Alt+滚轮调整大小，Ctrl+滚轮调整透明度，设置重启后保留
+- **悬浮选项滚轮调整** - Alt+ 滚轮调整大小，Ctrl+ 滚轮调整透明度，设置重启后保留
 - **悬浮样式按钮编辑名称** - 悬浮样式按钮右键菜单添加"编辑名称"选项，可修改显示文字
-- **样式类名渲染优化** - 设置样式类名后移除默认线框，完整注入CSS规则含伪元素，支持复杂样式
+- **样式类名渲染优化** - 设置样式类名后移除默认线框，完整注入 CSS 规则含伪元素，支持复杂样式
 
 ### v1.4.0 (2026-05-21)
 
-- **手机端悬浮球适配** - 增大悬浮球尺寸至36px，调整默认位置，添加位置安全检查确保可见
+- **手机端悬浮球适配** - 增大悬浮球尺寸至 36px，调整默认位置，添加位置安全检查确保可见
 - **手机端悬浮球菜单** - 点击悬浮球弹出选项菜单而非直接高亮，与电脑端行为区分
 - **手机端悬浮按钮拖动** - 悬浮样式按钮和悬浮选项按钮添加触摸事件支持，可拖动调整位置
 - **手机版阅读模式行、边距** - 新增手机版阅读模式行距和左右边距设置，移至"显示"分类下，与桌面版排版设置分开
 - **手机端折叠筛选面板** - 高亮列表筛选区域改为折叠式面板，默认收起，点击展开
 - **手机端列表式高亮显示** - 高亮列表改为卡片式布局，备注折叠进高亮文本中，点击展开
-- **高亮列表性能优化** - 文件读取并行化、内存缓存优先、省去冗余exists调用、全局规则Map索引
-- **加载状态提示** - 高亮列表打开和筛选切换时显示"加载中..."提示，先渲染UI再加载数据
+- **高亮列表性能优化** - 文件读取并行化、内存缓存优先、省去冗余 exists 调用、全局规则 Map 索引
+- **加载状态提示** - 高亮列表打开和筛选切换时显示"加载中..."提示，先渲染 UI 再加载数据
 
 ### v1.3.9 (2026-05-20)
 
-- **手机端兼容** - 封装跨平台文件操作工具类，桌面端用Node.js fs模块（高性能），手机端用Vault Adapter（兼容）
+- **手机端兼容** - 封装跨平台文件操作工具类，桌面端用 Node.js fs 模块（高性能），手机端用 Vault Adapter（兼容）
 - **阅读模式滚动高亮** - 修复滚动后高亮丢失的问题，监听滚动事件自动补刷视口内高亮
-- **延迟处理竞态修复** - 修复PostProcessor延迟分批处理的定时器竞态问题
+- **延迟处理竞态修复** - 修复 PostProcessor 延迟分批处理的定时器竞态问题
 
 ### v1.3.8 (2026-05-14)
 
 - **阅读模式高亮修复** - 修复阅读模式下部分匹配文本不显示样式的问题，递归处理嵌套行内元素中的文本节点
-- **悬浮按钮跟随边框** - 悬浮选项按钮和悬浮样式按钮在屏幕右侧时改用right定位，窗口边框拖动时自动跟随移动
+- **悬浮按钮跟随边框** - 悬浮选项按钮和悬浮样式按钮在屏幕右侧时改用 right 定位，窗口边框拖动时自动跟随移动
 - **禁用规则过滤** - 高亮处理时自动过滤已禁用的规则，避免无效匹配
 
 ### v1.3.7 (2026-05-13)
 
 - **备注支持图片** - 备注弹窗支持上传图片和粘贴剪贴板图片，图片自动保存到附件目录
-- **备注支持表格** - 备注弹窗支持Markdown表格渲染，带边框、表头高亮和斑马纹样式
+- **备注支持表格** - 备注弹窗支持 Markdown 表格渲染，带边框、表头高亮和斑马纹样式
 - **备注弹窗自适应** - 弹窗根据图片实际大小自动调整尺寸，箭头指示位置同步更新
-- **表格和Callout高亮** - 修复高亮规则在表格和Callout中不显示样式的问题
+- **表格和 Callout 高亮** - 修复高亮规则在表格和 Callout 中不显示样式的问题
 
 ### v1.3.6 (2026-05-09)
 
@@ -241,12 +533,12 @@
 - **高亮列表按应用次数模式** - 新增"按应用次数"显示模式，可设置最小次数阈值，自动显示应用次数≥该值的所有样式高亮
 - **窗口调整手柄** - 主面板和实体提取弹窗右下角添加可拖拽调整窗口大小的手柄
 - **跳转功能修复** - 修复高亮列表双击跳转时报错的问题
-- **性能优化** - CSS样式加载改用Node.js fs模块直接读取，提升加载速度
+- **性能优化** - CSS 样式加载改用 Node.js fs 模块直接读取，提升加载速度
 
 ### v1.3.4 (2026-05-06)
 
 - **默认拼音样式优化** - 新安装插件时默认拼音样式更美观（红色字体、方正书宋字体）
-- **AI设置链接修复** - 修复编辑AI配置时"获取API Key"链接始终显示OpenAI地址的问题
+- **AI 设置链接修复** - 修复编辑 AI 配置时"获取 API Key"链接始终显示 OpenAI 地址的问题
 
 ### v1.3.3 (2026-05-03)
 
@@ -268,7 +560,7 @@
 
 - **悬浮显示功能** - 右键样式按钮添加"悬浮显示"选项，创建可拖动的样式悬浮按钮
 - **多悬浮窗口** - 支持同时显示多个悬浮按钮，位置、透明度和大小会在重启后保留
-- **主面板交互优化** - 添加Alt+鼠标滚轮调整主面板宽度，Ctrl+滚轮调整透明度
+- **主面板交互优化** - 添加 Alt+ 鼠标滚轮调整主面板宽度，Ctrl+ 滚轮调整透明度
 - **输入框提示** - 鼠标悬浮在透明度/宽度输入框上时显示操作提示
 
 ### v1.2.9.9 (2026-04-21)
@@ -282,296 +574,5 @@
 - **悬浮显示功能** - 右键样式按钮添加"悬浮显示"选项，创建可拖动的样式悬浮按钮
 - **多悬浮窗口** - 支持同时显示多个悬浮按钮，每次点击"悬浮显示"会创建新的窗口
 - **位置记忆** - 悬浮按钮位置、透明度和大小会在重启插件后保留
-- **交互功能** - 按住拖动位置，左键点击应用样式到选中文本，Ctrl+滚轮调整透明度，Alt+滚轮调整大小
+- **交互功能** - 按住拖动位置，左键点击应用样式到选中文本，Ctrl+ 滚轮调整透明度，Alt+ 滚轮调整大小
 - **右键菜单** - 悬浮按钮右键菜单添加"关闭悬浮显示"选项
-
----
-
-## English Version
-
-[↑ 回到中文](#regex-css-highlighter) | English
-
-# Regex CSS Highlighter
-
-An Obsidian plugin that matches text via regular expressions and applies custom CSS styles for highlighting.
-
-## Features
-
-### 🎨 Style Highlighting
-
-- **Regex Matching + CSS Styles** — Match text using regular expressions and apply custom CSS styles to matched content
-- **Style Category Management** — Styles organized by groups, with support for adding, editing, and deleting
-- **Instant Style Application** — Styles take effect immediately after adding/editing/deleting, no restart required
-- **Floating Style Buttons** — Right-click a style button to create a draggable floating button with adjustable size and opacity
-- **Style Button Context Menu** — Copy class name, copy full style, float display, and other quick actions
-
-### 📝 Rule Management
-
-- **Current File / Global Rules** — Support for both file-level and global rule scopes
-- **Rule Source Markers** — Hover over matched text to see rule source (g=global/l=local), click to jump to the rule
-- **Highlight List** — View all matched highlight rules in the current file, with per-column search and filtering
-- **Clipboard Merge** — Merge clipboard content with selected text to add as a highlight rule
-
-### 🔮 Floating Ball
-
-- **Quick Access** — Floating ball provides quick style application: left-click for current file rules, middle-click for global rules
-- **Group Submenu** — Hover over a group option to expand a submenu showing all styles in that group
-- **Floating Option Buttons** — Menu options can be pinned as independent floating buttons for instant access
-- **Show/Hide Text Styles** — One-click toggle to show or hide all text style highlights
-
-### 🌐 Internationalization
-
-- **CN/EN Language Switch** — Language toggle button at the top-left of the main panel, full i18n support
-- **Bilingual Translation** — All UI text including settings, floating ball options, and group style buttons support both Chinese and English
-
-### 📱 Mobile Adaptation
-
-- **Touch Dragging** — Floating ball and floating buttons support touch dragging to adjust position
-- **Independent Layout Settings** — Mobile reading mode line height and margins are independent from desktop settings
-- **Panel Opacity** — Mobile main panel and button panel support opacity adjustment
-- **Collapsible Filters** — Highlight list filter area defaults to collapsed to save screen space
-
-### ✏️ Typography & Fonts
-
-- **System Font Switching** — Directly read system-installed fonts, no need to place font files
-- **Font Favorites** — Star favorite fonts, favorited fonts displayed at the top
-- **Line Height & Margins** — Support for line height, left margin, and right margin settings, effective in both edit and reading modes
-- **Scroll Wheel Fine-tuning** — Numeric input fields support mouse scroll wheel for quick adjustments
-
-### 📌 Notes
-
-- **Text Notes** — Add notes to highlighted text with Markdown rendering support
-- **Image Support** — Note popup supports uploading images and pasting clipboard images
-- **Table Rendering** — Notes support Markdown tables with borders and zebra stripe styling
-
-### 🤖 AI Integration
-
-- **Multiple AI Configs** — Support configuring multiple AI services (OpenAI, DeepSeek, etc.) with custom API URLs and models
-- **AI Entity Extraction** — Use AI to automatically identify entities in text and batch-add highlight rules
-
-### ⌨️ Keyboard Shortcuts
-
-| Shortcut | Function |
-|----------|----------|
-| `Ctrl+Alt+R` | Open main window |
-| `Ctrl+Alt+H` | Random highlight selected text |
-| `Ctrl+Alt+M` | Merge clipboard with selected text into highlight rule |
-| `Ctrl+Alt+D` | Remove highlight style from selected text |
-| `Alt+Scroll` | Adjust floating button / main panel size |
-| `Ctrl+Scroll` | Adjust floating button / main panel opacity |
-
-## Installation
-
-1. Download `main.js` and `manifest.json`
-2. Create a `Regex-Css-Highlighter` folder in your Obsidian vault's `.obsidian/plugins/` directory
-3. Place the downloaded files into that folder
-4. Enable "Regex Css Highlighter" in Obsidian Settings → Community Plugins
-
-## Changelog
-
-### 🆕 v1.5.8 (2026-06-01)
-
-- **Remove "About" section** - Removed the "About" section from the main panel bottom, version changelog unified to readme.md
-- **Clean up donate code** - Removed showDonateImage class method and standalone function, setupDonateText function, donate button CSS styles and related translation keys
-- **Clean up unused translation keys** - Removed main.tab.about, settings.about, settings.updateHistory, settings.viewUpdates and other unused translation keys
-- **Clean up DONATE_QR_CODE constant** - Removed base64-encoded donation QR code image constant
-
-### v1.5.7 (2026-05-31)
-
-- **Internationalization support** - Added CN/EN language toggle button to the main panel, supporting Chinese/English UI switching
-- **Full i18n** - Settings titles, floating ball options, group style buttons and all UI text internationalized
-- **Manage floating ball options: add "Hide/Show text styles"** - Can control whether this option appears in the floating ball menu
-- **Fix middle-click in group submenu triggering auto-scroll** - Middle-click to add global rule no longer enters auto-scroll state
-- **Highlight list style name column** - Added style name column to highlight list, displayed on separate line when display text exists, with show/hide toggle
-- **Highlight list header search** - Added search box to each column header, placeholder shows header text, supports real-time per-column search filtering
-- **Remove "Add to Highlight" feature** - Removed style button right-click "Add to Highlight" option and highlight list filter's show style name, by style name
-- **Min count always visible** - Removed mode dropdown, min count input always visible, Chinese label changed to "样式最少被应用[X]次"
-
-### v1.5.6 (2026-05-31)
-
-- **Floating submenu right-click options** - Added "Edit display text", "Copy class name", "Copy full style" to floating button submenu style right-click
-- **Submenu right-click UX fix** - Fixed submenu hiding when mouse moves to right-click option
-- **Middle-click add global rule** - Middle-click floating group submenu style to add selected text as global rule
-- **Rule source markers (g/l)** - Hover over matched rule text to show global/local marker "g/l", click to jump to the rule, with character threshold setting
-- **Edit mode marker fix** - Fixed "g/l" markers being added as text content in edit mode
-- **Floating submenu class name tooltip** - Hover over floating group submenu style item to show class name tooltip
-- **Show/Hide text styles** - Added "Show text styles"/"Hide text styles" option to floating ball hover menu, hiding disables all matched rule styles in text
-
-### v1.5.5 (2026-05-29)
-
-- **Preserve position data on hide** - Save position data when hiding floating style button, auto-restore on next show
-- **Main panel float display button** - Main panel style button hover shows 📌 button, click to float display that style
-
-### v1.5.4 (2026-05-28)
-
-- **Clean up non-existent styles** - Added "Clean up non-existent styles in category file" under Display settings, scan and one-click remove styles in style-categories.json but not in styles.css
-- **Group submenu scrollbar** - Added scrollbar to floating ball menu and floating option button group style submenus, no longer exceeds app interface with many styles
-- **Settings title light blue background** - Added light blue background to main panel settings headers, full-width, clearer hierarchy
-
-### v1.5.3 (2026-05-27)
-
-- **Mobile reading mode line height** - Added line height setting to mobile Display settings, merged with margins as "Mobile reading mode line height & margins"
-- **Mobile panel opacity** - Added main panel and button panel opacity settings to mobile Display settings
-- **Mobile layout settings separation** - Mobile no longer applies desktop line height and margin settings, controlled by independent mobile settings
-- **Mobile auto-expand fix** - Fixed bug where first style was mistakenly applied to text when group expanded in mobile auto-expand mode
-- **Heading settings category** - Moved "Heading level labels" and "Disable heading styles" to new "Heading" settings category
-- **Count info fix** - Fixed "Style categories" and "Count files" not displaying on the same line, removed link styles
-- **Floating ball menu opacity** - Floating ball menu supports Ctrl+scroll to adjust opacity, persisted after restart
-- **Context menu improvements** - Right-clicking another style auto-closes previous menu; normal mode right-click menu adds "Move to group" option
-
-### v1.5.2 (2026-05-26)
-
-- **Settings outline restructure** - Changed settings area from flat dividers to outline-style indented folding, clearer hierarchy
-- **Show recent rules when collapsed** - New setting option to control whether recently added rules are shown when main panel opens with no text selected and highlight rules collapsed
-- **Mobile hide font switch** - Mobile hides font switch function area in settings
-- **Mobile hide open file link** - Mobile hides "Open data.json" link next to Settings title
-
-### v1.5.1 (2026-05-25)
-
-- **Typography settings** - Added line height, left margin, right margin settings in "Switch body font" popup, effective in both edit and reading modes
-- **Scroll wheel adjust values** - Line height and margin input fields support mouse scroll wheel for quick value adjustment
-- **Edit mode margin fix** - Fixed left/right margins not working in edit mode
-
-### v1.5.0 (2026-05-25)
-
-- **Disable heading styles** - Added "Disable heading styles" toggle in settings, when disabled custom heading styles are not applied but heading level labels are preserved; "Heading styles" area hidden in main panel when disabled
-- **Level labels compatible with gradient text** - Fixed level labels invisible when using gradient text CSS snippet, reset inherited transparent text and background-clip properties in pseudo-elements
-- **Remove usage instructions** - Removed "Usage" related content from main panel, simplified interface
-
-### v1.4.9 (2026-05-25)
-
-- **Instant style application** - Fixed styles requiring Obsidian restart after add/edit/delete, styles now take effect immediately
-- **Style refresh optimization** - Removed destructive forceStyleRefresh calls, avoid newly injected CSS being cleared; directly update dynamic style elements after writing CSS file
-- **CSS read/write consistency fix** - injectCSSContent now uses vault.adapter.read, consistent with write API, avoiding cache desync
-- **Modal refresh acceleration** - Removed multi-layer setTimeout delays after adding styles (500ms+200ms), instant modal refresh
-- **Delete style instant refresh** - Removed 1-second delay after deleting style, immediately re-inject CSS and refresh view
-
-### v1.4.7 (2026-05-24)
-
-- **System font switching** - Font switching now directly reads system-installed fonts, no need to place font files, goodbye CSP/OTS compatibility issues
-- **Font favorites** - Font list supports star favorites, favorited fonts displayed at top for quick switching
-- **Font search** - Added search box to font selection popup for quick filtering
-- **Font list beautification** - Card layout, SVG star icons, in-use labels, hover interaction optimization
-
-### v1.4.6 (2026-05-22)
-
-- **DeepSeek default config update** - New install DeepSeek default base_url changed to https://api.deepseek.com/chat/completions, model changed to deepseek-v4-flash
-- **Style class name tooltip** - Added tooltip to style class name input in edit floating option window
-
-### v1.4.5 (2026-05-22)
-
-- **Floating ball remove highlight** - Added "Remove highlight" to floating ball options, click after selecting highlighted text to remove corresponding rule
-- **Rule right-click menu enhancement** - Current file and global rule buttons right-click add "Delete rule" and "Move to global/current file rule" options
-- **Reading mode selected text fix** - Fixed unable to get selected text after opening main panel in reading mode, save selection before modal opens
-- **Floating option arrow fix** - Fixed two arrows appearing after editing style, arrow moved inside style to save space
-- **Mobile main panel optimization** - Mobile hides opacity/width controls and post-title messages/links, regex label on separate line
-- **Remove add note button** - Removed "Add note" button from main panel, note function still available via right-click menu and floating ball
-
-### v1.4.4 (2026-05-22)
-
-- **Floating button scale offset fix** - Fixed floating style button shifting left/right when clicked after Alt+scroll scaling
-- **About panel height fix** - Changed "About" section height from fixed 300px to 70vh adaptive window height
-- **Copy class name** - Added "Copy class name" option to style button right-click menu
-
-### v1.4.3 (2026-05-22)
-
-- **Reading mode cross-element highlighting** - Rewrote highlight matching logic, supports matching long text across DOM element boundaries
-- **Right-click menu overflow fix** - Floating option and style button right-click menus auto-adjust position when near screen edges
-
-### v1.4.2 (2026-05-21)
-
-- **Mobile floating style button drag** - Fixed restored floating style buttons unable to be dragged on mobile
-- **Touch drag anti-mistouch** - Floating style buttons no longer mistakenly trigger style application after touch dragging
-
-### v1.4.1 (2026-05-21)
-
-- **Floating option right-click menu** - Changed floating option button right-click to popup menu (edit/close) instead of direct close
-- **Floating option edit** - Right-click "Edit" to modify display text and style class name, style class name supports pseudo-element full rendering
-- **Floating option scroll adjust** - Alt+scroll for size, Ctrl+scroll for opacity, persisted after restart
-- **Floating style button edit name** - Added "Edit name" option to floating style button right-click menu
-- **Style class name rendering optimization** - Removed default wireframe after setting class name, fully inject CSS rules including pseudo-elements
-
-### v1.4.0 (2026-05-21)
-
-- **Mobile floating ball adaptation** - Increased floating ball size to 36px, adjusted default position, added position safety check
-- **Mobile floating ball menu** - Click floating ball to show options menu instead of direct highlight, differentiated from desktop behavior
-- **Mobile floating button drag** - Added touch event support to floating style and option buttons for drag position adjustment
-- **Mobile reading mode line height & margins** - Added mobile reading mode line height and margin settings under "Display" category
-- **Mobile collapsible filter panel** - Highlight list filter area changed to collapsible panel, default collapsed
-- **Mobile card-style highlight display** - Highlight list changed to card layout, notes collapsed into highlight text
-- **Highlight list performance optimization** - Parallel file reads, memory cache priority, eliminate redundant exists calls, global rule Map index
-- **Loading state indicator** - Show "Loading..." prompt when opening highlight list and switching filters
-
-### v1.3.9 (2026-05-20)
-
-- **Mobile compatibility** - Encapsulated cross-platform file operation utility, desktop uses Node.js fs module, mobile uses Vault Adapter
-- **Reading mode scroll highlighting** - Fixed highlights lost after scrolling, listen to scroll events to auto-refresh viewport highlights
-- **Delayed processing race condition fix** - Fixed timer race condition in PostProcessor delayed batch processing
-
-### v1.3.8 (2026-05-14)
-
-- **Reading mode highlight fix** - Fixed some matched text not showing styles in reading mode, recursively process text nodes in nested inline elements
-- **Floating button follow window border** - Floating option and style buttons use right positioning when on screen right side, auto-follow window border drag
-- **Disabled rule filtering** - Automatically filter disabled rules during highlight processing
-
-### v1.3.7 (2026-05-13)
-
-- **Notes image support** - Note popup supports uploading images and pasting clipboard images, auto-save to attachments directory
-- **Notes table support** - Note popup supports Markdown table rendering with borders, header highlighting, and zebra stripe styling
-- **Note popup auto-sizing** - Popup auto-adjusts size based on actual image dimensions, arrow position syncs
-- **Table and Callout highlighting** - Fixed highlight rules not showing styles in tables and Callouts
-
-### v1.3.6 (2026-05-09)
-
-- **Floating button boundary constraints** - Floating ball, option buttons, and style buttons auto-retract when window shrinks, drag constrained to viewport
-- **Secondary submenu overflow fix** - Floating option secondary submenu auto-flips direction at right edge
-- **Window resize content reflow** - Internal buttons instantly reflow when dragging resize handle
-
-### v1.3.5 (2026-05-08)
-
-- **Highlight list by application count mode** - Added "By application count" display mode with minimum count threshold
-- **Window resize handle** - Added draggable resize handle to main panel and entity extraction popup bottom-right corner
-- **Jump function fix** - Fixed error when double-clicking to jump in highlight list
-- **Performance optimization** - CSS style loading uses Node.js fs module for direct reading
-
-### v1.3.4 (2026-05-06)
-
-- **Default pinyin style optimization** - More aesthetic default pinyin style for new installations
-- **AI settings link fix** - Fixed "Get API Key" link always showing OpenAI address when editing AI config
-
-### v1.3.3 (2026-05-03)
-
-- **Floating ball middle-click** - Middle-click floating ball to randomly apply style to global rules (left-click for current file rules)
-
-### v1.3.2 (2026-05-01)
-
-- **Floating button pseudo-element fix** - Fixed pseudo-element styles not showing on floating buttons after restart
-
-### v1.3.1 (2026-04-28)
-
-- **Floating option feature** - All floating ball menu options have "Float display" button to create floating buttons
-- **Ruby floating button** - Ruby option supports floating display with hover submenu
-- **Group floating button** - Group option supports floating display with hover submenu showing all group styles
-- **Quick style float** - Each style button in submenu has 📌 button for individual floating display
-- **Settings separation** - Group menu display and floating display use independent settings
-
-### v1.3.0.0 (2026-04-21)
-
-- **Floating display feature** - Right-click style button to add "Float display" option, creating draggable floating style buttons
-- **Multiple floating windows** - Support simultaneous display of multiple floating buttons, position/opacity/size persisted after restart
-- **Main panel interaction optimization** - Alt+scroll to adjust main panel width, Ctrl+scroll for opacity
-- **Input field tooltips** - Hover over opacity/width input fields to show operation tips
-
-### v1.2.9.9 (2026-04-21)
-
-- **Floating button interaction optimization** - Fixed mistouch highlighting during drag, added movement threshold
-- **Cursor display optimization** - Floating buttons show pointer cursor by default, grab cursor during drag
-- **Drag logic fix** - Fixed button always following mouse, only respond to drag when mouse pressed
-
-### v1.2.9.8 (2026-04-21)
-
-- **Floating display feature** - Right-click style button to add "Float display" option, creating draggable floating style buttons
-- **Multiple floating windows** - Support multiple floating buttons, each click creates a new window
-- **Position memory** - Floating button position, opacity, and size persisted after plugin restart
-- **Interaction** - Hold to drag position, left-click to apply style to selected text, Ctrl+scroll for opacity, Alt+scroll for size
-- **Right-click menu** - Added "Close floating display" option to floating button right-click menu

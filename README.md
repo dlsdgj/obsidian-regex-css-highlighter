@@ -3,7 +3,7 @@
 ---
 
 # Regex CSS Highlighter
-
+---
 An Obsidian plugin that matches text via regular expressions and applies custom CSS styles for highlighting.
 
 ![Basic Usage](./basic-usage.gif)
@@ -125,7 +125,7 @@ See [CHANGELOG.md](./CHANGELOG.md) for all version history.
 ---
 
 # Regex CSS Highlighter 中文
-
+---
 一个 Obsidian 插件，通过正则表达式匹配文本并应用自定义 CSS 样式高亮显示。
 
 ![基础用法](./basic-usage.gif)

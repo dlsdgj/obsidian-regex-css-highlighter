@@ -1,6 +1,6 @@
 
 [中文](#Regex CSS Highlighter_zh) | English
-
+(#english-version)
 # Regex CSS Highlighter
 
 An Obsidian plugin that matches text via regular expressions and applies custom CSS styles for highlighting.

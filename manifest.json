@@ -3,7 +3,7 @@
   "name": "Regex Css Highlighter",
   "version": "1.5.9",
   "minAppVersion": "0.15.0",
-  "description": "Regex matching + CSS highlighting with real-time preview and instant effects",
+  "description": "Regex matching + CSS highlighting with real-time preview and instant effects.",
   "author": "nilmarko",
   "authorUrl": "",
   "isDesktopOnly": false

@@ -1,5 +1,3 @@
-[English](#english-version) | 中文
-
 [中文](#ch-ver) | English
 
 # Regex CSS Highlighter

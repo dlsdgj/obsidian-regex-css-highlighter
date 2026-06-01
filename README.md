@@ -18,7 +18,7 @@ An Obsidian plugin that matches text via regular expressions and applies custom 
 
 ### 📝 Rule Management
 
-![Rule Switching](./rule-switching.gif)
+![RuleSwitching](./rule-switching.gif)
 
 - **Current File / Global Rules** — Support for both file-level and global rule scopes
 - **Rule Source Markers** — Hover over matched text to see rule source (g=global/l=local), click to jump to the rule
@@ -26,6 +26,8 @@ An Obsidian plugin that matches text via regular expressions and applies custom 
 - **Clipboard Merge** — Merge clipboard content with selected text to add as a highlight rule
 
 ### 🔮 Floating Ball
+
+![Floating Groups and Styles](./assets/悬浮显示分组和样式.gif)
 
 - **Quick Access** — Floating ball provides quick style application: left-click for current file rules, middle-click for global rules
 - **Group Submenu** — Hover over a group option to expand a submenu showing all styles in that group
@@ -111,6 +113,8 @@ See [CHANGELOG.md](./CHANGELOG.md) for all version history.
 - **合并剪贴板** — 将剪贴板内容与选中文本合并添加为高亮规则
 
 ### 🔮 悬浮球
+
+![悬浮显示分组和样式](./assets/悬浮显示分组和样式.gif)
 
 - **快速访问** — 悬浮球提供样式快速应用入口，左键应用当前文件规则，中键应用全局规则
 - **分组子菜单** — 悬停分组选项展开子菜单，显示该分组所有样式

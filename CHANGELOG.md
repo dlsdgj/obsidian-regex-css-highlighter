@@ -2,7 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.5.8 (2026-06-01)
+## 🆕 v1.5.9 (2026-06-01)
+
+- **Default Language Changed to English** - New installations now default to English; Chinese users can switch via CN/EN button
+- **Floating Ball Options Simplified** - Format Replace, Ruby, AI Reply, Entity Extract, Font Switch, Mode Switch, Hide Floating Buttons, Show/Hide Text Styles are unchecked by default for new installations
+- **Heading Styles Disabled by Default** - New installations have heading styles disabled to reduce visual clutter
+- **Floating Ball Menu Position Fix** - Menu now appears on the left side when floating ball is on the right half of the screen, avoiding overlap
+- **English Menu Text Wrapping Fix** - Increased menu width and added nowrap to prevent English option text from wrapping to two lines
+- **Plugin Market Support** - Added versions.json for Obsidian plugin market compatibility; install directly by searching "Regex Css Highlighter"
+- **README Updated** - Added demo GIFs, plugin market install instructions, removed keyboard shortcuts section, manual install moved to collapsible section
+- **Changelog Migrated to CHANGELOG.md** - Version history moved from README.md to standalone CHANGELOG.md file
+
+## v1.5.8 (2026-06-01)
 
 - **Removed "About" Section** - Removed "About" section from bottom of main panel; version changelog migrated to CHANGELOG.md
 - **Cleaned Up Donation Code** - Removed showDonateImage class methods and standalone functions, setupDonateText function, donation button CSS styles, and related translation keys

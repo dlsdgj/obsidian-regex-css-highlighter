@@ -1,4 +1,4 @@
-﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover } = require("obsidian");
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover } = require("obsidian");
 
 // 直接将CSS规则追加到动态样式元素，确保新样式立即生效（无需重新读取文件）
 function appendCSSToDynamicStyle(cssRule) {
@@ -19777,10 +19777,10 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     }
 
     if (this.settings.language === undefined) {
-      this.settings.language = 'zh';
+      this.settings.language = 'en';
       await this.saveData(this.settings);
     }
-    _currentLang = this.settings.language || 'zh';
+    _currentLang = this.settings.language || 'en';
 
     if (this.settings.showStyleUsageCount === undefined) {
       this.settings.showStyleUsageCount = true;
@@ -19798,7 +19798,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     }
 
     if (this.settings.disableHeadingStyle === undefined) {
-      this.settings.disableHeadingStyle = false;
+      this.settings.disableHeadingStyle = true;
       await this.saveData(this.settings);
     }
 
@@ -19898,16 +19898,17 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     if (this.floatButtonData.floatingBallVisibleOptions === undefined) {
       this.floatButtonData.floatingBallVisibleOptions = {
         openMainPanel: true,
-        formatReplace: true,
+        formatReplace: false,
         addRemark: true,
         removeHighlight: true,
-        pinyin: true,
-        aiAssistant: true,
-        extractEntities: true,
+        pinyin: false,
+        aiAssistant: false,
+        extractEntities: false,
         styleShowcase: true,
-        fontSwitch: true,
-        switchMode: true,
-        hideFloatingBtns: true
+        fontSwitch: false,
+        switchMode: false,
+        hideFloatingBtns: false,
+        hideTextStyles: false
       };
     }
     if (this.floatButtonData.hiddenFloatingStyleWindows === undefined) {
@@ -21211,14 +21212,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         this.saveFloatButtonData();
       } else if (!touchMoved) {
         // 轻触：显示菜单（手机端无hover，用点击替代）
-        touchHandled = true; // 阻止后续 click 事件触发随机高亮
+        touchHandled = true;
         const rect = floatingBall.getBoundingClientRect();
         if (hoverMenu && document.body.contains(hoverMenu)) {
           document.body.removeChild(hoverMenu);
           hoverMenu = null;
         } else {
           cancelClose();
-          createHoverMenu(rect.right + 5, rect.top);
+          const menuX = rect.left > window.innerWidth / 2 ? rect.left - 185 : rect.right + 5;
+          createHoverMenu(menuX, rect.top);
         }
       }
       
@@ -21260,7 +21262,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         z-index: 10000;
         padding: 4px 0;
-        min-width: 120px;
+        min-width: 180px;
+        white-space: nowrap;
       `;
       
       menu.style.left = `${x}px`;
@@ -21305,11 +21308,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           cursor: pointer;
           font-size: 14px;
           color: var(--text-normal);
+          white-space: nowrap;
         `;
         
         const textSpan = document.createElement('span');
         textSpan.textContent = label;
-        textSpan.style.flex = '1';
+        textSpan.style.cssText = 'flex: 1; white-space: nowrap;';
         
         const isFloating = this.floatButtonData.floatingBallOptions && this.floatButtonData.floatingBallOptions.includes(optionId);
         const pinBtn = document.createElement('span');
@@ -21618,7 +21622,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         border-radius: 6px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         display: none;
-        min-width: 120px;
+        min-width: 150px;
         white-space: nowrap;
         z-index: 10000;
       `;
@@ -22472,14 +22476,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       document.body.appendChild(menu);
       hoverMenu = menu;
       
-      // 调整菜单位置，确保不超出屏幕
+      // 调整菜单位置，确保不超出屏幕且不覆盖悬浮球
       const menuRect = menu.getBoundingClientRect();
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
+      const ballRect = floatingBall.getBoundingClientRect();
       
-      // 如果菜单超出右侧边界，显示在悬浮球左侧
-      if (menuRect.right > windowWidth - 10) {
-        const ballRect = floatingBall.getBoundingClientRect();
+      // 如果菜单超出右侧边界，或悬浮球在屏幕右半部分，显示在悬浮球左侧
+      if (menuRect.right > windowWidth - 10 || ballRect.left > windowWidth / 2) {
         menu.style.left = `${ballRect.left - menuRect.width - 5}px`;
       }
       
@@ -22487,6 +22491,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (menuRect.bottom > windowHeight - 10) {
         const newTop = windowHeight - menuRect.height - 10;
         menu.style.top = `${Math.max(10, newTop)}px`;
+      }
+      
+      // 如果菜单超出左侧边界，调整到悬浮球右侧
+      if (menu.getBoundingClientRect().left < 5) {
+        menu.style.left = `${ballRect.right + 5}px`;
       }
 
       return menu;
@@ -22501,7 +22510,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         hoverTimeout = setTimeout(() => {
           const rect = floatingBall.getBoundingClientRect();
-          createHoverMenu(rect.right + 5, rect.top);
+          const menuX = rect.left > window.innerWidth / 2 ? rect.left - 185 : rect.right + 5;
+          createHoverMenu(menuX, rect.top);
         }, 100);
       }
     });

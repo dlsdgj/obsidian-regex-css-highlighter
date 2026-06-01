@@ -4,6 +4,8 @@
 
 An Obsidian plugin that matches text via regular expressions and applies custom CSS styles for highlighting.
 
+![Basic Usage](./basic-usage.gif)
+
 ## Features
 
 ### 🎨 Style Highlighting
@@ -15,6 +17,8 @@ An Obsidian plugin that matches text via regular expressions and applies custom 
 - **Style Button Context Menu** — Copy class name, copy full style, float display, and other quick actions
 
 ### 📝 Rule Management
+
+![Rule Switching](./rule-switching.gif)
 
 - **Current File / Global Rules** — Support for both file-level and global rule scopes
 - **Rule Source Markers** — Hover over matched text to see rule source (g=global/l=local), click to jump to the rule
@@ -58,23 +62,19 @@ An Obsidian plugin that matches text via regular expressions and applies custom 
 - **Multiple AI Configs** — Support for multiple AI services (OpenAI, DeepSeek, etc.) with custom API endpoints and models
 - **AI Entity Extraction** — Automatically identify entities in text using AI and batch add highlight rules
 
-### ⌨️ Keyboard Shortcuts
-
-| Shortcut | Function |
-|----------|----------|
-| `Ctrl+Alt+R` | Open main window |
-| `Ctrl+Alt+H` | Randomly highlight selected text |
-| `Ctrl+Alt+M` | Merge clipboard and selected text to highlight rules |
-| `Ctrl+Alt+D` | Remove highlight styles from selected text |
-| `Alt+Scroll` | Adjust floating button/main panel size |
-| `Ctrl+Scroll` | Adjust floating button/main panel opacity |
-
 ## Installation
+
+Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins → Browse to install directly.
+
+<details>
+<summary>Manual Installation</summary>
 
 1. Download `main.js` and `manifest.json`
 2. Create a `Regex-Css-Highlighter` folder in your Obsidian vault's `.obsidian/plugins/` directory
 3. Place the downloaded files in that folder
 4. Enable "Regex Css Highlighter" in Obsidian Settings → Community Plugins
+
+</details>
 
 ## Changelog
 
@@ -89,6 +89,8 @@ See [CHANGELOG.md](./CHANGELOG.md) for all version history.
 
 一个 Obsidian 插件，通过正则表达式匹配文本并应用自定义 CSS 样式高亮显示。
 
+![基础用法](./basic-usage.gif)
+
 ## 功能特性
 
 ### 🎨 样式高亮
@@ -100,6 +102,8 @@ See [CHANGELOG.md](./CHANGELOG.md) for all version history.
 - **样式按钮右键菜单** — 复制类名、复制完整样式、悬浮显示等快捷操作
 
 ### 📝 规则管理
+
+![局部与全局规则切换](./rule-switching.gif)
 
 - **当前文件规则 / 全局规则** — 支持文件级和全局级两种规则范围
 - **规则来源标记** — 鼠标悬停匹配文本时显示规则来源（g=全局/l=局部），点击可跳转
@@ -143,23 +147,19 @@ See [CHANGELOG.md](./CHANGELOG.md) for all version history.
 - **多 AI 配置** — 支持配置多个 AI 服务（OpenAI、DeepSeek 等），自定义 API 地址和模型
 - **AI 实体提取** — 使用 AI 自动识别文本中的实体并批量添加高亮规则
 
-### ⌨️ 快捷键
-
-| 快捷键 | 功能 |
-|--------|------|
-| `Ctrl+Alt+R` | 打开主窗口 |
-| `Ctrl+Alt+H` | 随机高亮选中文本 |
-| `Ctrl+Alt+M` | 合并剪贴板与选中文本到高亮规则 |
-| `Ctrl+Alt+D` | 移除选中文本的高亮样式 |
-| `Alt+滚轮` | 调整悬浮按钮/主面板大小 |
-| `Ctrl+滚轮` | 调整悬浮按钮/主面板透明度 |
-
 ## 安装
+
+在 Obsidian 设置 → 社区插件 → 浏览 中搜索 "Regex Css Highlighter" 直接安装。
+
+<details>
+<summary>手动安装</summary>
 
 1. 下载 `main.js`、`manifest.json`
 2. 在 Obsidian 库的 `.obsidian/plugins/` 目录下创建 `Regex-Css-Highlighter` 文件夹
 3. 将下载的文件放入该文件夹
 4. 在 Obsidian 设置 → 社区插件中启用 "Regex Css Highlighter"
+
+</details>
 
 ## 更新日志
 

@@ -34,10 +34,6 @@ An Obsidian plugin that matches text via regular expressions and applies custom 
 - **Floating Option Buttons** — Menu options can be pinned as independent floating buttons for instant access
 - **Show/Hide Text Styles** — One-click toggle to show or hide all text style highlights
 
-### 🌐 Internationalization
-
-- **Chinese/English Switch** — CN/EN toggle button in top-left corner of main panel, full i18n support
-- **Bilingual Translation** — All UI text including settings, floating ball options, and group style buttons
 
 ### 📱 Mobile Adaptation
 
@@ -120,10 +116,7 @@ See [CHANGELOG.md](./CHANGELOG.md) for all version history.
 - **悬浮选项按钮** — 菜单选项可创建独立的悬浮按钮，随时可用
 - **显示/隐藏文本样式** — 一键切换所有文本样式的显示与隐藏
 
-### 🌐 国际化
 
-- **中英文切换** — 主面板左上角 CN/EN 切换按钮，界面文本全面国际化
-- **双语翻译** — 设置项、悬浮球选项、分组样式按钮等所有界面文本均支持中英文
 
 ### 📱 移动端适配
 

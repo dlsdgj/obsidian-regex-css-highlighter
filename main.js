@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover } = require("obsidian");
+﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover } = require("obsidian");
 
 // 直接将CSS规则追加到动态样式元素，确保新样式立即生效（无需重新读取文件）
 function appendCSSToDynamicStyle(cssRule) {
@@ -475,6 +475,7 @@ const i18n = {
     'settings.debugLog': '调试耗时日志',
     'settings.disableHeadingStyle': '禁用标题样式',
     'settings.showRecentRules': '折叠时显示最近规则',
+    'settings.hideOpenFileLink': '不显示标题后面的打开文件链接',
     'settings.styleUsageCount': '样式使用次数角标',
     'settings.hideAllStyles': '隐藏所有文本样式',
     'settings.defaultHideEnabled': '已开启默认隐藏功能，下次打开模态框时所有分组将呈隐藏状态',
@@ -748,13 +749,17 @@ const i18n = {
     'showcase.charUnit': '字',
     'showcase.noData': '暂无数据。请先在主面板样式按钮右键菜单中选择"加入展示"添加样式。',
     'settings.previewFontSize': '预览字体大小',
-    'settings.remarkKeepOpen': '确认后不自动关闭',
+    'settings.remarkKeepOpen': '鼠标离开不自动关闭',
     'settings.remarkPopupFontSize': '备注弹窗字体大小',
     'settings.remarkPopupPadding': '备注弹窗内边距',
     'settings.remarkLineSpacing': '备注弹窗行间距',
     'settings.times': '倍',
     'settings.remarkPopupBorderColor': '备注弹窗边框颜色',
     'settings.remarkPopupOnlyOnSelection': '仅在选中文本时弹出',
+    'settings.showRemarkBadge': '在高亮文字右上角显示备注提示符',
+    'settings.showRemarkBadgeHint': '悬停高亮文本时显示n(备注)标记',
+    'settings.remarkBadgeThreshold': '字数阈值',
+    'settings.remarkBadgeThresholdHint': '匹配文本字数大于此值时显示标记(0=始终显示)',
     'settings.enableFontSwitch': '启用字体切换功能',
     'settings.test': '测试',
     'settings.testingApi': '测试中...',
@@ -1391,6 +1396,7 @@ const i18n = {
     'settings.debugLog': 'Debug Timing Log',
     'settings.disableHeadingStyle': 'Disable Heading Styles',
     'settings.showRecentRules': 'Show Recent Rules when Collapsed',
+    'settings.hideOpenFileLink': 'Hide Open File Link After Title',
     'settings.styleUsageCount': 'Style Usage Count Badge',
     'settings.hideAllStyles': 'Hide All Text Styles',
     'settings.defaultHideEnabled': 'Default hide enabled, all groups will be hidden next time',
@@ -1664,13 +1670,17 @@ const i18n = {
     'showcase.charUnit': 'chars',
     'showcase.noData': 'No data. Please right-click style button in main panel and select "Add to Showcase".',
     'settings.previewFontSize': 'Preview Font Size',
-    'settings.remarkKeepOpen': 'Keep Open After Confirm',
+    'settings.remarkKeepOpen': 'Keep Open When Mouse Leaves',
     'settings.remarkPopupFontSize': 'Remark Popup Font Size',
     'settings.remarkPopupPadding': 'Remark Popup Padding',
     'settings.remarkLineSpacing': 'Remark Popup Line Spacing',
     'settings.times': 'x',
     'settings.remarkPopupBorderColor': 'Remark Popup Border Color',
     'settings.remarkPopupOnlyOnSelection': 'Only Popup on Selected Text',
+    'settings.showRemarkBadge': 'Show remark indicator at top-right of highlighted text',
+    'settings.showRemarkBadgeHint': 'Show n(remark) badge when hovering highlighted text',
+    'settings.remarkBadgeThreshold': 'Character Threshold',
+    'settings.remarkBadgeThresholdHint': 'Show badge when matched text length exceeds this value (0=always show)',
     'settings.enableFontSwitch': 'Enable Font Switch',
     'settings.test': 'Test',
     'settings.testingApi': 'Testing...',
@@ -2027,6 +2037,17 @@ const i18n = {
   }
 };
 
+function sortRegexByLength(regex) {
+  if (!regex.includes('|')) return regex;
+  const parts = regex.split('|');
+  if (parts.length <= 1) return regex;
+  if (parts.some((p, i) => i > 0 && p.length > parts[i - 1].length)) {
+    parts.sort((a, b) => b.length - a.length);
+    return parts.join('|');
+  }
+  return regex;
+}
+
 function t(key, params) {
   let text = key;
   if (i18n[_currentLang] && i18n[_currentLang].hasOwnProperty(key)) {
@@ -2275,7 +2296,7 @@ class AddRemarkModal extends Modal {
 
   // 控制点击遮罩层是否关闭弹窗
   shouldCloseOnOutsideClick() {
-    return !this.plugin?.settings?.remarkKeepOpen;
+    return true;
   }
 
   async saveImageToVault(imageData, fileName) {
@@ -2496,9 +2517,7 @@ class AddRemarkModal extends Modal {
       if (this.onSubmit) {
         this.onSubmit(textareaEl.value);
       }
-      if (!this.plugin?.settings?.remarkKeepOpen) {
-        this.close();
-      }
+      this.close();
     });
     
     textareaEl.addEventListener("keydown", (e) => {
@@ -2507,9 +2526,7 @@ class AddRemarkModal extends Modal {
         if (this.onSubmit) {
           this.onSubmit(textareaEl.value);
         }
-        if (!this.plugin?.settings?.remarkKeepOpen) {
-          this.close();
-        }
+        this.close();
       }
     });
     
@@ -8306,7 +8323,7 @@ class AddRegexRuleModal extends Modal {
         this.plugin.saveData(this.plugin.settings);
       }
       updateLangSwitch();
-      new Notice(t('main.langSwitchNotice'));
+      this.onOpen();
     });
     
     // 创建标题并设置为inline显示
@@ -9309,11 +9326,11 @@ class AddRegexRuleModal extends Modal {
     openStylesCssLink.style.cursor = 'pointer';
     openStylesCssLink.style.marginRight = '8px';
     openStylesCssLink.style.visibility = 'hidden'; // 默认隐藏链接
+    if (this.plugin.settings?.hideOpenFileLink !== false) openStylesCssLink.style.display = 'none';
 
     // 链接点击事件
     openStylesCssLink.addEventListener('click', () => {
       try {
-        // 打开styles.css文件
         const stylesCssPath = '.obsidian/plugins/Regex-Css-Highlighter/styles.css';
         const systemPath = require('path').join(this.app.vault.adapter.basePath, stylesCssPath);
         require('electron').shell.openPath(systemPath);
@@ -9334,11 +9351,11 @@ class AddRegexRuleModal extends Modal {
     openStyleCategoriesLink.style.textDecoration = 'underline';
     openStyleCategoriesLink.style.cursor = 'pointer';
     openStyleCategoriesLink.style.visibility = 'hidden'; // 默认隐藏链接
+    if (this.plugin.settings?.hideOpenFileLink !== false) openStyleCategoriesLink.style.display = 'none';
     
     // 链接点击事件
     openStyleCategoriesLink.addEventListener('click', () => {
       try {
-        // 打开样式分组文件
         const styleCategoriesPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
         const systemPath = require('path').join(this.app.vault.adapter.basePath, styleCategoriesPath);
         require('electron').shell.openPath(systemPath);
@@ -12688,8 +12705,10 @@ class AddRegexRuleModal extends Modal {
     settingsHeader.style.justifyContent = "flex-start";
     settingsHeader.style.alignItems = "center";
     settingsHeader.style.cursor = "pointer";
-    settingsHeader.style.padding = "4px 0";
+    settingsHeader.style.padding = "4px 6px";
     settingsHeader.style.position = "relative";
+    settingsHeader.style.borderRadius = "4px";
+    settingsHeader.style.background = "var(--background-modifier-hover)";
     
     // 创建标题容器
     const settingsTitleContainer = settingsHeader.createDiv();
@@ -12715,6 +12734,7 @@ class AddRegexRuleModal extends Modal {
     openDataFileLink.style.cursor = 'pointer';
     openDataFileLink.style.visibility = 'hidden'; // 默认隐藏链接
     if (!_isDesktop) openDataFileLink.style.display = 'none'; // 手机端隐藏链接
+    if (this.plugin.settings?.hideOpenFileLink !== false) openDataFileLink.style.display = 'none';
     
     // 链接点击事件
     openDataFileLink.addEventListener('click', (e) => {
@@ -13073,6 +13093,29 @@ class AddRegexRuleModal extends Modal {
         this.plugin.settings = {};
       }
       this.plugin.settings.showRecentRulesWhenCollapsed = isChecked;
+      await this.plugin.saveData(this.plugin.settings);
+    });
+
+    const hideOpenFileLinkRow = displayContent.createDiv();
+    hideOpenFileLinkRow.style.display = "flex";
+    hideOpenFileLinkRow.style.alignItems = "center";
+    hideOpenFileLinkRow.style.marginBottom = "5px";
+
+    const hideOpenFileLinkLabel = hideOpenFileLinkRow.createEl("span");
+    hideOpenFileLinkLabel.textContent = t('settings.hideOpenFileLink') + ": ";
+    hideOpenFileLinkLabel.style.marginRight = "10px";
+    hideOpenFileLinkLabel.style.fontSize = "14px";
+
+    const hideOpenFileLinkInput = hideOpenFileLinkRow.createEl("input");
+    hideOpenFileLinkInput.type = "checkbox";
+    hideOpenFileLinkInput.checked = this.plugin.settings?.hideOpenFileLink !== false;
+
+    hideOpenFileLinkInput.addEventListener("change", async (e) => {
+      const isChecked = e.target.checked;
+      if (!this.plugin.settings) {
+        this.plugin.settings = {};
+      }
+      this.plugin.settings.hideOpenFileLink = isChecked;
       await this.plugin.saveData(this.plugin.settings);
     });
     
@@ -13641,6 +13684,56 @@ class AddRegexRuleModal extends Modal {
     remarkPopupOnlyOnSelectionLabel.style.fontSize = "14px";
     remarkPopupOnlyOnSelectionLabel.style.cursor = "pointer";
 
+    // 备注提示符设置
+    const showRemarkBadgeRow = popupSettingsContent.createDiv();
+    showRemarkBadgeRow.style.display = "flex";
+    showRemarkBadgeRow.style.alignItems = "center";
+    showRemarkBadgeRow.style.marginBottom = "5px";
+    showRemarkBadgeRow.style.flexWrap = "wrap";
+
+    const showRemarkBadgeCheckbox = showRemarkBadgeRow.createEl("input");
+    showRemarkBadgeCheckbox.type = "checkbox";
+    showRemarkBadgeCheckbox.checked = this.plugin.settings?.showRemarkBadge || false;
+    showRemarkBadgeCheckbox.style.marginRight = "8px";
+    showRemarkBadgeCheckbox.style.cursor = "pointer";
+
+    const showRemarkBadgeLabel = showRemarkBadgeRow.createEl("span");
+    showRemarkBadgeLabel.textContent = t('settings.showRemarkBadge') + ": ";
+    showRemarkBadgeLabel.style.marginRight = "4px";
+    showRemarkBadgeLabel.style.fontSize = "14px";
+
+    const showRemarkBadgeHint = showRemarkBadgeRow.createEl("span");
+    showRemarkBadgeHint.textContent = t('settings.showRemarkBadgeHint');
+    showRemarkBadgeHint.style.fontSize = "12px";
+    showRemarkBadgeHint.style.color = "var(--text-muted)";
+    showRemarkBadgeHint.style.marginLeft = "8px";
+
+    const remarkBadgeThresholdRow = popupSettingsContent.createDiv();
+    remarkBadgeThresholdRow.style.display = "flex";
+    remarkBadgeThresholdRow.style.alignItems = "center";
+    remarkBadgeThresholdRow.style.marginBottom = "5px";
+    remarkBadgeThresholdRow.style.marginLeft = "20px";
+
+    const remarkBadgeThresholdLabel = remarkBadgeThresholdRow.createEl("span");
+    remarkBadgeThresholdLabel.textContent = t('settings.remarkBadgeThreshold') + ": ";
+    remarkBadgeThresholdLabel.style.marginRight = "10px";
+    remarkBadgeThresholdLabel.style.fontSize = "14px";
+
+    const remarkBadgeThresholdInput = remarkBadgeThresholdRow.createEl("input");
+    remarkBadgeThresholdInput.type = "number";
+    remarkBadgeThresholdInput.value = this.plugin.settings?.remarkBadgeThreshold ?? 1;
+    remarkBadgeThresholdInput.style.width = "60px";
+    remarkBadgeThresholdInput.style.padding = "4px 8px";
+    remarkBadgeThresholdInput.style.border = "1px solid var(--background-modifier-border)";
+    remarkBadgeThresholdInput.style.borderRadius = "4px";
+    remarkBadgeThresholdInput.style.fontSize = "14px";
+
+    const remarkBadgeThresholdHint = remarkBadgeThresholdRow.createEl("span");
+    remarkBadgeThresholdHint.textContent = t('settings.remarkBadgeThresholdHint');
+    remarkBadgeThresholdHint.style.fontSize = "12px";
+    remarkBadgeThresholdHint.style.color = "var(--text-muted)";
+    remarkBadgeThresholdHint.style.marginLeft = "8px";
+
     // 添加保存按钮
     const savePopupSettingsButtonRow = popupSettingsContent.createDiv();
     savePopupSettingsButtonRow.style.display = "flex";
@@ -13669,6 +13762,8 @@ class AddRegexRuleModal extends Modal {
         this.plugin.settings.popupBorderWidth = parseInt(popupBorderWidthInput.value);
         this.plugin.settings.popupBorderColor = popupBorderColorInput.value;
         this.plugin.settings.remarkPopupOnlyOnSelection = remarkPopupOnlyOnSelectionCheckbox.checked;
+        this.plugin.settings.showRemarkBadge = showRemarkBadgeCheckbox.checked;
+        this.plugin.settings.remarkBadgeThreshold = parseInt(remarkBadgeThresholdInput.value) || 0;
         await this.plugin.saveData(this.plugin.settings);
         new Notice(t('settings.remarkPopupSaved'));
         this.plugin.refreshCurrentView();
@@ -14871,13 +14966,16 @@ class AddRegexRuleModal extends Modal {
     titleContainer.style.justifyContent = 'flex-start';
     titleContainer.style.alignItems = 'center';
     titleContainer.style.marginBottom = '8px';
-    titleContainer.style.position = 'relative'; // 设置为相对定位，作为绝对定位元素的容器
+    titleContainer.style.position = 'relative';
+    titleContainer.style.cursor = 'pointer';
+    titleContainer.style.padding = '4px 6px';
+    titleContainer.style.borderRadius = '4px';
+    titleContainer.style.background = 'var(--background-modifier-hover)';
     
     const globalTitle = titleContainer.createEl("h3", { text: t('main.globalRules') + ' ▼' });
     globalTitle.style.margin = "0";
     globalTitle.style.fontSize = "14px";
     globalTitle.style.color = "#333";
-    globalTitle.style.cursor = "pointer";
 
     // 从插件实例中读取全局折叠状态
     this.plugin.isGlobalHistoryCollapsed = this.plugin.isGlobalHistoryCollapsed || false;
@@ -14912,6 +15010,7 @@ class AddRegexRuleModal extends Modal {
     openGlobalFileLink.style.cursor = 'pointer';
     openGlobalFileLink.style.visibility = 'hidden'; // 默认隐藏链接
     if (!_isDesktop) openGlobalFileLink.style.display = 'none'; // 手机端隐藏链接
+    if (this.plugin.settings?.hideOpenFileLink !== false) openGlobalFileLink.style.display = 'none';
 
     // 链接点击事件
     openGlobalFileLink.addEventListener('click', () => {
@@ -14937,12 +15036,19 @@ class AddRegexRuleModal extends Modal {
       openGlobalFileLink.style.visibility = 'hidden';
     });
 
+    const globalEmptySpan = titleContainer.createEl('span');
+    globalEmptySpan.style.flex = '1';
+    
+    titleContainer.addEventListener('click', () => {
+      toggleGlobalCollapse();
+    });
+
     // 创建全局规则内容容器
     const globalContent = globalSection.createDiv();
     globalContent.addClass('history-content');
-    globalContent.style.overflow = "hidden";
+    globalContent.style.overflow = isGlobalCollapsed ? "hidden" : "auto";
     globalContent.style.transition = "max-height 0.3s ease";
-    globalContent.style.maxHeight = isGlobalCollapsed ? "0" : "500px";
+    globalContent.style.maxHeight = isGlobalCollapsed ? "0" : "calc(100vh - 200px)";
     
     // 实现折叠/展开功能
     const toggleGlobalCollapse = async () => {
@@ -15017,17 +15123,18 @@ class AddRegexRuleModal extends Modal {
           }
           
           // 如果有可见按钮，显示内容区域；否则隐藏
-          globalContent.style.maxHeight = hasVisibleButton ? "500px" : "0";
+          globalContent.style.maxHeight = hasVisibleButton ? "calc(100vh - 200px)" : "0";
+          globalContent.style.overflow = hasVisibleButton ? "auto" : "hidden";
         } else {
-          // 展开状态：显示所有规则按钮
           globalButtons.forEach(button => {
             button.style.display = 'flex';
           });
-          globalContent.style.maxHeight = "500px";
+          globalContent.style.maxHeight = "calc(100vh - 200px)";
+          globalContent.style.overflow = "auto";
         }
       } else {
-        // 没有按钮时的默认处理
-        globalContent.style.maxHeight = isGlobalCollapsed ? "0" : "500px";
+        globalContent.style.maxHeight = isGlobalCollapsed ? "0" : "calc(100vh - 200px)";
+        globalContent.style.overflow = isGlobalCollapsed ? "hidden" : "auto";
       }
       if (this.plugin.settings?.enableDebugLog) console.timeEnd('[全局规则] toggleGlobalCollapse');
     };
@@ -15061,6 +15168,7 @@ class AddRegexRuleModal extends Modal {
       }
       // 更新内容显示
       globalContent.style.maxHeight = "0";
+      globalContent.style.overflow = "hidden";
       
       const emptyMessage = globalList.createDiv();
       emptyMessage.textContent = t('main.noHighlightRule');
@@ -15129,7 +15237,8 @@ class AddRegexRuleModal extends Modal {
           
           // 如果有可见按钮，显示内容区域
           if (hasVisibleButton) {
-            globalContent.style.maxHeight = "500px";
+            globalContent.style.maxHeight = "calc(100vh - 200px)";
+            globalContent.style.overflow = "auto";
           }
         }
       };
@@ -15967,13 +16076,16 @@ class AddRegexRuleModal extends Modal {
     titleContainer.style.justifyContent = 'flex-start';
     titleContainer.style.alignItems = 'center';
     titleContainer.style.marginBottom = '8px';
-    titleContainer.style.position = 'relative'; // 设置为相对定位，作为绝对定位元素的容器
+    titleContainer.style.position = 'relative';
+    titleContainer.style.cursor = 'pointer';
+    titleContainer.style.padding = '4px 6px';
+    titleContainer.style.borderRadius = '4px';
+    titleContainer.style.background = 'var(--background-modifier-hover)';
     
     const historyTitle = titleContainer.createEl("h3", { text: t('main.currentRules') + ' ▼' });
     historyTitle.style.margin = "0";
     historyTitle.style.fontSize = "14px";
     historyTitle.style.color = "#333";
-    historyTitle.style.cursor = "pointer";
 
     // 获取当前文件的规则
     const currentRules = Array.isArray(this.plugin.rules) ? this.plugin.rules : [];
@@ -16011,6 +16123,7 @@ class AddRegexRuleModal extends Modal {
     openFileLink.style.cursor = 'pointer';
     openFileLink.style.visibility = 'hidden'; // 默认隐藏链接
     if (!_isDesktop) openFileLink.style.display = 'none'; // 手机端隐藏链接
+    if (this.plugin.settings?.hideOpenFileLink !== false) openFileLink.style.display = 'none';
     
     // 链接点击事件
     openFileLink.addEventListener('click', () => {
@@ -16042,6 +16155,12 @@ class AddRegexRuleModal extends Modal {
       openFileLink.style.visibility = 'hidden';
     });
     
+    const historyEmptySpan = titleContainer.createEl('span');
+    historyEmptySpan.style.flex = '1';
+    
+    titleContainer.addEventListener('click', () => {
+      toggleCollapse();
+    });
     // 创建历史记录内容容器
     const historyContent = historyContainer.createDiv();
     historyContent.addClass('history-content');
@@ -19804,6 +19923,11 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       this.settings.remarkKeepOpen = false;
       await this.saveData(this.settings);
     }
+
+    if (this.settings.hideOpenFileLink === undefined) {
+      this.settings.hideOpenFileLink = true;
+      await this.saveData(this.settings);
+    }
     
     // 初始化标题样式存储（从styles.css迁移到data.json）
     if (!this.settings.headingStyles) {
@@ -19850,6 +19974,12 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     }
     if (this.settings.remarkPopupOnlyOnSelection === undefined) {
       this.settings.remarkPopupOnlyOnSelection = false;
+    }
+    if (this.settings.showRemarkBadge === undefined) {
+      this.settings.showRemarkBadge = false;
+    }
+    if (this.settings.remarkBadgeThreshold === undefined) {
+      this.settings.remarkBadgeThreshold = 1;
     }
     if (this.floatButtonData.floatingBallMode === undefined) {
       this.floatButtonData.floatingBallMode = 'always';
@@ -20078,6 +20208,9 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     // 初始化规则来源标记(g/l)
     this.initRuleSourceBadge();
     
+    // 初始化备注提示符(n)
+    this.initRemarkBadge();
+    
     // 监听文件切换事件
     this.registerEvent(
       this.app.workspace.on('active-leaf-change', (leaf) => {
@@ -20273,6 +20406,14 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       ]
     });
     
+    this.lastMouseX = window.innerWidth / 2;
+    this.lastMouseY = window.innerHeight / 2;
+    this._globalMouseListener = (e) => {
+      this.lastMouseX = e.clientX;
+      this.lastMouseY = e.clientY;
+    };
+    document.addEventListener('mousemove', this._globalMouseListener);
+
     this.createFloatingBall();
     
     this.renderFloatingOptionButtons();
@@ -22047,6 +22188,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const idx = this.floatButtonData.floatingBallGroupOptions.indexOf(groupName);
           if (idx >= 0) {
             this.floatButtonData.floatingBallGroupOptions.splice(idx, 1);
+            if (this.floatButtonData.floatingBallOptionPositions) {
+              delete this.floatButtonData.floatingBallOptionPositions[`group_${groupName}`];
+            }
             groupPinBtn.textContent = '📌';
             groupPinBtn.title = t('floating.floatDisplay');
           } else {
@@ -22528,9 +22672,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   setupFollowSelectionMode(floatingBall) {
     const { MarkdownView } = require('obsidian');
     
-    // 初始化鼠标位置跟踪变量
-    this.lastMouseX = window.innerWidth / 2;
-    this.lastMouseY = window.innerHeight / 2;
+    if (this.lastMouseX === undefined) {
+      this.lastMouseX = window.innerWidth / 2;
+      this.lastMouseY = window.innerHeight / 2;
+    }
     
     // 初始化鼠标按下状态标记
     this.isMouseDown = false;
@@ -22759,7 +22904,33 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     this._floatingOptionListeners = [];
 
     const existingBtns = document.querySelectorAll('.floating-option-btn');
-    existingBtns.forEach(btn => btn.remove());
+    existingBtns.forEach(btn => {
+      const optionId = btn.dataset.optionId;
+      if (optionId) {
+        if (!this.floatButtonData.floatingBallOptionPositions) {
+          this.floatButtonData.floatingBallOptionPositions = {};
+        }
+        const rect = btn.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const isRight = centerX > window.innerWidth / 2;
+        if (isRight) {
+          this.floatButtonData.floatingBallOptionPositions[optionId] = {
+            right: `${window.innerWidth - rect.right}px`,
+            top: `${rect.top}px`,
+            opacity: parseFloat(btn.dataset.opacity) || undefined,
+            scale: parseFloat(btn.dataset.scale) || undefined
+          };
+        } else {
+          this.floatButtonData.floatingBallOptionPositions[optionId] = {
+            left: `${rect.left}px`,
+            top: `${rect.top}px`,
+            opacity: parseFloat(btn.dataset.opacity) || undefined,
+            scale: parseFloat(btn.dataset.scale) || undefined
+          };
+        }
+      }
+      btn.remove();
+    });
 
     const existingSubmenus = document.querySelectorAll('.floating-option-submenu');
     existingSubmenus.forEach(submenu => submenu.remove());
@@ -23056,9 +23227,27 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           btn.style.transformOrigin = 'center center';
         }
       } else {
-        const offset = allOptions.indexOf(optionId);
-        btn.style.right = '20px';
-        btn.style.top = `${100 + offset * 40}px`;
+        const isGroupOption = optionId.startsWith('group_');
+        if (isGroupOption) {
+          const mouseX = this.lastMouseX || (window.innerWidth - 80);
+          const mouseY = this.lastMouseY || 100;
+          btn.style.right = `${window.innerWidth - mouseX}px`;
+          btn.style.left = 'auto';
+          btn.style.top = `${mouseY}px`;
+        } else {
+          const offset = allOptions.indexOf(optionId);
+          const startX = Math.max(5, Math.min(this.lastMouseX || (window.innerWidth - 80), window.innerWidth - 80));
+          const startY = Math.max(5, Math.min((this.lastMouseY || 100) + offset * 40, window.innerHeight - 40));
+          const isRightSide = startX > window.innerWidth / 2;
+          if (isRightSide) {
+            btn.style.right = `${window.innerWidth - startX}px`;
+            btn.style.left = 'auto';
+          } else {
+            btn.style.left = `${startX}px`;
+            btn.style.right = 'auto';
+          }
+          btn.style.top = `${startY}px`;
+        }
       }
 
       // 恢复自定义标签
@@ -24024,14 +24213,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               innerSpan.textContent = newLabel || label;
               innerSpan.style.display = 'inline-block';
               innerSpan.style.padding = '4px 8px';
-              // 如果有子菜单，添加箭头指示器
-              let arrow = btn.querySelector('.floating-option-arrow');
+              // 如果有子菜单，添加箭头指示器到innerSpan内部
+              let arrow = innerSpan.querySelector('.floating-option-arrow');
               if (hasSubmenu && !arrow) {
                 arrow = document.createElement('span');
                 arrow.className = 'floating-option-arrow';
                 arrow.style.marginLeft = '4px';
                 arrow.textContent = '▶';
-                btn.appendChild(arrow);
+                innerSpan.appendChild(arrow);
               }
               // 注入完整CSS规则（含伪元素）
               this.applyFloatingOptionStyleRules(newStyleClass);
@@ -24072,6 +24261,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             const idx = this.floatButtonData.floatingBallGroupOptions.indexOf(groupName);
             if (idx >= 0) {
               this.floatButtonData.floatingBallGroupOptions.splice(idx, 1);
+              if (this.floatButtonData.floatingBallOptionPositions) {
+                delete this.floatButtonData.floatingBallOptionPositions[optionId];
+              }
               await this.saveFloatButtonData();
               btn.remove();
               if (currentSubmenu) {
@@ -24085,6 +24277,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             const idx = this.floatButtonData.floatingBallOptions.indexOf(optionId);
             if (idx >= 0) {
               this.floatButtonData.floatingBallOptions.splice(idx, 1);
+              if (this.floatButtonData.floatingBallOptionPositions) {
+                delete this.floatButtonData.floatingBallOptionPositions[optionId];
+              }
               await this.saveFloatButtonData();
               btn.remove();
               if (currentSubmenu) {
@@ -24295,20 +24490,25 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     if (group || savedPosition?.group) floatingWindow.dataset.group = group || savedPosition.group;
 
     if (savedPosition) {
-      if (savedPosition.right) {
-        floatingWindow.style.right = savedPosition.right;
-        floatingWindow.style.left = 'auto';
-      } else {
-        floatingWindow.style.left = savedPosition.left || '100px';
-        floatingWindow.style.right = 'auto';
-      }
-      floatingWindow.style.top = savedPosition.top || '100px';
       if (savedPosition.opacity && savedPosition.opacity !== '1') {
         floatingWindow.style.opacity = savedPosition.opacity;
       }
       if (savedPosition.scale && savedPosition.scale !== '1') {
         floatingWindow.style.transform = `scale(${savedPosition.scale})`;
       }
+    }
+    {
+      const startX = Math.max(5, Math.min(this.lastMouseX || 100, window.innerWidth - 100));
+      const startY = Math.max(5, Math.min(this.lastMouseY || 100, window.innerHeight - 40));
+      const isRightSide = startX > window.innerWidth / 2;
+      if (isRightSide) {
+        floatingWindow.style.right = `${window.innerWidth - startX}px`;
+        floatingWindow.style.left = 'auto';
+      } else {
+        floatingWindow.style.left = `${startX}px`;
+        floatingWindow.style.right = 'auto';
+      }
+      floatingWindow.style.top = `${startY}px`;
     }
 
     // 添加到body
@@ -30595,12 +30795,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
       
       if (newClasses.length > 0) {
-        if (!categories['新分组']) {
-          categories['新分组'] = [];
+        const defaultGroupName = t('main.newGroup');
+        if (!categories[defaultGroupName]) {
+          categories[defaultGroupName] = [];
         }
         for (const className of newClasses) {
-          if (!categories['新分组'].includes(className)) {
-            categories['新分组'].push(className);
+          if (!categories[defaultGroupName].includes(className)) {
+            categories[defaultGroupName].push(className);
           }
         }
         
@@ -30692,131 +30893,35 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       let cssContent = '';
       
       if (!cssExists) {
-        cssContent = `.regex-highlight {
-  color: #ff9800;
-  text-decoration: underline wavy #4caf50;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 3px;
-}
+        cssContent = `.highlight-wavy-accent { color: #ff9800; text-decoration: underline wavy #4caf50; text-decoration-thickness: 2px; text-underline-offset: 3px; }
 
-.huatong-textshadow {
-  text-shadow: 2px 2px 4px #FFD93D, -2px -2px 4px #6BCB77;
-  color: #2D4059;
-}
+.text-shadow-dual { text-shadow: 2px 2px 4px #FFD93D, -2px -2px 4px #6BCB77; color: #2D4059; }
 
-.xiahou-mao-6 { 
-  color: #191970; 
-  font-weight: 600; 
-  text-decoration: underline wavy #FF6347; 
-  padding: 2px 4px; 
-  background-color: #F0F8FF; 
-  letter-spacing: 0.5px; 
-}
+.highlight-navy-redwave { color: #191970; font-weight: 600; text-decoration: underline wavy #FF6347; padding: 2px 4px; background-color: #F0F8FF; letter-spacing: 0.5px; }
 
-.sanae-miko {
-  color: #c62828;
-  background-color: #fff5f5;
-  padding: 3px 10px;
-  border: 1px dashed #ef9a9a;
-  border-radius: 4px 16px 4px 16px;
-  font-style: italic;
-  display: inline-block;
-}
+.badge-italic-dashed { color: #c62828; background-color: #fff5f5; padding: 3px 10px; border: 1px dashed #ef9a9a; border-radius: 4px 16px 4px 16px; font-style: italic; display: inline-block; }
 
-.character-zhugeliang-4 {
-  color: #4a235a;
-  background: linear-gradient(to right, #d6eaf8, #d5f4e6);
-  font-weight: bold;
-  padding: 3px 7px;
-  border-radius: 5px;
-  border-bottom: 2px solid #7d3c98;
-}
+.highlight-purple-gradient { color: #4a235a; background: linear-gradient(to right, #d6eaf8, #d5f4e6); font-weight: bold; padding: 3px 7px; border-radius: 5px; border-bottom: 2px solid #7d3c98; }
 
-.rainbow-border {
-  display: inline-block;
-  padding: 0px 0px;
-  border-radius: 999px;
-  background: 
-    linear-gradient(#fff, #fff) padding-box,
-    conic-gradient(
-      from 180deg,
-      #ff3b30,
-      #ff9500,
-      #ffcc00,
-      #4cd964,
-      #34c7ff,
-      #007aff,
-      #af52de,
-      #ff2d55,
-      #ff3b30
-    ) border-box;
-  border: 1px solid transparent;
-  color: #111;
-  text-decoration: none;
-  user-select: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
+.rainbow-border { display: inline-block; padding: 0px 0px; border-radius: 999px; background: linear-gradient(#fff, #fff) padding-box, conic-gradient(from 180deg, #ff3b30, #ff9500, #ffcc00, #4cd964, #34c7ff, #007aff, #af52de, #ff2d55, #ff3b30) border-box; border: 1px solid transparent; color: #111; text-decoration: none; user-select: none; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 
-.rainbow-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 24px;
-  border-radius: 999px;
-  font-size: 18px;
-  font-weight: 600;
-  color: #111;
-  background: 
-    linear-gradient(#fff, #fff) padding-box,
-    conic-gradient(
-      from 180deg,
-      #ff3b30,
-      #ff9500,
-      #ffcc00,
-      #4cd964,
-      #34c7ff,
-      #007aff,
-      #af52de,
-      #ff2d55,
-      #ff3b30
-    ) border-box;
-  border: 3px solid transparent;
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.08),
-    0 0 8px rgba(255, 255, 255, 0.6) inset;
-  transition: all 0.2s ease;
-  user-select: none;
-}
+.rainbow-btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 24px; border-radius: 999px; font-size: 18px; font-weight: 600; color: #111; background: linear-gradient(#fff, #fff) padding-box, conic-gradient(from 180deg, #ff3b30, #ff9500, #ffcc00, #4cd964, #34c7ff, #007aff, #af52de, #ff2d55, #ff3b30) border-box; border: 3px solid transparent; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 0 8px rgba(255, 255, 255, 0.6) inset; transition: all 0.2s ease; user-select: none; }
 
-.destiny-tremor-test {
-  font-weight: 800;
-  color: #1a1a1a;
-  text-shadow: 1px 1px 2px rgba(139, 0, 0, 0.4);
-  animation: tremor-test 0.8s ease-in-out infinite;
-  letter-spacing: 0.08em;
-  display: inline-block;
-}
+.text-tremor { font-weight: 800; color: #1a1a1a; text-shadow: 1px 1px 2px rgba(139, 0, 0, 0.4); animation: tremor 0.8s ease-in-out infinite; letter-spacing: 0.08em; display: inline-block; }
 
-.cultural-changan { 
-  background-color: #FAF0E6; 
-  color: #654321; 
-  padding: 7px 10px; 
-  border-radius: 8px; 
-  box-shadow: inset 0 0 5px #DEB887; 
-  font-family: "KaiTi", cursive; 
-}
+.highlight-parchment { background-color: #FAF0E6; color: #654321; padding: 7px 10px; border-radius: 8px; box-shadow: inset 0 0 5px #DEB887; font-family: "KaiTi", cursive; }
 
-.longxi-martial {
-  color: #5C3317;
-  font-weight: 600;
-  font-family: 'SimSun', serif;
-  text-shadow: 0.5px 0.5px 0px #AAA;
-  letter-spacing: -0.1px;
-  background: linear-gradient(transparent 70%, #E9D4B3 70%);
-}
+.highlight-underline-warm { color: #5C3317; font-weight: 600; font-family: 'SimSun', serif; text-shadow: 0.5px 0.5px 0px #AAA; letter-spacing: -0.1px; background: linear-gradient(transparent 70%, #E9D4B3 70%); }
 
-.hide {
-  font-size: 0;
+.hide { font-size: 0; }
+
+.text-gradient-glow { font-weight: 700; font-family: "STKaiti", "SimSun", serif; color: transparent; background: linear-gradient(135deg, #8b5cf6, #c4b5fd, #f59e0b); -webkit-background-clip: text; text-shadow: 0 0 6px rgba(139, 92, 246, 0.3), 0 0 12px rgba(245, 158, 11, 0.2); letter-spacing: 0.5px; animation: gradientFlow 3s ease-in-out infinite alternate; }
+
+.text-glow-pulse { font-weight: 900; font-family: "STZhongsong", "SimHei", sans-serif; color: transparent; background: linear-gradient(120deg, #c0c0c0, #ff1e56, #8b0000); -webkit-background-clip: text; text-shadow: 0 0 8px rgba(255, 50, 50, 0.5), 0 0 16px rgba(255, 150, 150, 0.3), 1px 1px 3px rgba(0, 0, 0, 0.6); letter-spacing: 1.5px; animation: glowPulse 2.8s ease-in-out infinite alternate; }
+
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 6px rgba(255, 40, 40, 0.5), 0 0 12px rgba(255, 100, 100, 0.3); transform: scale(1); }
+  100% { text-shadow: 0 0 14px rgba(255, 80, 80, 0.7), 0 0 26px rgba(255, 160, 160, 0.5); transform: scale(1.03); }
 }`;
         
         await crossFS.write(this.app.vault, cssRelPath, cssContent);
@@ -30836,7 +30941,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }
         
         const defaultCategories = {
-          '新分组': classNames
+          [t('main.newGroup')]: classNames
         };
         await crossFS.write(this.app.vault, categoriesRelPath, JSON.stringify(defaultCategories, null, 2));
       } else {
@@ -31591,7 +31696,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }
       }
       
-      const newRegex = originalRegex + '|' + trimmedClipboard;
+      const allParts = (originalRegex.includes('|') ? originalRegex.split('|') : [originalRegex]);
+      allParts.push(trimmedClipboard);
+      allParts.sort((a, b) => b.length - a.length);
+      const newRegex = allParts.join('|');
       existingRule.regex = newRegex;
       
       if (isGlobalRule) {
@@ -32106,7 +32214,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const containerText = container.textContent || '';
     const rules = allRules.filter(({ regex }) => {
       try {
-        return new RegExp(regex).test(containerText);
+        return new RegExp(sortRegexByLength(regex)).test(containerText);
       } catch {
         return false;
       }
@@ -32259,9 +32367,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
     // 逐条规则应用高亮
     for (const { regex, cssClass, remark, _source } of rules) {
+      let sortedRegex = sortRegexByLength(regex);
       let re;
       try {
-        re = new RegExp(regex, "g");
+        re = new RegExp(sortedRegex, "g");
       } catch (e) {
         console.error('Invalid regex:', regex, e);
         continue;
@@ -32311,7 +32420,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       for (const { regex, cssClass, remark } of rules) {
         try {
-          const re = new RegExp(regex, 'g');
+          const re = new RegExp(sortRegexByLength(regex), 'g');
           
           if (!re.test(textContent)) continue;
           
@@ -32402,7 +32511,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       for (const { regex, cssClass, remark } of rules) {
         try {
-          const re = new RegExp(regex, 'g');
+          const re = new RegExp(sortRegexByLength(regex), 'g');
           
           if (re.test(textContent)) {
             re.lastIndex = 0;
@@ -32507,7 +32616,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       for (const { regex, cssClass, remark } of rules) {
         try {
-          const re = new RegExp(regex, 'g');
+          const re = new RegExp(sortRegexByLength(regex), 'g');
           
           if (re.test(textContent)) {
             re.lastIndex = 0;
@@ -33253,7 +33362,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           for (const { regex, cssClass, remark, _source } of allRules) {
             let re;
-            try { re = new RegExp(regex, "g"); } catch { continue; }
+            try { re = new RegExp(sortRegexByLength(regex), "g"); } catch { continue; }
             
             for (let {from, to} of view.visibleRanges) {
               let text = view.state.doc.sliceString(from, to);
@@ -33470,7 +33579,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     // 只应用类名，不进行文本替换，避免DOM结构复杂化
     for (const { regex, cssClass, remark } of rules) {
       try {
-        const re = new RegExp(regex, 'g');
+        const re = new RegExp(sortRegexByLength(regex), 'g');
         if (re.test(originalText)) {
           hasAnyMatch = true;
           // Rule matched for simplified highlight
@@ -33511,7 +33620,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     for (const { regex, cssClass, remark } of rules) {
       let re;
       try {
-        re = new RegExp(regex, "g");
+        re = new RegExp(sortRegexByLength(regex), "g");
       } catch (e) {
         console.error('Invalid regex for title/tab styling:', regex, e);
         continue;
@@ -33701,14 +33810,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       // 检查是否在弹窗内（包括弹窗的祖先元素）
       if (target.closest('.remark-custom-popup')) return;
       
-      // 检查是否是带有备注的高亮元素
-      if (!target.classList.contains('highlight-tooltip-text') && 
-          !target.classList.contains('highlight-regex-text')) return;
+      // 检查是否是带有备注的高亮元素（使用closest向上查找，兼容CodeMirror嵌套结构）
+      const highlightEl = target.closest('.highlight-tooltip-text, .highlight-regex-text');
+      if (!highlightEl) return;
       
       // 如果当前已有弹窗且目标是当前元素或其内部节点，则不处理（避免闪烁）
-      if (currentTargetEl && (currentTargetEl === target || currentTargetEl.contains(target))) return;
+      if (currentTargetEl && (currentTargetEl === highlightEl || currentTargetEl.contains(highlightEl))) return;
       
-      let remark = target.dataset.remark;
+      let remark = highlightEl.dataset.remark;
 
       if (!remark) return;
       
@@ -33729,10 +33838,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       // 减少显示延迟以提高响应速度
       showTimeout = setTimeout(async () => {
         try {
-          // 获取有效的 DOM 元素（如果目标是文本节点，向上找最近的 span 元素）
-          let targetEl = target;
+          // 获取有效的 DOM 元素（使用closest找到的高亮元素）
+          let targetEl = highlightEl;
           if (!(targetEl instanceof HTMLElement)) {
-            targetEl = target.closest('span') || document.createElement('span');
+            targetEl = highlightEl.closest('span') || document.createElement('span');
           }
           if (!(targetEl instanceof HTMLElement)) {
             return;
@@ -34978,7 +35087,190 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
     }, true);
   }
-  
+
+  initRemarkBadge() {
+    const plugin = this;
+    let currentRemarkBadge = null;
+    let currentRemarkBadgeTarget = null;
+    let remarkBadgeTimeout = null;
+
+    const hideRemarkBadge = () => {
+      if (remarkBadgeTimeout) {
+        clearTimeout(remarkBadgeTimeout);
+        remarkBadgeTimeout = null;
+      }
+      if (currentRemarkBadge) {
+        currentRemarkBadge.remove();
+        currentRemarkBadge = null;
+        currentRemarkBadgeTarget = null;
+      }
+    };
+
+    const scheduleHideRemarkBadge = (delay = 500) => {
+      if (remarkBadgeTimeout) {
+        clearTimeout(remarkBadgeTimeout);
+      }
+      remarkBadgeTimeout = setTimeout(hideRemarkBadge, delay);
+    };
+
+    const cancelHideRemarkBadge = () => {
+      if (remarkBadgeTimeout) {
+        clearTimeout(remarkBadgeTimeout);
+        remarkBadgeTimeout = null;
+      }
+    };
+
+    const positionRemarkBadge = (badge, target) => {
+      const rect = target.getBoundingClientRect();
+      badge.style.left = (rect.right - 8) + 'px';
+      badge.style.top = (rect.top - 2) + 'px';
+    };
+
+    this.registerDomEvent(document, 'mouseover', (e) => {
+      if (!(e.target instanceof Element)) return;
+
+      if (!plugin.settings?.showRemarkBadge) return;
+
+      if (e.target.classList.contains('remark-badge')) {
+        cancelHideRemarkBadge();
+        return;
+      }
+
+      const target = e.target.closest('.highlight-regex-text');
+      if (!target) return;
+
+      if (currentRemarkBadgeTarget === target && currentRemarkBadge && currentRemarkBadge.parentNode) {
+        cancelHideRemarkBadge();
+        return;
+      }
+
+      const textLength = target.textContent?.length || 0;
+      const threshold = plugin.settings?.remarkBadgeThreshold ?? 1;
+      if (threshold > 0 && textLength < threshold) return;
+
+      hideRemarkBadge();
+
+      const badge = document.createElement('span');
+      badge.className = 'remark-badge';
+      badge.textContent = 'n';
+      badge.title = t('main.addRemark');
+      badge.style.cssText = `
+        position: fixed;
+        font-size: 9px;
+        font-weight: bold;
+        color: var(--text-muted);
+        opacity: 0.5;
+        background: var(--background-primary);
+        border: 1px solid var(--background-modifier-border);
+        border-radius: 3px;
+        padding: 0 3px;
+        line-height: 1.2;
+        cursor: pointer;
+        z-index: 1000;
+        pointer-events: auto;
+        user-select: none;
+        transition: opacity 0.15s, color 0.15s;
+      `;
+
+      positionRemarkBadge(badge, target);
+
+      badge.addEventListener('mouseenter', () => {
+        cancelHideRemarkBadge();
+        badge.style.opacity = '0.9';
+        badge.style.color = 'var(--text-accent)';
+      });
+      badge.addEventListener('mouseleave', () => {
+        badge.style.opacity = '0.5';
+        badge.style.color = 'var(--text-muted)';
+        scheduleHideRemarkBadge(500);
+      });
+
+      badge.addEventListener('click', async (ce) => {
+        ce.stopPropagation();
+        ce.preventDefault();
+
+        const ruleRegex = target.dataset.ruleRegex;
+        const ruleSource = target.dataset.ruleSource;
+        const matchedText = target.textContent || '';
+
+        let currentRemark = '';
+        let isGlobalRule = ruleSource === 'global';
+
+        if (isGlobalRule) {
+          const rule = plugin.globalRules.find(r => r.regex === ruleRegex);
+          if (rule && rule.remark) currentRemark = rule.remark;
+        } else {
+          const rule = plugin.rules.find(r => r.regex === ruleRegex);
+          if (rule && rule.remark) currentRemark = rule.remark;
+        }
+
+        const modal = new AddRemarkModal(
+          plugin.app,
+          currentRemark ? (isGlobalRule ? t('main.editRemarkGlobal') : t('main.editRemark')) : (isGlobalRule ? t('main.addRemarkGlobal') : t('main.addRemark')),
+          t('main.inputRemarkContent'),
+          currentRemark,
+          async (remark) => {
+            const trimmedRemark = remark.trim();
+
+            if (isGlobalRule) {
+              const ruleIndex = plugin.globalRules.findIndex(r => r.regex === ruleRegex);
+              if (ruleIndex !== -1) {
+                plugin.globalRules[ruleIndex].remark = trimmedRemark;
+                await plugin.saveGlobalRules(plugin.globalRules);
+              }
+            } else {
+              const ruleIndex = plugin.rules.findIndex(r => r.regex === ruleRegex);
+              if (ruleIndex !== -1) {
+                plugin.rules[ruleIndex].remark = trimmedRemark;
+                await plugin.saveFileRules(plugin.currentFilePath, plugin.rules);
+              } else {
+                await plugin.addFileRule(matchedText, '', trimmedRemark);
+              }
+            }
+            plugin.rulesVersion++;
+            plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+            plugin.refreshCurrentView();
+            new Notice(trimmedRemark ? t('main.remarkUpdated') : t('main.remarkCleared'));
+          },
+          plugin
+        );
+        modal.open();
+        hideRemarkBadge();
+      });
+
+      document.body.appendChild(badge);
+      currentRemarkBadge = badge;
+      currentRemarkBadgeTarget = target;
+
+      remarkBadgeTimeout = setTimeout(hideRemarkBadge, 3000);
+    });
+
+    this.registerDomEvent(document, 'mouseout', (e) => {
+      if (!(e.target instanceof Element)) return;
+
+      if (e.target.classList.contains('remark-badge')) {
+        return;
+      }
+
+      const target = e.target.closest('.highlight-regex-text');
+      if (!target) return;
+
+      if (currentRemarkBadge && currentRemarkBadgeTarget === target) {
+        const relatedTarget = e.relatedTarget;
+        if (relatedTarget && (relatedTarget === currentRemarkBadge || currentRemarkBadge.contains(relatedTarget) || target.contains(relatedTarget))) {
+          return;
+        }
+        scheduleHideRemarkBadge(500);
+      }
+    });
+
+    this.registerDomEvent(document, 'scroll', () => {
+      if (currentRemarkBadge && currentRemarkBadgeTarget) {
+        positionRemarkBadge(currentRemarkBadge, currentRemarkBadgeTarget);
+      }
+    }, true);
+  }
+
   // 更新规则的备注
   async updateRuleRemark(regex, cssClass, newRemark) {
     // 查找并更新全局规则 - 只使用正则表达式来唯一标识规则

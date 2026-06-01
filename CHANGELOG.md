@@ -2,7 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.6.0 (2026-06-01)
+## 🆕 v1.6.1 (2026-06-02)
+
+- **Remark Badge Indicator** - Added "Show remark indicator at top-right of highlighted text" setting under Remark Popup section; hovering highlighted text shows a small "n" badge, clicking it opens the Add Remark modal; includes character threshold option
+- **Long Phrase Priority Matching** - When merging rules (e.g. "视角主义" + "视角主义真理观"), longer phrases now match first; added sortRegexByLength utility function applied to all regex matching logic
+- **Fixed Remark Popup in Edit Mode Callouts** - Remark popup now works correctly in CodeMirror edit mode for text inside callouts; changed from classList.contains to closest() for upward DOM traversal
+- **Remark Popup Setting Name Fix** - Renamed "确认后不自动关闭" to "鼠标离开不自动关闭"; remark popup now auto-closes after clicking confirm
+- **Global Highlight Rules Scrollbar** - Added scrollbar to global highlight rules section when content exceeds viewport height
+- **Hide Open File Links Setting** - Added "Don't show open file links after panel titles" setting in Display section; controls visibility of "Open styles.css", "Open group file", "Open data.json" links
+- **Localized Default Group Name** - Default group name for new styles now follows plugin language (e.g. "New Group" in English mode)
+- **Floating Element Initial Position** - First-time hover on options/groups/style buttons now positions near the mouse cursor
+- **Language Switch Instant Refresh** - Switching language now immediately refreshes the panel without needing to reopen
+- **Fixed Arrow Position After Style Edit** - Arrow indicator now stays inside the group style area after editing custom styles
+- **Floating Group Button Positioning** - Each floating group button appears near the mouse cursor with top-right corner aligned to mouse position; position info cleared on close
+- **Full-Width Clickable Panel Titles** - "Settings", "Current File Rules", "Global Rules" titles now have full-width clickable area and background shading for expand/collapse
+
+## v1.6.0 (2026-06-01)
 
 - **Floating Group No Longer Auto-Added to Floating Ball Menu** - Floating a group via main panel group title hover button or right-click "Float This Group" now only creates floating buttons without automatically adding the group to the floating ball menu; users can manually add groups in the floating ball menu settings
 

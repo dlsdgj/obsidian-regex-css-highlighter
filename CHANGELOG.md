@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.5.9 (2026-06-01)
+## 🆕 v1.6.0 (2026-06-01)
+
+- **Floating Group No Longer Auto-Added to Floating Ball Menu** - Floating a group via main panel group title hover button or right-click "Float This Group" now only creates floating buttons without automatically adding the group to the floating ball menu; users can manually add groups in the floating ball menu settings
+
+## v1.5.9 (2026-06-01)
 
 - **Default Language Changed to English** - New installations now default to English; Chinese users can switch via CN/EN button
 - **Floating Ball Options Simplified** - Format Replace, Ruby, AI Reply, Entity Extract, Font Switch, Mode Switch, Hide Floating Buttons, Show/Hide Text Styles are unchecked by default for new installations

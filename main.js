@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover } = require("obsidian");
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover } = require("obsidian");
 
 // 直接将CSS规则追加到动态样式元素，确保新样式立即生效（无需重新读取文件）
 function appendCSSToDynamicStyle(cssRule) {
@@ -9611,12 +9611,6 @@ class AddRegexRuleModal extends Modal {
           e.stopPropagation();
           e.preventDefault();
           if (this.plugin && typeof this.plugin.floatButtonData === 'object') {
-            if (!this.plugin.floatButtonData.floatingBallGroups) {
-              this.plugin.floatButtonData.floatingBallGroups = [];
-            }
-            if (!this.plugin.floatButtonData.floatingBallGroups.includes(category)) {
-              this.plugin.floatButtonData.floatingBallGroups.push(category);
-            }
             if (!this.plugin.floatButtonData.floatingBallGroupOptions) {
               this.plugin.floatButtonData.floatingBallGroupOptions = [];
             }
@@ -10193,12 +10187,6 @@ class AddRegexRuleModal extends Modal {
               .setIcon("layout-grid")
               .onClick(async () => {
                 try {
-                  if (!this.plugin.floatButtonData.floatingBallGroups) {
-                    this.plugin.floatButtonData.floatingBallGroups = [];
-                  }
-                  if (!this.plugin.floatButtonData.floatingBallGroups.includes(category)) {
-                    this.plugin.floatButtonData.floatingBallGroups.push(category);
-                  }
                   if (!this.plugin.floatButtonData.floatingBallGroupOptions) {
                     this.plugin.floatButtonData.floatingBallGroupOptions = [];
                   }

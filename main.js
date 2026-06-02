@@ -2062,6 +2062,18 @@ function sortRegexByLength(regex) {
   return regex;
 }
 
+// 判断选中文本是否匹配规则的正则表达式
+// rule.regex 可能包含正则转义（如 \\.），selectedText 是原始文本
+function textMatchesRegex(selectedText, ruleRegex) {
+  if (selectedText === ruleRegex) return true;
+  try {
+    const regex = new RegExp('^' + ruleRegex + '$');
+    return regex.test(selectedText);
+  } catch {
+    return false;
+  }
+}
+
 function getDefaultPreviewText(plugin) {
   if (_currentLang === 'zh') {
     const custom = plugin?.settings?.defaultPreviewTextCN;
@@ -6869,18 +6881,74 @@ ${currentCss}
     // 解析CSS样式的函数（与AI生成后相同）
     const parseCssStyles = (cssText) => {
       const styles = [];
+      const pseudoRules = []; // 先收集伪元素/伪类规则
+      const keyframeRules = []; // 收集 @keyframes 规则
       const styleRegex = /\.([^{]+?)\s*\{([^}]*)\}/g;
       let match;
       
-      while ((match = styleRegex.exec(cssText)) !== null) {
+      // 提取 @keyframes 规则（使用括号计数法匹配任意深度）
+      const extractKeyframes = (text) => {
+        const results = [];
+        const startRegex = /@keyframes\s+([a-zA-Z0-9_-]+)\s*\{/g;
+        let startMatch;
+        while ((startMatch = startRegex.exec(text)) !== null) {
+          const name = startMatch[1];
+          const startPos = startMatch.index;
+          const openPos = startMatch.index + startMatch[0].length - 1;
+          let depth = 1;
+          let pos = openPos + 1;
+          while (pos < text.length && depth > 0) {
+            if (text[pos] === '{') depth++;
+            else if (text[pos] === '}') depth--;
+            pos++;
+          }
+          results.push({ name, fullStyle: text.substring(startPos, pos) });
+        }
+        return results;
+      };
+      const kfResults = extractKeyframes(cssText);
+      for (const kf of kfResults) {
+        keyframeRules.push(kf);
+      }
+      
+      // 从文本中移除 @keyframes 块，避免内部的小数点被误匹配为类选择器
+      let cssTextNoKeyframes = cssText;
+      for (const kf of kfResults) {
+        cssTextNoKeyframes = cssTextNoKeyframes.replace(kf.fullStyle, '');
+      }
+      
+      while ((match = styleRegex.exec(cssTextNoKeyframes)) !== null) {
         const className = match[1].trim();
         const styleContent = match[2].trim();
         const fullStyle = `.${className} { ${styleContent} }`;
-        styles.push({
-          className,
-          styleContent,
-          fullStyle
-        });
+        if (className.includes('::') || className.includes(':')) {
+          // 提取主类名（伪元素/伪类前的部分）
+          const baseName = className.split(/::|:/)[0].trim();
+          pseudoRules.push({ baseName, fullStyle });
+        } else {
+          styles.push({
+            className,
+            styleContent,
+            fullStyle
+          });
+        }
+      }
+      
+      // 将伪元素规则关联到对应的主类
+      for (const pseudo of pseudoRules) {
+        const parent = styles.find(s => s.className === pseudo.baseName);
+        if (parent) {
+          parent.fullStyle += '\n' + pseudo.fullStyle;
+        }
+      }
+      
+      // 将 @keyframes 规则关联到引用它的主类
+      for (const kf of keyframeRules) {
+        for (const style of styles) {
+          if (style.fullStyle.includes(kf.name)) {
+            style.fullStyle = style.fullStyle + '\n' + kf.fullStyle;
+          }
+        }
       }
       
       return styles;
@@ -6896,11 +6964,23 @@ ${currentCss}
         previewContainer.remove();
       }
       
+      // 清理临时预览样式
+      let tempPreviewStyle = document.getElementById('add-style-preview-temp');
+      if (tempPreviewStyle) tempPreviewStyle.textContent = '';
+      
       if (!styleText) {
         return;
       }
       
       const styles = parseCssStyles(styleText);
+      
+      // 注入临时CSS样式（含伪元素），使预览能正确显示
+      if (!tempPreviewStyle) {
+        tempPreviewStyle = document.createElement('style');
+        tempPreviewStyle.id = 'add-style-preview-temp';
+        document.head.appendChild(tempPreviewStyle);
+      }
+      tempPreviewStyle.textContent = styles.map(s => s.fullStyle).join('\n');
       
       // 如果有样式，显示预览容器
       if (styles.length >= 1) {
@@ -6927,22 +7007,12 @@ ${currentCss}
           
           // 预览文本 - 无框设计
           const previewSpan = previewWrapper.createEl('span', { text: t('entity.preview') });
+          previewSpan.className = style.className;
           previewSpan.style.display = 'inline-block';
           previewSpan.style.padding = '2px 8px';
           previewSpan.style.borderRadius = '3px';
           previewSpan.style.fontSize = '12px';
           previewSpan.setAttribute('style', `font-size: 12px; display: inline-block; ${style.styleContent}`);
-          
-          // 如果有多个样式，添加复选框
-          if (styles.length > 1) {
-            const checkbox = previewWrapper.createEl('input');
-            checkbox.type = 'checkbox';
-            checkbox.className = 'style-checkbox';
-            checkbox.dataset.index = index;
-            checkbox.dataset.className = style.className;
-            checkbox.dataset.styleContent = style.styleContent;
-            checkbox.style.cursor = 'pointer';
-          }
         });
         
         // 将预览容器插入到样式输入区域上方
@@ -7101,19 +7171,73 @@ ${currentCss}
         // 解析多个CSS样式
         const parseCssStyles = (cssText) => {
           const styles = [];
+          const pseudoRules = [];
+          const keyframeRules = [];
           // 匹配CSS类选择器和样式内容
           const styleRegex = /\.([^{]+?)\s*\{([^}]*)\}/g;
           let match;
           
-          while ((match = styleRegex.exec(cssText)) !== null) {
+          // 提取 @keyframes 规则（使用括号计数法匹配任意深度）
+          const extractKeyframes = (text) => {
+            const results = [];
+            const startRegex = /@keyframes\s+([a-zA-Z0-9_-]+)\s*\{/g;
+            let startMatch;
+            while ((startMatch = startRegex.exec(text)) !== null) {
+              const name = startMatch[1];
+              const startPos = startMatch.index;
+              const openPos = startMatch.index + startMatch[0].length - 1;
+              let depth = 1;
+              let pos = openPos + 1;
+              while (pos < text.length && depth > 0) {
+                if (text[pos] === '{') depth++;
+                else if (text[pos] === '}') depth--;
+                pos++;
+              }
+              results.push({ name, fullStyle: text.substring(startPos, pos) });
+            }
+            return results;
+          };
+          const kfResults = extractKeyframes(cssText);
+          for (const kf of kfResults) {
+            keyframeRules.push(kf);
+          }
+          
+          // 从文本中移除 @keyframes 块，避免内部的小数点被误匹配为类选择器
+          let cssTextNoKeyframes = cssText;
+          for (const kf of kfResults) {
+            cssTextNoKeyframes = cssTextNoKeyframes.replace(kf.fullStyle, '');
+          }
+          
+          while ((match = styleRegex.exec(cssTextNoKeyframes)) !== null) {
             const className = match[1].trim();
             const styleContent = match[2].trim();
             const fullStyle = `.${className} { ${styleContent} }`;
-            styles.push({
-              className,
-              styleContent,
-              fullStyle
-            });
+            if (className.includes('::') || className.includes(':')) {
+              const baseName = className.split(/::|:/)[0].trim();
+              pseudoRules.push({ baseName, fullStyle });
+            } else {
+              styles.push({
+                className,
+                styleContent,
+                fullStyle
+              });
+            }
+          }
+          
+          for (const pseudo of pseudoRules) {
+            const parent = styles.find(s => s.className === pseudo.baseName);
+            if (parent) {
+              parent.fullStyle += '\n' + pseudo.fullStyle;
+            }
+          }
+          
+          // 将 @keyframes 规则关联到引用它的主类
+          for (const kf of keyframeRules) {
+            for (const style of styles) {
+              if (style.fullStyle.includes(kf.name)) {
+                style.fullStyle = style.fullStyle + '\n' + kf.fullStyle;
+              }
+            }
           }
           
           return styles;
@@ -7158,20 +7282,12 @@ ${currentCss}
             
             // 预览文本 - 无框设计
             const previewSpan = previewWrapper.createEl('span', { text: t('entity.preview') });
+            previewSpan.className = style.className;
             previewSpan.style.display = 'inline-block';
             previewSpan.style.padding = '2px 8px';
             previewSpan.style.borderRadius = '3px';
             previewSpan.style.fontSize = '12px';
             previewSpan.setAttribute('style', `font-size: 12px; display: inline-block; ${style.styleContent}`);
-            
-            // 添加复选框
-            const checkbox = previewWrapper.createEl('input');
-            checkbox.type = 'checkbox';
-            checkbox.className = 'style-checkbox';
-            checkbox.dataset.index = index;
-            checkbox.dataset.className = style.className;
-            checkbox.dataset.styleContent = style.styleContent;
-            checkbox.style.cursor = 'pointer';
           });
           
           // 将预览容器插入到样式输入区域上方
@@ -7231,50 +7347,19 @@ ${currentCss}
     addBtn.style.fontWeight = "bold";
     
     addBtn.addEventListener("click", async () => {
-      // 收集所有选中的样式
-      const checkboxes = modal.contentEl.querySelectorAll('.style-checkbox');
-      const selectedStyles = [];
+      // 直接从文本框解析所有样式
+      const styleText = styleTextarea.value.trim();
+      const selectedStyles = parseCssStyles(styleText);
       
-      checkboxes.forEach(checkbox => {
-        if (checkbox.checked) {
-          selectedStyles.push({
-            className: checkbox.dataset.className,
-            styleContent: checkbox.dataset.styleContent
-          });
-        }
-      });
-      
-      // 如果没有选中的样式，尝试从文本框中解析
       if (selectedStyles.length === 0) {
-        const styleText = styleTextarea.value.trim();
-        
-        // 从CSS样式文本中提取类名
-        const classMatch = styleText.match(/\.([a-zA-Z0-9_\u4e00-\u9fa5-]+)\s*\{([^}]*)\}/);
-        if (!classMatch || !classMatch[1]) {
-          this.showError(modal.contentEl, "请输入有效的CSS样式格式，例如：.my-class { color: red; }");
-          return;
-        }
-        
-        const className = classMatch[1];
-        const styleContent = classMatch[2].trim();
-        
-        selectedStyles.push({
-          className,
-          styleContent
-        });
-      }
-      
-      // 检查是否有样式需要添加
-      if (selectedStyles.length === 0) {
-        this.showError(modal.contentEl, "请选择或输入CSS样式");
+        this.showError(modal.contentEl, "请输入有效的CSS样式格式，例如：.my-class { color: red; }");
         return;
       }
       
       try {
         // 处理每个选中的样式
         for (const style of selectedStyles) {
-          const { className, styleContent } = style;
-          const fullStyle = `.${className} { ${styleContent} }`;
+          const { className, styleContent, fullStyle } = style;
           
           // 检查类名是否已存在
           if (existingClassNames.includes(className)) {
@@ -7282,8 +7367,8 @@ ${currentCss}
             continue;
           }
           
-          // 添加到CSS文件
-          await this.addStyleToCSSFile(className, styleContent);
+          // 添加到CSS文件（使用fullStyle以包含伪元素规则）
+          await this.addStyleToCSSFileDirectly(fullStyle);
           
           // 添加到配置文件
           await this.addStyleToConfig(category, className);
@@ -7313,11 +7398,8 @@ ${currentCss}
         await this.plugin.loadStyleCategories();
         await this.loadCssStyles();
         
-        // 刷新弹窗内容 - 重新打开AddRegexRuleModal
-        if (this.plugin) {
-          const newModal = new AddRegexRuleModal(this.app, this.plugin);
-          newModal.open();
-        }
+        // 刷新当前主面板内容
+        this.onOpen();
         
       } catch (error) {
         console.error('Error adding style:', error);
@@ -7762,18 +7844,72 @@ class AddRegexRuleModal extends Modal {
     // 解析CSS样式的函数（与AI生成后相同）
     const parseCssStyles = (cssText) => {
       const styles = [];
+      const pseudoRules = [];
+      const keyframeRules = [];
       const styleRegex = /\.([^{]+?)\s*\{([^}]*)\}/g;
       let match;
       
-      while ((match = styleRegex.exec(cssText)) !== null) {
+      // 提取 @keyframes 规则（使用括号计数法匹配任意深度）
+      const extractKeyframes = (text) => {
+        const results = [];
+        const startRegex = /@keyframes\s+([a-zA-Z0-9_-]+)\s*\{/g;
+        let startMatch;
+        while ((startMatch = startRegex.exec(text)) !== null) {
+          const name = startMatch[1];
+          const startPos = startMatch.index;
+          const openPos = startMatch.index + startMatch[0].length - 1;
+          let depth = 1;
+          let pos = openPos + 1;
+          while (pos < text.length && depth > 0) {
+            if (text[pos] === '{') depth++;
+            else if (text[pos] === '}') depth--;
+            pos++;
+          }
+          results.push({ name, fullStyle: text.substring(startPos, pos) });
+        }
+        return results;
+      };
+      const kfResults = extractKeyframes(cssText);
+      for (const kf of kfResults) {
+        keyframeRules.push(kf);
+      }
+      
+      // 从文本中移除 @keyframes 块，避免内部的小数点被误匹配为类选择器
+      let cssTextNoKeyframes = cssText;
+      for (const kf of kfResults) {
+        cssTextNoKeyframes = cssTextNoKeyframes.replace(kf.fullStyle, '');
+      }
+      
+      while ((match = styleRegex.exec(cssTextNoKeyframes)) !== null) {
         const className = match[1].trim();
         const styleContent = match[2].trim();
         const fullStyle = `.${className} { ${styleContent} }`;
-        styles.push({
-          className,
-          styleContent,
-          fullStyle
-        });
+        if (className.includes('::') || className.includes(':')) {
+          const baseName = className.split(/::|:/)[0].trim();
+          pseudoRules.push({ baseName, fullStyle });
+        } else {
+          styles.push({
+            className,
+            styleContent,
+            fullStyle
+          });
+        }
+      }
+      
+      for (const pseudo of pseudoRules) {
+        const parent = styles.find(s => s.className === pseudo.baseName);
+        if (parent) {
+          parent.fullStyle += '\n' + pseudo.fullStyle;
+        }
+      }
+      
+      // 将 @keyframes 规则关联到引用它的主类
+      for (const kf of keyframeRules) {
+        for (const style of styles) {
+          if (style.fullStyle.includes(kf.name)) {
+            style.fullStyle = style.fullStyle + '\n' + kf.fullStyle;
+          }
+        }
       }
       
       return styles;
@@ -7789,11 +7925,23 @@ class AddRegexRuleModal extends Modal {
         previewContainer.remove();
       }
       
+      // 清理临时预览样式
+      let tempPreviewStyleEl = document.getElementById('add-style-preview-temp');
+      if (tempPreviewStyleEl) tempPreviewStyleEl.textContent = '';
+      
       if (!styleText) {
         return;
       }
       
       const styles = parseCssStyles(styleText);
+      
+      // 注入临时CSS样式（含伪元素），使预览能正确显示
+      if (!tempPreviewStyleEl) {
+        tempPreviewStyleEl = document.createElement('style');
+        tempPreviewStyleEl.id = 'add-style-preview-temp';
+        document.head.appendChild(tempPreviewStyleEl);
+      }
+      tempPreviewStyleEl.textContent = styles.map(s => s.fullStyle).join('\n');
       
       // 如果有样式，显示预览容器
       if (styles.length >= 1) {
@@ -7820,22 +7968,12 @@ class AddRegexRuleModal extends Modal {
           
           // 预览文本 - 无框设计
           const previewSpan = previewWrapper.createEl('span', { text: t('entity.preview') });
+          previewSpan.className = style.className;
           previewSpan.style.display = 'inline-block';
           previewSpan.style.padding = '2px 8px';
           previewSpan.style.borderRadius = '3px';
           previewSpan.style.fontSize = '12px';
           previewSpan.setAttribute('style', `font-size: 12px; display: inline-block; ${style.styleContent}`);
-          
-          // 如果有多个样式，添加复选框
-          if (styles.length > 1) {
-            const checkbox = previewWrapper.createEl('input');
-            checkbox.type = 'checkbox';
-            checkbox.className = 'style-checkbox';
-            checkbox.dataset.index = index;
-            checkbox.dataset.className = style.className;
-            checkbox.dataset.styleContent = style.styleContent;
-            checkbox.style.cursor = 'pointer';
-          }
         });
         
         // 将预览容器插入到样式输入区域上方
@@ -7977,19 +8115,73 @@ class AddRegexRuleModal extends Modal {
         // 解析多个CSS样式
         const parseCssStyles = (cssText) => {
           const styles = [];
+          const pseudoRules = [];
+          const keyframeRules = [];
           // 匹配CSS类选择器和样式内容
           const styleRegex = /\.([^{]+?)\s*\{([^}]*)\}/g;
           let match;
           
-          while ((match = styleRegex.exec(cssText)) !== null) {
+          // 提取 @keyframes 规则（使用括号计数法匹配任意深度）
+          const extractKeyframes = (text) => {
+            const results = [];
+            const startRegex = /@keyframes\s+([a-zA-Z0-9_-]+)\s*\{/g;
+            let startMatch;
+            while ((startMatch = startRegex.exec(text)) !== null) {
+              const name = startMatch[1];
+              const startPos = startMatch.index;
+              const openPos = startMatch.index + startMatch[0].length - 1;
+              let depth = 1;
+              let pos = openPos + 1;
+              while (pos < text.length && depth > 0) {
+                if (text[pos] === '{') depth++;
+                else if (text[pos] === '}') depth--;
+                pos++;
+              }
+              results.push({ name, fullStyle: text.substring(startPos, pos) });
+            }
+            return results;
+          };
+          const kfResults = extractKeyframes(cssText);
+          for (const kf of kfResults) {
+            keyframeRules.push(kf);
+          }
+          
+          // 从文本中移除 @keyframes 块，避免内部的小数点被误匹配为类选择器
+          let cssTextNoKeyframes = cssText;
+          for (const kf of kfResults) {
+            cssTextNoKeyframes = cssTextNoKeyframes.replace(kf.fullStyle, '');
+          }
+          
+          while ((match = styleRegex.exec(cssTextNoKeyframes)) !== null) {
             const className = match[1].trim();
             const styleContent = match[2].trim();
             const fullStyle = `.${className} { ${styleContent} }`;
-            styles.push({
-              className,
-              styleContent,
-              fullStyle
-            });
+            if (className.includes('::') || className.includes(':')) {
+              const baseName = className.split(/::|:/)[0].trim();
+              pseudoRules.push({ baseName, fullStyle });
+            } else {
+              styles.push({
+                className,
+                styleContent,
+                fullStyle
+              });
+            }
+          }
+          
+          for (const pseudo of pseudoRules) {
+            const parent = styles.find(s => s.className === pseudo.baseName);
+            if (parent) {
+              parent.fullStyle += '\n' + pseudo.fullStyle;
+            }
+          }
+          
+          // 将 @keyframes 规则关联到引用它的主类
+          for (const kf of keyframeRules) {
+            for (const style of styles) {
+              if (style.fullStyle.includes(kf.name)) {
+                style.fullStyle = style.fullStyle + '\n' + kf.fullStyle;
+              }
+            }
           }
           
           return styles;
@@ -8034,20 +8226,12 @@ class AddRegexRuleModal extends Modal {
             
             // 预览文本 - 无框设计
             const previewSpan = previewWrapper.createEl('span', { text: t('entity.preview') });
+            previewSpan.className = style.className;
             previewSpan.style.display = 'inline-block';
             previewSpan.style.padding = '2px 8px';
             previewSpan.style.borderRadius = '3px';
             previewSpan.style.fontSize = '12px';
             previewSpan.setAttribute('style', `font-size: 12px; display: inline-block; ${style.styleContent}`);
-            
-            // 添加复选框
-            const checkbox = previewWrapper.createEl('input');
-            checkbox.type = 'checkbox';
-            checkbox.className = 'style-checkbox';
-            checkbox.dataset.index = index;
-            checkbox.dataset.className = style.className;
-            checkbox.dataset.styleContent = style.styleContent;
-            checkbox.style.cursor = 'pointer';
           });
           
           // 将预览容器插入到样式输入区域上方
@@ -8107,42 +8291,12 @@ class AddRegexRuleModal extends Modal {
     addBtn.style.fontWeight = "bold";
     
     addBtn.addEventListener("click", async () => {
-      // 收集所有选中的样式
-      const checkboxes = modal.contentEl.querySelectorAll('.style-checkbox');
-      const selectedStyles = [];
+      // 直接从文本框解析所有样式
+      const styleText = styleTextarea.value.trim();
+      const selectedStyles = parseCssStyles(styleText);
       
-      checkboxes.forEach(checkbox => {
-        if (checkbox.checked) {
-          selectedStyles.push({
-            className: checkbox.dataset.className,
-            styleContent: checkbox.dataset.styleContent
-          });
-        }
-      });
-      
-      // 如果没有选中的样式，尝试从文本框中解析
       if (selectedStyles.length === 0) {
-        const styleText = styleTextarea.value.trim();
-        
-        // 从CSS样式文本中提取类名
-        const classMatch = styleText.match(/\.([a-zA-Z0-9_\u4e00-\u9fa5-]+)\s*\{([^}]*)\}/);
-        if (!classMatch || !classMatch[1]) {
-          this.showError(modal.contentEl, "请输入有效的CSS样式格式，例如：.my-class { color: red; }");
-          return;
-        }
-        
-        const className = classMatch[1];
-        const styleContent = classMatch[2].trim();
-        
-        selectedStyles.push({
-          className,
-          styleContent
-        });
-      }
-      
-      // 检查是否有样式需要添加
-      if (selectedStyles.length === 0) {
-        this.showError(modal.contentEl, "请选择或输入CSS样式");
+        this.showError(modal.contentEl, "请输入有效的CSS样式格式，例如：.my-class { color: red; }");
         return;
       }
       
@@ -8151,8 +8305,7 @@ class AddRegexRuleModal extends Modal {
         
         // 处理每个选中的样式
         for (const style of selectedStyles) {
-          const { className, styleContent } = style;
-          const fullStyle = `.${className} { ${styleContent} }`;
+          const { className, styleContent, fullStyle } = style;
           
           // 检查类名是否已存在
           if (existingClassNames.includes(className)) {
@@ -8160,7 +8313,7 @@ class AddRegexRuleModal extends Modal {
             continue;
           }
           
-          // 直接将整个CSS样式代码添加到文件中，不进行处理
+          // 直接将整个CSS样式代码添加到文件中（含伪元素规则）
           await this.addStyleToCSSFileDirectly(fullStyle);
           
           // 添加到配置文件
@@ -8197,11 +8350,8 @@ class AddRegexRuleModal extends Modal {
         await this.plugin.loadStyleCategories();
         await this.loadCssStyles();
         
-        // 刷新弹窗内容 - 重新打开AddRegexRuleModal
-        if (this.plugin) {
-          const newModal = new AddRegexRuleModal(this.app, this.plugin);
-          newModal.open();
-        }
+        // 刷新当前主面板内容
+        this.onOpen();
         
       } catch (error) {
         console.error('Error adding style:', error);
@@ -8302,6 +8452,11 @@ class AddRegexRuleModal extends Modal {
         Object.entries(this.plugin.settings.headingStyles).forEach(([className, styles]) => {
           this.cssStyles.set(className, styles);
         });
+      }
+
+      // 同步更新 plugin.cssStyles，确保新创建的 Modal 能获取到最新数据
+      if (this.plugin && this.plugin.cssStyles) {
+        this.plugin.cssStyles = new Map(this.cssStyles);
       }
 
       if (this.plugin) {
@@ -21817,7 +21972,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }
         
         // 检查是否在全局规则中
-        const globalRuleIndex = this.globalRules.findIndex(rule => rule.regex === selectedText);
+        const globalRuleIndex = this.globalRules.findIndex(rule => textMatchesRegex(selectedText, rule.regex));
         const isGlobalRule = globalRuleIndex !== -1;
         
         // 尝试从全局规则或当前文件规则中查找匹配的规则并获取备注
@@ -21830,7 +21985,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           }
         } else if (this.rules) {
           // 从当前文件规则中获取备注
-          const matchingRule = this.rules.find(rule => rule.regex === selectedText);
+          const matchingRule = this.rules.find(rule => textMatchesRegex(selectedText, rule.regex));
           if (matchingRule && matchingRule.remark) {
             currentRemark = matchingRule.remark;
           }
@@ -21872,7 +22027,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             if (currentFilePath && selectedText) {
               await this.loadFileRules(currentFilePath);
               
-              const ruleIndex = this.rules.findIndex(rule => rule.regex === selectedText);
+              const ruleIndex = this.rules.findIndex(rule => textMatchesRegex(selectedText, rule.regex));
               if (ruleIndex !== -1) {
                 this.rules[ruleIndex].remark = trimmedRemark;
                 await this.saveFileRules(currentFilePath, this.rules);
@@ -21911,12 +22066,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         // 查找匹配的规则
         const globalRuleIndex = this.globalRules.findIndex(rule => {
           const ruleParts = rule.regex.split('|');
-          return ruleParts.includes(selectedText) || rule.regex === selectedText;
+          return ruleParts.some(p => textMatchesRegex(selectedText, p)) || textMatchesRegex(selectedText, rule.regex);
         });
         
         const fileRuleIndex = this.rules ? this.rules.findIndex(rule => {
           const ruleParts = rule.regex.split('|');
-          return ruleParts.includes(selectedText) || rule.regex === selectedText;
+          return ruleParts.some(p => textMatchesRegex(selectedText, p)) || textMatchesRegex(selectedText, rule.regex);
         }) : -1;
         
         if (globalRuleIndex === -1 && fileRuleIndex === -1) {
@@ -21928,8 +22083,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         if (globalRuleIndex !== -1) {
           const rule = this.globalRules[globalRuleIndex];
           const ruleParts = rule.regex.split('|');
-          if (ruleParts.length > 1 && ruleParts.includes(selectedText)) {
-            const newParts = ruleParts.filter(p => p !== selectedText);
+          if (ruleParts.length > 1 && ruleParts.some(p => textMatchesRegex(selectedText, p))) {
+            const newParts = ruleParts.filter(p => !textMatchesRegex(selectedText, p));
             if (newParts.length > 0) {
               this.globalRules[globalRuleIndex].regex = newParts.join('|');
             } else {
@@ -21959,8 +22114,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           if (currentFilePath) {
             const rule = this.rules[fileRuleIndex];
             const ruleParts = rule.regex.split('|');
-            if (ruleParts.length > 1 && ruleParts.includes(selectedText)) {
-              const newParts = ruleParts.filter(p => p !== selectedText);
+            if (ruleParts.length > 1 && ruleParts.some(p => textMatchesRegex(selectedText, p))) {
+              const newParts = ruleParts.filter(p => !textMatchesRegex(selectedText, p));
               if (newParts.length > 0) {
                 this.rules[fileRuleIndex].regex = newParts.join('|');
               } else {
@@ -22496,6 +22651,46 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           clearTimeout(hoverTimeout);
         };
         
+        // 从悬浮球移除按钮
+        const groupRemoveBtn = document.createElement('span');
+        groupRemoveBtn.textContent = '🗑️';
+        groupRemoveBtn.title = t('main.removeFromFloatingBall');
+        groupRemoveBtn.style.cssText = `
+          margin-right: 8px;
+          cursor: pointer;
+          font-size: 0.85em;
+          opacity: 0.5;
+          transition: opacity 0.2s ease;
+        `;
+        groupRemoveBtn.addEventListener('mouseenter', () => {
+          groupRemoveBtn.style.opacity = '1';
+        });
+        groupRemoveBtn.addEventListener('mouseleave', () => {
+          groupRemoveBtn.style.opacity = '0.5';
+        });
+        groupRemoveBtn.onclick = async (e) => {
+          e.stopPropagation();
+          const idx = floatingBallGroups.indexOf(groupName);
+          if (idx > -1) {
+            floatingBallGroups.splice(idx, 1);
+          }
+          this.floatButtonData.floatingBallGroups = floatingBallGroups;
+          await this.saveFloatButtonData();
+          this.renderFloatingOptionButtons();
+          // 关闭子菜单
+          if (styleSubMenu && document.body.contains(styleSubMenu)) {
+            document.body.removeChild(styleSubMenu);
+            styleSubMenu = null;
+          }
+          // 刷新菜单
+          if (document.body.contains(menu)) {
+            document.body.removeChild(menu);
+            hoverMenu = null;
+          }
+          new Notice(t('main.groupDeleted'));
+        };
+        
+        groupOption.appendChild(groupRemoveBtn);
         groupOption.appendChild(groupText);
         groupOption.appendChild(groupPinBtn);
         
@@ -23291,7 +23486,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }
         
         // 检查是否在全局规则中
-        const globalRuleIndex = this.globalRules.findIndex(rule => rule.regex === selectedText);
+        const globalRuleIndex = this.globalRules.findIndex(rule => textMatchesRegex(selectedText, rule.regex));
         const isGlobalRule = globalRuleIndex !== -1;
         
         // 尝试从全局规则或当前文件规则中查找匹配的规则并获取备注
@@ -23304,7 +23499,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           }
         } else if (this.rules) {
           // 从当前文件规则中获取备注
-          const matchingRule = this.rules.find(rule => rule.regex === selectedText);
+          const matchingRule = this.rules.find(rule => textMatchesRegex(selectedText, rule.regex));
           if (matchingRule && matchingRule.remark) {
             currentRemark = matchingRule.remark;
           }
@@ -23341,7 +23536,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             if (currentFilePath && selectedText) {
               await this.loadFileRules(currentFilePath);
               
-              const ruleIndex = this.rules.findIndex(rule => rule.regex === selectedText);
+              const ruleIndex = this.rules.findIndex(rule => textMatchesRegex(selectedText, rule.regex));
               if (ruleIndex !== -1) {
                 this.rules[ruleIndex].remark = trimmedRemark;
                 await this.saveFileRules(currentFilePath, this.rules);
@@ -23389,12 +23584,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         // 查找匹配的规则
         const globalRuleIndex = this.globalRules.findIndex(rule => {
           const ruleParts = rule.regex.split('|');
-          return ruleParts.includes(selectedText) || rule.regex === selectedText;
+          return ruleParts.some(p => textMatchesRegex(selectedText, p)) || textMatchesRegex(selectedText, rule.regex);
         });
         
         const fileRuleIndex = this.rules ? this.rules.findIndex(rule => {
           const ruleParts = rule.regex.split('|');
-          return ruleParts.includes(selectedText) || rule.regex === selectedText;
+          return ruleParts.some(p => textMatchesRegex(selectedText, p)) || textMatchesRegex(selectedText, rule.regex);
         }) : -1;
         
         if (globalRuleIndex === -1 && fileRuleIndex === -1) {
@@ -23406,9 +23601,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         if (globalRuleIndex !== -1) {
           const rule = this.globalRules[globalRuleIndex];
           const ruleParts = rule.regex.split('|');
-          if (ruleParts.length > 1 && ruleParts.includes(selectedText)) {
+          if (ruleParts.length > 1 && ruleParts.some(p => textMatchesRegex(selectedText, p))) {
             // 多部分规则，只移除匹配的部分
-            const newParts = ruleParts.filter(p => p !== selectedText);
+            const newParts = ruleParts.filter(p => !textMatchesRegex(selectedText, p));
             if (newParts.length > 0) {
               this.globalRules[globalRuleIndex].regex = newParts.join('|');
             } else {
@@ -23438,9 +23633,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           if (currentFilePath) {
             const rule = this.rules[fileRuleIndex];
             const ruleParts = rule.regex.split('|');
-            if (ruleParts.length > 1 && ruleParts.includes(selectedText)) {
+            if (ruleParts.length > 1 && ruleParts.some(p => textMatchesRegex(selectedText, p))) {
               // 多部分规则，只移除匹配的部分
-              const newParts = ruleParts.filter(p => p !== selectedText);
+              const newParts = ruleParts.filter(p => !textMatchesRegex(selectedText, p));
               if (newParts.length > 0) {
                 this.rules[fileRuleIndex].regex = newParts.join('|');
               } else {
@@ -23946,7 +24141,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               }
               try {
                 const existingRule = this.globalRules.find(
-                  rule => rule.regex === selectedText && rule.cssClass === className
+                  rule => textMatchesRegex(selectedText, rule.regex) && rule.cssClass === className
                 );
                 if (existingRule) {
                   new Notice(t('main.globalRuleExists'));
@@ -31992,8 +32187,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (this.rules && this.rules.length > 0) {
         for (let i = 0; i < this.rules.length; i++) {
           const rule = this.rules[i];
-          if (rule.regex === trimmedSelection || 
-              rule.regex === selectedText ||
+          if (textMatchesRegex(trimmedSelection, rule.regex) || 
+              textMatchesRegex(selectedText, rule.regex) ||
               (rule.regex && rule.regex.includes(trimmedSelection))) {
             foundRuleIndex = i;
             break;
@@ -32004,8 +32199,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (foundRuleIndex === -1 && this.globalRules && this.globalRules.length > 0) {
         for (let i = 0; i < this.globalRules.length; i++) {
           const rule = this.globalRules[i];
-          if (rule.regex === trimmedSelection || 
-              rule.regex === selectedText ||
+          if (textMatchesRegex(trimmedSelection, rule.regex) || 
+              textMatchesRegex(selectedText, rule.regex) ||
               (rule.regex && rule.regex.includes(trimmedSelection))) {
             foundRuleIndex = i;
             isGlobalRule = true;
@@ -32150,7 +32345,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       let existingRuleIndex = -1;
       for (let i = 0; i < this.rules.length; i++) {
         const rule = this.rules[i];
-        if (rule.regex === trimmedSelection || rule.regex === selectedText) {
+        if (textMatchesRegex(trimmedSelection, rule.regex) || textMatchesRegex(selectedText, rule.regex)) {
           existingRuleIndex = i;
           break;
         }
@@ -32243,7 +32438,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       let existingRuleIndex = -1;
       for (let i = 0; i < this.globalRules.length; i++) {
         const rule = this.globalRules[i];
-        if (rule.regex === trimmedSelection || rule.regex === selectedText) {
+        if (textMatchesRegex(trimmedSelection, rule.regex) || textMatchesRegex(selectedText, rule.regex)) {
           existingRuleIndex = i;
           break;
         }
@@ -32325,8 +32520,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       let foundRuleIndex = -1;
       for (let i = 0; i < this.rules.length; i++) {
         const rule = this.rules[i];
-        if (rule.regex === trimmedSelection || 
-            rule.regex === selectedText ||
+        if (textMatchesRegex(trimmedSelection, rule.regex) || 
+            textMatchesRegex(selectedText, rule.regex) ||
             (rule.regex && rule.regex.includes(trimmedSelection))) {
           foundRuleIndex = i;
           break;

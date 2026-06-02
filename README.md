@@ -3,7 +3,6 @@
 ---
 
 #Regex-CSS-Highlighter-en
-
 ---
 An Obsidian plugin that matches text via regular expressions and applies custom CSS styles for highlighting.
 

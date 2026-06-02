@@ -294,6 +294,8 @@ const i18n = {
     'main.floatEnabled': '悬浮显示已启用，按住拖动位置，左键点击应用样式到选中文本',
     'main.floatNameUpdated': '悬浮按钮名称已更新',
     'main.floatOptionUpdated': '悬浮选项已更新',
+    'main.groupStyleUpdated': '分组按钮样式已更新',
+    'main.groupStyleEditTitle': '编辑分组按钮样式',
     'main.floatGroupCancelled': '已取消分组的悬浮显示',
     'main.floatOptionCancelled': '已取消的悬浮显示',
     'main.displayTextChanged': '显示文字已更新',
@@ -590,6 +592,7 @@ const i18n = {
     'context.addGroup': '添加到分组',
     'context.renameGroup': '重命名分组',
     'context.deleteGroup': '删除分组',
+    'context.editGroupStyle': '修改分组样式',
     'context.newGroup': '新建分组',
     'context.showInFloatingBall': '在悬浮球中显示',
     'context.hideInFloatingBall': '从悬浮球中移除',
@@ -1219,6 +1222,8 @@ const i18n = {
     'main.floatEnabled': 'Float display enabled, drag to move, left-click to apply style',
     'main.floatNameUpdated': 'Floating button name updated',
     'main.floatOptionUpdated': 'Floating option updated',
+    'main.groupStyleUpdated': 'Group button style updated',
+    'main.groupStyleEditTitle': 'Edit Group Button Style',
     'main.floatGroupCancelled': 'Float display cancelled for group',
     'main.floatOptionCancelled': 'Float display cancelled',
     'main.displayTextChanged': 'Display text updated',
@@ -1515,6 +1520,7 @@ const i18n = {
     'context.addGroup': 'Add to Group',
     'context.renameGroup': 'Rename Group',
     'context.deleteGroup': 'Delete Group',
+    'context.editGroupStyle': 'Edit Group Style',
     'context.newGroup': 'New Group',
     'context.showInFloatingBall': 'Show in Floating Ball',
     'context.hideInFloatingBall': 'Remove from Floating Ball',
@@ -4817,8 +4823,9 @@ class EntityExtractionModal extends Modal {
     widthInput.style.fontSize = "14px";
     widthInput.title = t('settings.altScrollWidth');
     // 使用plugin.settings.modalWidth作为默认值
-    const defaultWidth = this.plugin.settings?.modalWidth || 600;
-    widthInput.value = defaultWidth;
+    const savedModalWidth = this.plugin.settings?.modalWidth || 600;
+    const defaultWidth = _isDesktop ? savedModalWidth : Math.min(savedModalWidth, window.innerWidth - 20);
+    widthInput.value = savedModalWidth;
     // 设置初始窗口宽度，与主模态框保持一致
     const contentWidth = defaultWidth - 30; // 减去边距
     contentEl.style.maxWidth = `${contentWidth}px`;
@@ -8325,20 +8332,19 @@ class AddRegexRuleModal extends Modal {
     
     // 内容区域宽度设置，使用用户配置的宽度减去边距
     const defaultWidth = _isDesktop ? 1000 : Math.min(window.innerWidth - 20, 1000);
-    const userWidth = this.plugin.settings?.modalWidth || defaultWidth;
-    const contentWidth = userWidth - 30; // 减去边距
+    const savedWidth = this.plugin.settings?.modalWidth || defaultWidth;
+    const userWidth = _isDesktop ? savedWidth : Math.min(savedWidth, defaultWidth);
+    const contentWidth = userWidth - 30;
     
     contentEl.style.maxWidth = `${contentWidth}px`;
     contentEl.style.width = `${contentWidth}px`;
     contentEl.style.maxHeight = "80vh";
-    contentEl.style.overflowY = "auto"; // 允许整个弹窗滚动
-    
-    // 强制设置弹窗容器的宽度，优先使用用户设置的宽度（使用上面已声明的变量）
+    contentEl.style.overflowY = "auto";
     
     this.modalEl.style.width = `${userWidth}px`;
     this.modalEl.style.maxWidth = '95vw';
     this.modalEl.style.minWidth = _isDesktop ? "800px" : "0";
-    this.modalEl.style.maxHeight = "80vh"; // 限制模态框高度
+    this.modalEl.style.maxHeight = "80vh";
     
     // 创建标题容器
     const titleContainer = contentEl.createDiv();
@@ -8346,9 +8352,9 @@ class AddRegexRuleModal extends Modal {
     titleContainer.style.justifyContent = "space-between";
     titleContainer.style.alignItems = "center";
     titleContainer.style.marginBottom = "5px";
-    titleContainer.style.flexWrap = "nowrap"; // 防止换行
-    titleContainer.style.width = "100%"; // 确保容器占满宽度
-    titleContainer.style.minWidth = "0"; // 允许flex子项收缩
+    titleContainer.style.flexWrap = "nowrap";
+    titleContainer.style.width = "100%";
+    titleContainer.style.minWidth = "0";
     
     // 创建主标题容器，用于包含标题和链接
     const mainTitleContainer = titleContainer.createDiv();
@@ -8386,7 +8392,6 @@ class AddRegexRuleModal extends Modal {
     const titleEl = mainTitleContainer.createEl("h2", { text: titleText });
     titleEl.style.margin = "0";
     titleEl.style.fontSize = "14px";
-    titleEl.style.color = "#333";
     titleEl.style.display = "inline";
     titleEl.style.flexShrink = "1"; // 允许标题收缩以腾出空间
     titleEl.style.minWidth = "0"; // 允许标题收缩
@@ -9104,7 +9109,11 @@ class AddRegexRuleModal extends Modal {
             // 更新分组标题的视觉效果
             const categoryTitle = categoryContainer.querySelector('h4');
             if (categoryTitle) {
-              categoryTitle.style.backgroundColor = '#007bff';
+              const catName = categoryContainer.getAttribute('data-category');
+              const savedStyle = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[catName];
+              if (!savedStyle) {
+                categoryTitle.style.backgroundColor = '#007bff';
+              }
               categoryTitle.title = t('main.dblClickHideGroup');
             }
             
@@ -9358,13 +9367,12 @@ class AddRegexRuleModal extends Modal {
     // 创建标题和链接容器
     const titleAndLinkContainer = styleContainer.createDiv();
     titleAndLinkContainer.style.marginBottom = "2px";
-    titleAndLinkContainer.style.position = "relative"; // 设置为相对定位，作为绝对定位元素的容器
+    titleAndLinkContainer.style.position = "relative";
     
     // 创建标题
     const styleTitle = titleAndLinkContainer.createEl("h3", { text: t('main.styleListGroup') });
     styleTitle.style.margin = "0";
     styleTitle.style.fontSize = "14px";
-    styleTitle.style.color = "#555";
     styleTitle.style.display = "inline";
     
     // 添加空格
@@ -9530,7 +9538,6 @@ class AddRegexRuleModal extends Modal {
     mainContainer.style.padding = "2px";
     mainContainer.style.border = "1px solid #eee";
     mainContainer.style.borderRadius = "6px";
-    // mainContainer.style.backgroundColor = "#fafafa";
     
     
     // 创建默认折叠功能开关
@@ -9538,7 +9545,6 @@ class AddRegexRuleModal extends Modal {
     defaultCollapseToggle.style.marginTop = '8px';
     defaultCollapseToggle.style.marginBottom = '4px';
     defaultCollapseToggle.style.padding = '4px';
-    // 移除背景色
     defaultCollapseToggle.style.borderRadius = '4px';
 
     // 创建标题和开关容器
@@ -9609,7 +9615,6 @@ class AddRegexRuleModal extends Modal {
       collapsedCategoriesContainer.style.gap = '4px';
       collapsedCategoriesContainer.style.padding = '4px';
       collapsedCategoriesContainer.style.marginBottom = '4px';
-      // 移除背景色
       collapsedCategoriesContainer.style.borderRadius = '4px';
       collapsedCategoriesContainer.style.minHeight = '24px';
       // 默认隐藏，只有当有折叠分组时才显示
@@ -9659,6 +9664,14 @@ class AddRegexRuleModal extends Modal {
         categoryTitle.style.flexShrink = "0";
         categoryTitle.style.cursor = "grab";
         categoryTitle.style.position = "relative";
+
+        const savedGroupStyleClass = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[category];
+        if (savedGroupStyleClass) {
+          categoryTitle.style.backgroundColor = '';
+          categoryTitle.style.color = '';
+          categoryTitle.className = `group-btn-style-${savedGroupStyleClass}`;
+          this.plugin.applyGroupButtonStyleRules(savedGroupStyleClass);
+        }
 
         const groupFloatBtn = document.createElement('span');
         groupFloatBtn.textContent = '📌';
@@ -9835,7 +9848,9 @@ class AddRegexRuleModal extends Modal {
           if (isHidden) {
             // 显示分组
             categoryContainer.style.display = 'flex';
-            categoryTitle.style.backgroundColor = '#007bff';
+            if (!savedGroupStyleClass) {
+              categoryTitle.style.backgroundColor = '#007bff';
+            }
             categoryTitle.title = t('main.dblClickHideGroup');
             
             // 只显示分组内匹配的样式按钮，避免闪烁
@@ -9983,7 +9998,9 @@ class AddRegexRuleModal extends Modal {
           } else {
             // 隐藏分组
             categoryContainer.style.display = 'none';
-            categoryTitle.style.backgroundColor = '#6c757d';
+            if (!savedGroupStyleClass) {
+              categoryTitle.style.backgroundColor = '#6c757d';
+            }
             categoryTitle.title = t('main.dblClickShowGroup');
             
             // 创建重新打开按钮
@@ -10270,6 +10287,138 @@ class AddRegexRuleModal extends Modal {
                 } catch (error) {
                   console.error("悬浮显示分组时出错:", error);
                   new Notice(t('main.groupAddFailed'));
+                }
+              });
+          });
+
+          menu.addItem((item) => {
+            item
+              .setTitle(t('context.editGroupStyle'))
+              .setIcon("palette")
+              .onClick(async () => {
+                try {
+                  const currentStyleClass = this.plugin.floatButtonData?.groupButtonStyleClasses?.[category] || '';
+
+                  const modal = new Modal(this.app);
+                  modal.titleEl.textContent = t('main.groupStyleEditTitle');
+                  modal.contentEl.addClass('input-modal');
+
+                  const styleDiv = modal.contentEl.createDiv();
+                  styleDiv.style.marginBottom = '12px';
+
+                  const styleName = styleDiv.createEl('label');
+                  styleName.textContent = t('floating.styleClassNameLabel') + ': ';
+                  styleName.style.display = 'block';
+                  styleName.style.marginBottom = '4px';
+                  styleName.style.fontWeight = 'bold';
+
+                  const styleHint = styleDiv.createEl('span');
+                  styleHint.textContent = t('floating.styleClassHint');
+                  styleHint.style.fontSize = '12px';
+                  styleHint.style.color = 'var(--text-muted)';
+                  styleHint.style.display = 'block';
+                  styleHint.style.marginBottom = '4px';
+
+                  const styleInput = styleDiv.createEl('input');
+                  styleInput.type = 'text';
+                  styleInput.placeholder = t('floating.inputCssClass');
+                  styleInput.value = currentStyleClass;
+                  styleInput.style.width = '100%';
+                  styleInput.style.padding = '8px';
+                  styleInput.style.border = '1px solid var(--background-modifier-border)';
+                  styleInput.style.borderRadius = '4px';
+
+                  const previewDiv = modal.contentEl.createDiv();
+                  previewDiv.style.marginBottom = '16px';
+
+                  const previewLabel = previewDiv.createEl('label');
+                  previewLabel.textContent = t('floating.preview') + ': ';
+                  previewLabel.style.display = 'block';
+                  previewLabel.style.marginBottom = '4px';
+                  previewLabel.style.fontWeight = 'bold';
+
+                  const previewEl = previewDiv.createEl('span');
+                  previewEl.textContent = category;
+                  previewEl.style.display = 'inline-block';
+                  previewEl.style.padding = '1px 5px';
+                  previewEl.style.borderRadius = '3px';
+                  previewEl.style.whiteSpace = 'nowrap';
+                  previewEl.style.fontSize = '14px';
+                  previewEl.style.fontWeight = 'bold';
+
+                  const updatePreview = (className) => {
+                    if (className) {
+                      previewEl.className = `group-btn-style-${className}`;
+                      previewEl.style.backgroundColor = '';
+                      previewEl.style.color = '';
+                      previewEl.style.border = '';
+                      previewEl.style.boxShadow = '';
+                      this.plugin.applyGroupButtonStyleRules(className);
+                    } else {
+                      previewEl.className = '';
+                      previewEl.style.backgroundColor = '#007bff';
+                      previewEl.style.color = 'white';
+                      previewEl.style.border = '';
+                      previewEl.style.boxShadow = '';
+                    }
+                  };
+
+                  updatePreview(currentStyleClass);
+
+                  styleInput.addEventListener('input', () => {
+                    updatePreview(styleInput.value.trim());
+                  });
+
+                  const buttonContainer = modal.contentEl.createEl('div');
+                  buttonContainer.style.display = 'flex';
+                  buttonContainer.style.justifyContent = 'flex-end';
+                  buttonContainer.style.gap = '8px';
+
+                  const cancelBtn = buttonContainer.createEl('button');
+                  cancelBtn.textContent = t('main.cancel');
+                  cancelBtn.style.padding = '6px 16px';
+                  cancelBtn.addEventListener('click', () => modal.close());
+
+                  const confirmBtn = buttonContainer.createEl('button');
+                  confirmBtn.textContent = t('main.confirm');
+                  confirmBtn.style.padding = '6px 16px';
+                  confirmBtn.style.backgroundColor = 'var(--interactive-accent)';
+                  confirmBtn.style.color = 'white';
+                  confirmBtn.style.border = 'none';
+                  confirmBtn.style.borderRadius = '4px';
+                  confirmBtn.addEventListener('click', async () => {
+                    const newStyleClass = styleInput.value.trim();
+
+                    if (!this.plugin.floatButtonData.groupButtonStyleClasses) {
+                      this.plugin.floatButtonData.groupButtonStyleClasses = {};
+                    }
+                    this.plugin.floatButtonData.groupButtonStyleClasses[category] = newStyleClass;
+                    await this.plugin.saveFloatButtonData();
+
+                    if (newStyleClass) {
+                      categoryTitle.style.backgroundColor = '';
+                      categoryTitle.style.color = '';
+                      categoryTitle.style.border = '';
+                      categoryTitle.style.boxShadow = '';
+                      categoryTitle.className = `group-btn-style-${newStyleClass}`;
+                      this.plugin.applyGroupButtonStyleRules(newStyleClass);
+                    } else {
+                      categoryTitle.className = '';
+                      categoryTitle.style.backgroundColor = '#007bff';
+                      categoryTitle.style.color = 'white';
+                      categoryTitle.style.border = '';
+                      categoryTitle.style.boxShadow = '';
+                    }
+
+                    new Notice(t('main.groupStyleUpdated'));
+                    modal.close();
+                  });
+
+                  setTimeout(() => styleInput.focus(), 100);
+                  modal.open();
+                } catch (error) {
+                  console.error("编辑分组样式时出错:", error);
+                  new Notice(t('main.cannotOpenEditor'));
                 }
               });
           });
@@ -11929,7 +12078,9 @@ class AddRegexRuleModal extends Modal {
         // 应用折叠状态 - 隐藏整个分类容器
         categoryContainer.style.display = 'none';
         // 更新标题的视觉效果
-        categoryTitle.style.backgroundColor = '#6c757d';
+        if (!savedGroupStyleClass) {
+          categoryTitle.style.backgroundColor = '#6c757d';
+        }
         categoryTitle.title = t('main.dblClickExpandGroup');
         
         // 如果是默认折叠功能，更新插件的折叠状态
@@ -12049,7 +12200,9 @@ class AddRegexRuleModal extends Modal {
         
         // 确保分组容器可见
         categoryContainer.style.display = 'flex';
-        categoryTitle.style.backgroundColor = '#007bff';
+        if (!savedGroupStyleClass) {
+          categoryTitle.style.backgroundColor = '#007bff';
+        }
         categoryTitle.title = t('main.dblClickHideGroup');
       }
       
@@ -12318,7 +12471,11 @@ class AddRegexRuleModal extends Modal {
           // 找到分类标题并更新视觉效果
           const categoryTitle = categoryContainer.querySelector('h4');
           if (categoryTitle) {
-            categoryTitle.style.backgroundColor = '#007bff';
+            const catName = categoryContainer.getAttribute('data-category');
+            const savedStyle = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[catName];
+            if (!savedStyle) {
+              categoryTitle.style.backgroundColor = '#007bff';
+            }
             categoryTitle.title = t('main.dblClickHideGroup');
           }
           
@@ -12732,7 +12889,7 @@ class AddRegexRuleModal extends Modal {
     
     // 创建新的设置容器
     const settingsContainer = targetEl.createDiv();
-    settingsContainer.className = 'regex-highlighter-settings'; // 添加特殊类名以便识别
+    settingsContainer.className = 'regex-highlighter-settings';
     settingsContainer.style.marginTop = "10px";
     settingsContainer.style.padding = "8px";
     settingsContainer.style.border = "1px solid #ddd";
@@ -12772,7 +12929,6 @@ class AddRegexRuleModal extends Modal {
     const settingsTitle = settingsTitleContainer.createEl("h3", { text: t('settings.settingsTitle') + " ▶" });
     settingsTitle.style.margin = "0";
     settingsTitle.style.fontSize = "14px";
-    settingsTitle.style.color = "#666";
     settingsTitle.style.display = "inline";
     
     // 添加空格
@@ -15054,7 +15210,7 @@ class AddRegexRuleModal extends Modal {
     
     // 创建全局规则容器
     const globalSection = contentEl.createDiv();
-    globalSection.className = 'global-rules-section'; // 添加类名便于识别
+    globalSection.className = 'global-rules-section';
     globalSection.style.marginTop = "10px";
     globalSection.style.padding = "8px";
     globalSection.style.border = "1px solid #ddd";
@@ -15099,7 +15255,6 @@ class AddRegexRuleModal extends Modal {
     const globalTitle = titleContainer.createEl("h3", { text: t('main.globalRules') + ' ▼' });
     globalTitle.style.margin = "0";
     globalTitle.style.fontSize = "14px";
-    globalTitle.style.color = "#333";
 
     // 从插件实例中读取全局折叠状态
     this.plugin.isGlobalHistoryCollapsed = this.plugin.isGlobalHistoryCollapsed || false;
@@ -16166,12 +16321,11 @@ class AddRegexRuleModal extends Modal {
     
     // 创建历史记录容器
     const historyContainer = contentEl.createDiv();
-    historyContainer.className = 'history-section'; // 添加类名便于识别
+    historyContainer.className = 'history-section';
     historyContainer.style.marginTop = "10px";
     historyContainer.style.padding = "8px";
     historyContainer.style.border = "1px solid #ddd";
     historyContainer.style.borderRadius = "6px";
-   // historyContainer.style.backgroundColor = "#f9f9f9";
     
     // 先将历史记录容器从DOM中移除（如果被自动添加了）
     if (historyContainer.parentNode === contentEl) {
@@ -16211,7 +16365,6 @@ class AddRegexRuleModal extends Modal {
     const historyTitle = titleContainer.createEl("h3", { text: t('main.currentRules') + ' ▼' });
     historyTitle.style.margin = "0";
     historyTitle.style.fontSize = "14px";
-    historyTitle.style.color = "#333";
 
     // 获取当前文件的规则
     const currentRules = Array.isArray(this.plugin.rules) ? this.plugin.rules : [];
@@ -19984,6 +20137,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       'floatingBallMode', 'floatingBallGroups', 'floatingBallGroupOptions',
       'floatingBallOpacity', 'floatingBallOptions', 'floatingBallOptionPositions',
       'floatingBallOptionLabels', 'floatingBallOptionStyleClasses',
+      'groupButtonStyleClasses',
       'floatingBallPosition', 'floatingBallMenuOpacity',
       'hideFloatingOptionButtons', 'floatingBallVisibleOptions', 'floatingStyleWindows',
       'hiddenFloatingStyleWindows'
@@ -20141,6 +20295,9 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     }
     if (this.floatButtonData.floatingBallOptionStyleClasses === undefined) {
       this.floatButtonData.floatingBallOptionStyleClasses = {};
+    }
+    if (this.floatButtonData.groupButtonStyleClasses === undefined) {
+      this.floatButtonData.groupButtonStyleClasses = {};
     }
     if (this.floatButtonData.hideFloatingOptionButtons === undefined) {
       this.floatButtonData.hideFloatingOptionButtons = false;
@@ -22415,7 +22572,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           pinIcon.style.cssText = `
             position: absolute;
             top: 4px;
-            right: 4px;
+            left: 4px;
             font-size: 14px;
             cursor: pointer;
             z-index: 10002;
@@ -23030,6 +23187,33 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     }
   }
 
+  async applyGroupButtonStyleRules(className) {
+    const styleId = `group-btn-style-${className}`;
+    if (document.getElementById(styleId)) return;
+
+    let fullCssRules = '';
+    try {
+      const cssContent = await this.app.vault.adapter.read('.obsidian/plugins/Regex-Css-Highlighter/styles.css');
+      const escapedClassName = className.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const ruleRegex = new RegExp(`\\.${escapedClassName}(?:::[a-zA-Z-]+(?:\\([^)]*\\))?)*\\s*\\{(?:[^{}]|\\{[^{}]*\\})*\\}`, 'gs');
+      const matches = cssContent.match(ruleRegex);
+      if (matches && matches.length > 0) {
+        fullCssRules = matches.map(rule =>
+          rule.replace(new RegExp(`\\.${escapedClassName}`, 'g'), `.group-btn-style-${className}`)
+        ).join('\n');
+      }
+    } catch (error) {
+      console.log('读取分组按钮样式CSS规则失败:', error);
+    }
+
+    if (fullCssRules) {
+      const styleElement = document.createElement('style');
+      styleElement.id = styleId;
+      styleElement.textContent = fullCssRules;
+      document.head.appendChild(styleElement);
+    }
+  }
+
   // 渲染悬浮选项按钮
   renderFloatingOptionButtons() {
     if (this._floatingOptionListeners) {
@@ -23610,7 +23794,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             overflow-y: auto;
           `;
           
-          currentSubmenu.style.left = `${btnRect.right + 5}px`;
+          const btnCenterX = btnRect.left + btnRect.width / 2;
+          if (btnCenterX > window.innerWidth / 2) {
+            currentSubmenu.style.right = `${window.innerWidth - btnRect.left + 5}px`;
+            currentSubmenu.style.left = 'auto';
+          } else {
+            currentSubmenu.style.left = `${btnRect.right + 5}px`;
+          }
           currentSubmenu.style.top = `${btnRect.top}px`;
           
           styles.forEach(className => {
@@ -23989,7 +24179,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             min-width: 120px;
           `;
           
-          currentSubmenu.style.left = `${btnRect.right + 5}px`;
+          const btnCenterX2 = btnRect.left + btnRect.width / 2;
+          if (btnCenterX2 > window.innerWidth / 2) {
+            currentSubmenu.style.right = `${window.innerWidth - btnRect.left + 5}px`;
+            currentSubmenu.style.left = 'auto';
+          } else {
+            currentSubmenu.style.left = `${btnRect.right + 5}px`;
+          }
           currentSubmenu.style.top = `${btnRect.top}px`;
           
           submenuItems.forEach(item => {
@@ -24031,17 +24227,24 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const windowH = window.innerHeight;
           const margin = 5;
           
-          if (submenuRect.right > windowW - margin) {
-            const leftPos = btnRect.left - submenuRect.width - 5;
-            if (leftPos < margin) {
+          if (currentSubmenu.style.right && currentSubmenu.style.right !== 'auto') {
+            if (submenuRect.left < margin) {
               currentSubmenu.style.left = `${margin}px`;
-              currentSubmenu.style.maxWidth = `${btnRect.left - margin - 5}px`;
-            } else {
-              currentSubmenu.style.left = `${leftPos}px`;
+              currentSubmenu.style.right = 'auto';
             }
-          }
-          if (parseFloat(currentSubmenu.style.left) < margin) {
-            currentSubmenu.style.left = `${margin}px`;
+          } else {
+            if (submenuRect.right > windowW - margin) {
+              const leftPos = btnRect.left - submenuRect.width - 5;
+              if (leftPos < margin) {
+                currentSubmenu.style.left = `${margin}px`;
+                currentSubmenu.style.maxWidth = `${btnRect.left - margin - 5}px`;
+              } else {
+                currentSubmenu.style.left = `${leftPos}px`;
+              }
+            }
+            if (parseFloat(currentSubmenu.style.left) < margin) {
+              currentSubmenu.style.left = `${margin}px`;
+            }
           }
           if (submenuRect.bottom > windowH - margin) {
             const newTop = windowH - submenuRect.height - margin;
@@ -24071,7 +24274,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             pinIcon2.style.cssText = `
               position: absolute;
               top: 4px;
-              right: 4px;
+              left: 4px;
               font-size: 14px;
               cursor: pointer;
               z-index: 10002;
@@ -35582,3 +35785,6 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
 }
 
 // 高亮列表弹窗类
+
+/* nosourcemap */
+/* nosourcemap */

@@ -1,0 +1,721 @@
+/**
+ * 独立可复制的高亮样式
+ * 基于 MoreHighlightStyle.css 修改(@稻米鼠https://zji.me/)
+*/
+
+.hl-yellow {
+  margin: 0 -0.2em;
+  padding: 0.1em 0.2em;
+  border-radius: 0.8em 0.3em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background-image: linear-gradient(
+    1deg,
+    rgba(255, 233, 88, .1),
+    rgba(255, 233, 88, 1) 4%,
+    rgba(255, 233, 88, .3) 8%,
+    rgba(255, 233, 88, .1) 50%,
+    rgba(255, 233, 88, .5) 90%,
+    rgba(255, 233, 88, .7) 100%,
+    transparent 100%
+  ),
+  linear-gradient(
+    90deg,
+    transparent  96%,
+    rgba(255, 233, 88, 1) 98%,
+    rgba(255, 233, 88, 0.8) 100%
+  );
+}
+
+.hl-green {
+  margin: 0 -0.2em;
+  padding: 0.1em 0.2em;
+  border-radius: 0.8em 0.3em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background-image: linear-gradient(
+    1deg,
+    rgba(188, 233, 64, .1),
+    rgba(188, 233, 64, 1) 4%,
+    rgba(188, 233, 64, .3) 8%,
+    rgba(188, 233, 64, .1) 50%,
+    rgba(188, 233, 64, .5) 90%,
+    rgba(188, 233, 64, .7) 100%,
+    transparent 100%
+  ),
+  linear-gradient(
+    90deg,
+    transparent  96%,
+    rgba(188, 233, 64, 1) 98%,
+    rgba(188, 233, 64, 0.8) 100%
+  );
+}
+
+.hl-blue {
+  margin: 0 -0.2em;
+  padding: 0.1em 0.2em;
+  border-radius: 0.8em 0.3em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background-image: linear-gradient(
+    1deg,
+    rgba(88, 188, 255, .1),
+    rgba(88, 188, 255, 1) 4%,
+    rgba(88, 188, 255, .3) 8%,
+    rgba(88, 188, 255, .1) 50%,
+    rgba(88, 188, 255, .5) 90%,
+    rgba(88, 188, 255, .7) 100%,
+    transparent 100%
+  ),
+  linear-gradient(
+    90deg,
+    transparent  96%,
+    rgba(88, 188, 255, 1) 98%,
+    rgba(88, 188, 255, 0.8) 100%
+  );
+}
+
+.hl-pink {
+  margin: 0 -0.2em;
+  padding: 0.1em 0.2em;
+  border-radius: 0.8em 0.3em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background-image: linear-gradient(
+    1deg,
+    rgba(255, 160, 188, .1),
+    rgba(255, 160, 188, 1) 4%,
+    rgba(255, 160, 188, .3) 8%,
+    rgba(255, 160, 188, .1) 50%,
+    rgba(255, 160, 188, .5) 90%,
+    rgba(255, 160, 188, .7) 100%,
+    transparent 100%
+  ),
+  linear-gradient(
+    90deg,
+    transparent  96%,
+    rgba(255, 160, 188, 1) 98%,
+    rgba(255, 160, 188, 0.8) 100%
+  );
+}
+
+.hl-orange {
+  margin: 0 -0.2em;
+  padding: 0.1em 0.2em;
+  border-radius: 0.8em 0.3em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background-image: linear-gradient(
+    1deg,
+    rgba(255, 188, 64, .1),
+    rgba(255, 188, 64, 1) 4%,
+    rgba(255, 188, 64, .3) 8%,
+    rgba(255, 188, 64, .1) 50%,
+    rgba(255, 188, 64, .5) 90%,
+    rgba(255, 188, 64, .7) 100%,
+    transparent 100%
+  ),
+  linear-gradient(
+    90deg,
+    transparent  96%,
+    rgba(255, 188, 64, 1) 98%,
+    rgba(255, 188, 64, 0.8) 100%
+  );
+}
+
+.hl-red {
+  margin: 0 -0.2em;
+  padding: 0.1em 0.2em;
+  border-radius: 0.8em 0.3em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background-image: linear-gradient(
+    1deg,
+    rgba(255, 96, 108, .1),
+    rgba(255, 96, 108, 1) 4%,
+    rgba(255, 96, 108, .3) 8%,
+    rgba(255, 96, 108, .1) 50%,
+    rgba(255, 96, 108, .5) 90%,
+    rgba(255, 96, 108, .7) 100%,
+    transparent 100%
+  ),
+  linear-gradient(
+    90deg,
+    transparent  96%,
+    rgba(255, 96, 108, 1) 98%,
+    rgba(255, 96, 108, 0.8) 100%
+  );
+}
+
+.hl-purple {
+  margin: 0 -0.2em;
+  padding: 0.1em 0.2em;
+  border-radius: 0.8em 0.3em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background-image: linear-gradient(
+    1deg,
+    rgba(188, 127, 255, .1),
+    rgba(188, 127, 255, 1) 4%,
+    rgba(188, 127, 255, .3) 8%,
+    rgba(188, 127, 255, .1) 50%,
+    rgba(188, 127, 255, .5) 90%,
+    rgba(188, 127, 255, .7) 100%,
+    transparent 100%
+  ),
+  linear-gradient(
+    90deg,
+    transparent  96%,
+    rgba(188, 127, 255, 1) 98%,
+    rgba(188, 127, 255, 0.8) 100%
+  );
+}
+
+.hl-gray {
+  margin: 0 -0.2em;
+  padding: 0.1em 0.2em;
+  border-radius: 0.8em 0.3em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background-image: linear-gradient(
+    1deg,
+    rgba(200, 200, 210, .1),
+    rgba(200, 200, 210, 1) 4%,
+    rgba(200, 200, 210, .3) 8%,
+    rgba(200, 200, 210, .1) 50%,
+    rgba(200, 200, 210, .5) 90%,
+    rgba(200, 200, 210, .7) 100%,
+    transparent 100%
+  ),
+  linear-gradient(
+    90deg,
+    transparent  96%,
+    rgba(200, 200, 210, 1) 98%,
+    rgba(200, 200, 210, 0.8) 100%
+  );
+}
+
+
+.hl-half-yellow {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background: 
+    radial-gradient(farthest-side,rgba(255, 233, 88, .8) 98%,#0000) bottom left,
+    linear-gradient(rgb(255, 233, 88) 0 0) bottom,
+    radial-gradient(farthest-side,rgba(255, 233, 88, .8) 98%,#0000) bottom right;
+  background-size:8px 8px,calc(100% - 8px) 8px;
+  background-repeat:no-repeat;
+}
+
+.hl-half-green {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background: 
+    radial-gradient(farthest-side,rgba(188, 233, 64, .8) 98%,#0000) bottom left,
+    linear-gradient(rgb(188, 233, 64) 0 0) bottom,
+    radial-gradient(farthest-side,rgba(188, 233, 64, .8) 98%,#0000) bottom right;
+  background-size:8px 8px,calc(100% - 8px) 8px;
+  background-repeat:no-repeat;
+}
+
+.hl-half-blue {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background: 
+    radial-gradient(farthest-side,rgba(88, 188, 255, .8) 98%,#0000) bottom left,
+    linear-gradient(rgb(88, 188, 255) 0 0) bottom,
+    radial-gradient(farthest-side,rgba(88, 188, 255, .8) 98%,#0000) bottom right;
+  background-size:8px 8px,calc(100% - 8px) 8px;
+  background-repeat:no-repeat;
+}
+
+.hl-half-pink {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background: 
+    radial-gradient(farthest-side,rgba(255, 160, 188, .8) 98%,#0000) bottom left,
+    linear-gradient(rgb(255, 160, 188) 0 0) bottom,
+    radial-gradient(farthest-side,rgba(255, 160, 188, .8) 98%,#0000) bottom right;
+  background-size:8px 8px,calc(100% - 8px) 8px;
+  background-repeat:no-repeat;
+}
+
+.hl-half-orange {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background: 
+    radial-gradient(farthest-side,rgba(255, 188, 64, .8) 98%,#0000) bottom left,
+    linear-gradient(rgb(255, 188, 64) 0 0) bottom,
+    radial-gradient(farthest-side,rgba(255, 188, 64, .8) 98%,#0000) bottom right;
+  background-size:8px 8px,calc(100% - 8px) 8px;
+  background-repeat:no-repeat;
+}
+
+.hl-half-red {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background: 
+    radial-gradient(farthest-side,rgba(255, 96, 108, .8) 98%,#0000) bottom left,
+    linear-gradient(rgb(255, 96, 108) 0 0) bottom,
+    radial-gradient(farthest-side,rgba(255, 96, 108, .8) 98%,#0000) bottom right;
+  background-size:8px 8px,calc(100% - 8px) 8px;
+  background-repeat:no-repeat;
+}
+
+.hl-half-purple {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background: 
+    radial-gradient(farthest-side,rgba(188, 127, 255, .8) 98%,#0000) bottom left,
+    linear-gradient(rgb(188, 127, 255) 0 0) bottom,
+    radial-gradient(farthest-side,rgba(188, 127, 255, .8) 98%,#0000) bottom right;
+  background-size:8px 8px,calc(100% - 8px) 8px;
+  background-repeat:no-repeat;
+}
+
+.hl-half-gray {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background: 
+    radial-gradient(farthest-side,rgba(200, 200, 210, .8) 98%,#0000) bottom left,
+    linear-gradient(rgb(200, 200, 210) 0 0) bottom,
+    radial-gradient(farthest-side,rgba(200, 200, 210, .8) 98%,#0000) bottom right;
+  background-size:8px 8px,calc(100% - 8px) 8px;
+  background-repeat:no-repeat;
+}
+
+
+.hl-underline-yellow {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  text-decoration: underline wavy rgb(255, 233, 88) 2px;
+}
+
+.hl-underline-green {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  text-decoration: underline wavy rgb(188, 233, 64) 2px;
+}
+
+.hl-underline-blue {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  text-decoration: underline wavy rgb(88, 188, 255) 2px;
+}
+
+.hl-underline-pink {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  text-decoration: underline wavy rgb(255, 160, 188) 2px;
+}
+
+.hl-underline-orange {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  text-decoration: underline wavy rgb(255, 188, 64) 2px;
+}
+
+.hl-underline-red {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  text-decoration: underline wavy rgb(255, 96, 108) 2px;
+}
+
+.hl-underline-purple {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  text-decoration: underline wavy rgb(188, 127, 255) 2px;
+}
+
+.hl-underline-gray {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  text-decoration: underline wavy rgb(200, 200, 210) 2px;
+}
+
+
+
+.hl-rainbow-yellow {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: #0f0f0f;
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  color: transparent;
+  background: 
+    linear-gradient(90deg, rgb(255, 233, 88), rgb(255, 233, 88)),
+    linear-gradient(90deg, rgb(255, 96, 108), rgb(255, 233, 88), rgb(188, 127, 255));
+  background-size: 100% 3px, 0 3px;
+  background-repeat: no-repeat;
+  background-position: 100% 100%, 0 100%;
+  transition: 0.5s all;
+  cursor: pointer;
+}
+.hl-rainbow-yellow:hover {
+  color: rgb(15, 15, 15);
+  background-size: 0 3px, 100% 3px;
+}
+
+.hl-rainbow-green {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: #0f0f0f;
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  color: transparent;
+  background: 
+    linear-gradient(90deg, rgb(188, 233, 64), rgb(188, 233, 64)),
+    linear-gradient(90deg, rgb(255, 96, 108), rgb(255, 233, 88), rgb(188, 127, 255));
+  background-size: 100% 3px, 0 3px;
+  background-repeat: no-repeat;
+  background-position: 100% 100%, 0 100%;
+  transition: 0.5s all;
+  cursor: pointer;
+}
+.hl-rainbow-green:hover {
+  color: rgb(15, 15, 15);
+  background-size: 0 3px, 100% 3px;
+}
+
+.hl-rainbow-blue {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: #0f0f0f;
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  color: transparent;
+  background: 
+    linear-gradient(90deg, rgb(88, 188, 255), rgb(88, 188, 255)),
+    linear-gradient(90deg, rgb(255, 96, 108), rgb(255, 233, 88), rgb(188, 127, 255));
+  background-size: 100% 3px, 0 3px;
+  background-repeat: no-repeat;
+  background-position: 100% 100%, 0 100%;
+  transition: 0.5s all;
+  cursor: pointer;
+}
+.hl-rainbow-blue:hover {
+  color: rgb(15, 15, 15);
+  background-size: 0 3px, 100% 3px;
+}
+
+.hl-rainbow-pink {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: #0f0f0f;
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  color: transparent;
+  background: 
+    linear-gradient(90deg, rgb(255, 160, 188), rgb(255, 160, 188)),
+    linear-gradient(90deg, rgb(255, 96, 108), rgb(255, 233, 88), rgb(188, 127, 255));
+  background-size: 100% 3px, 0 3px;
+  background-repeat: no-repeat;
+  background-position: 100% 100%, 0 100%;
+  transition: 0.5s all;
+  cursor: pointer;
+}
+.hl-rainbow-pink:hover {
+  color: rgb(15, 15, 15);
+  background-size: 0 3px, 100% 3px;
+}
+
+.hl-rainbow-orange {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: #0f0f0f;
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  color: transparent;
+  background: 
+    linear-gradient(90deg, rgb(255, 188, 64), rgb(255, 188, 64)),
+    linear-gradient(90deg, rgb(255, 96, 108), rgb(255, 233, 88), rgb(188, 127, 255));
+  background-size: 100% 3px, 0 3px;
+  background-repeat: no-repeat;
+  background-position: 100% 100%, 0 100%;
+  transition: 0.5s all;
+  cursor: pointer;
+}
+.hl-rainbow-orange:hover {
+  color: rgb(15, 15, 15);
+  background-size: 0 3px, 100% 3px;
+}
+
+.hl-rainbow-red {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: #0f0f0f;
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  color: transparent;
+  background: 
+    linear-gradient(90deg, rgb(255, 96, 108), rgb(255, 96, 108)),
+    linear-gradient(90deg, rgb(255, 96, 108), rgb(255, 233, 88), rgb(188, 127, 255));
+  background-size: 100% 3px, 0 3px;
+  background-repeat: no-repeat;
+  background-position: 100% 100%, 0 100%;
+  transition: 0.5s all;
+  cursor: pointer;
+}
+.hl-rainbow-red:hover {
+  color: rgb(15, 15, 15);
+  background-size: 0 3px, 100% 3px;
+}
+
+.hl-rainbow-purple {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: #0f0f0f;
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  color: transparent;
+  background: 
+    linear-gradient(90deg, rgb(188, 127, 255), rgb(188, 127, 255)),
+    linear-gradient(90deg, rgb(255, 96, 108), rgb(255, 233, 88), rgb(188, 127, 255));
+  background-size: 100% 3px, 0 3px;
+  background-repeat: no-repeat;
+  background-position: 100% 100%, 0 100%;
+  transition: 0.5s all;
+  cursor: pointer;
+}
+.hl-rainbow-purple:hover {
+  color: rgb(15, 15, 15);
+  background-size: 0 3px, 100% 3px;
+}
+
+.hl-rainbow-gray {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: #0f0f0f;
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  color: transparent;
+  background: 
+    linear-gradient(90deg, rgb(200, 200, 210), rgb(200, 200, 210)),
+    linear-gradient(90deg, rgb(255, 96, 108), rgb(255, 233, 88), rgb(188, 127, 255));
+  background-size: 100% 3px, 0 3px;
+  background-repeat: no-repeat;
+  background-position: 100% 100%, 0 100%;
+  transition: 0.5s all;
+  cursor: pointer;
+}
+.hl-rainbow-gray:hover {
+  color: rgb(15, 15, 15);
+  background-size: 0 3px, 100% 3px;
+}
+
+
+.hl-mask-yellow {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  text-decoration: underline solid rgb(255, 233, 88) 3px;
+  filter: blur(5px);
+  transition: 0.2s all;
+  cursor: pointer;
+}
+.hl-mask-yellow:hover {
+  filter: blur(0px);
+}
+
+.hl-mask-green {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  text-decoration: underline solid rgb(188, 233, 64) 3px;
+  filter: blur(5px);
+  transition: 0.2s all;
+  cursor: pointer;
+}
+.hl-mask-green:hover {
+  filter: blur(0px);
+}
+
+.hl-mask-blue {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  text-decoration: underline solid rgb(88, 188, 255) 3px;
+  filter: blur(5px);
+  transition: 0.2s all;
+  cursor: pointer;
+}
+.hl-mask-blue:hover {
+  filter: blur(0px);
+}
+
+.hl-mask-pink {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  text-decoration: underline solid rgb(255, 160, 188) 3px;
+  filter: blur(5px);
+  transition: 0.2s all;
+  cursor: pointer;
+}
+.hl-mask-pink:hover {
+  filter: blur(0px);
+}
+
+.hl-mask-orange {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  text-decoration: underline solid rgb(255, 188, 64) 3px;
+  filter: blur(5px);
+  transition: 0.2s all;
+  cursor: pointer;
+}
+.hl-mask-orange:hover {
+  filter: blur(0px);
+}
+
+.hl-mask-red {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  text-decoration: underline solid rgb(255, 96, 108) 3px;
+  filter: blur(5px);
+  transition: 0.2s all;
+  cursor: pointer;
+}
+.hl-mask-red:hover {
+  filter: blur(0px);
+}
+
+.hl-mask-purple {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  text-decoration: underline solid rgb(188, 127, 255) 3px;
+  filter: blur(5px);
+  transition: 0.2s all;
+  cursor: pointer;
+}
+.hl-mask-purple:hover {
+  filter: blur(0px);
+}
+
+.hl-mask-gray {
+  margin: 0 -0.2em;
+  padding: 0 0.2em;
+  color: rgb(15, 15, 15);
+  background: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  text-decoration: underline solid rgb(200, 200, 210) 3px;
+  filter: blur(5px);
+  transition: 0.2s all;
+  cursor: pointer;
+}
+.hl-mask-gray:hover {
+  filter: blur(0px);
+}

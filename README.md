@@ -108,6 +108,12 @@ An Obsidian plugin that matches text via regular expressions and applies custom 
 
 </details>
 
+## Share Your CSS Styles
+
+![Share Your CSS Styles](./assets/Share%20Your%20CSS%20Styles.gif)
+
+Created a cool style? Share it with the community in [Discussions](https://github.com/dlsdgj/obsidian-regex-css-highlighter/discussions/1) — see how others use regex and CSS to highlight their notes!
+
 ## Installation
 
 Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins → Browse to install directly.
@@ -532,6 +538,12 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 - AI 实体提取 — 使用 AI 自动识别文本中的实体并批量添加高亮规则
 
 </details>
+
+## 分享你的 CSS 样式
+
+![分享你的 CSS 样式](./assets/Share%20Your%20CSS%20Styles.gif)
+
+创建了好看的样式？在 [Discussions](https://github.com/dlsdgj/obsidian-regex-css-highlighter/discussions/1) 中与社区分享——看看其他人如何用正则和 CSS 高亮他们的笔记！
 
 ## 安装
 

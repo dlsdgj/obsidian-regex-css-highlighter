@@ -2,7 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.6.5 (2026-06-03)
+## 🆕 v1.6.6 (2026-06-07)
+
+- **Rule Conversion Merge** — When converting a rule between global and local, if a rule with the same regex already exists in the target, the cssClass is overwritten and remark/links are merged instead of blocking the conversion
+- **Popup Rule Source Badge** — Added l/g (local/global) badge at the top-right corner of remark popup, always visible and clickable to convert rule source
+- **Remark Popup i18n** — Translated hardcoded Chinese strings in remark popup (double-click to edit, no search text, no title, copy/open/delete remark) for English mode support
+- **Updated Remark Demo GIF** — Replaced addremark.gif with new demo animation
+
+## v1.6.5 (2026-06-03)
 
 - **Pseudo-element Style Support** — Add Style dialog now correctly previews and saves CSS rules with pseudo-elements (::before, ::after); pseudo-element rules are associated with their parent class
 - **@keyframes Animation Support** — Add Style dialog now correctly previews and saves CSS rules with @keyframes animations; animation rules are placed below the main style rules; @keyframes blocks are stripped before class parsing to prevent false matches from decimal values inside keyframe definitions

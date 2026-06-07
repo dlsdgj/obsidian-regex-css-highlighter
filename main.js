@@ -1,4 +1,4 @@
-﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover } = require("obsidian");
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover } = require("obsidian");
 
 // 直接将CSS规则追加到动态样式元素，确保新样式立即生效（无需重新读取文件）
 function appendCSSToDynamicStyle(cssRule) {
@@ -326,6 +326,12 @@ const i18n = {
     'main.localRuleNotFound': '未找到对应的局部规则',
     'main.localRuleExists': '局部规则中已存在相同规则',
     'main.globalRuleExistsShort': '全局规则中已存在相同规则',
+    'main.doubleClickToEditRemark': '双击编辑备注',
+    'main.noSearchText': '无搜索词',
+    'main.noTitle': '无标题',
+    'main.copyRemark': '复制备注',
+    'main.openDocument': '打开文档',
+    'main.deleteRemark': '删除备注',
     'main.cannotGetRuleInfo': '无法获取规则信息',
     'main.cannotGetMatchText': '无法获取匹配文本',
     'main.fileNameEmpty': '文件名不能为空',
@@ -657,6 +663,11 @@ const i18n = {
     'settings.defaultPreviewTextCN': '中文预览文本',
     'settings.defaultPreviewTextEN': '英文预览文本',
     'settings.defaultPreviewTextHint': '未选中文字时样式按钮显示的文本(留空则使用默认值)',
+    'settings.showClassNameAsPreview': '显示类名',
+    'settings.showClassNameAsPreviewHint': '勾选后样式按钮预览文本显示为CSS类名',
+    'settings.searchClassName': '搜索类名',
+    'settings.searchClassNamePlaceholder': '输入类名...',
+    'settings.searchClassNameHint': '按Enter搜索并高亮匹配样式',
     'settings.headingLevelLabel': '标题层级标签(h1/h2...)',
     'settings.autoExpandMode': '自动展开模式',
     'settings.scan': '扫描',
@@ -722,6 +733,7 @@ const i18n = {
     'cssEditor.aiStyleGenerate': 'AI 样式生成',
     'cssEditor.noAiWarning': '当前无可用AI，',
     'cssEditor.goToSettings': '到设置中配置',
+    'cssEditor.moreStyles': '更多样式',
     'cssEditor.sendToAiOptimize': '发送到AI优化',
     'cssEditor.optimizing': '优化中...',
     'cssEditor.buttonText': '按钮文字 (留空则显示「示例」或选中文字):',
@@ -767,6 +779,10 @@ const i18n = {
     'settings.showRemarkBadgeHint': '悬停高亮文本时显示n(备注)标记',
     'settings.remarkBadgeThreshold': '字数阈值',
     'settings.remarkBadgeThresholdHint': '匹配文本字数大于此值时显示标记(0=始终显示)',
+    'settings.remarkDebugLog': '备注调试日志',
+    'settings.remarkDebugLogHint': '在控制台输出备注相关调试信息',
+    'settings.popupAltWheel': 'Alt + 滚轮：调整弹窗宽度',
+    'settings.popupCtrlWheel': 'Ctrl + 滚轮：调整弹窗透明度',
     'settings.enableFontSwitch': '启用字体切换功能',
     'settings.test': '测试',
     'settings.testingApi': '测试中...',
@@ -873,6 +889,7 @@ const i18n = {
     'ai.createdAtCol': '创建时间',
     'ai.actionsCol': '操作',
     'main.regexPlaceholder': '如 TODO|FIXME',
+    'main.searchClassName': '搜索类名...',
     'ai.responsePlaceholder': 'AI响应将显示在这里...输入您的问题或修改要求以继续对话。',
     'main.saveAsFile': '保存为文件',
     'main.switchToEn': '切换到英文',
@@ -902,6 +919,9 @@ const i18n = {
     'main.editRemarkGlobal': '编辑备注（全局规则）',
     'main.addRemark': '添加备注',
     'main.addRemarkGlobal': '添加备注（全局规则）',
+    'main.remarkLinks': '来源链接',
+    'main.linkAdded': '已添加来源链接',
+    'main.openLinkNewTab': '在新标签页打开并搜索',
     'main.inputRemarkContent': '请输入备注内容...',
     'main.deleteGroupWithStyles': '删除分组将同时删除其中的所有样式。确定要删除吗？',
     'main.deleteEmptyGroup': '确定要删除空分组吗？',
@@ -954,6 +974,12 @@ const i18n = {
     'main.localRuleNotFound': '未找到对应的局部规则',
     'main.localRuleExists': '局部规则中已存在相同规则',
     'main.globalRuleExistsShort': '全局规则中已存在相同规则',
+    'main.doubleClickToEditRemark': '双击编辑备注',
+    'main.noSearchText': '无搜索词',
+    'main.noTitle': '无标题',
+    'main.copyRemark': '复制备注',
+    'main.openDocument': '打开文档',
+    'main.deleteRemark': '删除备注',
     'main.cannotGetRuleInfo': '无法获取规则信息',
     'main.cannotGetMatchText': '无法获取匹配文本',
     'main.fileNameEmpty': '文件名不能为空',
@@ -1254,6 +1280,12 @@ const i18n = {
     'main.localRuleNotFound': 'Corresponding local rule not found',
     'main.localRuleExists': 'Same rule already exists in local rules',
     'main.globalRuleExistsShort': 'Same rule already exists in global rules',
+    'main.doubleClickToEditRemark': 'Double-click to edit remark',
+    'main.noSearchText': 'No search text',
+    'main.noTitle': 'No title',
+    'main.copyRemark': 'Copy remark',
+    'main.openDocument': 'Open document',
+    'main.deleteRemark': 'Delete remark',
     'main.cannotGetRuleInfo': 'Cannot get rule info',
     'main.cannotGetMatchText': 'Cannot get matching text',
     'main.fileNameEmpty': 'File name cannot be empty',
@@ -1585,6 +1617,11 @@ const i18n = {
     'settings.defaultPreviewTextCN': 'Chinese Preview Text',
     'settings.defaultPreviewTextEN': 'English Preview Text',
     'settings.defaultPreviewTextHint': 'Text shown on style buttons when no text is selected (leave empty for default)',
+    'settings.showClassNameAsPreview': 'Show Class Name',
+    'settings.showClassNameAsPreviewHint': 'Show CSS class name as preview text on style buttons',
+    'settings.searchClassName': 'Search Class Name',
+    'settings.searchClassNamePlaceholder': 'Enter class name...',
+    'settings.searchClassNameHint': 'Press Enter to search and highlight matching styles',
     'settings.headingLevelLabel': 'Heading Level Label (h1/h2...)',
     'settings.autoExpandMode': 'Auto Expand Mode',
     'settings.scan': 'Scan',
@@ -1650,6 +1687,7 @@ const i18n = {
     'cssEditor.aiStyleGenerate': 'AI Style Generation',
     'cssEditor.noAiWarning': 'No AI available, ',
     'cssEditor.goToSettings': 'configure in Settings',
+    'cssEditor.moreStyles': 'More Styles',
     'cssEditor.sendToAiOptimize': 'Send to AI Optimize',
     'cssEditor.optimizing': 'Optimizing...',
     'cssEditor.buttonText': 'Button text (leave empty to show "Example" or selected text):',
@@ -1695,6 +1733,10 @@ const i18n = {
     'settings.showRemarkBadgeHint': 'Show n(remark) badge when hovering highlighted text',
     'settings.remarkBadgeThreshold': 'Character Threshold',
     'settings.remarkBadgeThresholdHint': 'Show badge when matched text length exceeds this value (0=always show)',
+    'settings.remarkDebugLog': 'Remark Debug Log',
+    'settings.remarkDebugLogHint': 'Output remark debug messages to console',
+    'settings.popupAltWheel': 'Alt + Scroll: Adjust popup width',
+    'settings.popupCtrlWheel': 'Ctrl + Scroll: Adjust popup opacity',
     'settings.enableFontSwitch': 'Enable Font Switch',
     'settings.test': 'Test',
     'settings.testingApi': 'Testing...',
@@ -1801,6 +1843,7 @@ const i18n = {
     'ai.createdAtCol': 'Created At',
     'ai.actionsCol': 'Actions',
     'main.regexPlaceholder': 'e.g. TODO|FIXME',
+    'main.searchClassName': 'Search class name...',
     'ai.responsePlaceholder': 'AI response will appear here...Enter your question or modification request to continue.',
     'main.saveAsFile': 'Save as File',
     'main.switchToEn': 'Switch to English',
@@ -1830,6 +1873,9 @@ const i18n = {
     'main.editRemarkGlobal': 'Edit Remark (Global Rule)',
     'main.addRemark': 'Add Remark',
     'main.addRemarkGlobal': 'Add Remark (Global Rule)',
+    'main.remarkLinks': 'Source Links',
+    'main.linkAdded': 'Source link added',
+    'main.openLinkNewTab': 'Open in new tab and search',
     'main.inputRemarkContent': 'Enter remark content...',
     'main.deleteGroupWithStyles': 'Deleting the group will also delete all styles in it. Are you sure?',
     'main.deleteEmptyGroup': 'Are you sure you want to delete the empty group?',
@@ -1882,6 +1928,12 @@ const i18n = {
     'main.localRuleNotFound': 'Corresponding local rule not found',
     'main.localRuleExists': 'Same rule already exists in local rules',
     'main.globalRuleExistsShort': 'Same rule already exists in global rules',
+    'main.doubleClickToEditRemark': 'Double-click to edit remark',
+    'main.noSearchText': 'No search text',
+    'main.noTitle': 'No title',
+    'main.copyRemark': 'Copy remark',
+    'main.openDocument': 'Open document',
+    'main.deleteRemark': 'Delete remark',
     'main.cannotGetRuleInfo': 'Cannot get rule info',
     'main.cannotGetMatchText': 'Cannot get match text',
     'main.fileNameEmpty': 'File name cannot be empty',
@@ -2074,7 +2126,10 @@ function textMatchesRegex(selectedText, ruleRegex) {
   }
 }
 
-function getDefaultPreviewText(plugin) {
+function getDefaultPreviewText(plugin, className) {
+  if (plugin?.settings?.showClassNameAsPreview && className) {
+    return className;
+  }
   if (_currentLang === 'zh') {
     const custom = plugin?.settings?.defaultPreviewTextCN;
     return (custom !== undefined && custom !== '') ? custom : t('main.preview');
@@ -2321,13 +2376,14 @@ class PromptTemplateModal extends Modal {
 
 // 自定义备注输入模态框类
 class AddRemarkModal extends Modal {
-  constructor(app, title, placeholder = "", defaultValue = "", onSubmit, plugin = null) {
+  constructor(app, title, placeholder = "", defaultValue = "", onSubmit, plugin = null, matchedText = '') {
     super(app);
     this.title = title;
     this.placeholder = placeholder;
     this.defaultValue = defaultValue;
     this.onSubmit = onSubmit;
     this.plugin = plugin;
+    this.matchedText = matchedText;
   }
 
   // 控制点击遮罩层是否关闭弹窗
@@ -2380,105 +2436,164 @@ class AddRemarkModal extends Modal {
     const popupSpacing = pluginSettings.popupSpacing !== undefined ? pluginSettings.popupSpacing : 10;
     const popupWidth = pluginSettings.popupWidth !== undefined ? pluginSettings.popupWidth : 300;
     const popupBorderWidth = pluginSettings.popupBorderWidth !== undefined ? pluginSettings.popupBorderWidth : 1;
-    const popupBorderColor = pluginSettings.popupBorderColor || 'var(--background-modifier-border)';
+    const popupBorderColor = pluginSettings.popupBorderColor || 'var(--text-accent)';
+    const savedOpacity = pluginSettings.popupOpacity !== undefined ? pluginSettings.popupOpacity : 1;
     
+    // 与备注弹窗风格一致的模态窗口样式
     this.modalEl.style.width = `auto`;
     this.modalEl.style.maxWidth = `${Math.max(popupWidth, 500)}px`;
+    this.modalEl.style.borderRadius = '8px';
+    this.modalEl.style.overflow = 'hidden';
+    this.modalEl.style.backgroundColor = 'var(--background-primary)';
+    this.modalEl.style.opacity = savedOpacity;
     
     if (popupBorderWidth === 0) {
       this.modalEl.style.border = 'none';
-      this.modalEl.style.boxShadow = 'none';
+      this.modalEl.style.boxShadow = '0 4px 16px rgba(0,0,0,0.35)';
     } else {
       this.modalEl.style.border = `${popupBorderWidth}px solid ${popupBorderColor}`;
-      this.modalEl.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.25)';
+      this.modalEl.style.boxShadow = '0 4px 16px rgba(0,0,0,0.35)';
     }
     
-    const titleEl = contentEl.createEl("h2", { text: this.title });
-    titleEl.style.marginBottom = `${popupSpacing}px`;
-    titleEl.style.fontSize = `${popupFontSize + 4}px`;
+    // 深色模式增强
+    if (document.body.classList.contains('theme-dark')) {
+      this.modalEl.style.boxShadow = '0 4px 16px rgba(0,0,0,0.5)';
+      this.modalEl.style.outline = '1px solid rgba(255, 255, 255, 0.1)';
+    }
     
-    const toolbar = contentEl.createDiv();
-    toolbar.style.display = "flex";
-    toolbar.style.gap = "8px";
-    toolbar.style.marginBottom = `${popupSpacing}px`;
-    toolbar.style.alignItems = "center";
-    toolbar.style.flexWrap = "wrap";
+    // 添加与备注弹窗一致的 Markdown 样式
+    const mdStyle = document.createElement('style');
+    mdStyle.textContent = `
+      .input-modal p { margin: 0; }
+      .input-modal ul, .input-modal ol { margin: 0; padding-left: 20px; }
+      .input-modal li { margin: 0; }
+      .input-modal h1, .input-modal h2, .input-modal h3, .input-modal h4, .input-modal h5, .input-modal h6 { margin: 0; }
+      .input-modal blockquote { margin: 0; }
+      .input-modal hr { margin: 5px 0; }
+      .input-modal img { max-width: 100%; height: auto; border-radius: 4px; margin: 4px 0; }
+      .input-modal .internal-embed { max-width: 100%; }
+      .input-modal .internal-embed img { max-width: 100%; height: auto; border-radius: 4px; margin: 4px 0; }
+    `;
+    contentEl.appendChild(mdStyle);
     
-    const imageBtn = toolbar.createEl("button");
-    imageBtn.textContent = t('remark.insertImage');
-    imageBtn.style.padding = "4px 10px";
-    imageBtn.style.fontSize = `${popupFontSize}px`;
-    imageBtn.style.cursor = "pointer";
-    imageBtn.style.border = "1px solid var(--background-modifier-border)";
-    imageBtn.style.borderRadius = "4px";
-    imageBtn.style.backgroundColor = "var(--background-secondary)";
+    // 获取当前文件信息
+    const av = this.plugin?.app?.workspace?.getActiveViewOfType(MarkdownView);
+    const linkFilePath = av?.file?.path || this.plugin?.currentFilePath || '';
+    const fileName = linkFilePath ? linkFilePath.split('/').pop().replace(/\.md$/, '') : '';
+    const matchedText = this.matchedText || '';
     
-    const fileInput = toolbar.createEl("input");
-    fileInput.type = "file";
-    fileInput.accept = "image/png,image/jpeg,image/gif,image/bmp,image/webp,image/svg+xml";
-    fileInput.style.display = "none";
+    // 文件名 + 搜索词 标题栏（与备注弹窗样式一致）
+    if (fileName || matchedText) {
+      const headerEl = contentEl.createDiv();
+      headerEl.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;';
+      
+      const headerLeft = headerEl.createDiv();
+      headerLeft.style.cssText = 'display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;min-width:0;';
+      
+      const fileHue = 210;
+      
+      if (fileName) {
+        const fileNameEl = headerLeft.createEl('span');
+        fileNameEl.textContent = '📄 ' + fileName;
+        fileNameEl.style.cssText = `font-size:12px;font-weight:600;color:hsl(${fileHue},50%,35%);background:hsl(${fileHue},50%,90%);padding:2px 8px;border-radius:10px;flex-shrink:0;white-space:nowrap;`;
+      }
+      
+      if (matchedText) {
+        const searchTag = headerLeft.createEl('span');
+        const displayText = matchedText.length > 20 ? matchedText.substring(0, 20) + '...' : matchedText;
+        searchTag.textContent = displayText;
+        searchTag.style.cssText = 'font-size:10px;color:var(--text-muted);background:var(--background-modifier-hover);padding:1px 6px;border-radius:8px;';
+      }
+    }
     
-    imageBtn.addEventListener("click", () => fileInput.click());
+    // 编辑/预览 切换状态
+    let isEditing = true;
+    let currentValue = this.defaultValue || '';
     
-    const pasteHint = toolbar.createEl("span");
-    pasteHint.textContent = t('remark.pasteImageHint');
-    pasteHint.style.fontSize = "12px";
-    pasteHint.style.color = "var(--text-muted)";
+    // 内容容器
+    const contentContainer = contentEl.createDiv();
+    contentContainer.style.cssText = `position:relative;`;
     
-    const textareaEl = contentEl.createEl("textarea");
+    // ===== 编辑模式 =====
+    const editContainer = contentContainer.createDiv();
+    
+    const textareaEl = editContainer.createEl("textarea");
     textareaEl.placeholder = this.placeholder;
-    textareaEl.value = this.defaultValue;
-    textareaEl.style.width = "100%";
-    textareaEl.style.height = "200px";
-    textareaEl.style.padding = `${popupSpacing}px`;
-    textareaEl.style.marginBottom = `${popupSpacing}px`;
-    textareaEl.style.border = "1px solid var(--background-modifier-border)";
-    textareaEl.style.borderRadius = "4px";
-    textareaEl.style.fontFamily = "var(--font-family-editor)";
-    textareaEl.style.fontSize = `${popupFontSize}px`;
-    textareaEl.style.lineHeight = "1.5";
+    textareaEl.value = currentValue;
+    textareaEl.style.cssText = `width:100%;height:150px;padding:${popupSpacing}px;background-color:var(--background-primary);color:var(--text-normal);border:1px solid var(--background-modifier-border);border-radius:4px;font-size:${popupFontSize}px;font-family:var(--font-ui);line-height:1.5;resize:vertical;box-sizing:border-box;outline:none;`;
     
-    const previewContainer = contentEl.createDiv();
-    previewContainer.style.marginBottom = `${popupSpacing}px`;
-    previewContainer.style.border = "1px solid var(--background-modifier-border)";
-    previewContainer.style.borderRadius = "4px";
-    previewContainer.style.padding = `${popupSpacing}px`;
-    previewContainer.style.maxHeight = "200px";
-    previewContainer.style.overflowY = "auto";
-    previewContainer.style.display = "none";
-    previewContainer.style.backgroundColor = "var(--background-secondary)";
+    // ===== 预览模式 =====
+    const previewContainer = contentContainer.createDiv();
+    previewContainer.className = 'remark-popup-content';
+    previewContainer.style.cssText = `width:100%;min-height:60px;max-height:200px;padding:${popupSpacing}px;overflow-y:auto;font-size:${popupFontSize}px;line-height:1.5;box-sizing:border-box;max-width:100%;word-wrap:break-word;display:none;`;
     
-    const previewToggle = toolbar.createEl("button");
-    previewToggle.textContent = t('remark.showPreview');
-    previewToggle.style.padding = "4px 10px";
-    previewToggle.style.fontSize = `${popupFontSize}px`;
-    previewToggle.style.cursor = "pointer";
-    previewToggle.style.border = "1px solid var(--background-modifier-border)";
-    previewToggle.style.borderRadius = "4px";
-    previewToggle.style.backgroundColor = "var(--background-secondary)";
+    // 渲染预览
+    const renderPreview = async () => {
+      if (previewContainer._component) {
+        previewContainer._component.unload();
+        previewContainer._component = null;
+      }
+      previewContainer.innerHTML = '';
+      if (!currentValue.trim()) {
+        previewContainer.innerHTML = `<em style="color: var(--text-muted)">${t('main.empty')}</em>`;
+        return;
+      }
+      try {
+        const { MarkdownRenderer, Component } = require('obsidian');
+        if (this.app && MarkdownRenderer) {
+          const component = new Component();
+          component.load();
+          const sourcePath = this.plugin?.currentFilePath || '';
+          MarkdownRenderer.renderMarkdown(currentValue, previewContainer, sourcePath, component);
+          previewContainer._component = component;
+        }
+        await new Promise(r => requestAnimationFrame(r));
+        if (this.plugin) {
+          await this.plugin.renderImagesManually(currentValue, previewContainer, this.plugin);
+        }
+      } catch (err) {
+        if (this.plugin) {
+          await this.plugin.renderImagesManually(currentValue, previewContainer, this.plugin);
+        } else {
+          previewContainer.textContent = currentValue;
+        }
+      }
+    };
     
-    let previewVisible = false;
-    previewToggle.addEventListener("click", async () => {
-      previewVisible = !previewVisible;
-      if (previewVisible) {
-        previewContainer.style.display = "block";
-        previewToggle.textContent = t('remark.hidePreview');
-        await this.renderPreview(textareaEl.value, previewContainer);
-      } else {
-        previewContainer.style.display = "none";
-        previewToggle.textContent = t('remark.showPreview');
+    // 切换到预览模式
+    const switchToPreview = async () => {
+      if (!isEditing) return;
+      currentValue = textareaEl.value;
+      isEditing = false;
+      editContainer.style.display = 'none';
+      previewContainer.style.display = 'block';
+      await renderPreview();
+    };
+    
+    // 切换到编辑模式（双击预览区）
+    const switchToEdit = () => {
+      if (isEditing) return;
+      isEditing = true;
+      previewContainer.style.display = 'none';
+      editContainer.style.display = 'block';
+      textareaEl.value = currentValue;
+      textareaEl.focus();
+    };
+    
+    // 双击预览区切换回编辑模式
+    previewContainer.addEventListener('dblclick', switchToEdit);
+    
+    // 失焦时切换到预览模式
+    textareaEl.addEventListener('blur', async () => {
+      // 延迟检查，避免点击按钮时立即触发
+      await new Promise(r => setTimeout(r, 150));
+      // 如果焦点不在弹窗内的任何元素上，切换到预览
+      if (isEditing && !this.modalEl.contains(document.activeElement)) {
+        switchToPreview();
       }
     });
     
-    let previewTimer = null;
-    textareaEl.addEventListener("input", () => {
-      if (!previewVisible) return;
-      if (previewTimer) clearTimeout(previewTimer);
-      previewTimer = setTimeout(async () => {
-        await this.renderPreview(textareaEl.value, previewContainer);
-      }, 300);
-    });
-    
+    // 图片粘贴功能
     const handleImageFile = async (file) => {
       if (!file) return;
       const arrayBuffer = await file.arrayBuffer();
@@ -2494,9 +2609,9 @@ class AddRemarkModal extends Modal {
           ext = nameExt === 'jpeg' ? 'jpg' : nameExt;
         }
       }
-      const fileName = `remark_${Date.now()}.${ext}`;
+      const imgFileName = `remark_${Date.now()}.${ext}`;
       try {
-        const savedName = await this.saveImageToVault(new Uint8Array(arrayBuffer), fileName);
+        const savedName = await this.saveImageToVault(new Uint8Array(arrayBuffer), imgFileName);
         this.insertAtCursor(textareaEl, `![[${savedName}]]`);
         new Notice(t('main.imageSaved') + ': ' + savedName);
       } catch (err) {
@@ -2505,12 +2620,20 @@ class AddRemarkModal extends Modal {
       }
     };
     
+    // 隐藏的文件选择器
+    const fileInput = document.createElement('input');
+    fileInput.type = "file";
+    fileInput.accept = "image/png,image/jpeg,image/gif,image/bmp,image/webp,image/svg+xml";
+    fileInput.style.display = "none";
+    contentEl.appendChild(fileInput);
+    
     fileInput.addEventListener("change", async () => {
       const file = fileInput.files[0];
       if (file) await handleImageFile(file);
       fileInput.value = '';
     });
     
+    // Ctrl+V 粘贴图片
     textareaEl.addEventListener("paste", async (e) => {
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -2527,35 +2650,54 @@ class AddRemarkModal extends Modal {
       if (file) await handleImageFile(file);
     });
     
+    // 拖放图片支持
+    textareaEl.addEventListener('drop', async (e) => {
+      const files = e.dataTransfer?.files;
+      if (!files || files.length === 0) return;
+      for (const file of files) {
+        if (file.type.startsWith('image/')) {
+          e.preventDefault();
+          await handleImageFile(file);
+          break;
+        }
+      }
+    });
+    textareaEl.addEventListener('dragover', (e) => {
+      if (e.dataTransfer?.types?.includes('Files')) {
+        e.preventDefault();
+      }
+    });
+    
     setTimeout(() => textareaEl.focus(), 100);
     
+    // 底部按钮区
     const buttonContainer = contentEl.createEl("div");
-    buttonContainer.style.display = "flex";
-    buttonContainer.style.justifyContent = "flex-end";
-    buttonContainer.style.gap = `${popupSpacing}px`;
+    buttonContainer.style.cssText = `display:flex;justify-content:flex-end;gap:${popupSpacing}px;align-items:center;margin-top:${popupSpacing}px;`;
+    
+    // 提示文字
+    const hintEl = buttonContainer.createEl("span");
+    hintEl.style.cssText = `font-size:11px;color:var(--text-muted);flex:1;`;
+    hintEl.textContent = 'Ctrl+V 粘贴图片 · Enter 确认';
     
     const cancelBtn = buttonContainer.createEl("button");
     cancelBtn.textContent = t('main.cancel');
-    cancelBtn.style.padding = `${Math.floor(popupSpacing * 0.6)}px ${Math.floor(popupSpacing * 1.5)}px`;
-    cancelBtn.style.fontSize = `${popupFontSize}px`;
-    cancelBtn.addEventListener("click", () => this.close());
+    cancelBtn.style.cssText = `padding:${Math.floor(popupSpacing * 0.6)}px ${Math.floor(popupSpacing * 1.5)}px;font-size:${popupFontSize}px;cursor:pointer;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-secondary);color:var(--text-normal);`;
     
     const confirmBtn = buttonContainer.createEl("button");
     confirmBtn.textContent = t('main.confirm');
-    confirmBtn.style.padding = `${Math.floor(popupSpacing * 0.6)}px ${Math.floor(popupSpacing * 1.5)}px`;
-    confirmBtn.style.fontSize = `${popupFontSize}px`;
-    confirmBtn.style.backgroundColor = "var(--interactive-accent)";
-    confirmBtn.style.color = "white";
-    confirmBtn.style.border = "none";
-    confirmBtn.style.borderRadius = "4px";
+    confirmBtn.style.cssText = `padding:${Math.floor(popupSpacing * 0.6)}px ${Math.floor(popupSpacing * 1.5)}px;font-size:${popupFontSize}px;cursor:pointer;background-color:var(--interactive-accent);color:white;border:none;border-radius:4px;`;
+    
+    cancelBtn.addEventListener("click", () => this.close());
     
     confirmBtn.addEventListener("click", () => {
+      const finalValue = isEditing ? textareaEl.value : currentValue;
       if (this.onSubmit) {
-        this.onSubmit(textareaEl.value);
+        this.onSubmit(finalValue);
       }
       this.close();
     });
     
+    // Enter 确认
     textareaEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -2566,11 +2708,136 @@ class AddRemarkModal extends Modal {
       }
     });
     
-    textareaEl.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        this.close();
+    // 点击编辑区外部只是让编辑框失焦（由blur事件处理预览切换）
+    this.shouldCloseOnOutsideClick = () => {
+      if (isEditing) {
+        // 让textarea失焦，触发blur切换到预览
+        textareaEl.blur();
+        return false;
       }
-    });
+      return true;
+    };
+    
+    // 恢复记住的大小
+    const savedWidth = this.plugin?.settings?.addRemarkModalWidth;
+    const savedHeight = this.plugin?.settings?.addRemarkModalHeight;
+    if (savedWidth) {
+      this.modalEl.style.width = `${savedWidth}px`;
+      this.modalEl.style.maxWidth = `${savedWidth}px`;
+      const contentWidth = savedWidth - 30;
+      contentEl.style.maxWidth = `${contentWidth}px`;
+      contentEl.style.width = `${contentWidth}px`;
+    }
+    if (savedHeight) {
+      this.modalEl.style.height = `${savedHeight}px`;
+      this.modalEl.style.maxHeight = 'none';
+      contentEl.style.maxHeight = 'none';
+    }
+    
+    // 添加调整大小手柄
+    this._setupRemarkModalResize();
+  }
+  
+  _setupRemarkModalResize() {
+    const modalEl = this.modalEl;
+    const contentEl = this.contentEl;
+    
+    // 清理旧的
+    if (this._remarkResizeHandle && document.body.contains(this._remarkResizeHandle)) {
+      document.body.removeChild(this._remarkResizeHandle);
+    }
+    if (this._remarkPositionInterval) {
+      clearInterval(this._remarkPositionInterval);
+    }
+    
+    const resizeHandle = document.body.createDiv();
+    resizeHandle.className = "modal-resize-handle";
+    resizeHandle.style.position = "fixed";
+    resizeHandle.style.width = "12px";
+    resizeHandle.style.height = "12px";
+    resizeHandle.style.cursor = "nwse-resize";
+    resizeHandle.style.zIndex = "9999";
+    resizeHandle.style.background = "linear-gradient(135deg, transparent 50%, var(--text-muted) 50%)";
+    resizeHandle.style.pointerEvents = "auto";
+    resizeHandle.style.borderRadius = "0 0 8px 0";
+    
+    const updatePosition = () => {
+      if (!modalEl || !document.body.contains(modalEl)) return;
+      const rect = modalEl.getBoundingClientRect();
+      resizeHandle.style.right = `${window.innerWidth - rect.right + 2}px`;
+      resizeHandle.style.bottom = `${window.innerHeight - rect.bottom + 2}px`;
+    };
+    
+    setTimeout(updatePosition, 0);
+    setTimeout(updatePosition, 50);
+    setTimeout(updatePosition, 200);
+    
+    this._remarkPositionInterval = setInterval(updatePosition, 500);
+    
+    let isResizing = false;
+    let resizeStartX, resizeStartY, resizeStartWidth, resizeStartHeight;
+    
+    const onResizeMouseDown = (e) => {
+      isResizing = true;
+      resizeStartX = e.clientX;
+      resizeStartY = e.clientY;
+      resizeStartWidth = modalEl.offsetWidth;
+      resizeStartHeight = modalEl.offsetHeight;
+      modalEl.style.maxHeight = 'none';
+      contentEl.style.maxHeight = 'none';
+      document.addEventListener("mousemove", onResizeMouseMove);
+      document.addEventListener("mouseup", onResizeMouseUp);
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    
+    const onResizeMouseMove = (e) => {
+      if (!isResizing) return;
+      const newWidth = Math.max(400, resizeStartWidth + (e.clientX - resizeStartX));
+      const newHeight = Math.max(300, resizeStartHeight + (e.clientY - resizeStartY));
+      modalEl.style.width = `${newWidth}px`;
+      modalEl.style.maxWidth = `${newWidth}px`;
+      modalEl.style.height = `${newHeight}px`;
+      const contentWidth = newWidth - 30;
+      contentEl.style.maxWidth = `${contentWidth}px`;
+      contentEl.style.width = `${contentWidth}px`;
+      updatePosition();
+    };
+    
+    const onResizeMouseUp = () => {
+      isResizing = false;
+      document.removeEventListener("mousemove", onResizeMouseMove);
+      document.removeEventListener("mouseup", onResizeMouseUp);
+      // 保存大小
+      if (this.plugin && this.plugin.settings) {
+        this.plugin.settings.addRemarkModalWidth = modalEl.offsetWidth;
+        this.plugin.settings.addRemarkModalHeight = modalEl.offsetHeight;
+        this.plugin.saveData(this.plugin.settings);
+      }
+    };
+    
+    resizeHandle.addEventListener("mousedown", onResizeMouseDown);
+    
+    this._remarkResizeHandle = resizeHandle;
+    this._remarkResizeListeners = { mousemove: onResizeMouseMove, mouseup: onResizeMouseUp };
+    
+    // 覆盖 onClose 确保清理
+    const originalOnClose = this.onClose.bind(this);
+    this.onClose = () => {
+      if (this._remarkResizeListeners) {
+        document.removeEventListener("mousemove", this._remarkResizeListeners.mousemove);
+        document.removeEventListener("mouseup", this._remarkResizeListeners.mouseup);
+      }
+      if (this._remarkResizeHandle && document.body.contains(this._remarkResizeHandle)) {
+        document.body.removeChild(this._remarkResizeHandle);
+        this._remarkResizeHandle = null;
+      }
+      if (this._remarkPositionInterval) {
+        clearInterval(this._remarkPositionInterval);
+        this._remarkPositionInterval = null;
+      }
+      originalOnClose();
+    };
   }
 
   async renderPreview(content, container) {
@@ -6433,8 +6700,9 @@ class CSSEditorModal extends Modal {
       document.head.appendChild(previewStyleEl);
     }
     
-    // 将样式预览文本改为"预览"，并移除CSS样式代码标题
-    const previewText = editorSection.createEl("span", { text: t('entity.preview') });
+    // 将样式预览文本改为"预览"或类名，并移除CSS样式代码标题
+    const previewDisplayText = this.plugin?.settings?.showClassNameAsPreview ? this.className : t('entity.preview');
+    const previewText = editorSection.createEl("span", { text: previewDisplayText });
     previewText.style.marginBottom = "8px";
     previewText.style.fontSize = "16px";
     previewText.style.display = "inline-block";
@@ -7316,11 +7584,20 @@ ${currentCss}
     const buttonContainer = modal.contentEl.createDiv();
     buttonContainer.style.display = "flex";
     buttonContainer.style.justifyContent = "flex-end";
+    buttonContainer.style.alignItems = "center";
     buttonContainer.style.gap = "10px";
     buttonContainer.style.marginTop = "20px";
     buttonContainer.style.paddingTop = "15px";
    // buttonContainer.style.borderTop = "1px solid #eee";
-    
+
+    // 更多样式链接
+    const moreStylesLink = buttonContainer.createEl("a", { text: t('cssEditor.moreStyles') });
+    moreStylesLink.href = "https://github.com/dlsdgj/obsidian-regex-css-highlighter/discussions/1";
+    moreStylesLink.target = "_blank";
+    moreStylesLink.style.marginRight = "auto";
+    moreStylesLink.style.fontSize = "14px";
+    moreStylesLink.style.textDecoration = "none";
+
     // 取消按钮
     const cancelBtn = buttonContainer.createEl("button", { text: t('main.cancel') });
     cancelBtn.style.padding = "8px 16px";
@@ -8260,11 +8537,20 @@ class AddRegexRuleModal extends Modal {
     const buttonContainer = modal.contentEl.createDiv();
     buttonContainer.style.display = "flex";
     buttonContainer.style.justifyContent = "flex-end";
+    buttonContainer.style.alignItems = "center";
     buttonContainer.style.gap = "10px";
     buttonContainer.style.marginTop = "20px";
     buttonContainer.style.paddingTop = "15px";
     buttonContainer.style.borderTop = "1px solid #eee";
-    
+
+    // 更多样式链接
+    const moreStylesLink = buttonContainer.createEl("a", { text: t('cssEditor.moreStyles') });
+    moreStylesLink.href = "https://github.com/dlsdgj/obsidian-regex-css-highlighter/discussions/1";
+    moreStylesLink.target = "_blank";
+    moreStylesLink.style.marginRight = "auto";
+    moreStylesLink.style.fontSize = "14px";
+    moreStylesLink.style.textDecoration = "none";
+
     // 取消按钮
     const cancelBtn = buttonContainer.createEl("button", { text: t('main.cancel') });
     cancelBtn.style.padding = "8px 16px";
@@ -8961,6 +9247,93 @@ class AddRegexRuleModal extends Modal {
     const autoMatchRule = () => {
       // 什么都不做，只更新上一个输入值
       previousInputValue = inputEl.value;
+    };
+    
+    // 通过类名搜索并高亮匹配的样式按钮
+    this.highlightByClassName = (className) => {
+      const isAutoExpandMode = this.plugin && this.plugin.settings && this.plugin.settings.autoExpandMode === true;
+      
+      // 先清除所有高亮
+      this.clearClassNameHighlight();
+      
+      if (!className) return;
+      
+      // 查找所有分组容器中的样式按钮
+      const categoryContainers = this.contentEl.querySelectorAll('[data-category]');
+      
+      categoryContainers.forEach(categoryContainer => {
+        const groupStyleButtons = categoryContainer.querySelectorAll('.style-option');
+        let hasMatchingStyle = false;
+        
+        for (const button of groupStyleButtons) {
+          const buttonClass = button.getAttribute('data-class');
+          if (buttonClass && (buttonClass === className || buttonClass.includes(className) || className.includes(buttonClass))) {
+            hasMatchingStyle = true;
+            button.style.border = "2px solid #ff6b35";
+            button.style.transform = "scale(1.05)";
+            button.style.boxShadow = "0 0 8px rgba(255, 107, 53, 0.5)";
+            button.style.zIndex = "10";
+            button.dataset.classNameHighlighted = 'true';
+          }
+        }
+        
+        // 如果有匹配的样式，展开分组
+        if (hasMatchingStyle) {
+          // 展开隐藏的分组
+          if (categoryContainer.style.display === 'none') {
+            categoryContainer.style.display = 'flex';
+            categoryContainer.dataset.wasHidden = 'true';
+          }
+          
+          // 展开折叠的分组
+          const toggleBtn = categoryContainer.querySelector('.style-toggle-btn');
+          const styleButtonsContainer = categoryContainer.querySelector('.style-buttons-container');
+          if (toggleBtn && toggleBtn.textContent === '>') {
+            toggleBtn.textContent = '∨';
+            if (styleButtonsContainer) {
+              styleButtonsContainer.style.display = 'flex';
+              categoryContainer.dataset.wasCollapsed = 'true';
+            }
+          }
+          
+          // 滚动到第一个匹配的按钮
+          const firstMatch = categoryContainer.querySelector('[data-class-name-highlighted="true"]');
+          if (firstMatch) {
+            setTimeout(() => {
+              firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+          }
+        }
+      });
+    };
+    
+    // 清除类名搜索高亮
+    this.clearClassNameHighlight = () => {
+      const highlightedButtons = this.contentEl.querySelectorAll('[data-class-name-highlighted="true"]');
+      highlightedButtons.forEach(button => {
+        button.style.border = "0px solid #ddd";
+        button.style.transform = "scale(1)";
+        button.style.boxShadow = "0 1px 2px rgba(0,0,0,0.1)";
+        button.style.zIndex = "1";
+        delete button.dataset.classNameHighlighted;
+      });
+      
+      // 恢复之前隐藏的分组
+      const hiddenContainers = this.contentEl.querySelectorAll('[data-was-hidden="true"]');
+      hiddenContainers.forEach(container => {
+        container.style.display = 'none';
+        delete container.dataset.wasHidden;
+      });
+      
+      // 恢复之前折叠的分组
+      const collapsedContainers = this.contentEl.querySelectorAll('[data-was-collapsed="true"]');
+      collapsedContainers.forEach(container => {
+        const toggleBtn = container.querySelector('.style-toggle-btn');
+        const styleButtonsContainer = container.querySelector('.style-buttons-container');
+        if (toggleBtn) toggleBtn.textContent = '>';
+        if (styleButtonsContainer) styleButtonsContainer.style.display = 'none';
+        delete container.dataset.wasCollapsed;
+      });
     };
     
     // 高亮匹配的规则按钮和对应的CSS样式按钮
@@ -10791,9 +11164,9 @@ class AddRegexRuleModal extends Modal {
           // 根据文本类型决定显示长度：中文显示3个汉字，英文显示10个字母
           const hasChineseChars = /[\u4e00-\u9fa5]/.test(selectedText);
           const previewLength = hasChineseChars ? 3 : 10;
-          // 优先使用设置的按钮文字，其次是选中的文字，最后是默认的"示例"文字
+          // 显示类名时优先显示类名，忽略手动设置的显示文本
           const buttonText = this.plugin && typeof this.plugin.getButtonText === 'function' ? this.plugin.getButtonText(styleInfo.class) : '';
-          styleExample.textContent = buttonText || (selectedText.length >= previewLength ? selectedText.substring(0, previewLength) : (selectedText || getDefaultPreviewText(this.plugin)));
+          styleExample.textContent = this.plugin?.settings?.showClassNameAsPreview ? styleInfo.class : (buttonText || (selectedText.length >= previewLength ? selectedText.substring(0, previewLength) : (selectedText || getDefaultPreviewText(this.plugin, styleInfo.class))));
           // 保留内联样式设置以确保基本样式正常，同时通过添加类名支持伪元素和动画效果
           styleExample.setAttribute("style", styleInfo.style);
           fontSizeCheckQueue.push(styleExample);
@@ -10801,7 +11174,10 @@ class AddRegexRuleModal extends Modal {
           styleExample.style.whiteSpace = "nowrap";
           styleExample.style.overflow = "visible";
           styleExample.style.textOverflow = "clip";
-          styleExample.style.maxWidth = "80px";
+          // 显示类名时不限制宽度，完整显示
+          if (!this.plugin?.settings?.showClassNameAsPreview) {
+            styleExample.style.maxWidth = "80px";
+          }
           styleExample.style.paddingBottom = "4px";
           
           // 检查CSS类是否有hover样式，如果有则添加hover事件监听器
@@ -13415,6 +13791,84 @@ class AddRegexRuleModal extends Modal {
       await this.plugin.saveData(this.plugin.settings);
     });
 
+    // 显示类名设置
+    const showClassNameRow = displayContent.createDiv();
+    showClassNameRow.style.display = "flex";
+    showClassNameRow.style.alignItems = "center";
+    showClassNameRow.style.marginBottom = "5px";
+    showClassNameRow.style.marginLeft = "20px";
+
+    const showClassNameLabel = showClassNameRow.createEl("span");
+    showClassNameLabel.textContent = t('settings.showClassNameAsPreview') + ": ";
+    showClassNameLabel.style.marginRight = "10px";
+    showClassNameLabel.style.fontSize = "14px";
+
+    const showClassNameInput = showClassNameRow.createEl("input");
+    showClassNameInput.type = "checkbox";
+    showClassNameInput.checked = this.plugin.settings?.showClassNameAsPreview || false;
+
+    const showClassNameHint = showClassNameRow.createEl("span");
+    showClassNameHint.textContent = t('settings.showClassNameAsPreviewHint');
+    showClassNameHint.style.fontSize = "12px";
+    showClassNameHint.style.color = "var(--text-muted)";
+    showClassNameHint.style.marginLeft = "8px";
+
+    showClassNameInput.addEventListener("change", async (e) => {
+      if (!this.plugin.settings) this.plugin.settings = {};
+      this.plugin.settings.showClassNameAsPreview = e.target.checked;
+      await this.plugin.saveData(this.plugin.settings);
+    });
+
+    // 搜索类名设置
+    const searchClassNameRow = displayContent.createDiv();
+    searchClassNameRow.style.display = "flex";
+    searchClassNameRow.style.alignItems = "center";
+    searchClassNameRow.style.marginBottom = "5px";
+    searchClassNameRow.style.marginLeft = "20px";
+
+    const searchClassNameLabel = searchClassNameRow.createEl("span");
+    searchClassNameLabel.textContent = t('settings.searchClassName') + ": ";
+    searchClassNameLabel.style.marginRight = "10px";
+    searchClassNameLabel.style.fontSize = "14px";
+
+    const searchClassNameInput = searchClassNameRow.createEl("input");
+    searchClassNameInput.type = "text";
+    searchClassNameInput.placeholder = t('settings.searchClassNamePlaceholder');
+    searchClassNameInput.value = this.plugin.settings?.searchClassName || '';
+    searchClassNameInput.style.width = "150px";
+    searchClassNameInput.style.padding = "4px 8px";
+    searchClassNameInput.style.border = "1px solid var(--background-modifier-border)";
+    searchClassNameInput.style.borderRadius = "4px";
+    searchClassNameInput.style.fontSize = "14px";
+
+    const searchClassNameHint = searchClassNameRow.createEl("span");
+    searchClassNameHint.textContent = t('settings.searchClassNameHint');
+    searchClassNameHint.style.fontSize = "12px";
+    searchClassNameHint.style.color = "var(--text-muted)";
+    searchClassNameHint.style.marginLeft = "8px";
+
+    searchClassNameInput.addEventListener("keydown", (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        const searchValue = searchClassNameInput.value.trim();
+        if (searchValue) {
+          // 搜索类名并高亮匹配样式
+          this.highlightByClassName(searchValue);
+        } else {
+          // 清空时恢复
+          this.clearClassNameHighlight();
+        }
+        searchClassNameInput.blur();
+      }
+    });
+
+    searchClassNameInput.addEventListener("change", async () => {
+      if (!this.plugin.settings) this.plugin.settings = {};
+      this.plugin.settings.searchClassName = searchClassNameInput.value;
+      await this.plugin.saveData(this.plugin.settings);
+    });
+
     // 添加标题设置分类
     const headingOutline = createOutlineSection(settingsContent, t('settings.heading'), { isCollapsed: true, icon: '📌' });
     const headingSettingsContent = headingOutline.content;
@@ -14034,30 +14488,10 @@ class AddRegexRuleModal extends Modal {
     lineHeightUnit.style.marginLeft = "5px";
     lineHeightUnit.style.fontSize = "14px";
 
-    // 添加备注弹窗大小设置
-    const popupSizeSettingRow = popupSettingsContent.createDiv();
-    popupSizeSettingRow.style.display = "flex";
-    popupSizeSettingRow.style.alignItems = "center";
-    popupSizeSettingRow.style.marginBottom = "5px";
-
-    const popupSizeLabel = popupSizeSettingRow.createEl("span", { text: t('settings.remarkPopupWidth') + ": " });
-    popupSizeLabel.style.marginRight = "10px";
-    popupSizeLabel.style.fontSize = "14px";
-
-    const popupSizeInput = popupSizeSettingRow.createEl("input");
-    popupSizeInput.type = "number";
-    popupSizeInput.value = this.plugin.settings?.popupWidth !== undefined ? this.plugin.settings.popupWidth : 300;
-    popupSizeInput.min = "200";
-    popupSizeInput.max = "600";
-    popupSizeInput.step = "20";
-    popupSizeInput.style.width = "80px";
-    popupSizeInput.style.padding = "4px";
-    popupSizeInput.style.border = "1px solid var(--background-modifier-border)";
-    popupSizeInput.style.borderRadius = "4px";
-
-    const popupSizeUnit = popupSizeSettingRow.createEl("span", { text: "px" });
-    popupSizeUnit.style.marginLeft = "5px";
-    popupSizeUnit.style.fontSize = "14px";
+    // 弹窗宽度/透明度快捷键提示
+    const popupShortcutHint = popupSettingsContent.createDiv();
+    popupShortcutHint.style.cssText = 'margin-bottom:8px;padding:8px 12px;border-radius:6px;background:var(--background-secondary);border:1px solid var(--border-color);font-size:12px;color:var(--text-muted);line-height:1.6;';
+    popupShortcutHint.innerHTML = '💡 ' + t('settings.popupAltWheel') + '<br>💡 ' + t('settings.popupCtrlWheel');
 
     // 添加备注弹窗边框宽度设置
     const popupBorderWidthSettingRow = popupSettingsContent.createDiv();
@@ -14169,6 +14603,28 @@ class AddRegexRuleModal extends Modal {
     remarkBadgeThresholdHint.style.color = "var(--text-muted)";
     remarkBadgeThresholdHint.style.marginLeft = "8px";
 
+    // 添加备注调试日志开关
+    const remarkDebugLogRow = popupSettingsContent.createDiv();
+    remarkDebugLogRow.style.display = "flex";
+    remarkDebugLogRow.style.alignItems = "center";
+    remarkDebugLogRow.style.marginBottom = "5px";
+
+    const remarkDebugLogCheckbox = remarkDebugLogRow.createEl("input");
+    remarkDebugLogCheckbox.type = "checkbox";
+    remarkDebugLogCheckbox.checked = this.plugin.settings?.remarkDebugLog || false;
+    remarkDebugLogCheckbox.style.marginRight = "8px";
+
+    const remarkDebugLogLabel = remarkDebugLogRow.createEl("span");
+    remarkDebugLogLabel.textContent = t('settings.remarkDebugLog') + ': ';
+    remarkDebugLogLabel.style.marginRight = "4px";
+    remarkDebugLogLabel.style.fontSize = "14px";
+
+    const remarkDebugLogHint = remarkDebugLogRow.createEl("span");
+    remarkDebugLogHint.textContent = t('settings.remarkDebugLogHint');
+    remarkDebugLogHint.style.fontSize = "12px";
+    remarkDebugLogHint.style.color = "var(--text-muted)";
+    remarkDebugLogHint.style.marginLeft = "8px";
+
     // 添加保存按钮
     const savePopupSettingsButtonRow = popupSettingsContent.createDiv();
     savePopupSettingsButtonRow.style.display = "flex";
@@ -14193,12 +14649,12 @@ class AddRegexRuleModal extends Modal {
         this.plugin.settings.popupFontSize = parseInt(fontSizeInput.value);
         this.plugin.settings.popupSpacing = parseInt(spacingInput.value);
         this.plugin.settings.popupLineHeight = parseFloat(lineHeightInput.value);
-        this.plugin.settings.popupWidth = parseInt(popupSizeInput.value);
         this.plugin.settings.popupBorderWidth = parseInt(popupBorderWidthInput.value);
         this.plugin.settings.popupBorderColor = popupBorderColorInput.value;
         this.plugin.settings.remarkPopupOnlyOnSelection = remarkPopupOnlyOnSelectionCheckbox.checked;
         this.plugin.settings.showRemarkBadge = showRemarkBadgeCheckbox.checked;
         this.plugin.settings.remarkBadgeThreshold = parseInt(remarkBadgeThresholdInput.value) || 0;
+        this.plugin.settings.remarkDebugLog = remarkDebugLogCheckbox.checked;
         await this.plugin.saveData(this.plugin.settings);
         new Notice(t('settings.remarkPopupSaved'));
         this.plugin.refreshCurrentView();
@@ -17212,7 +17668,10 @@ class AddRegexRuleModal extends Modal {
     
     // 更新规则，保留原有的remark（如果没有提供新的remark）
     const existingRemark = this.plugin.rules[index]?.remark || '';
-    this.plugin.rules[index] = { regex: newRegex, cssClass: cssClass, remark: remark !== undefined ? remark : existingRemark };
+    const existingLinks = this.plugin.rules[index]?.links || undefined;
+    const updatedRule = { regex: newRegex, cssClass: cssClass, remark: remark !== undefined ? remark : existingRemark };
+    if (existingLinks) updatedRule.links = existingLinks;
+    this.plugin.rules[index] = updatedRule;
     
     // 保存到文件
     await this.plugin.saveFileRules(this.plugin.currentFilePath, this.plugin.rules);
@@ -17291,7 +17750,10 @@ class AddRegexRuleModal extends Modal {
   async editGlobalRule(index, newRegex, cssClass, remark = undefined) {
     // 更新全局规则，保留原有的remark（如果没有提供新的remark）
     const existingRemark = this.plugin.globalRules[index]?.remark || '';
-    this.plugin.globalRules[index] = { regex: newRegex, cssClass: cssClass, remark: remark !== undefined ? remark : existingRemark };
+    const existingLinks = this.plugin.globalRules[index]?.links || undefined;
+    const updatedRule = { regex: newRegex, cssClass: cssClass, remark: remark !== undefined ? remark : existingRemark };
+    if (existingLinks) updatedRule.links = existingLinks;
+    this.plugin.globalRules[index] = updatedRule;
     
     // 保存全局规则（saveGlobalRules已包含版本更新、事件发射和视图刷新）
     await this.plugin.saveGlobalRules(this.plugin.globalRules);
@@ -18278,13 +18740,28 @@ class AddRegexRuleModal extends Modal {
       async (remark) => {
         const newRemark = remark.trim();
         
+        // 构建来源链接条目
+        const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+        const currentFilePath = activeView?.file?.path;
+        const searchText = currentFilePath ? await this.plugin.determineSearchText(rule.regex, newRemark, currentFilePath) : rule.regex;
+        const linkEntry = currentFilePath ? {
+          filePath: currentFilePath,
+          searchText: searchText,
+          remark: newRemark,
+          timestamp: Date.now()
+        } : null;
+        
         try {
           // 确定是全局规则还是当前文件规则
           if (rule.isGlobal || Array.isArray(this.plugin.globalRules) && this.plugin.globalRules.includes(rule)) {
             // 全局规则
             const ruleIndex = this.plugin.globalRules.findIndex(r => r.regex === rule.regex && r.cssClass === rule.cssClass);
             if (ruleIndex !== -1) {
-              this.plugin.globalRules[ruleIndex].remark = newRemark;
+              // 自动添加来源链接
+              if (linkEntry) {
+                if (!this.plugin.globalRules[ruleIndex].links) this.plugin.globalRules[ruleIndex].links = [];
+                this.plugin.globalRules[ruleIndex].links.push(linkEntry);
+              }
               await this.plugin.saveGlobalRules(this.plugin.globalRules);
               this.showSuccessMessage('全局规则备注已更新！');
             }
@@ -18297,7 +18774,11 @@ class AddRegexRuleModal extends Modal {
             
             const ruleIndex = this.plugin.rules.findIndex(r => r.regex === rule.regex && r.cssClass === rule.cssClass);
             if (ruleIndex !== -1) {
-              this.plugin.rules[ruleIndex].remark = newRemark;
+              // 自动添加来源链接
+              if (linkEntry) {
+                if (!this.plugin.rules[ruleIndex].links) this.plugin.rules[ruleIndex].links = [];
+                this.plugin.rules[ruleIndex].links.push(linkEntry);
+              }
               await this.plugin.saveFileRules(this.plugin.currentFilePath, this.plugin.rules);
               
               // 更新计数文件
@@ -18330,7 +18811,8 @@ class AddRegexRuleModal extends Modal {
           alert('保存备注时出错：' + error.message);
         }
       },
-      this.plugin // 传递plugin对象
+      this.plugin, // 传递plugin对象
+      rule.regex || '' // 传递匹配文本
     );
     
     // 显示弹窗
@@ -20331,6 +20813,12 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     
     if (this.settings.enableDebugLog === undefined) {
       this.settings.enableDebugLog = false;
+    }
+    if (this.settings.remarkDebugLog === undefined) {
+      this.settings.remarkDebugLog = false;
+    }
+    if (this.settings.searchClassName === undefined) {
+      this.settings.searchClassName = '';
       await this.saveData(this.settings);
     }
 
@@ -20406,6 +20894,9 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     }
     if (this.settings.popupWidth === undefined) {
       this.settings.popupWidth = 300;
+    }
+    if (this.settings.popupOpacity === undefined) {
+      this.settings.popupOpacity = 1;
     }
     if (this.settings.remarkPopupOnlyOnSelection === undefined) {
       this.settings.remarkPopupOnlyOnSelection = false;
@@ -20528,6 +21019,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     
     this.rulesUpdateEmitter = new EventTarget();
     this.pinyinUpdateEmitter = new EventTarget();
+    this._skipRefreshForPopup = false; // 弹窗操作期间跳过视图刷新
     this.rulesVersion = 0;
     
     this.randomHighlightState = {
@@ -20756,7 +21248,13 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     
     // 监听规则更新事件，更新标题和标签页样式，并刷新当前视图
     this.rulesUpdateEmitter.addEventListener('update', () => {
-      // 立即处理规则更新，不使用延迟
+      // 弹窗操作期间跳过视图刷新，避免阅读模式下 targetEl 被 DOM 替换导致弹窗跳到左上角
+      if (this._skipRefreshForPopup) {
+        this.remarkLog('[RegexCssHL] rulesUpdateEmitter: 弹窗打开期间，跳过视图刷新');
+        return;
+      }
+      
+      this.remarkLog('[RegexCssHL] rulesUpdateEmitter: 执行视图刷新');
       
       // 刷新当前视图以应用新规则
       this.refreshCurrentView();
@@ -22004,9 +22502,27 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           async (remark) => {
             const trimmedRemark = remark.trim();
             
+            // 构建来源链接条目
+            let linkFilePath = this.currentFilePath;
+            if (!linkFilePath) {
+              const av = this.app.workspace.getActiveViewOfType(MarkdownView);
+              if (av?.file) linkFilePath = av.file.path;
+            }
+            const searchText = linkFilePath ? await this.determineSearchText(selectedText, trimmedRemark, linkFilePath) : selectedText;
+            const linkEntry = linkFilePath ? {
+              filePath: linkFilePath,
+              searchText: searchText,
+              remark: trimmedRemark,
+              timestamp: Date.now()
+            } : null;
+            
             // 如果是全局规则，更新全局规则中的备注
             if (isGlobalRule) {
-              this.globalRules[globalRuleIndex].remark = trimmedRemark;
+              // 自动添加来源链接
+              if (linkEntry) {
+                if (!this.globalRules[globalRuleIndex].links) this.globalRules[globalRuleIndex].links = [];
+                this.globalRules[globalRuleIndex].links.push(linkEntry);
+              }
               await this.saveGlobalRules(this.globalRules);
               this.rulesVersion++;
               this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
@@ -22029,7 +22545,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               
               const ruleIndex = this.rules.findIndex(rule => textMatchesRegex(selectedText, rule.regex));
               if (ruleIndex !== -1) {
-                this.rules[ruleIndex].remark = trimmedRemark;
+                // 自动添加来源链接
+                if (linkEntry) {
+                  if (!this.rules[ruleIndex].links) this.rules[ruleIndex].links = [];
+                  this.rules[ruleIndex].links.push(linkEntry);
+                }
                 await this.saveFileRules(currentFilePath, this.rules);
                 await this.updateStyleCountFile(currentFilePath, this.rules);
                 this.rulesVersion++;
@@ -22037,12 +22557,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 this.refreshCurrentView();
                 new Notice(trimmedRemark ? t('main.remarkUpdated') : t('main.remarkCleared'));
               } else {
-                await this.addFileRule(selectedText, '', trimmedRemark);
+                await this.addFileRule(selectedText, '', trimmedRemark, linkEntry ? [linkEntry] : null);
                 new Notice(trimmedRemark ? t('main.remarkAdded') : t('main.remarkCleared'));
               }
             }
           },
-          this
+          this,
+          selectedText || ''
         );
         modal.open();
       });
@@ -22861,9 +23382,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             const styleExample = document.createElement('div');
             styleExample.className = `${className} style-example style-option-preview`;
             
-            // 获取按钮文字
+            // 显示类名时优先显示类名，忽略手动设置的显示文本
             const buttonText = this.getButtonText ? this.getButtonText(className) : '';
-            styleExample.textContent = buttonText || getDefaultPreviewText(this.plugin);
+            styleExample.textContent = this.plugin?.settings?.showClassNameAsPreview ? className : (buttonText || getDefaultPreviewText(this.plugin, className));
             
             // 获取内联样式（如果存在）
             const inlineStyle = this.cssStyles?.get(className) || '';
@@ -22880,7 +23401,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             styleExample.style.whiteSpace = 'nowrap';
             styleExample.style.overflow = 'visible';
             styleExample.style.textOverflow = 'clip';
-            styleExample.style.maxWidth = '100px';
+            // 显示类名时不限制宽度，完整显示
+            if (!this.plugin?.settings?.showClassNameAsPreview) {
+              styleExample.style.maxWidth = '100px';
+            }
             styleExample.style.paddingBottom = '4px';
             
             // 检查hover样式
@@ -23513,9 +24037,27 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           async (remark) => {
             const trimmedRemark = remark.trim();
             
+            // 构建来源链接条目
+            let linkFilePath = this.currentFilePath;
+            if (!linkFilePath) {
+              const av = this.app.workspace.getActiveViewOfType(MarkdownView);
+              if (av?.file) linkFilePath = av.file.path;
+            }
+            const searchText = linkFilePath ? await this.determineSearchText(selectedText, trimmedRemark, linkFilePath) : selectedText;
+            const linkEntry = linkFilePath ? {
+              filePath: linkFilePath,
+              searchText: searchText,
+              remark: trimmedRemark,
+              timestamp: Date.now()
+            } : null;
+            
             // 如果是全局规则，更新全局规则中的备注
             if (isGlobalRule) {
-              this.globalRules[globalRuleIndex].remark = trimmedRemark;
+              // 自动添加来源链接
+              if (linkEntry) {
+                if (!this.globalRules[globalRuleIndex].links) this.globalRules[globalRuleIndex].links = [];
+                this.globalRules[globalRuleIndex].links.push(linkEntry);
+              }
               await this.saveGlobalRules(this.globalRules);
               this.rulesVersion++;
               this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
@@ -23538,7 +24080,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               
               const ruleIndex = this.rules.findIndex(rule => textMatchesRegex(selectedText, rule.regex));
               if (ruleIndex !== -1) {
-                this.rules[ruleIndex].remark = trimmedRemark;
+                // 自动添加来源链接
+                if (linkEntry) {
+                  if (!this.rules[ruleIndex].links) this.rules[ruleIndex].links = [];
+                  this.rules[ruleIndex].links.push(linkEntry);
+                }
                 await this.saveFileRules(currentFilePath, this.rules);
                 await this.updateStyleCountFile(currentFilePath, this.rules);
                 this.rulesVersion++;
@@ -23546,12 +24092,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 this.refreshCurrentView();
                 new Notice(trimmedRemark ? t('main.remarkUpdated') : t('main.remarkCleared'));
               } else {
-                await this.addFileRule(selectedText, '', trimmedRemark);
+                await this.addFileRule(selectedText, '', trimmedRemark, linkEntry ? [linkEntry] : null);
                 new Notice(trimmedRemark ? t('main.remarkAdded') : t('main.remarkCleared'));
               }
             }
           },
-          this
+          this,
+          selectedText || ''
         );
         modal.open();
       },
@@ -24018,8 +24565,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             const styleExample = document.createElement('div');
             styleExample.className = `${className} style-example style-option-preview`;
             
+            // 显示类名时优先显示类名，忽略手动设置的显示文本
             const buttonText = this.getButtonText ? this.getButtonText(className) : '';
-            styleExample.textContent = buttonText || getDefaultPreviewText(this.plugin);
+            styleExample.textContent = this.plugin?.settings?.showClassNameAsPreview ? className : (buttonText || getDefaultPreviewText(this.plugin, className));
             
             const inlineStyle = this.cssStyles?.get(className) || '';
             if (inlineStyle) {
@@ -29799,9 +30347,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           if (existingRuleIndex >= 0) {
             // 更新现有规则
             this.plugin.rules[existingRuleIndex].cssClass = className;
-            if (briefText) {
-              this.plugin.rules[existingRuleIndex].remark = briefText;
-            }
             new Notice(t('main.styleRuleUpdated'));
           } else {
             // 创建新的规则，同时包含样式和备注
@@ -30732,6 +31277,17 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       const filePath = activeView.file.path;
       
+      // 智能选择搜索词
+      const searchText = await this.determineSearchText(selectedText, remarkText, filePath);
+      
+      // 构建来源链接条目
+      const linkEntry = {
+        filePath: filePath,
+        searchText: searchText,
+        remark: remarkText,
+        timestamp: Date.now()
+      };
+      
       // 转义特殊字符，确保选中文本被正确匹配
       const escapedText = selectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       
@@ -30745,7 +31301,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       if (existingRuleIndex >= 0) {
         // 更新现有规则的备注
-        this.rules[existingRuleIndex].remark = remarkText;
+        // 自动添加来源链接
+        if (!this.rules[existingRuleIndex].links) {
+          this.rules[existingRuleIndex].links = [];
+        }
+        const existingLinks = this.rules[existingRuleIndex].links;
+        existingLinks.push(linkEntry);
         new Notice(t('main.remarkUpdated'));
       } else {
         // 检查是否有规则部分匹配选中文本（例如：规则是「张昭|子布」，选中文本是「张昭」）
@@ -30823,7 +31384,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           if (shouldMerge) {
             // 更新所有部分匹配的规则
             partialMatchingRules.forEach(rule => {
-              rule.remark = remarkText;
+              // 自动添加来源链接
+              if (!rule.links) rule.links = [];
+              rule.links.push(linkEntry);
             });
             
             new Notice(t('main.remarkMerged'));
@@ -30831,7 +31394,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             const newRule = {
               regex: escapedText,
               cssClass: '',
-              remark: remarkText,
+              links: [linkEntry],
               timestamp: Date.now()
             };
             
@@ -30842,7 +31405,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const newRule = {
             regex: escapedText,
             cssClass: '',
-            remark: remarkText,
+            links: [linkEntry],
             timestamp: Date.now()
           };
           
@@ -31273,9 +31836,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       this.registerCategoryShortcuts();
     } catch (error) {
       styleCategories = {
-        '背景': ['yellow-bg', 'red-bg', 'green-bg', 'blue-bg'],
-        '文字': ['yellow-text', 'red-text', 'green-text', 'blue-text'],
-        '边框': ['border-yellow', 'border-red', 'border-green', 'border-blue']
+        [t('main.newGroup')]: []
       };
       
       if (!this.config) {
@@ -31283,6 +31844,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
       this.config.styleCategories = styleCategories;
       this.registerCategoryShortcuts();
+      
+      // 将默认分组写入磁盘，确保 syncStylesToCategories 能正确读取
+      try {
+        await crossFS.write(this.app.vault, '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json', JSON.stringify(styleCategories, null, 2));
+      } catch (writeError) {
+      }
     }
   }
 
@@ -31309,7 +31876,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       let categories = {};
       if (categoriesExists) {
         const categoriesContent = await crossFS.read(this.app.vault, categoriesRelPath);
-        categories = JSON.parse(categoriesContent);
+        if (categoriesContent && categoriesContent.trim()) {
+          categories = JSON.parse(categoriesContent);
+        }
       }
       
       const existingClasses = new Set();
@@ -31651,7 +32220,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           regex: rule.regex,
           cssClass: rule.cssClass,
           remark: rule.remark || "",
-          timestamp: rule.timestamp || 0
+          timestamp: rule.timestamp || 0,
+          ...(rule.links ? { links: rule.links } : {})
         }));
 
         const originalLength = this.rules.length;
@@ -31693,7 +32263,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           regex: rule.regex,
           cssClass: rule.cssClass,
           remark: rule.remark || "",
-          timestamp: rule.timestamp || 0
+          timestamp: rule.timestamp || 0,
+          ...(rule.links ? { links: rule.links } : {})
         }));
       }
     } catch (error) {
@@ -31734,6 +32305,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           existingRule.cssClass = rule.cssClass;
           shouldUpdate = true;
         }
+        
+        // 合并来源链接
+        if (rule.links && rule.links.length > 0) {
+          if (!existingRule.links) existingRule.links = [];
+          for (const link of rule.links) {
+            existingRule.links.push(link);
+            shouldUpdate = true;
+          }
+        }
 
         if (shouldUpdate) {
           console.log('Merged rule:', rule.regex, existingRule);
@@ -31754,8 +32334,21 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     return rules;
   }
 
-  async saveFileRules(filePath, rules) {
+  // 备注调试日志
+  remarkLog(...args) {
+    if (this.settings?.remarkDebugLog) {
+      console.log(...args);
+    }
+  }
+  remarkWarn(...args) {
+    if (this.settings?.remarkDebugLog) {
+      console.warn(...args);
+    }
+  }
+
+  async saveFileRules(filePath, rules, skipRefresh = false) {
     if (!filePath) {
+      this.remarkWarn('[RegexCssHL] saveFileRules: filePath 为空，跳过保存');
       return;
     }
 
@@ -31764,6 +32357,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       const dataRelDir = '.obsidian/plugins/Regex-Css-Highlighter/data';
       const ruleFileRelPath = dataRelDir + '/' + fileName;
       
+      this.remarkLog('[RegexCssHL] saveFileRules: 保存文件规则', { filePath, rulesCount: rules.length, skipRefresh });
+      
       await crossFS.mkdir(this.app.vault, dataRelDir);
       
       await crossFS.write(this.app.vault, ruleFileRelPath, JSON.stringify({ rules }, null, 2));
@@ -31771,8 +32366,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       this.fileRules.set(filePath, rules);
       
       await this.updateStyleCountFile(filePath, rules);
+      
+      this.rulesVersion++;
+      this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+      if (!skipRefresh) {
+        this.refreshCurrentView();
+      }
+      this.remarkLog('[RegexCssHL] saveFileRules: 保存成功', { filePath, rulesCount: rules.length });
     } catch (error) {
-      console.error('Error saving file rules:', error);
+      console.error('[RegexCssHL] saveFileRules: 保存失败', error);
     }
   }
   
@@ -31886,7 +32488,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           regex: rule.regex,
           cssClass: rule.cssClass,
           remark: rule.remark || "",
-          disabled: rule.disabled || false
+          disabled: rule.disabled || false,
+          ...(rule.links ? { links: rule.links } : {})
         }));
 
         const originalLength = this.globalRules.length;
@@ -31905,9 +32508,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   }
   
   // 保存全局规则
-  async saveGlobalRules(rules) {
+  async saveGlobalRules(rules, skipRefresh = false) {
     try {
       const globalRulesRelPath = '.obsidian/plugins/Regex-Css-Highlighter/global-rules.json';
+      
+      this.remarkLog('[RegexCssHL] saveGlobalRules: 保存全局规则', { rulesCount: rules.length, skipRefresh });
       
       await crossFS.write(this.app.vault, globalRulesRelPath, JSON.stringify({ rules }, null, 2));
       
@@ -31916,13 +32521,17 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       this.rulesVersion++;
       this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
       
-      this.refreshCurrentView();
+      if (!skipRefresh) {
+        this.refreshCurrentView();
+      }
+      this.remarkLog('[RegexCssHL] saveGlobalRules: 保存成功', { rulesCount: rules.length });
     } catch (error) {
+      console.error('[RegexCssHL] saveGlobalRules: 保存失败', error);
     }
   }
   
   // 添加全局规则
-  async addGlobalRule(regex, cssClass, remark = '') {
+  async addGlobalRule(regex, cssClass, remark = '', links = null) {
     console.log('Adding global rule:', regex, cssClass, remark);
 
     // 检查是否已存在相同 regex 的全局规则
@@ -31940,14 +32549,18 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }
       }
 
-      if (remark && remark !== existingRule.remark) {
-        existingRule.remark = remark;
-        shouldUpdate = true;
-      }
-
       if (cssClass && cssClass !== 'custom-style' && cssClass !== existingRule.cssClass) {
         existingRule.cssClass = cssClass;
         shouldUpdate = true;
+      }
+      
+      // 合并来源链接
+      if (links && links.length > 0) {
+        if (!existingRule.links) existingRule.links = [];
+        for (const link of links) {
+          existingRule.links.push(link);
+          shouldUpdate = true;
+        }
       }
 
       if (shouldUpdate) {
@@ -31961,7 +32574,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
     } else {
       // 添加规则到全局规则
-      this.globalRules.push({ regex, cssClass, remark });
+      const newRule = { regex, cssClass };
+      if (links && links.length > 0) newRule.links = links;
+      this.globalRules.push(newRule);
       console.log('Global rules after adding:', this.globalRules);
 
       // 保存全局规则
@@ -31977,7 +32592,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   }
   
   // 添加规则到当前文件
-  async addFileRule(regex, cssClass, remark = '') {
+  async addFileRule(regex, cssClass, remark = '', links = null) {
     if (!this.currentFilePath) {
       console.error('No current file path, cannot add file rule');
       return;
@@ -32000,14 +32615,18 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }
       }
 
-      if (remark && remark !== existingRule.remark) {
-        existingRule.remark = remark;
-        shouldUpdate = true;
-      }
-
       if (cssClass && cssClass !== 'custom-style' && cssClass !== existingRule.cssClass) {
         existingRule.cssClass = cssClass;
         shouldUpdate = true;
+      }
+      
+      // 合并来源链接
+      if (links && links.length > 0) {
+        if (!existingRule.links) existingRule.links = [];
+        for (const link of links) {
+          existingRule.links.push(link);
+          shouldUpdate = true;
+        }
       }
 
       if (shouldUpdate) {
@@ -32020,7 +32639,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         console.log('Rule already exists with same values, skipping:', existingRule);
       }
     } else {
-      this.rules.push({ regex, cssClass, remark, timestamp: Date.now() });
+      const newRule = { regex, cssClass, timestamp: Date.now() };
+      if (links && links.length > 0) newRule.links = links;
+      this.rules.push(newRule);
       console.log('File rules after adding:', this.rules);
 
       // 保存到文件
@@ -32076,11 +32697,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             cssClass = existingRule.cssClass;
             shouldUpdate = true;
           }
-        }
-
-        if (remark && remark !== existingRule.remark) {
-          existingRule.remark = remark;
-          shouldUpdate = true;
         }
 
         if (cssClass && cssClass !== 'custom-style' && cssClass !== existingRule.cssClass) {
@@ -32799,7 +33415,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     };
 
     // 在涉及的文本节点上应用高亮（支持跨节点）
-    const applyCrossNodeHighlight = (involved, matchStart, matchEnd, cssClass, remark, ruleSource, ruleRegex) => {
+    const applyCrossNodeHighlight = (involved, matchStart, matchEnd, cssClass, remark, ruleSource, ruleRegex, links) => {
       if (involved.length === 0) return;
       
       if (involved.length === 1) {
@@ -32818,7 +33434,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }
         const span = document.createElement("span");
         const classes = [cssClass || '', 'highlight-regex-text'];
-        if (remark) {
+        if (remark || (links && links.length > 0)) {
           classes.push('highlight-tooltip-text');
         }
         span.className = classes.join(' ').trim();
@@ -32826,6 +33442,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         if (remark) {
           span.dataset.remark = remark;
         }
+        if (links && links.length > 0) span.dataset.links = JSON.stringify(links);
         if (ruleSource) {
           span.dataset.ruleSource = ruleSource;
         }
@@ -32853,13 +33470,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             // 整个节点都被匹配，直接包裹
             const span = document.createElement("span");
             const classes = [cssClass || '', 'highlight-regex-text'];
-            if (remark) {
+            if (remark || (links && links.length > 0)) {
               classes.push('highlight-tooltip-text');
             }
             span.className = classes.join(' ').trim();
             if (remark) {
               span.dataset.remark = remark;
             }
+            if (links && links.length > 0) span.dataset.links = JSON.stringify(links);
             if (ruleSource) {
               span.dataset.ruleSource = ruleSource;
             }
@@ -32876,13 +33494,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             }
             const span = document.createElement("span");
             const classes = [cssClass || '', 'highlight-regex-text'];
-            if (remark) {
+            if (remark || (links && links.length > 0)) {
               classes.push('highlight-tooltip-text');
             }
             span.className = classes.join(' ').trim();
             span.textContent = text.slice(localStart, localEnd);
             if (remark) {
               span.dataset.remark = remark;
+            }
+            if (links && links.length > 0) span.dataset.links = JSON.stringify(links);
             }
             if (ruleSource) {
               span.dataset.ruleSource = ruleSource;
@@ -32897,11 +33517,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             node.parentNode.replaceChild(frag, node);
           }
         }
-      }
     };
 
     // 逐条规则应用高亮
-    for (const { regex, cssClass, remark, _source } of rules) {
+    for (const { regex, cssClass, remark, _source, links } of rules) {
       let sortedRegex = sortRegexByLength(regex);
       let re;
       try {
@@ -32932,7 +33551,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       for (let m = matches.length - 1; m >= 0; m--) {
         const { start, end } = matches[m];
         const involved = findNodesInRange(nodeOffsets, start, end);
-        applyCrossNodeHighlight(involved, start, end, cssClass, remark, _source, regex);
+        applyCrossNodeHighlight(involved, start, end, cssClass, remark, _source, regex, links);
       }
     }
   }
@@ -32953,7 +33572,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       const textContent = element.textContent;
       
-      for (const { regex, cssClass, remark } of rules) {
+      for (const { regex, cssClass, remark, links } of rules) {
         try {
           const re = new RegExp(sortRegexByLength(regex), 'g');
           
@@ -33005,9 +33624,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               span.className = cssClass ? `${cssClass} highlight-regex-text` : "highlight-regex-text";
               span.textContent = match[0];
               if (remark) {
-                span.className += ' highlight-tooltip-text';
                 span.dataset.remark = remark;
               }
+              if (remark || (links && links.length > 0)) {
+                span.className += ' highlight-tooltip-text';
+              }
+              if (links && links.length > 0) span.dataset.links = JSON.stringify(links);
               frag.appendChild(span);
               spansCreated++;
               lastIdx = match.index + match[0].length;
@@ -33044,7 +33666,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       const textContent = element.textContent;
       
-      for (const { regex, cssClass, remark } of rules) {
+      for (const { regex, cssClass, remark, links } of rules) {
         try {
           const re = new RegExp(sortRegexByLength(regex), 'g');
           
@@ -33069,10 +33691,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                   }
                   const span = document.createElement("span");
                   const classes = [cssClass || '', 'highlight-regex-text'];
-                  if (remark) {
+                  if (remark || (links && links.length > 0)) {
                     classes.push('highlight-tooltip-text');
                     span.dataset.remark = remark;
                   }
+                  if (links && links.length > 0) span.dataset.links = JSON.stringify(links);
                   span.className = classes.join(' ').trim();
                   span.textContent = match[0];
                   frag.appendChild(span);
@@ -33106,10 +33729,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                       }
                       const span = document.createElement("span");
                       const classes = [cssClass || '', 'highlight-regex-text'];
-                      if (remark) {
+                      if (remark || (links && links.length > 0)) {
                         classes.push('highlight-tooltip-text');
                         span.dataset.remark = remark;
                       }
+                      if (links && links.length > 0) span.dataset.links = JSON.stringify(links);
                       span.className = classes.join(' ').trim();
                       span.textContent = match[0];
                       frag.appendChild(span);
@@ -33178,7 +33802,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       const textContent = heading.textContent;
       const processedRanges = [];
       
-      for (const { regex, cssClass, remark } of rules) {
+      for (const { regex, cssClass, remark, links } of rules) {
         try {
           const re = new RegExp(sortRegexByLength(regex), 'g');
           
@@ -33213,9 +33837,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                     span.className = cssClass ? `${cssClass} highlight-regex-text` : "highlight-regex-text";
                     span.textContent = match[0];
                     if (remark) {
-                      span.className += ' highlight-tooltip-text';
                       span.dataset.remark = remark;
                     }
+                    if (remark || (links && links.length > 0)) {
+                      span.className += ' highlight-tooltip-text';
+                    }
+                    if (links && links.length > 0) span.dataset.links = JSON.stringify(links);
                     frag.appendChild(span);
                     
                     // 记录已处理的范围
@@ -33417,8 +34044,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const newRemark = editTextarea.value;
           remark = newRemark;
           target.dataset.remark = newRemark;
-          // TODO: 保存备注到插件配置中
-          // this.saveRemarkToConfig(regex, newRemark);
+          // 更新 links（从规则中获取）
+          const ruleRegex = target.dataset.ruleRegex;
+          if (ruleRegex) {
+            const rule = plugin.rules.find(r => r.regex === ruleRegex) || plugin.globalRules.find(r => r.regex === ruleRegex);
+            if (rule && rule.links && rule.links.length > 0) {
+              target.dataset.links = JSON.stringify(rule.links);
+            }
+          }
         }, 500);
       });
 
@@ -33944,7 +34577,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             ...activeGlobalRules.map(rule => ({ ...rule, _source: 'global' }))
           ];
           
-          for (const { regex, cssClass, remark, _source } of allRules) {
+          for (const { regex, cssClass, remark, _source, links } of allRules) {
             let re;
             try { re = new RegExp(sortRegexByLength(regex), "g"); } catch { continue; }
             
@@ -33952,7 +34585,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               let text = view.state.doc.sliceString(from, to);
               let match;
               while ((match = re.exec(text))) {
-                if (cssClass || remark) {
+                if (cssClass || remark || (links && links.length > 0)) {
                   const classes = ['highlight-regex-text'];
                   const attributes = {};
                   
@@ -33961,8 +34594,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                   }
                   
                   if (remark) {
-                    classes.push('highlight-tooltip-text');
                     attributes['data-remark'] = remark;
+                  }
+                  if (remark || (links && links.length > 0)) {
+                    classes.push('highlight-tooltip-text');
+                  }
+                  if (links && links.length > 0) {
+                    attributes['data-links'] = JSON.stringify(links);
                   }
                   
                   attributes['data-rule-regex'] = regex;
@@ -34163,7 +34801,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     let hasAnyMatch = false;
     
     // 只应用类名，不进行文本替换，避免DOM结构复杂化
-    for (const { regex, cssClass, remark } of rules) {
+    for (const { regex, cssClass, remark, links } of rules) {
       try {
         const re = new RegExp(sortRegexByLength(regex), 'g');
         if (re.test(originalText)) {
@@ -34173,9 +34811,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 添加tooltip支持
           if (remark) {
-            element.classList.add('highlight-tooltip-text');
             element.dataset.remark = remark;
           }
+          if (remark || (links && links.length > 0)) {
+            element.classList.add('highlight-tooltip-text');
+          }
+          if (links && links.length > 0) element.dataset.links = JSON.stringify(links);
         }
       } catch (e) {
         console.error('Invalid regex in simplified highlight:', regex, e);
@@ -34203,7 +34844,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     let hasAnyMatch = false;
     
     // 首先检查是否有任何规则匹配
-    for (const { regex, cssClass, remark } of rules) {
+    for (const { regex, cssClass, remark, links } of rules) {
       let re;
       try {
         re = new RegExp(sortRegexByLength(regex), "g");
@@ -34244,7 +34885,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             if (cssClass && cssClass.trim()) {
               classes.push(cssClass);
             }
-            if (remark) {
+            if (remark || (links && links.length > 0)) {
               classes.push('highlight-tooltip-text');
             }
             span.className = classes.join(' ');
@@ -34253,6 +34894,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             if (remark) {
               span.dataset.remark = remark;
             }
+            if (links && links.length > 0) span.dataset.links = JSON.stringify(links);
             
             // 添加规则的正则表达式，用于后续编辑时唯一标识规则
             span.dataset.ruleRegex = regex;
@@ -34400,12 +35042,28 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       const highlightEl = target.closest('.highlight-tooltip-text, .highlight-regex-text');
       if (!highlightEl) return;
       
+      // 如果当前已有弹窗，检查是否是同一个规则（通过 ruleRegex 判断，而非 DOM 引用）
+      if (currentPopover && currentTargetEl) {
+        const currentRegex = currentTargetEl.dataset?.ruleRegex;
+        const newRegex = highlightEl.dataset?.ruleRegex;
+        if (currentRegex && newRegex && currentRegex === newRegex) {
+          // 同一个规则，更新 DOM 引用但不创建新弹窗
+          currentTargetEl = highlightEl;
+          return;
+        }
+      }
+      
       // 如果当前已有弹窗且目标是当前元素或其内部节点，则不处理（避免闪烁）
       if (currentTargetEl && (currentTargetEl === highlightEl || currentTargetEl.contains(highlightEl))) return;
       
       let remark = highlightEl.dataset.remark;
+      let links = [];
+      try {
+        const linksData = highlightEl.dataset.links;
+        if (linksData) links = JSON.parse(linksData);
+      } catch(e) {}
 
-      if (!remark) return;
+      if (!remark && links.length === 0) return;
       
       // 检查是否启用了"仅在选中文本时弹出"设置
       if (plugin.settings?.remarkPopupOnlyOnSelection) {
@@ -34467,12 +35125,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const popupBorderColor = plugin.settings.popupBorderColor || 'var(--text-accent)';
           
           popup.style.padding = `${popupSpacing}px`;
-          popup.style.width = 'auto';
+          popup.style.width = `${popupMaxWidth}px`;
           popup.style.maxWidth = `${popupMaxWidth}px`;
           popup.style.minWidth = '15px';
-          popup.style.maxHeight = '400px';
+          popup.style.maxHeight = 'none'; // 由动态计算控制
           popup.style.backgroundColor = 'var(--background-primary)';
           popup.style.boxSizing = 'border-box'; // 确保边框宽度包含在元素尺寸内
+          // 应用保存的透明度
+          const savedOpacity = plugin.settings.popupOpacity !== undefined ? plugin.settings.popupOpacity : 1;
+          popup.style.opacity = savedOpacity;
           // 使用用户设置的边框颜色
           // 注意：popupBorderWidth控制边框宽度，popupSpacing控制内边距(边框与文本之间的空白)
           popup.style.border = `${popupBorderWidth}px solid ${popupBorderColor}`;
@@ -34490,6 +35151,59 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             .remark-custom-popup h1, .remark-custom-popup h2, .remark-custom-popup h3, .remark-custom-popup h4, .remark-custom-popup h5, .remark-custom-popup h6 { margin: 0; }
             .remark-custom-popup blockquote { margin: 0; }
             .remark-custom-popup hr { margin: 5px 0; }
+            .remark-custom-popup table {
+              border-collapse: separate;
+              border-spacing: 0;
+              margin: 8px 0;
+              width: 100%;
+              border-radius: 6px;
+              overflow: hidden;
+              border: 1px solid var(--border-color);
+              font-size: 11px;
+            }
+            .remark-custom-popup th,
+            .remark-custom-popup td {
+              padding: 5px 10px;
+              text-align: left;
+              border-bottom: 1px solid var(--border-color);
+              border-right: 1px solid var(--border-color);
+            }
+            .remark-custom-popup th:last-child,
+            .remark-custom-popup td:last-child {
+              border-right: none;
+            }
+            .remark-custom-popup tr:last-child td {
+              border-bottom: none;
+            }
+            .remark-custom-popup th {
+              background: linear-gradient(180deg, var(--background-modifier-hover), var(--background-secondary));
+              font-weight: 600;
+              font-size: 11px;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+              color: var(--text-muted);
+            }
+            .remark-custom-popup tr:nth-child(even) td {
+              background-color: rgba(0,0,0,0.03);
+            }
+            .remark-custom-popup tr:hover td {
+              background-color: var(--background-modifier-hover);
+            }
+            .remark-custom-popup img {
+              max-width: 100%;
+              height: auto;
+              border-radius: 4px;
+              margin: 4px 0;
+            }
+            .remark-custom-popup .internal-embed {
+              max-width: 100%;
+            }
+            .remark-custom-popup .internal-embed img {
+              max-width: 100%;
+              height: auto;
+              border-radius: 4px;
+              margin: 4px 0;
+            }
           `;
           popup.appendChild(style);
 
@@ -34506,8 +35220,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 初始使用预估高度
           let estimatedPopupHeight = 160;
           
-          // 计算水平位置：居中（使用最大宽度作为初始估算）
-          let left = rect.left + (rect.width - popupMaxWidth) / 2;
+          // 计算水平位置：居中于匹配词
+          let left = rect.left + rect.width / 2 - popupMaxWidth / 2;
           // 检查是否超出左右边界
           if (left < 10) {
             left = 10; // 贴左边界
@@ -34557,6 +35271,19 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           popup.style.left = left + 'px';
           popup.style.top = top + 'px';
+          
+          // 动态计算弹窗最大高度：基于关键词到视口边缘的可用空间
+          const margin = 10; // 距视口边缘的最小间距
+          let dynamicMaxHeight;
+          if (showArrowAtBottom) {
+            // 弹窗在关键词上方
+            dynamicMaxHeight = rect.top - arrowSize - margin;
+          } else {
+            // 弹窗在关键词下方
+            dynamicMaxHeight = window.innerHeight - rect.bottom - arrowSize - margin;
+          }
+          dynamicMaxHeight = Math.max(dynamicMaxHeight, 80); // 最小高度80px
+          popup.style.maxHeight = dynamicMaxHeight + 'px';
           
           // 保存初始位置信息供后续使用
           let lastPopupHeight = estimatedPopupHeight;
@@ -34687,7 +35414,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           contentContainer.style.backgroundColor = 'var(--background-secondary)';
           contentContainer.style.cursor = 'text';
           contentContainer.style.position = 'relative';
-          contentContainer.style.maxHeight = '374px';
+          contentContainer.style.maxHeight = `calc(${dynamicMaxHeight}px - ${popupSpacing * 2 + 26}px)`;
           contentContainer.style.overflowY = 'auto';
           contentContainer.style.userSelect = 'text';
           contentContainer.style.webkitUserSelect = 'text';
@@ -34700,30 +35427,933 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const styleElement = document.createElement('style');
           styleElement.textContent = `
             .remark-popup-content table {
-              border-collapse: collapse;
+              border-collapse: separate;
+              border-spacing: 0;
               margin: 8px 0;
               width: 100%;
+              border-radius: 6px;
+              overflow: hidden;
+              border: 1px solid var(--border-color);
+              font-size: 11px;
             }
             .remark-popup-content th,
             .remark-popup-content td {
-              border: 1px solid var(--border-color);
-              padding: 4px 8px;
+              padding: 5px 10px;
               text-align: left;
+              border-bottom: 1px solid var(--border-color);
+              border-right: 1px solid var(--border-color);
+            }
+            .remark-popup-content th:last-child,
+            .remark-popup-content td:last-child {
+              border-right: none;
+            }
+            .remark-popup-content tr:last-child td {
+              border-bottom: none;
             }
             .remark-popup-content th {
-              background-color: var(--background-modifier-hover);
+              background: linear-gradient(180deg, var(--background-modifier-hover), var(--background-secondary));
               font-weight: 600;
+              font-size: 11px;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+              color: var(--text-muted);
             }
-            .remark-popup-content tr:nth-child(even) {
-              background-color: var(--background-modifier-cover);
+            .remark-popup-content tr:nth-child(even) td {
+              background-color: rgba(0,0,0,0.03);
+            }
+            .remark-popup-content tr:hover td {
+              background-color: var(--background-modifier-hover);
+            }
+            .remark-popup-content img {
+              max-width: 100%;
+              height: auto;
+              border-radius: 4px;
+              margin: 4px 0;
+            }
+            .remark-popup-content .internal-embed {
+              max-width: 100%;
+            }
+            .remark-popup-content .internal-embed img {
+              max-width: 100%;
+              height: auto;
+              border-radius: 4px;
+              margin: 4px 0;
             }
           `;
           contentContainer.appendChild(styleElement);
           
-          // 创建单独的渲染容器，用于放置 Markdown 渲染内容
-          const renderContainer = document.createElement('div');
-          renderContainer.className = 'remark-popup-content';
-          contentContainer.appendChild(renderContainer);
+          // 将 links 按 filePath 分组
+          const linksByFile = new Map();
+          if (links && links.length > 0) {
+            for (const link of links) {
+              const key = link.filePath;
+              if (!linksByFile.has(key)) linksByFile.set(key, []);
+              linksByFile.get(key).push(link);
+            }
+          }
+          
+          // 保存内容高度
+          let savedHeight = 60;
+          
+          // ===== 渲染所有备注内容（预览模式） =====
+          const renderAllRemarks = () => {
+            contentContainer.innerHTML = '';
+            
+            // 按文档分组渲染
+            if (linksByFile.size > 0) {
+              let fileIndex = 0;
+              for (const [filePath, fileLinks] of linksByFile) {
+                const fileName = filePath.split('/').pop().replace(/\.md$/, '');
+                
+                // 硬边界分隔（不同文档之间）
+                const groupEl = document.createElement('div');
+                groupEl.className = 'remark-source-group';
+                groupEl.style.cssText = fileIndex > 0
+                  ? 'margin-top:8px;padding-top:8px;border-top:1px solid var(--background-modifier-border);' 
+                  : '';
+                
+                // 标题栏：文档名 + 搜索词 | 打开按钮 + 折叠按钮
+                const headerEl = document.createElement('div');
+                headerEl.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;';
+                
+                // 左侧区域：文档名 + 搜索词
+                const headerLeft = document.createElement('div');
+                headerLeft.style.cssText = 'display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;min-width:0;';
+                
+                // 文件颜色（不同文件用不同色相）
+                const fileHues = [210, 30, 150, 340, 270, 60, 180, 90];
+                const fileHue = fileHues[fileIndex % fileHues.length];
+                
+                // 文档名（含图标，可双击编辑）
+                const fileNameEl = document.createElement('span');
+                fileNameEl.textContent = '📄 ' + (fileName || '(' + t('main.noTitle') + ')');
+                fileNameEl.dataset.editField = 'filePath';
+                fileNameEl.dataset.filePath = filePath;
+                fileNameEl.style.cssText = `font-size:12px;font-weight:600;color:hsl(${fileHue},50%,35%);background:hsl(${fileHue},50%,90%);padding:2px 8px;border-radius:10px;flex-shrink:0;cursor:text;border-bottom:1px dashed transparent;white-space:nowrap;`;
+                fileNameEl.addEventListener('mouseenter', () => { fileNameEl.style.borderBottomColor = 'var(--text-muted)'; });
+                fileNameEl.addEventListener('mouseleave', () => { fileNameEl.style.borderBottomColor = 'transparent'; });
+                headerLeft.appendChild(fileNameEl);
+                
+                headerEl.appendChild(headerLeft);
+                
+                groupEl.appendChild(headerEl);
+                
+                // 备注内容区
+                const bodyEl = document.createElement('div');
+                bodyEl.className = 'remark-source-body';
+                
+                for (let i = 0; i < fileLinks.length; i++) {
+                  const link = fileLinks[i];
+                  
+                  // 同一文档多个备注用横线隔开
+                  if (i > 0) {
+                    const innerDivider = document.createElement('div');
+                    innerDivider.style.cssText = 'border-top:1px solid var(--background-modifier-border);margin:4px 0;';
+                    bodyEl.appendChild(innerDivider);
+                  }
+                  
+                  // 备注内容（使用链接自带的备注）
+                  const remarkContent = link.remark || '';
+                  const remarkWrapper = document.createElement('div');
+                  remarkWrapper.style.cssText = 'display:flex;align-items:flex-start;gap:6px;';
+                  // 同色圆点
+                  const dot = document.createElement('span');
+                  dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fileHue},50%,50%);flex-shrink:0;margin-top:5px;`;
+                  remarkWrapper.appendChild(dot);
+                  const remarkBox = document.createElement('div');
+                  remarkBox.style.cssText = 'flex:1;min-width:0;overflow:hidden;';
+                  const remarkEl = document.createElement('div');
+                  remarkEl.className = 'remark-popup-content';
+                  remarkEl.dataset.remarkSource = 'link';
+                  remarkEl.dataset.linkIndex = String(i);
+                  remarkEl.dataset.filePath = filePath;
+                  remarkEl.style.cssText = 'font-size:12px;overflow:hidden;';
+                  
+                  if (remarkContent) {
+                    // 用 MarkdownRenderer 渲染
+                    try {
+                      const { MarkdownRenderer: MR, Component } = require('obsidian');
+                      if (MR && plugin.app) {
+                        const component = new Component();
+                        component.load();
+                        const sourcePath = plugin.currentFilePath || '';
+                        MR.renderMarkdown(remarkContent, remarkEl, sourcePath, component);
+                        remarkEl._component = component;
+                        // 渲染图片
+                        plugin.renderImagesManually(remarkContent, remarkEl, plugin);
+                      } else {
+                        remarkEl.textContent = remarkContent;
+                      }
+                    } catch {
+                      remarkEl.textContent = remarkContent;
+                    }
+                  } else {
+                    // 空备注：显示可编辑提示
+                    remarkEl.textContent = '(' + t('main.doubleClickToEditRemark') + ')';
+                    remarkEl.style.cssText += 'color:var(--text-muted);font-style:italic;cursor:text;';
+                  }
+                  remarkBox.appendChild(remarkEl);
+                  
+                  // 底部工具栏：搜索词 + 打开按钮
+                  const toolBar = document.createElement('div');
+                  toolBar.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:2px;';
+                  
+                  // 搜索词标签（可双击编辑）
+                  const searchTag = document.createElement('span');
+                  searchTag.textContent = link.searchText ? link.searchText.substring(0, 20) + (link.searchText.length > 20 ? '...' : '') : '(' + t('main.noSearchText') + ')';
+                  searchTag.dataset.editField = 'searchText';
+                  searchTag.dataset.filePath = filePath;
+                  searchTag.dataset.linkIndex = String(i);
+                  searchTag.style.cssText = 'font-size:10px;color:var(--text-muted);background:var(--background-modifier-hover);padding:1px 6px;border-radius:8px;cursor:text;border-bottom:1px dashed transparent;';
+                  searchTag.addEventListener('mouseenter', () => { searchTag.style.borderBottomColor = 'var(--text-muted)'; });
+                  searchTag.addEventListener('mouseleave', () => { searchTag.style.borderBottomColor = 'transparent'; });
+                  // 支持拖放文字到搜索词
+                  searchTag.addEventListener('dragover', (de) => {
+                    if (de.dataTransfer?.types?.includes('text/plain') || de.dataTransfer?.types?.includes('text/unicode')) {
+                      de.preventDefault();
+                      searchTag.style.borderBottomColor = 'var(--text-accent)';
+                      searchTag.style.background = 'var(--text-accent)';
+                      searchTag.style.color = 'var(--text-on-accent)';
+                    }
+                  });
+                  searchTag.addEventListener('dragleave', () => {
+                    searchTag.style.borderBottomColor = 'transparent';
+                    searchTag.style.background = 'var(--background-modifier-hover)';
+                    searchTag.style.color = 'var(--text-muted)';
+                  });
+                  searchTag.addEventListener('drop', async (de) => {
+                    de.preventDefault();
+                    de.stopPropagation();
+                    const droppedText = de.dataTransfer?.getData('text/plain')?.trim();
+                    searchTag.style.borderBottomColor = 'transparent';
+                    searchTag.style.background = 'var(--background-modifier-hover)';
+                    searchTag.style.color = 'var(--text-muted)';
+                    if (!droppedText) return;
+                    // 更新搜索词
+                    link.searchText = droppedText;
+                    const ruleRegex = targetEl.dataset.ruleRegex;
+                    if (ruleRegex) {
+                      const isGlobal = plugin.globalRules.some(r => r.regex === ruleRegex);
+                      const rulesList = isGlobal ? plugin.globalRules : plugin.rules;
+                      const rule = rulesList.find(r => r.regex === ruleRegex);
+                      if (rule && rule.links) {
+                        const actualLink = rule.links.find(l => l.filePath === filePath && l.timestamp === link.timestamp);
+                        if (actualLink) {
+                          actualLink.searchText = droppedText;
+                        }
+                        targetEl.dataset.links = JSON.stringify(rule.links);
+                      }
+                      isDirty = true;
+                      if (isGlobal) {
+                        await plugin.saveGlobalRules(plugin.globalRules, true);
+                      } else {
+                        await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                      }
+                    }
+                    renderAllRemarks();
+                    repositionPopup();
+                  });
+                  toolBar.appendChild(searchTag);
+                  
+                  // 复制按钮
+                  const copyBtn = document.createElement('button');
+                  copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+                  copyBtn.title = t('main.copyRemark');
+                  copyBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;';
+                  copyBtn.addEventListener('click', (ce) => {
+                    ce.preventDefault();
+                    ce.stopPropagation();
+                    const text = link.remark || '';
+                    navigator.clipboard.writeText(text).then(() => {
+                      copyBtn.style.color = 'var(--text-normal)';
+                      setTimeout(() => { copyBtn.style.color = 'var(--text-muted)'; }, 800);
+                    });
+                  });
+                  toolBar.appendChild(copyBtn);
+                  
+                  // 打开链接按钮
+                  const openBtn = document.createElement('button');
+                  openBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="16.5" cy="16.5" r="2.5"/><path d="M18.5 18.5L21 21"/></svg>';
+                  openBtn.title = t('main.openDocument');
+                  openBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;';
+                  openBtn.addEventListener('click', async (ce) => {
+                    ce.preventDefault();
+                    ce.stopPropagation();
+                    if (link) await plugin.openLinkAndSearch(link.filePath, link.searchText);
+                  });
+                  toolBar.appendChild(openBtn);
+                  
+                  // 删除备注按钮
+                  const deleteBtn = document.createElement('button');
+                  deleteBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+                  deleteBtn.title = t('main.deleteRemark');
+                  deleteBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;';
+                  deleteBtn.addEventListener('click', async (ce) => {
+                    ce.preventDefault();
+                    ce.stopPropagation();
+                    // 从 linksByFile 中移除
+                    const fileLinks = linksByFile.get(filePath);
+                    if (fileLinks) {
+                      const idx = fileLinks.indexOf(link);
+                      if (idx !== -1) fileLinks.splice(idx, 1);
+                      if (fileLinks.length === 0) linksByFile.delete(filePath);
+                    }
+                    // 从原始规则数据中移除
+                    const ruleRegex = targetEl.dataset.ruleRegex;
+                    if (ruleRegex) {
+                      const isGlobal = plugin.globalRules.some(r => r.regex === ruleRegex);
+                      let rulesList = isGlobal ? plugin.globalRules : plugin.rules;
+                      const ruleIndex = rulesList.findIndex(r => r.regex === ruleRegex);
+                      if (ruleIndex !== -1) {
+                        const rule = rulesList[ruleIndex];
+                        if (rule && rule.links) {
+                          // 用 filePath + timestamp 匹配（更可靠）
+                          const linkIdx = link.timestamp
+                            ? rule.links.findIndex(l => l.filePath === link.filePath && l.timestamp === link.timestamp)
+                            : rule.links.findIndex(l => l.filePath === link.filePath && l.searchText === link.searchText);
+                          if (linkIdx !== -1) rule.links.splice(linkIdx, 1);
+                        }
+                        // 删除最后一条备注且 cssClass 为空时，删除整个规则
+                        if ((!rule.links || rule.links.length === 0) && (!rule.cssClass || rule.cssClass.trim() === '')) {
+                          rulesList.splice(ruleIndex, 1);
+                          delete targetEl.dataset.links;
+                        } else {
+                          if (rule.links && rule.links.length === 0) delete rule.links;
+                          targetEl.dataset.links = JSON.stringify(rule.links || []);
+                        }
+                        isDirty = true;
+                        if (isGlobal) {
+                          await plugin.saveGlobalRules(plugin.globalRules, true);
+                        } else {
+                          await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                        }
+                      }
+                    }
+                    renderAllRemarks();
+                    repositionPopup();
+                  });
+                  toolBar.appendChild(deleteBtn);
+                  remarkBox.appendChild(toolBar);
+                  remarkWrapper.appendChild(remarkBox);
+                  bodyEl.appendChild(remarkWrapper);
+                }
+                
+                groupEl.appendChild(bodyEl);
+                contentContainer.appendChild(groupEl);
+                
+                fileIndex++;
+              }
+            }
+            
+            // 无任何内容时显示提示
+            if (!remark?.trim() && linksByFile.size === 0) {
+              contentContainer.innerHTML = '<span style="color: var(--text-muted)">无备注内容</span>';
+            }
+            
+            // 右下角"+"按钮：添加新备注
+            const addBtn = document.createElement('button');
+            addBtn.className = 'remark-add-btn';
+            addBtn.textContent = '+';
+            addBtn.title = '添加备注';
+            addBtn.style.cssText = 'position:sticky;bottom:0;float:right;font-weight:800;font-size:14px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1CB5E0, #000046, #1CB5E0, #6a11cb);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 181, 224, 0.8));background-color:rgba(28, 181, 224, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 181, 224, 0.3), 0 0 15px rgba(0, 0, 70, 0.2);animation:hp-blue-shift 4s ease infinite;margin-top:6px;line-height:1;';
+            // 添加动画 keyframes
+            const addBtnStyle = document.createElement('style');
+            addBtnStyle.textContent = '@keyframes hp-blue-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }';
+            contentContainer.appendChild(addBtnStyle);
+            addBtn.addEventListener('click', async (ce) => {
+              ce.preventDefault();
+              ce.stopPropagation();
+              keepOpen = true; // 阻止弹窗自动隐藏
+              
+              const ruleRegex = targetEl.dataset.ruleRegex;
+              plugin.remarkLog('[RegexCssHL] 弹窗"+"按钮点击', { ruleRegex });
+              if (!ruleRegex) {
+                plugin.remarkWarn('[RegexCssHL] 弹窗"+"按钮: ruleRegex 为空，跳过');
+                return;
+              }
+              
+              // 创建新的 link entry
+              const newLink = {
+                filePath: plugin.currentFilePath || '',
+                searchText: '',
+                remark: '',
+                timestamp: Date.now()
+              };
+              
+              // 添加到规则
+              const isGlobal = plugin.globalRules.some(r => r.regex === ruleRegex);
+              let rule;
+              if (isGlobal) {
+                rule = plugin.globalRules.find(r => r.regex === ruleRegex);
+              } else {
+                rule = plugin.rules.find(r => r.regex === ruleRegex);
+              }
+              plugin.remarkLog('[RegexCssHL] 弹窗"+"按钮: 查找规则', { isGlobal, found: !!rule, ruleRegex });
+              if (rule) {
+                if (!rule.links) rule.links = [];
+                rule.links.push(newLink);
+                
+                // 更新 linksByFile
+                const key = newLink.filePath;
+                if (!linksByFile.has(key)) linksByFile.set(key, []);
+                linksByFile.get(key).push(newLink);
+                
+                // 更新 DOM dataset
+                targetEl.dataset.links = JSON.stringify(rule.links);
+                
+                plugin.remarkLog('[RegexCssHL] 弹窗"+"按钮: 保存规则', { isGlobal, linksCount: rule.links.length });
+                isDirty = true;
+                // 保存（跳过刷新，避免阅读模式下 targetEl 被 DOM 替换导致弹窗跳到左上角）
+                if (isGlobal) {
+                  await plugin.saveGlobalRules(plugin.globalRules, true);
+                } else {
+                  await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                }
+                plugin.remarkLog('[RegexCssHL] 弹窗"+"按钮: 保存完成');
+              } else {
+                plugin.remarkWarn('[RegexCssHL] 弹窗"+"按钮: 未找到规则，未保存', { ruleRegex, isGlobal });
+              }
+              
+              renderAllRemarks();
+              repositionPopup();
+            });
+            contentContainer.appendChild(addBtn);
+          };
+          
+          // 重新定位弹窗（内容变化后调用）
+          const repositionPopup = () => {
+            requestAnimationFrame(() => {
+              // 检查 targetEl 是否仍在 DOM 中，如果不在则尝试重新查找
+              let activeTargetEl = targetEl;
+              if (!document.body.contains(targetEl)) {
+                const ruleRegex = targetEl.dataset.ruleRegex;
+                if (ruleRegex) {
+                  const newEl = document.querySelector(`[data-rule-regex="${CSS.escape(ruleRegex)}"]`);
+                  if (newEl) {
+                    activeTargetEl = newEl;
+                  } else {
+                    hidePopup(true);
+                    return;
+                  }
+                } else {
+                  hidePopup(true);
+                  return;
+                }
+              }
+              
+              const newHeight = popup.offsetHeight;
+              const newWidth = popup.offsetWidth;
+              const r = activeTargetEl.getBoundingClientRect();
+              
+              // 用实际宽度重新计算水平居中位置
+              let nl = r.left + (r.width - newWidth) / 2;
+              if (nl < 10) nl = 10;
+              else if (nl + newWidth > window.innerWidth - 10) nl = window.innerWidth - newWidth - 10;
+              popup.style.left = nl + 'px';
+              
+              // 重新计算垂直位置
+              const spaceAbove = r.top;
+              const spaceBelow = window.innerHeight - r.bottom;
+              const requiredHeight = newHeight + arrowSize + 20;
+              const canShowAbove = spaceAbove >= requiredHeight;
+              const canShowBelow = spaceBelow >= requiredHeight;
+              
+              let nt;
+              let newShowArrowAtBottom;
+              if (canShowAbove && canShowBelow) {
+                if (spaceAbove >= spaceBelow) {
+                  nt = r.top - newHeight - arrowSize;
+                  newShowArrowAtBottom = true;
+                } else {
+                  nt = r.bottom + arrowSize;
+                  newShowArrowAtBottom = false;
+                }
+              } else if (canShowAbove) {
+                nt = r.top - newHeight - arrowSize;
+                newShowArrowAtBottom = true;
+              } else if (canShowBelow) {
+                nt = r.bottom + arrowSize;
+                newShowArrowAtBottom = false;
+              } else {
+                // 空间不够，放空间大的一侧
+                if (spaceAbove > spaceBelow) {
+                  nt = Math.max(10, r.top - newHeight - arrowSize);
+                  newShowArrowAtBottom = true;
+                } else {
+                  nt = r.bottom + arrowSize;
+                  newShowArrowAtBottom = false;
+                }
+              }
+              popup.style.top = nt + 'px';
+              lastPopupHeight = newHeight;
+              
+              // 动态更新最大高度
+              let newDynamicMaxHeight;
+              if (newShowArrowAtBottom) {
+                newDynamicMaxHeight = r.top - arrowSize - 10;
+              } else {
+                newDynamicMaxHeight = window.innerHeight - r.bottom - arrowSize - 10;
+              }
+              newDynamicMaxHeight = Math.max(newDynamicMaxHeight, 80);
+              popup.style.maxHeight = newDynamicMaxHeight + 'px';
+              contentContainer.style.maxHeight = `calc(${newDynamicMaxHeight}px - ${popupSpacing * 2 + 26}px)`;
+              
+              // 更新箭头
+              const targetCenter = r.left + r.width / 2;
+              const arrowTipInPopup = targetCenter - nl;
+              let newArrowPos = arrowTipInPopup - (arrowSize + 2);
+              const arrowSvgWidth = arrowSize * 2 + 4;
+              if (newArrowPos < 0) newArrowPos = 0;
+              if (newArrowPos > newWidth - arrowSvgWidth) newArrowPos = newWidth - arrowSvgWidth;
+              
+              if (arrowRef && arrowRef.parentNode) {
+                arrowRef.parentNode.removeChild(arrowRef);
+              }
+              arrowRef = createArrow(newShowArrowAtBottom ? 'down' : 'up');
+              arrowRef.style.left = newArrowPos + 'px';
+              if (newShowArrowAtBottom) {
+                arrowRef.style.top = '100%';
+                arrowRef.style.marginTop = '0px';
+              } else {
+                arrowRef.style.top = '0px';
+                arrowRef.style.transform = 'translateY(-100%)';
+              }
+              popup.appendChild(arrowRef);
+            });
+          };
+          
+          // 初始渲染
+          renderAllRemarks();
+          
+          // 显示弹窗
+          popup.style.opacity = '1';
+          popup.style.visibility = 'visible';
+          popup.style.transform = 'scale(1)';
+          
+          // 弹窗渲染后用实际高度和宽度重新定位
+          requestAnimationFrame(() => {
+            const actualHeight = popup.offsetHeight;
+            const actualWidth = popup.offsetWidth;
+            const rect = targetEl.getBoundingClientRect();
+            
+            // 用实际宽度重新计算水平居中位置
+            let newLeft = rect.left + (rect.width - actualWidth) / 2;
+            if (newLeft < 10) {
+              newLeft = 10;
+            } else if (newLeft + actualWidth > window.innerWidth - 10) {
+              newLeft = window.innerWidth - actualWidth - 10;
+            }
+            popup.style.left = newLeft + 'px';
+            
+            if (actualHeight !== estimatedPopupHeight) {
+              lastPopupHeight = actualHeight;
+              const spaceAbove = rect.top;
+              const spaceBelow = window.innerHeight - rect.bottom;
+              const requiredHeight = actualHeight + arrowSize + 20;
+              const canShowAbove = spaceAbove >= requiredHeight;
+              const canShowBelow = spaceBelow >= requiredHeight;
+              
+              let newTop;
+              if (canShowAbove && canShowBelow) {
+                if (spaceAbove >= spaceBelow) {
+                  newTop = rect.top - actualHeight - arrowSize;
+                  showArrowAtBottom = true;
+                } else {
+                  newTop = rect.bottom + arrowSize;
+                  showArrowAtBottom = false;
+                }
+              } else if (canShowAbove) {
+                newTop = rect.top - actualHeight - arrowSize;
+                showArrowAtBottom = true;
+              } else if (canShowBelow) {
+                newTop = rect.bottom + arrowSize;
+                showArrowAtBottom = false;
+              } else {
+                newTop = rect.bottom + arrowSize;
+                showArrowAtBottom = false;
+              }
+              popup.style.top = newTop + 'px';
+              
+              // 重新计算箭头位置
+              const actualPopupWidth = popup.offsetWidth;
+              const targetCenter = rect.left + rect.width / 2;
+              const arrowTipInPopup = targetCenter - newLeft;
+              let newArrowPos = arrowTipInPopup - (arrowSize + 2);
+              const arrowSvgWidth = arrowSize * 2 + 4;
+              if (newArrowPos < 0) newArrowPos = 0;
+              if (newArrowPos > actualPopupWidth - arrowSvgWidth) newArrowPos = actualPopupWidth - arrowSvgWidth;
+              
+              // 更新箭头方向和位置
+              if (arrowRef && arrowRef.parentNode) {
+                arrowRef.parentNode.removeChild(arrowRef);
+              }
+              arrowRef = createArrow(showArrowAtBottom ? 'down' : 'up');
+              arrowRef.style.left = newArrowPos + 'px';
+              if (showArrowAtBottom) {
+                arrowRef.style.top = '100%';
+                arrowRef.style.marginTop = '0px';
+              } else {
+                arrowRef.style.top = '0px';
+                arrowRef.style.transform = 'translateY(-100%)';
+              }
+              popup.appendChild(arrowRef);
+              
+              updateBounds();
+            }
+          });
+          
+          // ===== 编辑模式：双击某个区域进入编辑 =====
+          contentContainer.addEventListener('dblclick', (e) => {
+            // 锁定弹窗宽度，防止编辑时弹窗坍缩
+            const currentPopupWidth = popup.offsetWidth;
+            popup.style.minWidth = currentPopupWidth + 'px';
+            
+            // 编辑搜索词
+            const searchTag = e.target.closest('[data-edit-field="searchText"]');
+            if (searchTag) {
+              keepOpen = true; // 编辑模式下不自动关闭弹窗
+              const filePath = searchTag.dataset.filePath;
+              const linkIndex = parseInt(searchTag.dataset.linkIndex);
+              const fileLinks = linksByFile.get(filePath);
+              if (!fileLinks || !fileLinks[linkIndex]) return;
+              const linkRef = fileLinks[linkIndex];
+              const oldSearchText = linkRef.searchText || '';
+              const oldFilePath = linkRef.filePath || '';
+              const oldTimestamp = linkRef.timestamp || 0;
+              
+              const input = document.createElement('input');
+              input.type = 'text';
+              input.value = linkRef.searchText || '';
+              const origSearchWidth = searchTag.offsetWidth;
+              input.style.cssText = `font-size:10px;padding:1px 6px;border:none;border-radius:8px;background:var(--background-modifier-hover);color:var(--text-muted);width:${origSearchWidth}px;outline:none;box-sizing:border-box;margin:0;height:auto;line-height:normal;`;
+              searchTag.replaceWith(input);
+              input.focus();
+              input.select();
+              
+              let searchSaved = false;
+              const saveSearchText = async () => {
+                if (searchSaved) return;
+                searchSaved = true;
+                const newValue = input.value.trim();
+                linkRef.searchText = newValue;
+                const ruleRegex = targetEl.dataset.ruleRegex;
+                if (ruleRegex) {
+                  // 同时更新原始规则数据中的对应条目
+                  const isGlobal = plugin.globalRules.some(r => r.regex === ruleRegex);
+                  const rulesList = isGlobal ? plugin.globalRules : plugin.rules;
+                  const rule = rulesList.find(r => r.regex === ruleRegex);
+                  if (rule && rule.links) {
+                    // 用 filePath + timestamp 匹配
+                    let actualLink = null;
+                    if (oldTimestamp) {
+                      actualLink = rule.links.find(l => l.filePath === oldFilePath && l.timestamp === oldTimestamp);
+                    }
+                    if (!actualLink && linkIndex >= 0 && linkIndex < rule.links.length) {
+                      const candidate = rule.links[linkIndex];
+                      if (candidate.filePath === oldFilePath) actualLink = candidate;
+                    }
+                    if (actualLink) {
+                      actualLink.searchText = newValue;
+                    }
+                    targetEl.dataset.links = JSON.stringify(rule.links);
+                  }
+                  isDirty = true;
+                  if (isGlobal) {
+                    await plugin.saveGlobalRules(plugin.globalRules, true);
+                  } else {
+                    await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                  }
+                }
+                renderAllRemarks();
+                repositionPopup();
+              };
+              input.addEventListener('blur', saveSearchText);
+              input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { renderAllRemarks(); repositionPopup(); } });
+              return;
+            }
+            
+            // 编辑文档名(filePath)
+            const fileNameEl = e.target.closest('[data-edit-field="filePath"]');
+            if (fileNameEl) {
+              keepOpen = true; // 编辑模式下不自动关闭弹窗
+              const filePath = fileNameEl.dataset.filePath;
+              const fileLinks = linksByFile.get(filePath);
+              if (!fileLinks) return;
+              
+              // 计算文件色相，与预览模式一致
+              const fileHues = [210, 30, 150, 340, 270, 60, 180, 90];
+              const fileIndex = Array.from(linksByFile.keys()).indexOf(filePath);
+              const fileHue = fileHues[(fileIndex >= 0 ? fileIndex : 0) % fileHues.length];
+              
+              const input = document.createElement('input');
+              input.type = 'text';
+              input.value = filePath;
+              const origWidth = fileNameEl.offsetWidth;
+              input.style.cssText = `font-size:12px;font-weight:600;padding:2px 8px;border:none;border-radius:10px;background:hsl(${fileHue},50%,90%);color:hsl(${fileHue},50%,35%);width:${origWidth}px;outline:none;white-space:nowrap;box-sizing:border-box;margin:0;height:auto;line-height:normal;`;
+              fileNameEl.replaceWith(input);
+              input.focus();
+              input.select();
+              
+              let fileSaved = false;
+              const saveFilePath = async () => {
+                if (fileSaved) return;
+                fileSaved = true;
+                const newFilePath = input.value.trim();
+                if (newFilePath && newFilePath !== filePath) {
+                  // 更新所有 links 的 filePath
+                  for (const link of fileLinks) {
+                    link.filePath = newFilePath;
+                  }
+                  // 更新 linksByFile 的 key
+                  linksByFile.delete(filePath);
+                  linksByFile.set(newFilePath, fileLinks);
+                  
+                  const ruleRegex = targetEl.dataset.ruleRegex;
+                  if (ruleRegex) {
+                    // 同时更新原始规则数据中的对应条目
+                    const isGlobal = plugin.globalRules.some(r => r.regex === ruleRegex);
+                    const rulesList = isGlobal ? plugin.globalRules : plugin.rules;
+                    const rule = rulesList.find(r => r.regex === ruleRegex);
+                    if (rule && rule.links) {
+                      for (const rl of rule.links) {
+                        if (rl.filePath === filePath) {
+                          rl.filePath = newFilePath;
+                        }
+                      }
+                      targetEl.dataset.links = JSON.stringify(rule.links);
+                    }
+                    isDirty = true;
+                    if (isGlobal) {
+                      await plugin.saveGlobalRules(plugin.globalRules, true);
+                    } else {
+                      await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                    }
+                  }
+                }
+                renderAllRemarks();
+                repositionPopup();
+              };
+              input.addEventListener('blur', saveFilePath);
+              input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { renderAllRemarks(); repositionPopup(); } });
+              return;
+            }
+            
+            // 编辑备注内容
+            const remarkEl = e.target.closest('[data-remark-source]');
+            if (!remarkEl) return;
+            
+            keepOpen = true; // 编辑模式下不自动关闭弹窗
+            
+            const source = remarkEl.dataset.remarkSource;
+            let editValue = '';
+            let linkRef = null;
+            let linkFilePath = '', linkSearchText = '', linkTimestamp = 0;
+            let linkIndex = -1;
+            
+            if (source === 'link') {
+              const filePath = remarkEl.dataset.filePath;
+              linkIndex = parseInt(remarkEl.dataset.linkIndex);
+              const fileLinks = linksByFile.get(filePath);
+              if (fileLinks && fileLinks[linkIndex]) {
+                linkRef = fileLinks[linkIndex];
+                editValue = linkRef.remark || '';
+                linkFilePath = linkRef.filePath || '';
+                linkSearchText = linkRef.searchText || '';
+                linkTimestamp = linkRef.timestamp || 0;
+              }
+            }
+            
+            // 创建 textarea 替换显示内容
+            const origHeight = remarkEl.offsetHeight;
+            const textarea = document.createElement('textarea');
+            textarea.value = editValue;
+            textarea.style.cssText = `width:100%;min-height:${Math.max(origHeight, 60)}px;padding:4px;border:1px solid var(--border-color);border-radius:4px;background:var(--background-secondary);color:var(--text-normal);font-size:12px;font-family:var(--font-family);resize:vertical;box-sizing:border-box;outline:none;line-height:1.5;`;
+            // 保存编辑上下文到 dataset，供 doHide 预保存使用
+            textarea.dataset.source = source;
+            textarea.dataset.linkIndex = String(linkIndex);
+            textarea.dataset.linkFilePath = linkFilePath || '';
+            textarea.dataset.linkSearchText = linkSearchText || '';
+            textarea.dataset.linkTimestamp = String(linkTimestamp || 0);
+            
+            // 图片支持：保存图片到附件文件夹
+            const saveImageToVault = async (imageData, fileName) => {
+              const attachmentFolder = plugin.app.vault.config?.attachmentFolderPath || 'attachments';
+              const fullPath = `${attachmentFolder}/${fileName}`;
+              try {
+                if (!(await plugin.app.vault.adapter.exists(attachmentFolder))) {
+                  await plugin.app.vault.adapter.mkdir(attachmentFolder);
+                }
+              } catch (e) {
+                await plugin.app.vault.adapter.mkdir(attachmentFolder);
+              }
+              let finalPath = fullPath;
+              let finalName = fileName;
+              let counter = 1;
+              while (await plugin.app.vault.adapter.exists(finalPath)) {
+                const ext = fileName.substring(fileName.lastIndexOf('.'));
+                const base = fileName.substring(0, fileName.lastIndexOf('.'));
+                finalName = `${base}_${counter}${ext}`;
+                finalPath = `${attachmentFolder}/${finalName}`;
+                counter++;
+              }
+              await plugin.app.vault.adapter.writeBinary(finalPath, imageData);
+              return finalName;
+            };
+            
+            const insertAtCursor = (text) => {
+              const start = textarea.selectionStart;
+              const end = textarea.selectionEnd;
+              const value = textarea.value;
+              textarea.value = value.substring(0, start) + text + value.substring(end);
+              textarea.selectionStart = textarea.selectionEnd = start + text.length;
+              textarea.focus();
+            };
+            
+            const handleImageFile = async (file) => {
+              if (!file) return;
+              const arrayBuffer = await file.arrayBuffer();
+              let ext = 'png';
+              if (file.type) {
+                const mimeExt = file.type.split('/')[1];
+                if (mimeExt === 'jpeg') ext = 'jpg';
+                else if (mimeExt === 'svg+xml') ext = 'svg';
+                else if (['png', 'gif', 'bmp', 'webp'].includes(mimeExt)) ext = mimeExt;
+              } else {
+                const nameExt = file.name.split('.').pop()?.toLowerCase();
+                if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(nameExt)) {
+                  ext = nameExt === 'jpeg' ? 'jpg' : nameExt;
+                }
+              }
+              const fileName = `remark_${Date.now()}.${ext}`;
+              try {
+                const savedName = await saveImageToVault(new Uint8Array(arrayBuffer), fileName);
+                insertAtCursor(`![[${savedName}]]`);
+                new Notice(t('main.imageSaved') + ': ' + savedName);
+              } catch (err) {
+                console.error('保存图片失败:', err);
+                new Notice(t('main.imageSaveFailed') + ': ' + err.message);
+              }
+            };
+            
+            // 粘贴图片支持
+            textarea.addEventListener('paste', async (e) => {
+              const items = e.clipboardData?.items;
+              if (!items) return;
+              let imageItem = null;
+              for (let i = 0; i < items.length; i++) {
+                if (items[i].type.startsWith('image/')) {
+                  imageItem = items[i];
+                  break;
+                }
+              }
+              if (!imageItem) return;
+              e.preventDefault();
+              const file = imageItem.getAsFile();
+              if (file) await handleImageFile(file);
+            });
+            
+            // 拖放图片支持
+            textarea.addEventListener('drop', async (e) => {
+              const files = e.dataTransfer?.files;
+              if (!files || files.length === 0) return;
+              for (const file of files) {
+                if (file.type.startsWith('image/')) {
+                  e.preventDefault();
+                  await handleImageFile(file);
+                  break;
+                }
+              }
+            });
+            textarea.addEventListener('dragover', (e) => {
+              if (e.dataTransfer?.types?.includes('Files')) {
+                e.preventDefault();
+              }
+            });
+            
+            // 替换元素
+            const parent = remarkEl.parentNode;
+            parent.replaceChild(textarea, remarkEl);
+            textarea.focus();
+            repositionPopup();
+            
+            // ESC 取消编辑
+            const escHandler = (ev) => {
+              if (ev.key === 'Escape') {
+                textarea.removeEventListener('keydown', escHandler);
+                renderAllRemarks();
+                repositionPopup();
+              }
+            };
+            textarea.addEventListener('keydown', escHandler);
+            
+            // 失焦保存
+            let blurSaved = false;
+            textarea.addEventListener('blur', async () => {
+              if (blurSaved) return;
+              blurSaved = true;
+              const newValue = textarea.value.trim();
+              const ruleRegex = targetEl.dataset.ruleRegex;
+              plugin.remarkLog('[RegexCssHL] 备注编辑失焦保存', { ruleRegex, source, newValue: newValue.substring(0, 50) });
+              if (!ruleRegex) {
+                plugin.remarkWarn('[RegexCssHL] 备注编辑失焦: ruleRegex 为空，跳过保存');
+                renderAllRemarks(); repositionPopup(); return;
+              }
+              
+              if (source === 'link') {
+                // 更新 linksByFile 中的对应条目（renderAllRemarks 从此读取数据）
+                if (linkRef) {
+                  linkRef.remark = newValue;
+                }
+                // 同时更新原始规则数据
+                const isGlobal = plugin.globalRules.some(r => r.regex === ruleRegex);
+                const rulesList = isGlobal ? plugin.globalRules : plugin.rules;
+                const rule = rulesList.find(r => r.regex === ruleRegex);
+                plugin.remarkLog('[RegexCssHL] 备注编辑失焦: 查找规则', { found: !!rule, ruleRegex, isGlobal });
+                if (rule && rule.links) {
+                  // 优先用 filePath + timestamp 匹配（timestamp 是唯一的）
+                  let actualLink = null;
+                  if (linkTimestamp) {
+                    actualLink = rule.links.find(l => l.filePath === linkFilePath && l.timestamp === linkTimestamp);
+                  }
+                  // 回退：用 linkIndex 匹配（linksByFile 中的索引可能与 rule.links 不同，需验证）
+                  if (!actualLink && linkIndex >= 0 && linkIndex < rule.links.length) {
+                    const candidate = rule.links[linkIndex];
+                    if (candidate.filePath === linkFilePath) {
+                      actualLink = candidate;
+                      plugin.remarkLog('[RegexCssHL] 备注编辑失焦: 通过 linkIndex 回退匹配');
+                    }
+                  }
+                  // 最终回退：遍历所有 links 找到 filePath 匹配且 remark 未设置的
+                  if (!actualLink) {
+                    actualLink = rule.links.find(l => l.filePath === linkFilePath && (!l.remark || l.remark.trim() === ''));
+                    if (actualLink) plugin.remarkLog('[RegexCssHL] 备注编辑失焦: 通过 filePath+空备注 回退匹配');
+                  }
+                  
+                  if (actualLink) {
+                    actualLink.remark = newValue;
+                    plugin.remarkLog('[RegexCssHL] 备注编辑失焦: 更新 actualLink.remark');
+                  } else {
+                    plugin.remarkWarn('[RegexCssHL] 备注编辑失焦: 未找到对应 link 条目', { linkFilePath, linkSearchText, linkTimestamp, linkIndex, ruleLinksCount: rule.links.length, ruleLinks: rule.links.map(l => ({ filePath: l.filePath, timestamp: l.timestamp, remark: (l.remark || '').substring(0, 20) })) });
+                  }
+                  targetEl.dataset.links = JSON.stringify(rule.links);
+                }
+                // 先刷新显示，再保存
+                renderAllRemarks();
+                repositionPopup();
+                isDirty = true;
+                plugin.remarkLog('[RegexCssHL] 备注编辑失焦: 保存规则', { isGlobal, ruleRegex });
+                if (isGlobal) {
+                  await plugin.saveGlobalRules(plugin.globalRules, true);
+                } else {
+                  await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                }
+                plugin.remarkLog('[RegexCssHL] 备注编辑失焦: 保存完成');
+                return;
+              }
+              renderAllRemarks();
+              repositionPopup();
+            });
+          });
           
           // 深色模式下的内容容器增强样式
           if (document.body.classList.contains('theme-dark')) {
@@ -34731,395 +36361,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             contentContainer.style.backgroundColor = 'var(--background-primary)'; // 使用与弹窗一致的背景，增强统一感
           }
           
-          // 保存内容高度
-          let savedHeight = 60;
-          
-          // textarea 编辑器
-          const textarea = document.createElement('textarea');
-          textarea.value = remark;
-          textarea.style.width = '100%';
-          textarea.style.padding = `${popupSpacing}px`;
-          textarea.style.border = '1px solid var(--border-color)';
-          textarea.style.borderRadius = '4px';
-          textarea.style.backgroundColor = 'var(--background-secondary)';
-          textarea.style.color = 'var(--text-normal)';
-          textarea.style.fontSize = `${popupFontSize}px`;
-          textarea.style.fontFamily = 'var(--font-family)';
-          textarea.style.lineHeight = 'var(--line-height)';
-          textarea.style.fontWeight = 'normal';
-          textarea.style.resize = 'none';
-          textarea.style.boxSizing = 'border-box';
-          textarea.style.display = 'none';
-          textarea.style.margin = '0';
-          textarea.style.maxHeight = '374px';
-          textarea.style.overflowY = 'auto';
-          
-          // 深色模式下的textarea增强样式
-          if (document.body.classList.contains('theme-dark')) {
-            textarea.style.border = '1px solid var(--background-modifier-border)';
-            textarea.style.backgroundColor = 'var(--background-primary)'; // 使用与弹窗一致的背景
-          }
-          
-          
-          
-          // 渲染预览（带防抖）
-          let renderTimeout = null;
-          const renderPreview = async () => {
-            if (renderTimeout) clearTimeout(renderTimeout);
-            renderTimeout = setTimeout(async () => {
-              try {
-                renderContainer.innerHTML = '';
-                
-                const content = textarea.value;
-                if (content.trim()) {
-                  // 先尝试用 MarkdownRenderer
-                  const { MarkdownRenderer: MR, Component } = require('obsidian');
-                  if (MR && plugin.app) {
-                    const component = new Component();
-                    component.load();
-                    const sourcePath = plugin.currentFilePath || '';
-                    await MR.renderMarkdown(content, renderContainer, sourcePath, component);
-                    renderContainer._component = component;
-                  }
-                  
-                  // 给 MarkdownRenderer 渲染的图片添加标记，使其支持自适应尺寸
-                  renderContainer.querySelectorAll('img').forEach(img => {
-                    img.dataset.allowNaturalSize = 'true';
-                  });
-                  // 手动补充渲染图片（如果 MarkdownRenderer 没做好）
-                  await plugin.renderImagesManually(content, renderContainer, plugin);
-                  
-                  // 等待图片加载完成后重新调整弹窗高度
-                  const adjustHeightForImages = () => {
-                    const imgs = renderContainer.querySelectorAll('img');
-                    if (imgs.length === 0) return;
-                    
-                    let loadedCount = 0;
-                    imgs.forEach(img => {
-                      if (img.complete && img.naturalHeight > 0) {
-                        loadedCount++;
-                      } else {
-                        img.addEventListener('load', () => {
-                          loadedCount++;
-                          if (loadedCount === imgs.length) {
-                            updatePopupSizeAndPosition();
-                          }
-                        }, { once: true });
-                        img.addEventListener('error', () => {
-                          loadedCount++;
-                          if (loadedCount === imgs.length) {
-                            updatePopupSizeAndPosition();
-                          }
-                        }, { once: true });
-                      }
-                    });
-                    
-                    if (loadedCount === imgs.length) {
-                      updatePopupSizeAndPosition();
-                    }
-                  };
-                  
-                  const updatePopupSizeAndPosition = () => {
-                    // 检测图片实际尺寸，如果大于预设宽度则按实际大小显示
-                    const imgs = renderContainer.querySelectorAll('img');
-                    let maxImgNaturalWidth = 0;
-                    let hasLargeImage = false;
-                    
-                    imgs.forEach(img => {
-                      if (img.dataset.allowNaturalSize === 'true' && img.naturalWidth > 0) {
-                        if (img.naturalWidth > popupMaxWidth) {
-                          hasLargeImage = true;
-                          maxImgNaturalWidth = Math.max(maxImgNaturalWidth, img.naturalWidth);
-                        }
-                      }
-                    });
-                    
-                    if (hasLargeImage && maxImgNaturalWidth > popupMaxWidth) {
-                      const newMaxWidth = Math.min(maxImgNaturalWidth, window.innerWidth * 0.9);
-                      // 弹窗使用 border-box，宽度需加上 padding 和 border 才能让内容区等于图片宽度
-                      const popupWidth = newMaxWidth + (popupSpacing * 2) + (popupBorderWidth * 2);
-                      popup.style.width = `${popupWidth}px`;
-                      popup.style.maxWidth = `${popupWidth}px`;
-                      // 有大图片时移除高度限制，让图片完整显示
-                      popup.style.maxHeight = 'none';
-                      contentContainer.style.maxHeight = 'none';
-                      contentContainer.style.overflowY = 'visible';
-                      contentContainer.style.overflowX = 'visible';
-                      
-                      imgs.forEach(img => {
-                        if (img.dataset.allowNaturalSize === 'true' && img.naturalWidth > popupMaxWidth) {
-                          img.style.maxWidth = 'none';
-                          img.style.width = `${Math.min(img.naturalWidth, newMaxWidth)}px`;
-                        }
-                      });
-                    } else {
-                      popup.style.width = 'auto';
-                      popup.style.maxWidth = `${popupMaxWidth}px`;
-                      popup.style.maxHeight = '400px';
-                      contentContainer.style.maxHeight = '374px';
-                      contentContainer.style.overflowY = 'auto';
-                      contentContainer.style.overflowX = 'auto';
-                      imgs.forEach(img => {
-                        if (img.dataset.allowNaturalSize === 'true') {
-                          img.style.maxWidth = '100%';
-                          img.style.width = '';
-                        }
-                      });
-                    }
-                    
-                    // 在设置完图片尺寸后重新获取内容高度
-                    const contentHeight = contentContainer.scrollHeight;
-                    savedHeight = Math.max(40, contentHeight);
-                    const popupFullHeight = savedHeight + (popupSpacing * 2) + 2;
-                    popup.style.height = popupFullHeight + 'px';
-                    textarea.style.height = savedHeight + 'px';
-                    
-                    const newRect = targetEl.getBoundingClientRect();
-                    const actualPopupHeight = popupFullHeight;
-                    const spaceAbove = newRect.top;
-                    const spaceBelow = window.innerHeight - newRect.bottom;
-                    const requiredHeight = actualPopupHeight + arrowSize + 20;
-                    
-                    let newTop;
-                    let newShowArrowAtBottom;
-                    const canShowAbove = spaceAbove >= requiredHeight;
-                    const canShowBelow = spaceBelow >= requiredHeight;
-                    
-                    if (canShowAbove && canShowBelow) {
-                      if (spaceAbove >= spaceBelow) {
-                        newTop = newRect.top - actualPopupHeight - arrowSize;
-                        newShowArrowAtBottom = true;
-                      } else {
-                        newTop = newRect.bottom + arrowSize;
-                        newShowArrowAtBottom = false;
-                      }
-                    } else if (canShowAbove) {
-                      newTop = newRect.top - actualPopupHeight - arrowSize;
-                      newShowArrowAtBottom = true;
-                    } else if (canShowBelow) {
-                      newTop = newRect.bottom + arrowSize;
-                      newShowArrowAtBottom = false;
-                    } else {
-                      newTop = newRect.bottom + arrowSize;
-                      newShowArrowAtBottom = false;
-                    }
-                    
-                    popup.style.top = newTop + 'px';
-                    initialTop = newTop;
-                    initialShowArrowAtBottom = newShowArrowAtBottom;
-                    
-                    const actualPopupWidth = popup.offsetWidth;
-                    let newLeft = newRect.left + (newRect.width - actualPopupWidth) / 2;
-                    if (newLeft < 10) {
-                      newLeft = 10;
-                    } else if (newLeft + actualPopupWidth > window.innerWidth - 10) {
-                      newLeft = window.innerWidth - actualPopupWidth - 10;
-                    }
-                    popup.style.left = newLeft + 'px';
-                    left = newLeft;
-                    
-                    // 更新箭头位置
-                    const targetCenter = newRect.left + newRect.width / 2;
-                    const arrowTipInPopup = targetCenter - left;
-                    const arrowSvgWidth = arrowSize * 2 + 4;
-                    let newArrowPos = arrowTipInPopup - (arrowSize + 2);
-                    
-                    // 边界检查：确保箭头在弹窗内
-                    if (newArrowPos < 0) newArrowPos = 0;
-                    if (newArrowPos > actualPopupWidth - arrowSvgWidth) newArrowPos = actualPopupWidth - arrowSvgWidth;
-                    
-                    if (arrowRef) {
-                      arrowRef.style.left = newArrowPos + 'px';
-                    }
-                    
-                    updateBounds();
-                  };
-                  
-                  // 等待图片加载完成后再显示弹窗，避免箭头位置调整动画被用户看到
-                  const imgs = renderContainer.querySelectorAll('img');
-                  if (imgs.length === 0) {
-                    // 没有图片，立即显示
-                    updatePopupSizeAndPosition();
-                    popup.style.opacity = '1';
-                    popup.style.visibility = 'visible';
-                  } else {
-                    // 有图片，等待加载完成后再显示
-                    let loadedCount = 0;
-                    let hasError = false;
-                    
-                    const checkAllLoaded = () => {
-                      loadedCount++;
-                      if (loadedCount === imgs.length || hasError) {
-                        updatePopupSizeAndPosition();
-                        popup.style.opacity = '1';
-                        popup.style.visibility = 'visible';
-                      }
-                    };
-                    
-                    imgs.forEach(img => {
-                      if (img.complete && img.naturalHeight > 0) {
-                        checkAllLoaded();
-                      } else {
-                        img.addEventListener('load', checkAllLoaded, { once: true });
-                        img.addEventListener('error', () => {
-                          hasError = true;
-                          checkAllLoaded();
-                        }, { once: true });
-                      }
-                    });
-                  }
-                } else {
-                  contentContainer.innerHTML += '<span style="color: var(--text-muted)">无备注内容</span>';
-                  popup.style.opacity = '1';
-                  popup.style.visibility = 'visible';
-                }
-              } catch (err) {
-                contentContainer.textContent = textarea.value;
-                popup.style.opacity = '1';
-                popup.style.visibility = 'visible';
-              }
-            }, 150);
-          };
-          
-          // 保存对targetEl的引用，确保在闭包中正确使用
-          const originalTargetEl = targetEl;
-          
-          // textarea 输入时实时更新预览并自动保存
-          let saveTimeout = null;
-          textarea.addEventListener('input', async () => {
-            // 编辑模式下不调用 renderPreview，避免高度被覆盖
-            if (textarea.style.display === 'none') {
-              renderPreview();
-            } else {
-              // 保持与预览模式相同的高度，不动态调整
-              // 内容超出时通过滚动条查看
-              textarea.style.overflowY = 'auto';
-            }
-            
-            // 防抖保存
-            if (saveTimeout) clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(async () => {
-              const newRemark = textarea.value.trim();
-              if (newRemark !== remark) {
-                // 获取规则的正则表达式
-                const ruleRegex = originalTargetEl.dataset.ruleRegex;
-                // 提取CSS类名（如果存在），但不依赖它来标识规则
-                const cssClass = originalTargetEl.className.split(' ').find(c => c !== 'highlight-tooltip-text' && c !== 'highlight-regex-text') || '';
-                if (ruleRegex) {
-                  await plugin.updateRuleRemark(ruleRegex, cssClass, newRemark);
-                  originalTargetEl.dataset.remark = newRemark;
-                  remark = newRemark; // 更新原值
-                }
-              }
-            }, 500);
-          });
-          
-          // 初始渲染预览
-          renderPreview();
-          
-          // 双击进入编辑模式
-          const showEditMode = () => {
-            contentContainer.style.display = 'none';
-            textarea.style.display = 'block';
-            
-            // 保持与预览模式相同的高度，不重新计算
-            textarea.style.height = savedHeight + 'px';
-            textarea.style.overflowY = 'auto'; // 当内容超出时显示滚动条
-            
-            // 计算内容所需宽度
-            // 临时设置textarea宽度为auto，获取内容实际宽度
-            textarea.style.width = 'auto';
-            textarea.style.position = 'absolute';
-            textarea.style.visibility = 'hidden';
-            textarea.style.whiteSpace = 'nowrap';
-            
-            // 获取内容宽度（包括padding）
-            const contentWidth = textarea.scrollWidth + 2 * popupSpacing + 2 * popupBorderWidth;
-            
-            // 恢复textarea的正常样式
-            textarea.style.position = '';
-            textarea.style.visibility = '';
-            textarea.style.whiteSpace = '';
-            textarea.style.width = '100%';
-            
-            // 设置弹窗宽度为内容所需宽度，确保不小于最小宽度，不大于最大宽度
-            const minWidth = 15;
-            const maxWidth = popupMaxWidth;
-            const finalWidth = Math.max(minWidth, Math.min(maxWidth, contentWidth));
-            
-            // 设置弹窗宽度
-            popup.style.width = finalWidth + 'px';
-            
-            // 等待浏览器完成重排后再更新位置和箭头
-            requestAnimationFrame(() => {
-              // 重新计算位置，让弹窗紧贴匹配文本
-              const newRect = targetEl.getBoundingClientRect();
-              const actualPopupWidth = finalWidth;
-              const actualPopupHeight = popup.offsetHeight;
-              
-              // 重新计算水平位置，确保弹窗居中于目标元素且不超出边界
-              let newLeft = newRect.left + (newRect.width - actualPopupWidth) / 2;
-              // 检查是否超出左右边界
-              if (newLeft < 10) {
-                newLeft = 10; // 贴左边界
-              } else if (newLeft + actualPopupWidth > window.innerWidth - 10) {
-                newLeft = window.innerWidth - actualPopupWidth - 10; // 贴右边界
-              }
-              popup.style.left = newLeft + 'px';
-              left = newLeft; // 更新left变量，供后续使用
-              
-              // 更新箭头位置
-              const targetCenter = newRect.left + newRect.width / 2;
-              const arrowTipInPopup = targetCenter - left;
-              let newArrowPos = arrowTipInPopup - (arrowSize + 2);
-              const arrowSvgWidth = arrowSize * 2 + 4;
-              
-              // 边界检查：确保整个箭头SVG都在弹窗内
-              if (newArrowPos < 0) newArrowPos = 0;
-              if (newArrowPos > actualPopupWidth - arrowSvgWidth) newArrowPos = actualPopupWidth - arrowSvgWidth;
-              
-              if (arrowRef) {
-                arrowRef.style.left = newArrowPos + 'px';
-              }
-              
-              // 更新包围盒
-              updateBounds();
-            });
-            
-            textarea.focus();
-            
-            // 添加 ESC 键监听
-            const escHandler = (e) => {
-              if (e.key === 'Escape') {
-                textarea.value = remark; // 恢复原值
-                showPreviewMode();
-                textarea.removeEventListener('keydown', escHandler);
-              }
-            };
-            textarea.addEventListener('keydown', escHandler);
-          };
-          
-          // 返回预览模式
-          const showPreviewMode = () => {
-            textarea.style.display = 'none';
-            contentContainer.style.display = 'block';
-            contentContainer.style.overflow = 'auto';
-            renderPreview();
-            
-            // 保持高度一致
-            popup.style.height = (savedHeight + 16) + 'px';
-            
-            // 更新包围盒
-            updateBounds();
-          };
-          
-          // 双击预览区域进入编辑
-          contentContainer.addEventListener('dblclick', showEditMode);
-          
           // 关闭弹窗（带延迟，确保鼠标有足够时间移到匹配文字上）
           let isHiding = false;
+          let keepOpen = false; // 点击添加按钮后保持弹窗不自动隐藏
+          let isDirty = false; // 标记弹窗期间是否有修改
           const hidePopup = (immediate = false) => {
             if (isHiding) return;
+            if (!popup.parentNode) return; // 弹窗已移除，不再处理
+            if (keepOpen) return;
             isHiding = true;
             isClosing = true; // 标记正在关闭，阻止创建新弹窗
             // 清除显示定时器，防止在关闭期间创建新弹窗
@@ -35128,19 +36377,90 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               showTimeout = null;
             }
             
-            const doHide = () => {
+            const doHide = async () => {
+              // 在清理空条目之前，先保存弹窗中正在编辑的 textarea 内容
+              const activeTextarea = contentContainer.querySelector('textarea');
+              if (activeTextarea) {
+                const editingRemark = activeTextarea.value?.trim() || '';
+                const editingSource = activeTextarea.dataset?.source;
+                const editingLinkFilePath = activeTextarea.dataset?.linkFilePath;
+                const editingLinkTimestamp = activeTextarea.dataset?.linkTimestamp;
+                
+                if (editingSource === 'link' && editingLinkFilePath && editingLinkTimestamp) {
+                  const ruleRegex = targetEl.dataset.ruleRegex;
+                  if (ruleRegex) {
+                    const isGlobal = plugin.globalRules.some(r => r.regex === ruleRegex);
+                    const rulesList = isGlobal ? plugin.globalRules : plugin.rules;
+                    const rule = rulesList.find(r => r.regex === ruleRegex);
+                    if (rule && rule.links) {
+                      const ts = parseInt(editingLinkTimestamp);
+                      const actualLink = rule.links.find(l => l.filePath === editingLinkFilePath && l.timestamp === ts);
+                      if (actualLink && actualLink.remark !== editingRemark) {
+                        actualLink.remark = editingRemark;
+                        isDirty = true;
+                        plugin.remarkLog('[RegexCssHL] doHide: 预保存正在编辑的备注', { editingRemark: editingRemark.substring(0, 50) });
+                      }
+                    }
+                  }
+                }
+              }
+              
+              // 只在有修改时才执行清理和保存
+              if (isDirty) {
+                // 关闭弹窗时，移除没有备注和搜索词的空条目
+                const ruleRegex = targetEl.dataset.ruleRegex;
+                plugin.remarkLog('[RegexCssHL] 弹窗关闭 doHide（有修改）', { ruleRegex });
+                if (ruleRegex) {
+                  const isGlobal = plugin.globalRules.some(r => r.regex === ruleRegex);
+                  let rulesList = isGlobal ? plugin.globalRules : plugin.rules;
+                  const ruleIndex = rulesList.findIndex(r => r.regex === ruleRegex);
+                  if (ruleIndex !== -1) {
+                    const rule = rulesList[ruleIndex];
+                    if (rule && rule.links) {
+                      const beforeLen = rule.links.length;
+                      rule.links = rule.links.filter(l => (l.remark && l.remark.trim()) || (l.searchText && l.searchText.trim()));
+                      if (rule.links.length !== beforeLen) {
+                        plugin.remarkLog('[RegexCssHL] doHide: 清理空条目', { beforeLen, afterLen: rule.links.length });
+                        if (rule.links.length === 0) delete rule.links;
+                      }
+                    }
+                    // 删除最后一条备注且 cssClass 为空时，删除整个规则
+                    if ((!rule.links || rule.links.length === 0) && (!rule.cssClass || rule.cssClass.trim() === '')) {
+                      plugin.remarkLog('[RegexCssHL] doHide: 删除整个规则（无备注且无样式）', { ruleRegex });
+                      rulesList.splice(ruleIndex, 1);
+                      delete targetEl.dataset.links;
+                    } else {
+                      targetEl.dataset.links = JSON.stringify(rule.links || []);
+                    }
+                    plugin.remarkLog('[RegexCssHL] doHide: 保存规则', { isGlobal, ruleRegex });
+                    if (isGlobal) {
+                      await plugin.saveGlobalRules(plugin.globalRules, true);
+                    } else {
+                      await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                    }
+                    plugin.remarkLog('[RegexCssHL] doHide: 保存完成');
+                  } else {
+                    plugin.remarkWarn('[RegexCssHL] doHide: 未找到规则', { ruleRegex, isGlobal });
+                  }
+                }
+              } else {
+                plugin.remarkLog('[RegexCssHL] 弹窗关闭 doHide（无修改，跳过保存）');
+              }
               // 移除鼠标移动监听
               if (mouseMoveHandler) {
                 document.removeEventListener('mousemove', mouseMoveHandler);
                 mouseMoveHandler = null;
+              }
+              // 移除点击外部监听
+              if (clickOutsideHandler) {
+                document.removeEventListener('click', clickOutsideHandler, true);
+                clickOutsideHandler = null;
               }
               // 清除延迟关闭定时器
               if (closeDelayTimer) {
                 clearTimeout(closeDelayTimer);
                 closeDelayTimer = null;
               }
-              if (renderTimeout) clearTimeout(renderTimeout);
-              if (saveTimeout) clearTimeout(saveTimeout);
               if (popup.parentNode) {
                 popup.parentNode.removeChild(popup);
               }
@@ -35153,6 +36473,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               currentTargetEl = null; // 清除当前目标
               isHiding = false;
               isClosing = false; // 关闭完成
+              // 弹窗关闭后恢复视图刷新，并刷新视图让高亮元素的 dataset.links 与数据同步
+              plugin._skipRefreshForPopup = false;
+              plugin.refreshCurrentView();
             };
             
             if (immediate) {
@@ -35165,17 +36488,40 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 滚动时更新弹窗位置
           let scrollHandler = null;
-          const updatePopupPosition = () => {
+          const updatePopupPosition = (e) => {
             if (!popup.parentNode) return;
-            
-            const newRect = targetEl.getBoundingClientRect();
+
+            // 忽略弹窗内部容器的滚动事件，避免内部滚动触发重新定位
+            if (e && e.target && popup.contains(e.target)) return;
+
+            // 检查 targetEl 是否仍在 DOM 中，如果不在则尝试重新查找
+            let activeTargetEl = targetEl;
+            if (!document.body.contains(targetEl)) {
+              const ruleRegex = targetEl.dataset.ruleRegex;
+              if (ruleRegex) {
+                const newEl = document.querySelector(`[data-rule-regex="${CSS.escape(ruleRegex)}"]`);
+                if (newEl) {
+                  activeTargetEl = newEl;
+                } else {
+                  // 目标元素已不在 DOM 中且无法重新找到，关闭弹窗
+                  hidePopup(true);
+                  return;
+                }
+              } else {
+                hidePopup(true);
+                return;
+              }
+            }
+
+            const newRect = activeTargetEl.getBoundingClientRect();
             
             // 重新计算水平位置
-            let left = newRect.left + (newRect.width - popupMaxWidth) / 2;
+            const actualWidth = popup.offsetWidth;
+            let left = newRect.left + (newRect.width - actualWidth) / 2;
             if (left < 10) {
               left = 10;
-            } else if (left + popupMaxWidth > window.innerWidth - 10) {
-              left = window.innerWidth - popupMaxWidth - 10;
+            } else if (left + actualWidth > window.innerWidth - 10) {
+              left = window.innerWidth - actualWidth - 10;
             }
             
             // 重新判断上下位置
@@ -35226,6 +36572,17 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             popup.style.left = left + 'px';
             popup.style.top = newTop + 'px';
             
+            // 动态更新弹窗最大高度
+            let newDynamicMaxHeight;
+            if (newShowArrowAtBottom) {
+              newDynamicMaxHeight = newRect.top - arrowSize - 10;
+            } else {
+              newDynamicMaxHeight = window.innerHeight - newRect.bottom - arrowSize - 10;
+            }
+            newDynamicMaxHeight = Math.max(newDynamicMaxHeight, 80);
+            popup.style.maxHeight = newDynamicMaxHeight + 'px';
+            contentContainer.style.maxHeight = `calc(${newDynamicMaxHeight}px - ${popupSpacing * 2 + 26}px)`;
+            
             // 更新箭头
             if (arrowRef) {
               arrowRef.style.left = newArrowPos + 'px';
@@ -35262,11 +36619,161 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             updateBounds();
           };
           
+          // l/g 规则来源按钮（固定在弹窗右上角，始终置顶，不随内容滚动）
+          const popupRuleSource = targetEl.dataset.ruleSource;
+          const popupRuleRegex = targetEl.dataset.ruleRegex;
+          if (popupRuleSource && plugin.settings?.showRuleSourceBadge !== false) {
+            const ruleBadge = document.createElement('span');
+            ruleBadge.className = 'rule-source-badge';
+            const badgeLabel = popupRuleSource === 'global' ? 'g' : 'l';
+            ruleBadge.textContent = badgeLabel;
+            ruleBadge.title = popupRuleSource === 'global' ? t('main.globalRuleClickToLocal') : t('main.localRuleClickToGlobal');
+            ruleBadge.style.cssText = `
+              position: absolute;
+              top: 4px;
+              right: 4px;
+              font-size: 10px;
+              font-weight: bold;
+              color: var(--text-muted);
+              opacity: 0.6;
+              background: var(--background-secondary);
+              border: 1px solid var(--background-modifier-border);
+              border-radius: 3px;
+              padding: 1px 5px;
+              line-height: 1.3;
+              cursor: pointer;
+              z-index: 1002;
+              pointer-events: auto;
+              user-select: none;
+              transition: opacity 0.15s, color 0.15s, background 0.15s;
+            `;
+            ruleBadge.addEventListener('mouseenter', () => {
+              ruleBadge.style.opacity = '1';
+              ruleBadge.style.color = 'var(--text-accent)';
+              ruleBadge.style.background = 'var(--background-modifier-hover)';
+            });
+            ruleBadge.addEventListener('mouseleave', () => {
+              ruleBadge.style.opacity = '0.6';
+              ruleBadge.style.color = 'var(--text-muted)';
+              ruleBadge.style.background = 'var(--background-secondary)';
+            });
+            ruleBadge.addEventListener('click', async (ce) => {
+              ce.stopPropagation();
+              ce.preventDefault();
+              if (!popupRuleRegex) return;
+
+              const popupCssClass = targetEl.className.split(' ').find(c => c !== 'highlight-tooltip-text' && c !== 'highlight-regex-text' && c !== 'rule-source-badge') || '';
+
+              if (popupRuleSource === 'global') {
+                const ruleIndex = plugin.globalRules.findIndex(r => r.regex === popupRuleRegex && r.cssClass === popupCssClass);
+                if (ruleIndex === -1) return;
+                const rule = plugin.globalRules[ruleIndex];
+                if (!plugin.rules) plugin.rules = [];
+                const existsInLocal = plugin.rules.find(r => r.regex === rule.regex);
+                if (existsInLocal) {
+                  existsInLocal.cssClass = rule.cssClass;
+                  if (rule.remark && rule.remark.trim()) {
+                    const existingRemark = (existsInLocal.remark || '').trim();
+                    if (existingRemark && !existingRemark.includes(rule.remark.trim())) {
+                      existsInLocal.remark = existingRemark + '\n' + rule.remark.trim();
+                    } else if (!existingRemark) {
+                      existsInLocal.remark = rule.remark.trim();
+                    }
+                  }
+                  if (rule.links && rule.links.length > 0) {
+                    if (!existsInLocal.links) existsInLocal.links = [];
+                    for (const link of rule.links) {
+                      const isDuplicate = existsInLocal.links.some(l =>
+                        l.filePath === link.filePath && (l.timestamp ? l.timestamp === link.timestamp : l.searchText === link.searchText)
+                      );
+                      if (!isDuplicate) existsInLocal.links.push(link);
+                    }
+                  }
+                  plugin.globalRules.splice(ruleIndex, 1);
+                } else {
+                  plugin.rules.push({ regex: rule.regex, cssClass: rule.cssClass, remark: rule.remark || '', ...(rule.links ? { links: rule.links } : {}) });
+                  plugin.globalRules.splice(ruleIndex, 1);
+                }
+                await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                await plugin.saveGlobalRules(plugin.globalRules, true);
+                plugin.rulesVersion++;
+                plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+                plugin.refreshCurrentView();
+                new Notice(t('main.ruleMovedToLocal'));
+              } else {
+                const ruleIndex = plugin.rules.findIndex(r => r.regex === popupRuleRegex && r.cssClass === popupCssClass);
+                if (ruleIndex === -1) return;
+                const rule = plugin.rules[ruleIndex];
+                const existsInGlobal = plugin.globalRules.find(r => r.regex === rule.regex);
+                if (existsInGlobal) {
+                  existsInGlobal.cssClass = rule.cssClass;
+                  if (rule.remark && rule.remark.trim()) {
+                    const existingRemark = (existsInGlobal.remark || '').trim();
+                    if (existingRemark && !existingRemark.includes(rule.remark.trim())) {
+                      existsInGlobal.remark = existingRemark + '\n' + rule.remark.trim();
+                    } else if (!existingRemark) {
+                      existsInGlobal.remark = rule.remark.trim();
+                    }
+                  }
+                  if (rule.links && rule.links.length > 0) {
+                    if (!existsInGlobal.links) existsInGlobal.links = [];
+                    for (const link of rule.links) {
+                      const isDuplicate = existsInGlobal.links.some(l =>
+                        l.filePath === link.filePath && (l.timestamp ? l.timestamp === link.timestamp : l.searchText === link.searchText)
+                      );
+                      if (!isDuplicate) existsInGlobal.links.push(link);
+                    }
+                  }
+                  plugin.rules.splice(ruleIndex, 1);
+                } else {
+                  plugin.globalRules.push({ regex: rule.regex, cssClass: rule.cssClass, remark: rule.remark || '', ...(rule.links ? { links: rule.links } : {}) });
+                  plugin.rules.splice(ruleIndex, 1);
+                }
+                await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                await plugin.saveGlobalRules(plugin.globalRules, true);
+                plugin.rulesVersion++;
+                plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+                plugin.refreshCurrentView();
+                new Notice(t('main.ruleMovedToGlobal'));
+              }
+            });
+            popup.appendChild(ruleBadge);
+          }
+
           popup.appendChild(contentContainer);
-          popup.appendChild(textarea);
+
+          // 左下角版本标签（固定在弹窗底部，不随内容滚动）
+          const versionLabel = document.createElement('div');
+          const pluginVersion = plugin && plugin.manifest ? plugin.manifest.version : '';
+          versionLabel.textContent = 'Regex CSS Highlighter' + (pluginVersion ? ' v' + pluginVersion : '');
+          versionLabel.style.cssText = 'position:absolute;bottom:2px;left:6px;font-size:8px;color:var(--text-faint);opacity:0.3;user-select:none;-webkit-user-select:none;line-height:1;pointer-events:none;';
+          popup.appendChild(versionLabel);
           
           // 添加到页面
           document.body.appendChild(popup);
+          
+          // Alt+滚轮调整宽度，Ctrl+滚轮调整透明度
+          let popupOpacity = savedOpacity;
+          popup.addEventListener('wheel', (e) => {
+            if (e.altKey) {
+              e.preventDefault();
+              const delta = e.deltaY > 0 ? -20 : 20;
+              const currentWidth = popup.offsetWidth;
+              const newWidth = Math.max(100, Math.min(window.innerWidth - 20, currentWidth + delta));
+              popup.style.width = newWidth + 'px';
+              popup.style.maxWidth = newWidth + 'px';
+              plugin.settings.popupWidth = newWidth;
+              plugin.saveData(plugin.settings);
+              repositionPopup();
+            } else if (e.ctrlKey) {
+              e.preventDefault();
+              const delta = e.deltaY > 0 ? -0.05 : 0.05;
+              popupOpacity = Math.max(0.1, Math.min(1, popupOpacity + delta));
+              popup.style.opacity = popupOpacity;
+              plugin.settings.popupOpacity = Math.round(popupOpacity * 100) / 100;
+              plugin.saveData(plugin.settings);
+            }
+          }, { passive: false });
           
           // 添加右键菜单 - 保存为文件
           popup.addEventListener('contextmenu', (e) => {
@@ -35282,11 +36789,28 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 .onClick(async () => {
                   try {
                     const matchedText = targetEl.textContent || targetEl.innerText || '';
-                    const noteContent = textarea.value || '';
                     
                     if (!matchedText.trim()) {
                       new Notice(t('main.cannotGetMatchText'));
                       return;
+                    }
+                    
+                    // 构建所有备注内容
+                    let mdContent = `# ${matchedText.trim()}\n\n`;
+                    
+                    if (linksByFile.size > 0) {
+                      for (const [filePath, fileLinks] of linksByFile) {
+                        const fileName = filePath.split('/').pop().replace(/\.md$/, '');
+                        // 标题添加链接
+                        mdContent += `## [[${fileName}|${fileName}]]\n\n`;
+                        
+                        for (const link of fileLinks) {
+                          if (link.remark?.trim()) {
+                            mdContent += `- ${link.remark.trim()}\n`;
+                          }
+                        }
+                        mdContent += '\n';
+                      }
                     }
                     
                     const fileName = matchedText.trim();
@@ -35312,40 +36836,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                       cancelBtn.textContent = t('main.cancel');
                       cancelBtn.addEventListener('click', () => choiceModal.close());
                       
-                      const newBtn = buttonContainer.createEl('button');
-                      newBtn.textContent = t('main.createDiffName');
-                      newBtn.addEventListener('click', async () => {
-                        choiceModal.close();
-                        const inputModal = new InputModal(
-                          plugin.app,
-                          t('main.inputNewFileName'),
-                          t('main.inputNewFileNameHint'),
-                          `${fileName}_${t('main.remark')}`,
-                          async (newName) => {
-                            if (!newName.trim()) {
-                              new Notice(t('main.fileNameEmpty'));
-                              return;
-                            }
-                            const newFilePath = `${newName.trim()}.md`;
-                            const checkFile = plugin.app.vault.getAbstractFileByPath(newFilePath);
-                            if (checkFile) {
-                              new Notice(t('main.fileExists'));
-                              return;
-                            }
-                            await plugin.app.vault.create(newFilePath, noteContent);
-                            new Notice(t('main.savedToFile'));
-                            const ruleRegex = targetEl.dataset.ruleRegex;
-                            if (ruleRegex) {
-                              const cssClass = targetEl.className.split(' ').find(c => c !== 'highlight-tooltip-text' && c !== 'highlight-regex-text') || '';
-                              await plugin.updateRuleRemark(ruleRegex, cssClass, '');
-                              targetEl.dataset.remark = '';
-                              hidePopup();
-                            }
-                          }
-                        );
-                        inputModal.open();
-                      });
-                      
                       const mergeBtn = buttonContainer.createEl('button');
                       mergeBtn.textContent = t('main.mergeContent');
                       mergeBtn.style.backgroundColor = 'var(--interactive-accent)';
@@ -35355,16 +36845,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                       mergeBtn.addEventListener('click', async () => {
                         try {
                           const existingContent = await plugin.app.vault.read(existingFile);
-                          const newContent = existingContent + '\n\n---\n\n' + noteContent;
+                          const newContent = existingContent + '\n\n---\n\n' + mdContent;
                           await plugin.app.vault.modify(existingFile, newContent);
                           new Notice(t('main.mergedToFile'));
-                          const ruleRegex = targetEl.dataset.ruleRegex;
-                          if (ruleRegex) {
-                            const cssClass = targetEl.className.split(' ').find(c => c !== 'highlight-tooltip-text' && c !== 'highlight-regex-text') || '';
-                            await plugin.updateRuleRemark(ruleRegex, cssClass, '');
-                            targetEl.dataset.remark = '';
-                            hidePopup();
-                          }
                           choiceModal.close();
                         } catch (err) {
                           new Notice(t('main.mergeFailed') + ': ' + err.message);
@@ -35375,15 +36858,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                       return;
                     }
                     
-                    await plugin.app.vault.create(filePath, noteContent);
+                    await plugin.app.vault.create(filePath, mdContent);
                     new Notice(t('main.savedToFile'));
-                    const ruleRegex = targetEl.dataset.ruleRegex;
-                    if (ruleRegex) {
-                      const cssClass = targetEl.className.split(' ').find(c => c !== 'highlight-tooltip-text' && c !== 'highlight-regex-text') || '';
-                      await plugin.updateRuleRemark(ruleRegex, cssClass, '');
-                      targetEl.dataset.remark = '';
-                      hidePopup();
-                    }
                   } catch (error) {
                     console.error('保存文件时出错:', error);
                     new Notice(t('main.saveFailed') + ': ' + error.message);
@@ -35457,19 +36933,23 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 添加鼠标移动监听
           document.addEventListener('mousemove', mouseMoveHandler);
           
-          // 如果开启备注弹窗不自动关闭，添加点击外部关闭功能
-          if (plugin.settings?.remarkKeepOpen) {
-            const clickOutsideHandler = (e) => {
-              if (!popup.contains(e.target) && !targetEl.contains(e.target)) {
-                hidePopup();
-                document.removeEventListener('click', clickOutsideHandler, true);
-              }
-            };
-            document.addEventListener('click', clickOutsideHandler, true);
-          }
+          // 点击弹窗外部关闭（keepOpen 或 remarkKeepOpen 时）
+          let clickOutsideHandler = null;
+          clickOutsideHandler = (e) => {
+            if (e.target.closest('.remark-badge')) return;
+            if (!popup.contains(e.target) && !targetEl.contains(e.target)) {
+              keepOpen = false;
+              hidePopup();
+              document.removeEventListener('click', clickOutsideHandler, true);
+            }
+          };
+          document.addEventListener('click', clickOutsideHandler, true);
           
           currentPopover = { hide: hidePopup, _popup: popup };
           currentTargetEl = targetEl; // 保存当前目标元素
+          
+          // 弹窗打开期间，阻止规则更新事件触发视图刷新
+          plugin._skipRefreshForPopup = true;
           
           // 添加滚动监听
           scrollHandler = updatePopupPosition;
@@ -35603,15 +37083,34 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           }
           const rule = plugin.globalRules[ruleIndex];
           if (!plugin.rules) plugin.rules = [];
-          const existsInLocal = plugin.rules.find(r => r.regex === rule.regex && r.cssClass === rule.cssClass);
+          const existsInLocal = plugin.rules.find(r => r.regex === rule.regex);
           if (existsInLocal) {
-            new Notice(t('main.localRuleExists'));
-            return;
+            // cssClass覆盖，remark合并，links合并
+            existsInLocal.cssClass = rule.cssClass;
+            if (rule.remark && rule.remark.trim()) {
+              const existingRemark = (existsInLocal.remark || '').trim();
+              if (existingRemark && !existingRemark.includes(rule.remark.trim())) {
+                existsInLocal.remark = existingRemark + '\n' + rule.remark.trim();
+              } else if (!existingRemark) {
+                existsInLocal.remark = rule.remark.trim();
+              }
+            }
+            if (rule.links && rule.links.length > 0) {
+              if (!existsInLocal.links) existsInLocal.links = [];
+              for (const link of rule.links) {
+                const isDuplicate = existsInLocal.links.some(l =>
+                  l.filePath === link.filePath && (l.timestamp ? l.timestamp === link.timestamp : l.searchText === link.searchText)
+                );
+                if (!isDuplicate) existsInLocal.links.push(link);
+              }
+            }
+            plugin.globalRules.splice(ruleIndex, 1);
+          } else {
+            plugin.rules.push({ regex: rule.regex, cssClass: rule.cssClass, remark: rule.remark || '', ...(rule.links ? { links: rule.links } : {}) });
+            plugin.globalRules.splice(ruleIndex, 1);
           }
-          plugin.rules.push({ regex: rule.regex, cssClass: rule.cssClass, remark: rule.remark || '' });
-          plugin.globalRules.splice(ruleIndex, 1);
-          await plugin.saveFileRules(plugin.currentFilePath, plugin.rules);
-          await plugin.saveGlobalRules(plugin.globalRules);
+          await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+          await plugin.saveGlobalRules(plugin.globalRules, true);
           plugin.rulesVersion++;
           plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
           plugin.refreshCurrentView();
@@ -35623,15 +37122,34 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             return;
           }
           const rule = plugin.rules[ruleIndex];
-          const existsInGlobal = plugin.globalRules.find(r => r.regex === rule.regex && r.cssClass === rule.cssClass);
+          const existsInGlobal = plugin.globalRules.find(r => r.regex === rule.regex);
           if (existsInGlobal) {
-            new Notice(t('main.globalRuleExistsShort'));
-            return;
+            // cssClass覆盖，remark合并，links合并
+            existsInGlobal.cssClass = rule.cssClass;
+            if (rule.remark && rule.remark.trim()) {
+              const existingRemark = (existsInGlobal.remark || '').trim();
+              if (existingRemark && !existingRemark.includes(rule.remark.trim())) {
+                existsInGlobal.remark = existingRemark + '\n' + rule.remark.trim();
+              } else if (!existingRemark) {
+                existsInGlobal.remark = rule.remark.trim();
+              }
+            }
+            if (rule.links && rule.links.length > 0) {
+              if (!existsInGlobal.links) existsInGlobal.links = [];
+              for (const link of rule.links) {
+                const isDuplicate = existsInGlobal.links.some(l =>
+                  l.filePath === link.filePath && (l.timestamp ? l.timestamp === link.timestamp : l.searchText === link.searchText)
+                );
+                if (!isDuplicate) existsInGlobal.links.push(link);
+              }
+            }
+            plugin.rules.splice(ruleIndex, 1);
+          } else {
+            plugin.globalRules.push({ regex: rule.regex, cssClass: rule.cssClass, remark: rule.remark || '', ...(rule.links ? { links: rule.links } : {}) });
+            plugin.rules.splice(ruleIndex, 1);
           }
-          plugin.globalRules.push({ regex: rule.regex, cssClass: rule.cssClass, remark: rule.remark || '' });
-          plugin.rules.splice(ruleIndex, 1);
-          await plugin.saveFileRules(plugin.currentFilePath, plugin.rules);
-          await plugin.saveGlobalRules(plugin.globalRules);
+          await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+          await plugin.saveGlobalRules(plugin.globalRules, true);
           plugin.rulesVersion++;
           plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
           plugin.refreshCurrentView();
@@ -35775,52 +37293,81 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         ce.stopPropagation();
         ce.preventDefault();
 
+        // 检查是否已有备注弹窗显示，且弹窗对应同一个目标元素
+        const existingPopup = document.querySelector('.remark-custom-popup');
+        if (existingPopup) {
+          // 找到弹窗中的"+"按钮并触发点击，直接在弹窗中追加备注
+          const addBtn = existingPopup.querySelector('.remark-add-btn');
+          if (addBtn) {
+            addBtn.click();
+            hideRemarkBadge();
+            // 延迟后自动进入编辑模式：找到空备注并触发双击
+            setTimeout(() => {
+              const emptyRemark = existingPopup.querySelector('[data-remark-source="link"]');
+              if (emptyRemark && emptyRemark.textContent?.includes(t('main.doubleClickToEditRemark'))) {
+                emptyRemark.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
+              }
+            }, 200);
+            return;
+          }
+        }
+
+        // 没有弹窗时，先添加空 link entry，然后触发弹窗显示
         const ruleRegex = target.dataset.ruleRegex;
         const ruleSource = target.dataset.ruleSource;
         const matchedText = target.textContent || '';
+        const isGlobalRule = ruleSource === 'global';
 
-        let currentRemark = '';
-        let isGlobalRule = ruleSource === 'global';
+        // 添加空 link entry 到规则
+        const av = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+        const linkFilePath = av?.file?.path || plugin.currentFilePath;
+        const newLink = {
+          filePath: linkFilePath || '',
+          searchText: matchedText,
+          remark: '',
+          timestamp: Date.now()
+        };
 
         if (isGlobalRule) {
           const rule = plugin.globalRules.find(r => r.regex === ruleRegex);
-          if (rule && rule.remark) currentRemark = rule.remark;
+          if (rule) {
+            if (!rule.links) rule.links = [];
+            rule.links.push(newLink);
+            await plugin.saveGlobalRules(plugin.globalRules, true);
+          }
         } else {
           const rule = plugin.rules.find(r => r.regex === ruleRegex);
-          if (rule && rule.remark) currentRemark = rule.remark;
+          if (rule) {
+            if (!rule.links) rule.links = [];
+            rule.links.push(newLink);
+            await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+          }
         }
 
-        const modal = new AddRemarkModal(
-          plugin.app,
-          currentRemark ? (isGlobalRule ? t('main.editRemarkGlobal') : t('main.editRemark')) : (isGlobalRule ? t('main.addRemarkGlobal') : t('main.addRemark')),
-          t('main.inputRemarkContent'),
-          currentRemark,
-          async (remark) => {
-            const trimmedRemark = remark.trim();
+        // 更新高亮元素的 dataset
+        try {
+          const rule = isGlobalRule
+            ? plugin.globalRules.find(r => r.regex === ruleRegex)
+            : plugin.rules.find(r => r.regex === ruleRegex);
+          if (rule && rule.links) {
+            target.dataset.links = JSON.stringify(rule.links);
+          }
+        } catch(e) {}
 
-            if (isGlobalRule) {
-              const ruleIndex = plugin.globalRules.findIndex(r => r.regex === ruleRegex);
-              if (ruleIndex !== -1) {
-                plugin.globalRules[ruleIndex].remark = trimmedRemark;
-                await plugin.saveGlobalRules(plugin.globalRules);
-              }
-            } else {
-              const ruleIndex = plugin.rules.findIndex(r => r.regex === ruleRegex);
-              if (ruleIndex !== -1) {
-                plugin.rules[ruleIndex].remark = trimmedRemark;
-                await plugin.saveFileRules(plugin.currentFilePath, plugin.rules);
-              } else {
-                await plugin.addFileRule(matchedText, '', trimmedRemark);
-              }
+        // 触发 mouseover 让弹窗显示
+        target.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true }));
+
+        // 等待弹窗出现后自动进入编辑模式
+        setTimeout(() => {
+          const popup = document.querySelector('.remark-custom-popup');
+          if (popup) {
+            const emptyRemark = popup.querySelector('[data-remark-source="link"]');
+            if (emptyRemark && emptyRemark.textContent?.includes('双击编辑')) {
+              emptyRemark.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
             }
-            plugin.rulesVersion++;
-            plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
-            plugin.refreshCurrentView();
-            new Notice(trimmedRemark ? t('main.remarkUpdated') : t('main.remarkCleared'));
-          },
-          plugin
-        );
-        modal.open();
+          }
+        }, 400);
+
         hideRemarkBadge();
       });
 
@@ -35857,34 +37404,105 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     }, true);
   }
 
+  // 智能选择搜索词：规则词匹配多个时依次尝试备注中的句子
+  async determineSearchText(regex, remark, filePath) {
+    try {
+      const file = this.app.vault.getAbstractFileByPath(filePath);
+      if (!file) return regex;
+      const content = await this.app.vault.read(file);
+      
+      // 用规则词搜索，计算匹配数量
+      let re;
+      try { re = new RegExp(regex, 'g'); } catch { return regex; }
+      const regexMatches = content.match(re);
+      const regexMatchCount = regexMatches ? regexMatches.length : 0;
+      
+      // 如果规则词只匹配一次，直接用规则词
+      if (regexMatchCount <= 1) return regex;
+      
+      // 规则词匹配多次，尝试用备注中的句子
+      if (remark && remark.trim()) {
+        // 按句号、问号、感叹号、换行分割句子
+        const sentences = remark.split(/[。！？\n.!?]+/).map(s => s.trim()).filter(s => s.length >= 4);
+        
+        for (const sentence of sentences) {
+          const sentenceMatchCount = (content.match(new RegExp(sentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+          if (sentenceMatchCount <= 1) {
+            return sentence;
+          }
+        }
+      }
+      
+      // 所有句子都匹配多次，用规则词
+      return regex;
+    } catch (e) {
+      console.error('determineSearchText error:', e);
+      return regex;
+    }
+  }
+
   // 更新规则的备注
-  async updateRuleRemark(regex, cssClass, newRemark) {
-    // 查找并更新全局规则 - 只使用正则表达式来唯一标识规则
-    const globalIndex = this.globalRules.findIndex(rule => 
-      rule.regex === regex
-    );
-    if (globalIndex !== -1) {
-      this.globalRules[globalIndex].remark = newRemark;
-      await this.saveGlobalRules(this.globalRules);
-      this.rulesVersion++;
-      this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
-      this.refreshCurrentView();
+  // 新标签页打开文件并搜索到相关位置
+  async openLinkAndSearch(filePath, searchText) {
+    const { MarkdownView, Notice } = require('obsidian');
+    
+    if (!filePath) {
+      new Notice(t('main.cannotGetFilePath'));
+      return;
     }
     
-    // 查找并更新文件规则 - 只使用正则表达式来唯一标识规则
-    if (this.currentFilePath) {
-      await this.loadFileRules(this.currentFilePath);
-      const fileIndex = this.rules.findIndex(rule => 
-        rule.regex === regex
-      );
-      if (fileIndex !== -1) {
-        this.rules[fileIndex].remark = newRemark;
-        await this.saveFileRules(this.currentFilePath, this.rules);
-        this.rulesVersion++;
-        this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
-        this.refreshCurrentView();
+    try {
+      const targetFile = this.app.vault.getAbstractFileByPath(filePath);
+      if (!targetFile) {
+        new Notice(t('main.cannotOpenFile'));
+        return;
       }
+      
+      // 在新标签页打开文件
+      const newLeaf = this.app.workspace.getLeaf(true);
+      await newLeaf.openFile(targetFile);
+      
+      const targetView = this.app.workspace.getActiveViewOfType(MarkdownView);
+      if (!targetView || !targetView.editor) {
+        new Notice(t('main.cannotOpenEditor'));
+        return;
+      }
+      
+      // 延迟等待文件加载完成
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      if (searchText) {
+        const editor = targetView.editor;
+        const content = editor.getValue();
+        const lines = content.split('\n');
+        
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const pos = line.indexOf(searchText);
+          if (pos !== -1) {
+            const from = { line: i, ch: pos };
+            const to = { line: i, ch: pos + searchText.length };
+            editor.setCursor(from);
+            editor.scrollIntoView({ from, to }, true);
+            editor.setSelection(from, to);
+            new Notice(t('main.jumpedTo') + ': ' + searchText);
+            return;
+          }
+        }
+        new Notice(t('main.notFoundInDoc') + ': ' + searchText);
+      }
+    } catch (e) {
+      console.error('Error opening link and searching:', e);
+      new Notice(t('main.cannotOpenFile'));
     }
+  }
+
+  async updateRuleRemark(regex, cssClass, newRemark) {
+    // 不再更新 rule.remark，备注仅存储在 links 中
+    // 触发规则版本更新以刷新视图
+    this.rulesVersion++;
+    this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+    this.refreshCurrentView();
   }
 };
 function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput, options) {

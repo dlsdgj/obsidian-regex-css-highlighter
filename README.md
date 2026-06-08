@@ -134,6 +134,13 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 <summary>Changelog</summary>
 
 <details>
+<summary>v1.6.8 (2026-06-08)</summary>
+
+- **Popup z-index Improvement** — Sub-modals (add group, rename, CSS editor, etc.) now appear above the main panel by raising their own z-index instead of lowering the main panel's, preventing Obsidian's sidebar divider from overlapping the panel
+
+</details>
+
+<details>
 <summary>v1.6.7 (2026-06-08)</summary>
 
 - **Sticky Title Bar** — Main panel title bar now stays fixed at the top when scrolling content
@@ -592,6 +599,13 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 <details>
 <summary>更新日志</summary>
+
+<details>
+<summary>v1.6.8 (2026-06-08)</summary>
+
+- **弹窗层级优化** — 子弹窗（添加分组、重命名、CSS编辑器等）现在通过提升自身z-index显示在主面板上方，而非降低主面板z-index，避免Obsidian侧边栏分割线覆盖主面板
+
+</details>
 
 <details>
 <summary>v1.6.7 (2026-06-08)</summary>

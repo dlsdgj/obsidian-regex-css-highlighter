@@ -1,4 +1,4 @@
-﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover } = require("obsidian");
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover } = require("obsidian");
 
 // 直接将CSS规则追加到动态样式元素，确保新样式立即生效（无需重新读取文件）
 function appendCSSToDynamicStyle(cssRule) {
@@ -8658,22 +8658,16 @@ class AddRegexRuleModal extends Modal {
       styleTextarea.focus();
     }, 100);
     
-    // 打开弹窗前，临时降低主面板zIndex，确保弹窗在上方
-    const mainModalEl = this.modalEl;
-    const savedZIndex = mainModalEl.style.zIndex;
-    if (mainModalEl) mainModalEl.style.zIndex = "1";
-    const mainModalContainer = mainModalEl.closest('.modal-container');
-    if (mainModalContainer) mainModalContainer.style.zIndex = "1";
-    const mainModalBg = mainModalEl.closest('.modal-bg');
-    if (mainModalBg) mainModalBg.style.zIndex = "1";
-    
-    // 关闭弹窗时恢复主面板zIndex
-    const originalClose = modal.close.bind(modal);
-    modal.close = () => {
-      if (mainModalEl) mainModalEl.style.zIndex = savedZIndex || "100";
-      if (mainModalContainer) mainModalContainer.style.zIndex = savedZIndex || "100";
-      if (mainModalBg) mainModalBg.style.zIndex = savedZIndex || "100";
-      originalClose();
+    // 打开弹窗后，提升子弹窗zIndex到主面板之上，而不是降低主面板zIndex
+    const originalOnOpen = modal.onOpen?.bind(modal);
+    modal.onOpen = () => {
+      if (originalOnOpen) originalOnOpen();
+      const subModalEl = modal.modalEl;
+      if (subModalEl) subModalEl.style.zIndex = "200";
+      const subContainer = subModalEl?.closest('.modal-container');
+      if (subContainer) subContainer.style.zIndex = "200";
+      const subBg = subModalEl?.closest('.modal-bg');
+      if (subBg) subBg.style.zIndex = "200";
     };
     
     modal.open();
@@ -9986,7 +9980,7 @@ class AddRegexRuleModal extends Modal {
             }
           }
         );
-        modal.open();
+        this.openSubModal(modal);
       } catch (error) {
         console.error("打开添加分组对话框时出错:", error);
         new Notice(t('main.cannotOpenEditor'));
@@ -10597,7 +10591,7 @@ class AddRegexRuleModal extends Modal {
                       }
                     }
                   );
-                  modal.open();
+                  this.openSubModal(modal);
                 } catch (error) {
                   console.error("打开重命名对话框时出错:", error);
                   new Notice(t('main.cannotOpenEditor'));
@@ -10655,7 +10649,7 @@ class AddRegexRuleModal extends Modal {
                       }
                     }
                   );
-                  modal.open();
+                  this.openSubModal(modal);
                 } catch (error) {
                   console.error("打开添加分组对话框时出错:", error);
                   new Notice(t('main.cannotOpenEditor'));
@@ -10709,7 +10703,7 @@ class AddRegexRuleModal extends Modal {
                       }
                     }
                   );
-                  modal.open();
+                  this.openSubModal(modal);
                 } catch (error) {
                   console.error("打开删除确认对话框时出错:", error);
                   new Notice(t('main.cannotOpenEditor'));
@@ -10895,7 +10889,7 @@ class AddRegexRuleModal extends Modal {
                   });
 
                   setTimeout(() => styleInput.focus(), 100);
-                  modal.open();
+                  this.openSubModal(modal);
                 } catch (error) {
                   console.error("编辑分组样式时出错:", error);
                   new Notice(t('main.cannotOpenEditor'));
@@ -18176,24 +18170,21 @@ class AddRegexRuleModal extends Modal {
     
     const cssEditor = new CSSEditorModal(this.app, className, initialStyle, onSave.bind(this), this);
     
-    // 打开CSS编辑器前，临时降低主面板zIndex，确保编辑器弹窗在上方
-    const mainModalEl = this.modalEl;
-    const mainModalContainer = mainModalEl.closest('.modal-container');
-    const mainModalBg = mainModalEl.closest('.modal-bg');
-    const savedZIndex = mainModalEl.style.zIndex;
-    if (mainModalEl) mainModalEl.style.zIndex = "1";
-    if (mainModalContainer) mainModalContainer.style.zIndex = "1";
-    if (mainModalBg) mainModalBg.style.zIndex = "1";
+    // 打开CSS编辑器后，提升编辑器弹窗zIndex到主面板之上，而不是降低主面板zIndex
+    const originalOnOpen = cssEditor.onOpen?.bind(cssEditor);
+    cssEditor.onOpen = () => {
+      if (originalOnOpen) originalOnOpen();
+      const subModalEl = cssEditor.modalEl;
+      if (subModalEl) subModalEl.style.zIndex = "200";
+      const subContainer = subModalEl?.closest('.modal-container');
+      if (subContainer) subContainer.style.zIndex = "200";
+      const subBg = subModalEl?.closest('.modal-bg');
+      if (subBg) subBg.style.zIndex = "200";
+    };
     
     // 监听CSS编辑器关闭事件，更新按钮显示和整个弹窗内容
     const originalOnClose = cssEditor.onClose.bind(cssEditor);
     cssEditor.onClose = async () => {
-      // 恢复主面板zIndex
-      if (mainModalEl) mainModalEl.style.zIndex = savedZIndex || "100";
-      if (mainModalContainer) mainModalContainer.style.zIndex = savedZIndex || "100";
-      if (mainModalBg) mainModalBg.style.zIndex = savedZIndex || "100";
-      
-      await originalOnClose();
       
       // 只有保存后才刷新UI，取消时不刷新
       if (!cssEditor.saved) {
@@ -18682,6 +18673,28 @@ class AddRegexRuleModal extends Modal {
     }
   }
   
+  // 打开子弹窗时临时降低主面板zIndex，关闭时恢复
+  openSubModal(modal) {
+    const mainModalEl = this.modalEl;
+    const mainModalContainer = mainModalEl?.closest('.modal-container');
+    const mainModalBg = mainModalEl?.closest('.modal-bg');
+    
+    // 不降低主面板z-index，而是在子弹窗打开后提升其z-index到主面板之上
+    const originalOnOpen = modal.onOpen?.bind(modal);
+    modal.onOpen = () => {
+      if (originalOnOpen) originalOnOpen();
+      // 提升子弹窗的z-index到主面板之上
+      const subModalEl = modal.modalEl;
+      if (subModalEl) subModalEl.style.zIndex = "200";
+      const subContainer = subModalEl?.closest('.modal-container');
+      if (subContainer) subContainer.style.zIndex = "200";
+      const subBg = subModalEl?.closest('.modal-bg');
+      if (subBg) subBg.style.zIndex = "200";
+    };
+    
+    modal.open();
+  }
+  
   editRemark(rule) {
     // 使用与"添加备注"按钮相同的AddRemarkModal类，确保行为一致，包括光标闪烁
     const modal = new AddRemarkModal(
@@ -18767,26 +18780,7 @@ class AddRegexRuleModal extends Modal {
       rule.regex || '' // 传递匹配文本
     );
     
-    // 打开备注弹窗前，临时降低主面板zIndex
-    const mainModalEl = this.modalEl;
-    const mainModalContainer = mainModalEl.closest('.modal-container');
-    const mainModalBg = mainModalEl.closest('.modal-bg');
-    const savedZIndex = mainModalEl.style.zIndex;
-    if (mainModalEl) mainModalEl.style.zIndex = "1";
-    if (mainModalContainer) mainModalContainer.style.zIndex = "1";
-    if (mainModalBg) mainModalBg.style.zIndex = "1";
-    
-    // 关闭弹窗时恢复主面板zIndex
-    const originalClose = modal.close.bind(modal);
-    modal.close = () => {
-      if (mainModalEl) mainModalEl.style.zIndex = savedZIndex || "100";
-      if (mainModalContainer) mainModalContainer.style.zIndex = savedZIndex || "100";
-      if (mainModalBg) mainModalBg.style.zIndex = savedZIndex || "100";
-      originalClose();
-    };
-    
-    // 显示弹窗
-    modal.open();
+    this.openSubModal(modal);
   }
   
   showSuccessMessage(message) {

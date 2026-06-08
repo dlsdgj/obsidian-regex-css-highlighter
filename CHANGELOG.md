@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.6.7 (2026-06-08)
+## 🆕 v1.6.8 (2026-06-08)
+
+- **Popup z-index Improvement** — Sub-modals (add group, rename, CSS editor, etc.) now appear above the main panel by raising their own z-index instead of lowering the main panel's, preventing Obsidian's sidebar divider from overlapping the panel
+
+## v1.6.7 (2026-06-08)
 
 - **Sticky Title Bar** — Main panel title bar now stays fixed at the top when scrolling content
 - **Scrollbar Position Fix** — Resizing the main panel no longer causes the scrollbar to jump to the left of the close button

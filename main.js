@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover } = require("obsidian");
+﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover } = require("obsidian");
 
 // 直接将CSS规则追加到动态样式元素，确保新样式立即生效（无需重新读取文件）
 function appendCSSToDynamicStyle(cssRule) {
@@ -322,6 +322,7 @@ const i18n = {
     'main.addFromClipboardFailed': '从剪贴板添加样式失败',
     'main.ruleMovedToGlobal': '已将规则从局部移动到全局',
     'main.ruleMovedToLocal': '已将规则从全局移动到局部',
+    'main.ruleRemoved': '已移除规则',
     'main.globalRuleNotFound': '未找到对应的全局规则',
     'main.localRuleNotFound': '未找到对应的局部规则',
     'main.localRuleExists': '局部规则中已存在相同规则',
@@ -486,7 +487,7 @@ const i18n = {
     'settings.hideOpenFileLink': '不显示标题后面的打开文件链接',
     'settings.styleUsageCount': '样式使用次数角标',
     'settings.hideAllStyles': '隐藏所有文本样式',
-    'settings.defaultHideEnabled': '已开启默认隐藏功能，下次打开模态框时所有分组将呈隐藏状态',
+    'settings.defaultHideEnabled': '已开启默认隐藏功能，所有分组已隐藏',
     'settings.defaultHideDisabled': '已关闭默认隐藏功能',
     'settings.groupReordered': '分组已重新排序',
     'settings.groupSortFailed': '分组排序时出错',
@@ -656,9 +657,11 @@ const i18n = {
     'settings.settingsTitle': '设置',
     'settings.updateCount': '更新计数',
     'settings.ruleSourceBadge': '规则来源标记(g/l)',
-    'settings.ruleSourceBadgeHint': '悬停高亮文本时显示g(全局)/l(局部)标记',
+    'settings.ruleSourceBadgeHint': '悬停高亮文本时显示g(全局)/l(局部)标记，中键点击移除规则',
     'settings.ruleSourceBadgeThreshold': '字数阈值',
     'settings.ruleSourceBadgeThresholdHint': '匹配文本字数大于此值时显示标记(0=始终显示)',
+    'settings.hideTooltip': '不显示tooltip',
+    'settings.hideTooltipHint': '鼠标指向g/l/n标记时不显示操作提示',
     'settings.defaultPreviewText': '默认预览文本',
     'settings.defaultPreviewTextCN': '中文预览文本',
     'settings.defaultPreviewTextEN': '英文预览文本',
@@ -970,6 +973,7 @@ const i18n = {
     'main.addFromClipboardFailed': '从剪贴板添加样式失败',
     'main.ruleMovedToGlobal': '已将规则从局部移动到全局',
     'main.ruleMovedToLocal': '已将规则从全局移动到局部',
+    'main.ruleRemoved': '已移除规则',
     'main.globalRuleNotFound': '未找到对应的全局规则',
     'main.localRuleNotFound': '未找到对应的局部规则',
     'main.localRuleExists': '局部规则中已存在相同规则',
@@ -1135,8 +1139,8 @@ const i18n = {
     'floating.hideGroupStyles': '隐藏同组所有样式',
     'main.removeFromShowcase': '移出展示',
     'main.filter': '筛选',
-    'main.globalRuleClickToLocal': '全局规则 - 点击移动到局部规则',
-    'main.localRuleClickToGlobal': '局部规则 - 点击移动到全局规则',
+    'main.globalRuleClickToLocal': '全局规则 - 点击移动到局部规则，中键点击移除',
+    'main.localRuleClickToGlobal': '局部规则 - 点击移动到全局规则，中键点击移除',
     'main.fileRule': '文件规则',
     'main.className': '类名',
     'main.cssCleaned': 'CSS清理完成：删除了 {count} 个孤立样式',
@@ -1276,6 +1280,7 @@ const i18n = {
     'main.addFromClipboardFailed': 'Failed to add style from clipboard',
     'main.ruleMovedToGlobal': 'Rule moved from local to global',
     'main.ruleMovedToLocal': 'Rule moved from global to local',
+    'main.ruleRemoved': 'Rule removed',
     'main.globalRuleNotFound': 'Corresponding global rule not found',
     'main.localRuleNotFound': 'Corresponding local rule not found',
     'main.localRuleExists': 'Same rule already exists in local rules',
@@ -1610,9 +1615,11 @@ const i18n = {
     'settings.settingsTitle': 'Settings',
     'settings.updateCount': 'Update Count',
     'settings.ruleSourceBadge': 'Rule Source Badge (g/l)',
-    'settings.ruleSourceBadgeHint': 'Show g(global)/l(local) badge when hovering highlighted text',
+    'settings.ruleSourceBadgeHint': 'Show g(global)/l(local) badge when hovering highlighted text, middle-click to remove rule',
     'settings.ruleSourceBadgeThreshold': 'Character Threshold',
     'settings.ruleSourceBadgeThresholdHint': 'Show badge when matched text length exceeds this value (0=always show)',
+    'settings.hideTooltip': 'Hide Tooltip',
+    'settings.hideTooltipHint': 'Do not show operation tips when hovering g/l/n badges',
     'settings.defaultPreviewText': 'Default Preview Text',
     'settings.defaultPreviewTextCN': 'Chinese Preview Text',
     'settings.defaultPreviewTextEN': 'English Preview Text',
@@ -1924,6 +1931,7 @@ const i18n = {
     'main.addFromClipboardFailed': 'Failed to add style from clipboard',
     'main.ruleMovedToGlobal': 'Rule moved from local to global',
     'main.ruleMovedToLocal': 'Rule moved from global to local',
+    'main.ruleRemoved': 'Rule removed',
     'main.globalRuleNotFound': 'Corresponding global rule not found',
     'main.localRuleNotFound': 'Corresponding local rule not found',
     'main.localRuleExists': 'Same rule already exists in local rules',
@@ -2089,8 +2097,8 @@ const i18n = {
     'floating.hideGroupStyles': 'Hide all group styles',
     'main.removeFromShowcase': 'Remove from Showcase',
     'main.filter': 'Filter',
-    'main.globalRuleClickToLocal': 'Global rule - Click to move to local',
-    'main.localRuleClickToGlobal': 'Local rule - Click to move to global',
+    'main.globalRuleClickToLocal': 'Global rule - Click to move to local, middle-click to remove',
+    'main.localRuleClickToGlobal': 'Local rule - Click to move to global, middle-click to remove',
     'main.fileRule': 'File rule',
     'main.className': 'Class name',
     'main.cssCleaned': 'CSS cleanup done: removed {count} orphaned styles',
@@ -3476,9 +3484,8 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
     modalEl.style.width = `${newWidth}px`;
     modalEl.style.maxWidth = `${newWidth}px`;
     modalEl.style.height = `${newHeight}px`;
-    const contentWidth = newWidth - 30;
-    contentEl.style.maxWidth = `${contentWidth}px`;
-    contentEl.style.width = `${contentWidth}px`;
+    contentEl.style.width = "100%";
+    contentEl.style.maxWidth = "100%";
     if (widthInput) widthInput.value = newWidth;
     updatePosition();
   };
@@ -6639,9 +6646,9 @@ class CSSEditorModal extends Modal {
     this.originalStyle = currentStyle;
     this.plugin = plugin;
     this.buttonText = '';
+    this.saved = false; // 标记是否已保存
     
     try {
-      // 方法1: 尝试从传入的plugin参数获取
       if (plugin && plugin.buttonTexts && typeof plugin.buttonTexts === 'object') {
         this.buttonText = plugin.buttonTexts[className] || '';
       }
@@ -7040,6 +7047,7 @@ ${currentCss}
       const buttonTextValue = buttonTextInput.value.trim();
       try {
         await this.onSave(this.className, newStyle, buttonTextValue);
+        this.saved = true;
         this.close();
       } catch (error) {
         console.error("保存样式失败:", error);
@@ -8650,6 +8658,24 @@ class AddRegexRuleModal extends Modal {
       styleTextarea.focus();
     }, 100);
     
+    // 打开弹窗前，临时降低主面板zIndex，确保弹窗在上方
+    const mainModalEl = this.modalEl;
+    const savedZIndex = mainModalEl.style.zIndex;
+    if (mainModalEl) mainModalEl.style.zIndex = "1";
+    const mainModalContainer = mainModalEl.closest('.modal-container');
+    if (mainModalContainer) mainModalContainer.style.zIndex = "1";
+    const mainModalBg = mainModalEl.closest('.modal-bg');
+    if (mainModalBg) mainModalBg.style.zIndex = "1";
+    
+    // 关闭弹窗时恢复主面板zIndex
+    const originalClose = modal.close.bind(modal);
+    modal.close = () => {
+      if (mainModalEl) mainModalEl.style.zIndex = savedZIndex || "100";
+      if (mainModalContainer) mainModalContainer.style.zIndex = savedZIndex || "100";
+      if (mainModalBg) mainModalBg.style.zIndex = savedZIndex || "100";
+      originalClose();
+    };
+    
     modal.open();
   }
   
@@ -8769,16 +8795,15 @@ class AddRegexRuleModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     
-    contentEl.style.padding = "2px";
+    contentEl.style.padding = "0 5px 0 5px";
+    contentEl.style.boxSizing = "border-box";
     
     // 内容区域宽度设置，使用用户配置的宽度减去边距
     const defaultWidth = _isDesktop ? 1000 : Math.min(window.innerWidth - 20, 1000);
     const savedWidth = this.plugin.settings?.modalWidth || defaultWidth;
     const userWidth = _isDesktop ? savedWidth : Math.min(savedWidth, defaultWidth);
-    const contentWidth = userWidth - 30;
     
-    contentEl.style.maxWidth = `${contentWidth}px`;
-    contentEl.style.width = `${contentWidth}px`;
+    contentEl.style.width = "100%";
     contentEl.style.maxHeight = "80vh";
     contentEl.style.overflowY = "auto";
     
@@ -8786,6 +8811,22 @@ class AddRegexRuleModal extends Modal {
     this.modalEl.style.maxWidth = '95vw';
     this.modalEl.style.minWidth = _isDesktop ? "800px" : "0";
     this.modalEl.style.maxHeight = "80vh";
+    this.modalEl.style.padding = "0";
+    
+    // 允许面板溢出边界
+    this.modalEl.style.position = "fixed";
+    this.modalEl.style.overflow = "visible";
+    this.modalEl.style.zIndex = "100";
+    const modalContainer = this.modalEl.closest('.modal-container');
+    if (modalContainer) {
+      modalContainer.style.overflow = "visible";
+      modalContainer.style.zIndex = "100";
+    }
+    const modalBg = this.modalEl.closest('.modal-bg');
+    if (modalBg) {
+      modalBg.style.overflow = "visible";
+      modalBg.style.zIndex = "100";
+    }
     
     // 创建标题容器
     const titleContainer = contentEl.createDiv();
@@ -8796,6 +8837,53 @@ class AddRegexRuleModal extends Modal {
     titleContainer.style.flexWrap = "nowrap";
     titleContainer.style.width = "100%";
     titleContainer.style.minWidth = "0";
+    titleContainer.style.cursor = "grab";
+    titleContainer.style.position = "sticky";
+    titleContainer.style.top = "0";
+    titleContainer.style.zIndex = "10";
+    titleContainer.style.background = "var(--background-primary)";
+    titleContainer.style.paddingBottom = "5px";
+    
+    // 标题行拖动功能
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let modalStartX = 0;
+    let modalStartY = 0;
+    
+    titleContainer.addEventListener("mousedown", (e) => {
+      // 不拦截输入框和按钮的点击
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT') return;
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      const rect = this.modalEl.getBoundingClientRect();
+      modalStartX = rect.left;
+      modalStartY = rect.top;
+      titleContainer.style.cursor = "grabbing";
+      e.preventDefault();
+    });
+    
+    document.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+      this.modalEl.style.left = `${modalStartX + dx}px`;
+      this.modalEl.style.top = `${modalStartY + dy}px`;
+      this.modalEl.style.transform = "none";
+      // 确保容器也不居中定位
+      if (modalContainer) {
+        modalContainer.style.display = "block";
+        modalContainer.style.position = "static";
+      }
+    });
+    
+    document.addEventListener("mouseup", () => {
+      if (isDragging) {
+        isDragging = false;
+        titleContainer.style.cursor = "grab";
+      }
+    });
     
     // 创建主标题容器，用于包含标题和链接
     const mainTitleContainer = titleContainer.createDiv();
@@ -8882,161 +8970,35 @@ class AddRegexRuleModal extends Modal {
       openPluginLink.style.visibility = 'hidden';
     });
     
-    // 透明度设置
-    const opacityContainer = titleContainer.createDiv();
-    opacityContainer.style.display = "flex";
-    opacityContainer.style.alignItems = "center";
-    opacityContainer.style.gap = "8px";
-    if (!_isDesktop) opacityContainer.style.display = "none"; // 手机端隐藏透明度设置
-    
-    const opacityLabel = opacityContainer.createEl("span", { text: t('main.opacity') + ": " });
-    opacityLabel.style.fontSize = "14px";
-    
-    const opacityInput = opacityContainer.createEl("input", { type: "number", attr: { step: 5, min: 20, max: 100 } });
-    opacityInput.style.width = "60px";
-    opacityInput.style.padding = "4px 8px";
-    opacityInput.style.border = "1px solid var(--background-modifier-border)";
-    opacityInput.style.borderRadius = "4px";
-    opacityInput.style.fontSize = "14px";
-    opacityInput.title = t('settings.ctrlScrollOpacity');
+    // 应用初始透明度
     const defaultOpacity = Math.max(20, Math.min(100, this.plugin.settings?.mainModalOpacity || 100));
-    opacityInput.value = defaultOpacity;
+    this.modalEl.style.opacity = defaultOpacity / 100;
     
-    const opacityUnit = opacityContainer.createEl("span", { text: "%" });
-    opacityUnit.style.fontSize = "14px";
-    
-    opacityInput.addEventListener("input", async () => {
-      const opacity = parseInt(opacityInput.value);
-      if (!isNaN(opacity) && opacity >= 20 && opacity <= 100) {
-        this.modalEl.style.opacity = opacity / 100;
-        this.plugin.settings.mainModalOpacity = opacity;
-        await this.plugin.saveData(this.plugin.settings);
-      }
-    });
-    
-    // 保存对 opacityInput 和 defaultOpacity 的引用，用于全局滚轮事件
-    const self = this;
-    
-    opacityInput.addEventListener("wheel", (e) => {
-      e.preventDefault();
-      const step = e.deltaY > 0 ? -5 : 5;
-      let opacity = parseInt(opacityInput.value) || defaultOpacity;
-      opacity = Math.max(20, Math.min(100, opacity + step));
-      opacityInput.value = opacity;
-      this.modalEl.style.opacity = opacity / 100;
-      this.plugin.settings.mainModalOpacity = opacity;
-      this.plugin.saveData(this.plugin.settings);
-    }, { passive: false });
-    
-    // 添加全局 Ctrl+滚轮事件监听（在模态框范围内）
+    // Ctrl+滚轮调透明度，Alt+滚轮调宽度
     this.modalEl.addEventListener("wheel", (e) => {
       if (e.ctrlKey) {
         e.preventDefault();
         const step = e.deltaY > 0 ? -5 : 5;
-        let opacity = parseInt(opacityInput.value) || defaultOpacity;
+        let opacity = this.plugin.settings.mainModalOpacity || 100;
         opacity = Math.max(20, Math.min(100, opacity + step));
-        opacityInput.value = opacity;
-        self.modalEl.style.opacity = opacity / 100;
-        self.plugin.settings.mainModalOpacity = opacity;
-        self.plugin.saveData(self.plugin.settings);
+        this.modalEl.style.opacity = opacity / 100;
+        this.plugin.settings.mainModalOpacity = opacity;
+        this.plugin.saveData(this.plugin.settings);
       } else if (e.altKey) {
         e.preventDefault();
         const step = e.deltaY > 0 ? -50 : 50;
-        let width = parseInt(widthInput.value) || userWidth;
+        let width = this.plugin.settings.modalWidth || userWidth;
         width = Math.max(800, Math.min(2000, width + step));
-        widthInput.value = width;
-        const contentWidth = width - 30;
-        contentEl.style.maxWidth = `${contentWidth}px`;
-        contentEl.style.width = `${contentWidth}px`;
-        self.modalEl.style.width = `${width}px`;
-        self.modalEl.style.maxWidth = `${width}px`;
-        self.plugin.settings.modalWidth = width;
-        self.plugin.saveData(self.plugin.settings);
+        this.modalEl.style.width = `${width}px`;
+        this.modalEl.style.maxWidth = `${width}px`;
+        contentEl.style.width = "100%";
+        this.plugin.settings.modalWidth = width;
+        this.plugin.saveData(this.plugin.settings);
       }
     }, { passive: false });
     
-    opacityInput.addEventListener("blur", () => {
-      const opacity = parseInt(opacityInput.value);
-      if (isNaN(opacity) || opacity < 20 || opacity > 100) {
-        opacityInput.value = defaultOpacity;
-        this.modalEl.style.opacity = defaultOpacity / 100;
-      }
-    });
-    
-    // 应用初始透明度
-    this.modalEl.style.opacity = defaultOpacity / 100;
-    
-    // 宽度设置
-    const widthContainer = titleContainer.createDiv();
-    widthContainer.style.display = "flex";
-    widthContainer.style.alignItems = "center";
-    widthContainer.style.gap = "8px";
-    if (!_isDesktop) widthContainer.style.display = "none"; // 手机端隐藏宽度设置
-    
-    const widthLabel = widthContainer.createEl("span", { text: t('main.width') + ": " });
-    widthLabel.style.fontSize = "14px";
-    
-    const widthInput = widthContainer.createEl("input", { type: "number", attr: { step: 50, min: 800, max: 2000 } });
-    widthInput.style.width = "80px";
-    widthInput.style.padding = "4px 8px";
-    widthInput.style.border = "1px solid var(--background-modifier-border)";
-    widthInput.style.borderRadius = "4px";
-    widthInput.style.fontSize = "14px";
-    widthInput.title = t('settings.altScrollWidth');
-    widthInput.value = userWidth;
-    
-    const widthUnit = widthContainer.createEl("span", { text: "px" });
-    widthUnit.style.fontSize = "14px";
-    
-    // 实时更新宽度（使用节流避免频繁渲染）
-    let widthUpdateTimeout = null;
-    widthInput.addEventListener("input", () => {
-      if (widthUpdateTimeout) {
-        clearTimeout(widthUpdateTimeout);
-      }
-      
-      widthUpdateTimeout = setTimeout(async () => {
-        const width = parseInt(widthInput.value);
-        if (!isNaN(width) && width >= 800 && width <= 2000) {
-          const contentWidth = width - 30;
-          contentEl.style.maxWidth = `${contentWidth}px`;
-          contentEl.style.width = `${contentWidth}px`;
-          this.modalEl.style.width = `${width}px`;
-          this.modalEl.style.maxWidth = `${width}px`;
-          this.plugin.settings.modalWidth = width;
-          await this.plugin.saveData(this.plugin.settings);
-        }
-      }, 300);
-    });
-    
-    widthInput.addEventListener("wheel", (e) => {
-      e.preventDefault();
-      const step = e.deltaY > 0 ? -50 : 50;
-      let width = parseInt(widthInput.value) || defaultWidth;
-      width = Math.max(800, Math.min(2000, width + step));
-      widthInput.value = width;
-      const contentWidth = width - 30;
-      contentEl.style.maxWidth = `${contentWidth}px`;
-      contentEl.style.width = `${contentWidth}px`;
-      this.modalEl.style.width = `${width}px`;
-      this.modalEl.style.maxWidth = `${width}px`;
-      this.plugin.settings.modalWidth = width;
-      this.plugin.saveData(this.plugin.settings);
-    }, { passive: false });
-    
-    widthInput.addEventListener("blur", () => {
-      const width = parseInt(widthInput.value);
-      if (isNaN(width) || width < 800 || width > 2000) {
-        widthInput.value = defaultWidth;
-        const contentWidth = defaultWidth - 30;
-        contentEl.style.maxWidth = `${contentWidth}px`;
-        contentEl.style.width = `${contentWidth}px`;
-        this.modalEl.style.width = `${defaultWidth}px`;
-        this.modalEl.style.maxWidth = `${defaultWidth}px`;
-      }
-    });
-    
-    setupModalResizeHandle(this, this.modalEl, widthInput, opacityInput, {
+    // 恢复右下角调整大小按钮
+    setupModalResizeHandle(this, this.modalEl, null, null, {
       minWidth: _isDesktop ? 800 : 300, maxWidth: 2000,
       widthStep: 50,
       widthSettingsKey: 'modalWidth',
@@ -10045,18 +10007,6 @@ class AddRegexRuleModal extends Modal {
       addGroupLink.style.visibility = 'hidden';
     });
     
-    // 创建操作说明文字容器，显示在链接相同位置（覆盖显示）
-    const styleInstructions = titleAndLinkContainer.createSpan();
-    styleInstructions.style.position = "absolute"; // 使用绝对定位
-    styleInstructions.style.left = "93px"; // 向左移动27px，调整位置
-    styleInstructions.style.top = "3px"; // 向下移动3px
-    styleInstructions.style.fontSize = "12px";
-    styleInstructions.style.color = "#666";
-    // 移除背景色
-    styleInstructions.style.padding = "0 4px";
-    styleInstructions.textContent = t('main.styleInstructions');
-    styleInstructions.style.visibility = "hidden"; // 默认隐藏文字
-    
     // 创建主容器 - 横向排列所有分类
     const mainContainer = styleContainer.createDiv();
     mainContainer.style.display = "flex";
@@ -10115,13 +10065,15 @@ class AddRegexRuleModal extends Modal {
       this.plugin.defaultCollapseCategories = e.target.checked;
       this.plugin.settings.defaultCollapseCategories = e.target.checked;
       this.plugin.saveData(this.plugin.settings);
-      
+
       if (e.target.checked) {
-        // 如果开启默认隐藏，下次打开模态框时所有分组将隐藏
         new Notice(t('settings.defaultHideEnabled'));
       } else {
         new Notice(t('settings.defaultHideDisabled'));
       }
+
+      // 立即刷新主面板
+      this.onOpen();
     });
     
     // 为标题和开关容器添加鼠标事件监听器，控制开关容器的显示和隐藏
@@ -11002,17 +10954,6 @@ class AddRegexRuleModal extends Modal {
           styleOption.title = t('main.clickApplyStyle');
           styleOption.className = 'style-option'; // 添加类名以便于选择
           
-          // 为样式按钮添加鼠标事件监听器，控制操作说明文字的显示和隐藏
-          styleOption.addEventListener('mouseenter', () => {
-            styleInstructions.style.visibility = 'visible';
-            floatPinBtn.style.opacity = '1';
-          });
-          
-          styleOption.addEventListener('mouseleave', () => {
-            styleInstructions.style.visibility = 'hidden';
-            floatPinBtn.style.opacity = '0';
-          });
-          
           const floatPinBtn = document.createElement('span');
           floatPinBtn.textContent = '📌';
           floatPinBtn.style.cssText = `
@@ -11221,6 +11162,7 @@ class AddRegexRuleModal extends Modal {
           styleOption.addEventListener("mousedown", (e) => {
             if (e.button === 0) { // 只对左键生效
               wasLongPress = false; // 重置长按标志
+              if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] mousedown on style button:', className, 'button in DOM:', document.contains(styleOption));
               longPressTimer = setTimeout(() => {
                 wasLongPress = true; // 设置长按标志
                 console.log('Long press detected on style button, entering multi-select mode:', className);
@@ -11237,6 +11179,7 @@ class AddRegexRuleModal extends Modal {
           });
           
           styleOption.addEventListener("mouseup", () => {
+            if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] mouseup on style button:', className, 'wasLongPress:', wasLongPress);
             clearTimeout(longPressTimer);
           });
           
@@ -11253,9 +11196,16 @@ class AddRegexRuleModal extends Modal {
           // Ctrl+点击：添加为全局规则
           styleOption.addEventListener("click", async (e) => {
             // 如果是长按触发的点击，不执行任何操作
+            if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] click on style button:', className, 'wasLongPress:', wasLongPress, 'button in DOM:', document.contains(styleOption), 'isMultiSelectMode:', this.isMultiSelectMode);
             if (wasLongPress) {
               console.log('Skipping click event because it was triggered by long press');
               wasLongPress = false; // 重置标志
+              return;
+            }
+            
+            // 如果已进入多选模式，跳过原始click逻辑（长按后按钮已被克隆替换，但click可能仍触发在原始按钮上）
+            if (this.isMultiSelectMode) {
+              if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] Skipping click because isMultiSelectMode is true');
               return;
             }
             
@@ -11379,6 +11329,7 @@ class AddRegexRuleModal extends Modal {
                 
                 this.plugin.checkAndApplyHighlights();
               } else {
+                if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] ERROR: 正则表达式不能为空 (path 1 - original click, existingRule=false), wasLongPress:', wasLongPress, 'isMultiSelectMode:', this.isMultiSelectMode, 'regexValue:', currentRegexValue);
                 this.showErrorMessage(styleOption, '错误: 正则表达式不能为空');
               }
             }
@@ -11389,6 +11340,9 @@ class AddRegexRuleModal extends Modal {
               e.preventDefault();
               e.stopPropagation();
               e.stopImmediatePropagation();
+              
+              // 如果已进入多选模式，跳过
+              if (this.isMultiSelectMode) return;
               
               // 获取当前输入框中的值
               const currentRegexValue = regexInput ? regexInput.getValue() : regexValue;
@@ -11419,6 +11373,7 @@ class AddRegexRuleModal extends Modal {
                   this.addRemarkSection(this.contentEl);
                 }
               } else {
+                if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] ERROR: 正则表达式不能为空 (path 2 - middle click), regexValue:', currentRegexValue);
                 this.showErrorMessage(styleOption, '错误: 正则表达式不能为空');
               }
             }
@@ -11431,6 +11386,9 @@ class AddRegexRuleModal extends Modal {
               e.stopPropagation();
               e.stopImmediatePropagation();
               
+              // 如果已进入多选模式，跳过
+              if (this.isMultiSelectMode) return;
+              
               // 获取当前输入框中的值
               const currentRegexValue = regexInput ? regexInput.getValue() : regexValue;
               
@@ -11460,22 +11418,13 @@ class AddRegexRuleModal extends Modal {
                   this.addRemarkSection(this.contentEl);
                 }
               } else {
+                if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] ERROR: 正则表达式不能为空 (path 3 - auxclick middle), regexValue:', currentRegexValue);
                 this.showErrorMessage(styleOption, '错误: 正则表达式不能为空');
               }
             }
           });
           
 
-          
-          // 鼠标进入样式按钮时显示说明文字
-          styleOption.addEventListener("mouseenter", () => {
-            styleInstructions.style.visibility = "visible";
-          });
-          
-          // 鼠标离开样式按钮时隐藏说明文字
-          styleOption.addEventListener("mouseleave", () => {
-            styleInstructions.style.visibility = "hidden";
-          });
           
           // 右键点击：弹出选项菜单
           styleOption.addEventListener("contextmenu", async (e) => {
@@ -11489,6 +11438,7 @@ class AddRegexRuleModal extends Modal {
             }
             
             console.log('Right-click on style button:', className);
+            if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] Right-click on style button (original):', className, 'isMultiSelectMode:', this.isMultiSelectMode);
             
             // 创建上下文菜单
             const menu = document.createElement('div');
@@ -12467,6 +12417,7 @@ class AddRegexRuleModal extends Modal {
             styleOption.style.borderColor = '#007bff';
             styleOption.style.transform = 'translateY(-2px)';
             styleOption.style.boxShadow = '0 2px 3px rgba(0,123,255,0.2)';
+            floatPinBtn.style.opacity = '1';
             
             // 根据规则状态显示不同的提示
             const action = existingRule ? '左键: 删除规则' : '左键: 应用样式';
@@ -12498,6 +12449,7 @@ class AddRegexRuleModal extends Modal {
             styleOption.style.transform = 'translateY(0) scale(1)';
             styleOption.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
             styleOption.style.transition = 'all 0.2s ease';
+            floatPinBtn.style.opacity = '0';
           });
         }
       });
@@ -12964,14 +12916,15 @@ class AddRegexRuleModal extends Modal {
 
       // 添加样式到历史记录按钮
 
-    // 添加高亮历史记录区域
-    this.addHistorySection(contentEl);
-    
-    this.addGlobalRulesSection(contentEl);
-    
-    this.addHeadingStylesSection(contentEl);
-    
-    this.addRemarkSection(contentEl);
+    // 添加高亮历史记录区域（延迟渲染，加快首屏显示）
+    requestAnimationFrame(() => {
+      this.addHistorySection(contentEl);
+      this.addGlobalRulesSection(contentEl);
+      this.addHeadingStylesSection(contentEl);
+      this.addRemarkSection(contentEl);
+      this.addWidthSettingsSection(contentEl);
+      if (this.plugin.settings?.enableDebugLog) console.timeEnd('[主面板] onOpen总耗时');
+    });
     
     // 添加重新打开按钮的点击事件监听器
     collapsedCategoriesContainer.addEventListener('click', (e) => {
@@ -13105,22 +13058,18 @@ class AddRegexRuleModal extends Modal {
       }
     });
     
-    // 添加弹窗宽度设置区域
-    this.addWidthSettingsSection(contentEl);
-    
-    if (this.plugin.settings?.enableDebugLog) console.timeEnd('[主面板] onOpen总耗时');
-    
-    setTimeout(async () => {
+    requestAnimationFrame(() => {
       const queue = this._fontSizeCheckQueue;
       if (queue && queue.length > 0) {
+        // 批量设置，避免逐个getComputedStyle导致多次reflow
         for (const el of queue) {
-          if (window.getComputedStyle(el).fontSize === '0px') {
-            el.style.fontSize = "14px";
-          }
+          el.style.fontSize = "14px";
         }
         queue.length = 0;
       }
-      
+    });
+    
+    setTimeout(async () => {
       await this.updateStyleCountBadges();
       
       this.highlightMatchingRuleButtons();
@@ -13421,9 +13370,9 @@ class AddRegexRuleModal extends Modal {
     // 创建新的设置容器
     const settingsContainer = targetEl.createDiv();
     settingsContainer.className = 'regex-highlighter-settings';
-    settingsContainer.style.marginTop = "10px";
-    settingsContainer.style.padding = "8px";
-    settingsContainer.style.border = "1px solid #ddd";
+    settingsContainer.style.marginTop = "0px";
+    settingsContainer.style.padding = "3px";
+    settingsContainer.style.border = "1px solid transparent";
     settingsContainer.style.borderRadius = "6px";
     
     // 先将设置容器从DOM中移除（如果被自动添加了）
@@ -13718,6 +13667,35 @@ class AddRegexRuleModal extends Modal {
         this.plugin.settings = {};
       }
       this.plugin.settings.ruleSourceBadgeThreshold = val;
+      await this.plugin.saveData(this.plugin.settings);
+    });
+
+    // 不显示tooltip设置
+    const hideTooltipRow = displayContent.createDiv();
+    hideTooltipRow.style.display = "flex";
+    hideTooltipRow.style.alignItems = "center";
+    hideTooltipRow.style.marginBottom = "5px";
+
+    const hideTooltipLabel = hideTooltipRow.createEl("span");
+    hideTooltipLabel.textContent = t('settings.hideTooltip') + ": ";
+    hideTooltipLabel.style.marginRight = "10px";
+    hideTooltipLabel.style.fontSize = "14px";
+
+    const hideTooltipInput = hideTooltipRow.createEl("input");
+    hideTooltipInput.type = "checkbox";
+    hideTooltipInput.checked = this.plugin.settings?.hideTooltip === true;
+
+    const hideTooltipHint = hideTooltipRow.createEl("span");
+    hideTooltipHint.textContent = t('settings.hideTooltipHint');
+    hideTooltipHint.style.fontSize = "12px";
+    hideTooltipHint.style.color = "var(--text-muted)";
+    hideTooltipHint.style.marginLeft = "8px";
+
+    hideTooltipInput.addEventListener("change", async (e) => {
+      if (!this.plugin.settings) {
+        this.plugin.settings = {};
+      }
+      this.plugin.settings.hideTooltip = e.target.checked;
       await this.plugin.saveData(this.plugin.settings);
     });
 
@@ -15822,9 +15800,9 @@ class AddRegexRuleModal extends Modal {
     // 创建全局规则容器
     const globalSection = contentEl.createDiv();
     globalSection.className = 'global-rules-section';
-    globalSection.style.marginTop = "10px";
-    globalSection.style.padding = "8px";
-    globalSection.style.border = "1px solid #ddd";
+    globalSection.style.marginTop = "0px";
+    globalSection.style.padding = "3px";
+    globalSection.style.border = "1px solid transparent";
     globalSection.style.borderRadius = "6px";
     
     // 先将全局规则容器从DOM中移除（如果被自动添加了）
@@ -15871,19 +15849,6 @@ class AddRegexRuleModal extends Modal {
     this.plugin.isGlobalHistoryCollapsed = this.plugin.isGlobalHistoryCollapsed || false;
     let isGlobalCollapsed = this.plugin.isGlobalHistoryCollapsed;
     let globalButtonGrid;
-
-    // 创建说明文本，只在展开时显示
-    const globalDescription = titleContainer.createSpan();
-    globalDescription.style.position = "absolute"; // 使用绝对定位
-    globalDescription.style.left = "120px"; // 调整位置，覆盖在链接上
-    globalDescription.style.top = "3px"; // 向下移动3px
-    globalDescription.style.fontSize = "12px";
-    globalDescription.style.color = "#666";
-    globalDescription.style.padding = "0 4px";
-    globalDescription.textContent = t('global.description');
-    globalDescription.style.visibility = "hidden";
-    globalDescription.style.pointerEvents = "none";
-    if (!_isDesktop) globalDescription.style.display = "none";
 
     // 修改标题样式为inline
     globalTitle.style.display = "inline";
@@ -15950,17 +15915,13 @@ class AddRegexRuleModal extends Modal {
       this.plugin.isGlobalHistoryCollapsed = isGlobalCollapsed;
       // 将折叠状态保存到插件设置中
       this.plugin.settings.isGlobalHistoryCollapsed = isGlobalCollapsed;
-      // 保存设置到文件
-      if (this.plugin.settings?.enableDebugLog) console.time('[全局规则] toggleGlobalCollapse.saveData');
-      await this.plugin.saveData(this.plugin.settings);
-      if (this.plugin.settings?.enableDebugLog) console.timeEnd('[全局规则] toggleGlobalCollapse.saveData');
+      // 保存设置到文件（不阻塞UI更新）
+      this.plugin.saveData(this.plugin.settings);
       // 更新标题的箭头方向
       const arrowMatch = globalTitle.textContent.match(/(▼|▶)/);
       if (arrowMatch) {
         globalTitle.textContent = globalTitle.textContent.replace(arrowMatch[0], isGlobalCollapsed ? '▶' : '▼');
       }
-      // 控制说明文本的显示
-      globalDescription.style.display = isGlobalCollapsed ? 'none' : 'block';
       
       // 如果有规则按钮，控制它们的显示
       if (globalButtonGrid) {
@@ -16479,16 +16440,6 @@ class AddRegexRuleModal extends Modal {
             document.addEventListener('click', closeMenu);
           }
         });
-        
-        // 鼠标进入全局规则按钮时显示说明文字
-        globalButton.addEventListener("mouseenter", () => {
-          globalDescription.style.visibility = "visible";
-        });
-        
-        // 鼠标离开全局规则按钮时隐藏说明文字
-        globalButton.addEventListener("mouseleave", () => {
-          globalDescription.style.visibility = "hidden";
-        });
       });
       
       // 应用初始折叠状态
@@ -16509,8 +16460,8 @@ class AddRegexRuleModal extends Modal {
     // 创建标题样式容器
     const headingSection = contentEl.createDiv();
     headingSection.className = 'heading-styles-section'; // 添加类名便于识别
-    headingSection.style.marginTop = "10px";
-    headingSection.style.padding = "8px";
+    headingSection.style.marginTop = "0px";
+    headingSection.style.padding = "3px";
     headingSection.style.border = "1px solid #ddd";
     headingSection.style.borderRadius = "6px";
     
@@ -16933,9 +16884,9 @@ class AddRegexRuleModal extends Modal {
     // 创建历史记录容器
     const historyContainer = contentEl.createDiv();
     historyContainer.className = 'history-section';
-    historyContainer.style.marginTop = "10px";
-    historyContainer.style.padding = "8px";
-    historyContainer.style.border = "1px solid #ddd";
+    historyContainer.style.marginTop = "0px";
+    historyContainer.style.padding = "3px";
+    historyContainer.style.border = "1px solid transparent";
     historyContainer.style.borderRadius = "6px";
     
     // 先将历史记录容器从DOM中移除（如果被自动添加了）
@@ -16984,19 +16935,6 @@ class AddRegexRuleModal extends Modal {
     this.plugin.isHistoryCollapsed = this.plugin.isHistoryCollapsed || false;
     let isCollapsed = this.plugin.isHistoryCollapsed;
     let buttonGrid;
-
-    // 创建说明文本，只在展开时显示
-    const historyDescription = titleContainer.createSpan();
-    historyDescription.style.position = "absolute"; // 使用绝对定位
-    historyDescription.style.left = "140px"; // 右移20px
-    historyDescription.style.top = "1px"; // 上移2px
-    historyDescription.style.fontSize = "12px";
-    historyDescription.style.color = "#666";
-    historyDescription.style.padding = "0 4px";
-    historyDescription.textContent = t('history.description');
-    historyDescription.style.visibility = "hidden";
-    historyDescription.style.pointerEvents = "none";
-    if (!_isDesktop) historyDescription.style.display = "none";
 
     // 修改标题样式为inline
     historyTitle.style.display = "inline";
@@ -17067,17 +17005,13 @@ class AddRegexRuleModal extends Modal {
       this.plugin.isHistoryCollapsed = isCollapsed;
       // 将折叠状态保存到插件设置中
       this.plugin.settings.isHistoryCollapsed = isCollapsed;
-      // 保存设置到文件
-      if (this.plugin.settings?.enableDebugLog) console.time('[高亮规则] toggleCollapse.saveData');
-      await this.plugin.saveData(this.plugin.settings);
-      if (this.plugin.settings?.enableDebugLog) console.timeEnd('[高亮规则] toggleCollapse.saveData');
+      // 保存设置到文件（不阻塞UI更新）
+      this.plugin.saveData(this.plugin.settings);
       // 更新标题的箭头方向
       const arrowMatch = historyTitle.textContent.match(/(▼|▶)/);
       if (arrowMatch) {
         historyTitle.textContent = historyTitle.textContent.replace(arrowMatch[0], isCollapsed ? '▶' : '▼');
       }
-      // 控制说明文本的显示
-      historyDescription.style.display = isCollapsed ? 'none' : 'block';
       
       // 如果有规则按钮，控制它们的显示
       if (buttonGrid) {
@@ -17439,8 +17373,6 @@ class AddRegexRuleModal extends Modal {
           historyButton.style.transform = "translateY(-2px)";
           historyButton.style.boxShadow = "0 2px 3px rgba(0,123,255,0.2)";
           historyButton.title = t('main.leftClickEdit') + ` | ` + t('main.middleClickGlobal') + `\n` + t('main.regex') + `: ${rule.regex}\n` + t('main.styleClass') + `: ${rule.cssClass}\n` + t('main.remark') + `: ${rule.remark || t('main.empty')}`;
-          // 显示说明文字
-          historyDescription.style.visibility = "visible";
         });
         
         // 鼠标按下时的动态效果
@@ -17467,8 +17399,6 @@ class AddRegexRuleModal extends Modal {
           historyButton.style.transform = "translateY(0) scale(1)";
           historyButton.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
           historyButton.style.transition = 'all 0.2s ease';
-          // 隐藏说明文字
-          historyDescription.style.visibility = "hidden";
         });
         
         // 阻止中键的默认滚动行为
@@ -17631,9 +17561,8 @@ class AddRegexRuleModal extends Modal {
       applyInitialCollapse();
     }
   }
-  
+
   clearHistorySection() {
-    // 清理所有历史记录容器
     const historySections = this.contentEl.querySelectorAll('.history-section');
     historySections.forEach(section => section.remove());
     
@@ -18247,9 +18176,32 @@ class AddRegexRuleModal extends Modal {
     
     const cssEditor = new CSSEditorModal(this.app, className, initialStyle, onSave.bind(this), this);
     
+    // 打开CSS编辑器前，临时降低主面板zIndex，确保编辑器弹窗在上方
+    const mainModalEl = this.modalEl;
+    const mainModalContainer = mainModalEl.closest('.modal-container');
+    const mainModalBg = mainModalEl.closest('.modal-bg');
+    const savedZIndex = mainModalEl.style.zIndex;
+    if (mainModalEl) mainModalEl.style.zIndex = "1";
+    if (mainModalContainer) mainModalContainer.style.zIndex = "1";
+    if (mainModalBg) mainModalBg.style.zIndex = "1";
+    
     // 监听CSS编辑器关闭事件，更新按钮显示和整个弹窗内容
+    const originalOnClose = cssEditor.onClose.bind(cssEditor);
     cssEditor.onClose = async () => {
-      console.log('CSS editor closed, refreshing UI...');
+      // 恢复主面板zIndex
+      if (mainModalEl) mainModalEl.style.zIndex = savedZIndex || "100";
+      if (mainModalContainer) mainModalContainer.style.zIndex = savedZIndex || "100";
+      if (mainModalBg) mainModalBg.style.zIndex = savedZIndex || "100";
+      
+      await originalOnClose();
+      
+      // 只有保存后才刷新UI，取消时不刷新
+      if (!cssEditor.saved) {
+        console.log('CSS editor canceled, skipping UI refresh');
+        return;
+      }
+      
+      console.log('CSS editor closed after save, refreshing UI...');
       
       try {
         // 并行执行异步操作，减少等待时间
@@ -18815,6 +18767,24 @@ class AddRegexRuleModal extends Modal {
       rule.regex || '' // 传递匹配文本
     );
     
+    // 打开备注弹窗前，临时降低主面板zIndex
+    const mainModalEl = this.modalEl;
+    const mainModalContainer = mainModalEl.closest('.modal-container');
+    const mainModalBg = mainModalEl.closest('.modal-bg');
+    const savedZIndex = mainModalEl.style.zIndex;
+    if (mainModalEl) mainModalEl.style.zIndex = "1";
+    if (mainModalContainer) mainModalContainer.style.zIndex = "1";
+    if (mainModalBg) mainModalBg.style.zIndex = "1";
+    
+    // 关闭弹窗时恢复主面板zIndex
+    const originalClose = modal.close.bind(modal);
+    modal.close = () => {
+      if (mainModalEl) mainModalEl.style.zIndex = savedZIndex || "100";
+      if (mainModalContainer) mainModalContainer.style.zIndex = savedZIndex || "100";
+      if (mainModalBg) mainModalBg.style.zIndex = savedZIndex || "100";
+      originalClose();
+    };
+    
     // 显示弹窗
     modal.open();
   }
@@ -18862,6 +18832,7 @@ class AddRegexRuleModal extends Modal {
   
   // 进入多选模式
   enterMultiSelectMode(currentCategory = null, targetButton = null, targetClassName = null) {
+    if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] enterMultiSelectMode called, category:', currentCategory, 'targetClassName:', targetClassName, 'isMultiSelectMode:', this.isMultiSelectMode);
     if (!this.isMultiSelectMode) {
       this.isMultiSelectMode = true;
       console.log('Entering multi-select mode for category:', currentCategory);
@@ -18874,6 +18845,7 @@ class AddRegexRuleModal extends Modal {
       
       // 为所有样式按钮添加点击选择功能
       const styleButtons = document.querySelectorAll('.style-option');
+      if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] Found style buttons:', styleButtons.length);
       
       styleButtons.forEach(button => {
         // 保存原始状态
@@ -18897,11 +18869,13 @@ class AddRegexRuleModal extends Modal {
         if (className) {
           // 移除现有的点击事件（通过克隆和替换）
           const clone = button.cloneNode(true);
+          if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] Cloning button:', className, 'original in DOM:', document.contains(button), 'clone in DOM:', document.contains(clone));
           button.parentNode.replaceChild(clone, button);
           
           // 添加选择事件
           clone.addEventListener('click', (e) => {
             e.stopPropagation();
+            if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] Click on cloned button in multi-select mode:', className);
             // 只有当没有指定分组或者按钮属于当前分组时，才允许选择
             if (!currentCategory || buttonCategory === currentCategory) {
               this.toggleStyleButtonSelection(clone, className);
@@ -18914,6 +18888,7 @@ class AddRegexRuleModal extends Modal {
             e.stopPropagation();
             
             console.log('Right-click on style button in multi-select mode:', className);
+            if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] Right-click in multi-select mode, isMultiSelectMode:', this.isMultiSelectMode, 'selectedClassNames:', this.selectedClassNames);
             
             // 创建上下文菜单
             const menu = document.createElement('div');
@@ -19176,15 +19151,15 @@ class AddRegexRuleModal extends Modal {
   // 退出多选模式
   exitMultiSelectMode(e = null) {
     // 打印调试信息
-    console.log('exitMultiSelectMode called with event:', e);
+    if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] exitMultiSelectMode called, isMultiSelectMode:', this.isMultiSelectMode, 'event:', e);
     
     // 如果事件存在，检查点击目标是否是样式按钮或其内部元素
     if (e) {
       const target = e.target;
-      console.log('Clicked target:', target);
+      if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] Clicked target:', target);
       
       const isStyleButton = target.closest('.style-option');
-      console.log('Is style button:', isStyleButton);
+      if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] Is style button:', isStyleButton);
       
       if (isStyleButton) {
         // 如果点击的是样式按钮，不退出多选模式
@@ -19195,800 +19170,14 @@ class AddRegexRuleModal extends Modal {
     
     if (this.isMultiSelectMode) {
       this.isMultiSelectMode = false;
-      console.log('Exiting multi-select mode');
-      
-      // 恢复所有样式按钮的原始状态
-      const styleButtons = document.querySelectorAll('.style-option');
-      styleButtons.forEach((button, index) => {
-        // 恢复原始样式
-        if (this.originalButtonStates[index]) {
-          const originalStyle = this.originalButtonStates[index].style;
-          button.style.borderColor = originalStyle.borderColor;
-          button.style.backgroundColor = originalStyle.backgroundColor;
-          button.style.boxShadow = originalStyle.boxShadow;
-        }
-        
-        // 移除现有的点击事件（通过克隆和替换）
-        const clone = button.cloneNode(true);
-        button.parentNode.replaceChild(clone, button);
-        
-        // 重新添加原始的点击事件
-        const className = clone.dataset.class || clone.getAttribute('data-class');
-        if (className) {
-          // 长按功能：长按进入多选模式
-          let longPressTimer;
-          const longPressDuration = 500; // 长按持续时间（毫秒）
-          let wasLongPress = false; // 标记是否触发了长按
-          
-          clone.addEventListener("mousedown", (e) => {
-            if (e.button === 0) { // 只对左键生效
-              wasLongPress = false; // 重置长按标志
-              longPressTimer = setTimeout(() => {
-                wasLongPress = true; // 设置长按标志
-                console.log('Long press detected on style button, entering multi-select mode:', className);
-                
-                // 获取当前按钮所在的分组
-                const buttonGroup = clone.closest('[data-category]');
-                const currentCategory = buttonGroup ? buttonGroup.getAttribute('data-category') : null;
-                console.log('Current category:', currentCategory);
-                
-                // 进入多选模式，传递当前分组信息、目标按钮和类名
-                this.enterMultiSelectMode(currentCategory, clone, className);
-              }, longPressDuration);
-            }
-          });
-          
-          clone.addEventListener("mouseup", () => {
-            clearTimeout(longPressTimer);
-          });
-          
-          clone.addEventListener("mouseleave", () => {
-            clearTimeout(longPressTimer);
-          });
-          
-          // 添加鼠标移动事件监听，检测拖动时清除长按计时器
-          clone.addEventListener("mousemove", () => {
-            clearTimeout(longPressTimer);
-          });
-          
-          // 左键点击：应用或删除样式
-          // Ctrl+点击：添加为全局规则
-          clone.addEventListener("click", async (e) => {
-            // 如果是长按触发的点击，不执行任何操作
-            if (wasLongPress) {
-              console.log('Skipping click event because it was triggered by long press');
-              wasLongPress = false; // 重置标志
-              return;
-            }
-            
-            // 获取当前样式按钮所在的分组
-            const buttonGroup = e.target.closest('[data-category]');
-            if (buttonGroup) {
-              // 检查分组是否处于折叠状态
-              const isGroupCollapsed = buttonGroup.style.display === 'none';
-              
-              if (isGroupCollapsed && this.plugin && this.plugin.defaultCollapseCategories) {
-                // 如果分组处于折叠状态且默认折叠功能开启，展开该分组后需要折叠其他已展开的分组
-                const allCategoryContainers = this.contentEl.querySelectorAll('[data-category]');
-                const currentCategory = buttonGroup.getAttribute('data-category');
-                
-                allCategoryContainers.forEach(container => {
-                  const containerCategory = container.getAttribute('data-category');
-                  if (containerCategory !== currentCategory && container.style.display === 'flex') {
-                    // 折叠其他已展开的分组
-                    container.style.display = 'none';
-                    
-                    // 更新标题的视觉效果
-                    const otherCategoryTitle = container.querySelector('h4');
-                    if (otherCategoryTitle) {
-                      otherCategoryTitle.style.backgroundColor = '#6c757d';
-                      otherCategoryTitle.title = t('main.dblClickExpandGroup');
-                    }
-                    
-                    // 更新插件的折叠状态
-                    if (this.plugin) {
-                      this.plugin.settings = this.plugin.settings || {};
-                      this.plugin.settings.collapsedCategories = this.plugin.settings.collapsedCategories || {};
-                      this.plugin.settings.collapsedCategories[containerCategory] = true;
-                      this.plugin.collapsedCategories = this.plugin.settings.collapsedCategories;
-                    }
-                  }
-                });
-              }
-            }
-            
-            // 获取当前输入框中的值
-            const currentRegexValue = this.regexInput ? this.regexInput.getValue() : this.regexValue;
-            const isCtrlClick = e.ctrlKey || e.metaKey; // Windows/Linux使用Ctrl，Mac使用Cmd
-            
-            // 检查是否已存在对应的规则
-            const currentRules = Array.isArray(this.plugin.rules) ? this.plugin.rules : [];
-            const existingRule = currentRules.find(rule => 
-              rule.regex === currentRegexValue && rule.cssClass === className
-            );
-            const ruleIndex = currentRules.findIndex(rule => 
-              rule.regex === currentRegexValue && rule.cssClass === className
-            );
-            
-            if (existingRule) {
-              if (isCtrlClick) {
-                // Ctrl+点击现有规则：移动到全局规则
-                console.log('Moving rule to global with Ctrl+click:', currentRegexValue, className);
-                const success = await this.plugin.moveRuleToGlobal(currentRegexValue, className);
-                if (success) {
-                  this.showSuccessMessage(t('main.ruleMovedToGlobalSuccess') + ` "${currentRegexValue}"`);
-                  // 按照固定顺序重新加载：当前文件规则 > 全局规则 > 已备注文本
-                  this.clearHistorySection();
-                  this.clearGlobalRulesSection();
-                  this.clearRemarkSection();
-                  this.addHistorySection(this.contentEl);
-                  this.addGlobalRulesSection(this.contentEl);
-                  this.addHeadingStylesSection(this.contentEl);
-                  this.addRemarkSection(this.contentEl);
-                }
-              } else {
-                // 规则已存在，执行删除后重新应用操作
-                // Removing then re-applying rule
-                // 先删除规则
-                await this.deleteRule(ruleIndex);
-                // 然后重新应用规则
-                if (currentRegexValue && currentRegexValue.trim() !== '') {
-                  await this.plugin.addRule(currentRegexValue, className, false, this.remark); // 不添加为全局规则
-                  
-                  // 更新样式计数角标
-                  await this.updateStyleCountBadges();
-                  
-                  // 显示成功消息
-                  this.showSuccessMessage(t('main.ruleReapplied') + ` "${currentRegexValue}" ` + t('main.styleClass') + ` .${className}`);
-                  
-                  // 按照固定顺序重新加载：当前文件规则 > 全局规则 > 已备注文本
-                  this.clearHistorySection();
-                  this.clearGlobalRulesSection();
-                  this.clearRemarkSection();
-                  this.addHistorySection(this.contentEl);
-                  this.addGlobalRulesSection(this.contentEl);
-                  this.addHeadingStylesSection(this.contentEl);
-                  this.addRemarkSection(this.contentEl);
-                  
-                  // 更新样式按钮状态（显示已应用）
-                  this.updateStyleButtonState(currentRegexValue, className, true);
-                  
-                  // 关键改进：重新加载CSS样式以确保最新的样式生效
-                  console.log('Reloading styles to ensure latest CSS is applied...');
-                  if (typeof this.plugin.reloadStyles === 'function') {
-                    await this.plugin.reloadStyles();
-                  }
-                  
-                  // 然后重新应用高亮，确保使用最新样式
-                  // Re-applying highlights with updated styles
-                  this.plugin.checkAndApplyHighlights();
-                }
-              }
-            } else {
-              // 规则不存在，添加它
-              const isGlobal = isCtrlClick;
-              console.log('Adding rule:', currentRegexValue, className, 'global:', isGlobal);
-              
-              // 验证正则表达式不为空
-              if (currentRegexValue && currentRegexValue.trim() !== '') {
-                await this.plugin.addRule(currentRegexValue, className, isGlobal, this.remark);
-                
-                // 更新样式计数角标
-                await this.updateStyleCountBadges();
-                
-                // 显示成功消息
-                const message = isGlobal ? 
-                  t('main.globalRuleStyleApplied') + ` "${currentRegexValue}" ` + t('main.styleClass') + ` .${className}` : 
-                  t('main.ruleStyleApplied') + ` "${currentRegexValue}" ` + t('main.styleClass') + ` .${className}`;
-                this.showSuccessMessage(message);
-                
-                // 按照固定顺序重新加载：当前文件规则 > 全局规则 > 已备注文本
-                this.clearHistorySection();
-                this.clearGlobalRulesSection();
-                this.clearRemarkSection();
-                this.addHistorySection(this.contentEl);
-                this.addGlobalRulesSection(this.contentEl);
-                this.addHeadingStylesSection(this.contentEl);
-                this.addRemarkSection(this.contentEl);
-                
-                // 更新样式按钮状态（显示已应用）
-                this.updateStyleButtonState(currentRegexValue, className, true);
-                
-                // 关键改进：重新加载CSS样式以确保最新的样式生效
-                console.log('Reloading styles to ensure latest CSS is applied...');
-                if (typeof this.plugin.reloadStyles === 'function') {
-                  await this.plugin.reloadStyles();
-                }
-                
-                // 然后重新应用高亮，确保使用最新样式
-                console.log('Re-applying highlights with updated styles...');
-                this.plugin.checkAndApplyHighlights();
-              } else {
-                console.log('Cannot add rule: empty regex pattern');
-                // 显示错误提示
-                this.showErrorMessage(clone, '错误: 正则表达式不能为空');
-              }
-            }
-          });
-          
-          // 重新添加鼠标悬停效果
-          clone.addEventListener('mouseenter', function() {
-            this.style.borderColor = '#007bff';
-            this.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
-          });
-          
-          clone.addEventListener('mouseleave', function() {
-            this.style.borderColor = '#ddd';
-            this.style.backgroundColor = '';
-          });
-          
-          // 重新添加右键菜单事件
-          clone.addEventListener("contextmenu", async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            console.log('Right-click on style button:', className);
-            
-            // 创建上下文菜单
-            const menu = document.createElement('div');
-            menu.className = 'rch-context-menu';
-            menu.style.cssText = `
-              position: fixed;
-              top: ${e.clientY}px;
-              left: ${e.clientX}px;
-              background: var(--background-primary);
-              border: 1px solid var(--border-color);
-              border-radius: 4px;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-              z-index: 10000;
-              padding: 4px 0;
-              min-width: 120px;
-            `;
-            
-            // 检查是否处于多选模式
-            if (this.isMultiSelectMode) {
-              // 多选模式下的选项
-              
-              // 添加删除选项
-              const deleteOption = document.createElement('div');
-              deleteOption.textContent = t('context.delete');
-              deleteOption.style.cssText = `
-                padding: 8px 16px;
-                cursor: pointer;
-                font-size: 14px;
-                color: var(--text-normal);
-              `;
-              
-              deleteOption.addEventListener('mouseenter', () => {
-                deleteOption.style.background = 'var(--background-modifier-hover)';
-              });
-              
-              deleteOption.addEventListener('mouseleave', () => {
-                deleteOption.style.background = 'transparent';
-              });
-              
-              deleteOption.addEventListener('click', async () => {
-                // 批量删除选中的样式
-                for (const selectedClassName of this.selectedClassNames) {
-                  await this.deleteStyleAndCleanup(selectedClassName);
-                }
-                
-                // 重新加载样式按钮
-                      this.onOpen();
-                
-                // 退出多选模式
-                this.exitMultiSelectMode();
-                
-                // 关闭菜单
-                document.body.removeChild(menu);
-              });
-              
-              menu.appendChild(deleteOption);
-              
-              // 添加移动到分组选项
-              const moveOption = document.createElement('div');
-              moveOption.textContent = t('context.moveToGroup');
-              moveOption.style.cssText = `
-                padding: 8px 16px;
-                cursor: pointer;
-                font-size: 14px;
-                color: var(--text-normal);
-                border-top: 1px solid var(--border-color);
-                position: relative;
-              `;
-              
-              moveOption.addEventListener('mouseenter', () => {
-                moveOption.style.background = 'var(--background-modifier-hover)';
-                
-                // 创建分组列表
-                const groupList = document.createElement('div');
-                groupList.id = 'group-list';
-                groupList.style.cssText = `
-                  position: absolute;
-                  top: 0;
-                  left: 100%;
-                  margin-left: 5px;
-                  background: var(--background-primary);
-                  border: 1px solid var(--border-color);
-                  border-radius: 4px;
-                  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-                  z-index: 10001;
-                  padding: 4px 0;
-                  min-width: 150px;
-                  max-height: 200px;
-                  overflow-y: auto;
-                `;
-                
-                // 获取所有分组
-                const categories = Object.keys(this.plugin.config?.styleCategories || {});
-                
-                // 添加分组选项
-                categories.forEach(category => {
-                  const groupItem = document.createElement('div');
-                  groupItem.textContent = category;
-                  groupItem.style.cssText = `
-                    padding: 8px 16px;
-                    cursor: pointer;
-                    font-size: 14px;
-                    color: var(--text-normal);
-                  `;
-                  
-                  groupItem.addEventListener('mouseenter', () => {
-                    groupItem.style.background = 'var(--background-modifier-hover)';
-                  });
-                  
-                  groupItem.addEventListener('mouseleave', () => {
-                    groupItem.style.background = 'transparent';
-                  });
-                  
-                  groupItem.addEventListener('click', async () => {
-                    try {
-                      // 实现移动到分组的逻辑
-                      if (this.isMultiSelectMode) {
-                        // 多选模式下移动所有选中的样式
-                        for (const selectedClassName of this.selectedClassNames) {
-                          // 从所有分类中查找并移除样式
-                          for (const cat in this.plugin.config.styleCategories) {
-                            const index = this.plugin.config.styleCategories[cat].indexOf(selectedClassName);
-                            if (index !== -1) {
-                              this.plugin.config.styleCategories[cat].splice(index, 1);
-                              break;
-                            }
-                          }
-                          
-                          // 添加到目标分类
-                          if (!this.plugin.config.styleCategories[category]) {
-                            this.plugin.config.styleCategories[category] = [];
-                          }
-                          if (!this.plugin.config.styleCategories[category].includes(selectedClassName)) {
-                            this.plugin.config.styleCategories[category].push(selectedClassName);
-                          }
-                        }
-                        
-                        // 保存配置文件
-                        const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
-                        await this.plugin.app.vault.adapter.write(configPath, JSON.stringify(this.plugin.config.styleCategories, null, 2));
-                        
-                        // 重新加载样式分类
-                        if (typeof this.plugin.loadStyleCategories === 'function') {
-                          await this.plugin.loadStyleCategories();
-                        }
-                        
-                        // 重新加载样式按钮
-                  this.onOpen();
-                        
-                        // 退出多选模式
-                        this.exitMultiSelectMode();
-                        
-                        // 显示成功消息
-                        this.showSuccessMessage(t('main.styleMovedToGroup') + ` "${category}"`);
-                      } else {
-                        // 普通模式下移动单个样式
-                        // 从所有分类中查找并移除样式
-                        for (const cat in this.plugin.config.styleCategories) {
-                          const index = this.plugin.config.styleCategories[cat].indexOf(className);
-                          if (index !== -1) {
-                            this.plugin.config.styleCategories[cat].splice(index, 1);
-                            break;
-                          }
-                        }
-                        
-                        // 添加到目标分类
-                        if (!this.plugin.config.styleCategories[category]) {
-                          this.plugin.config.styleCategories[category] = [];
-                        }
-                        if (!this.plugin.config.styleCategories[category].includes(className)) {
-                          this.plugin.config.styleCategories[category].push(className);
-                        }
-                        
-                        // 保存配置文件
-                        const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
-                        await this.plugin.app.vault.adapter.write(configPath, JSON.stringify(this.plugin.config.styleCategories, null, 2));
-                        
-                        // 重新加载样式分类
-                        if (typeof this.plugin.loadStyleCategories === 'function') {
-                          await this.plugin.loadStyleCategories();
-                        }
-                        
-                        // 重新加载样式按钮
-                  this.onOpen();
-                        
-                        // 显示成功消息
-                        this.showSuccessMessage(t('main.styleMovedToGroup') + ` "${category}"`);
-                      }
-                    } catch (error) {
-                      console.error('Error moving style to category:', error);
-                      this.showErrorMessage(clone, '移动样式失败: ' + error.message);
-                    }
-                    
-                    // 关闭菜单
-                    if (document.body.contains(menu)) {
-                      document.body.removeChild(menu);
-                    }
-                  });
-                  
-                  groupList.appendChild(groupItem);
-                });
-                
-                // 添加到移动选项
-                moveOption.appendChild(groupList);
-                
-                // 检测子菜单是否溢出屏幕右侧，如果是则改为左侧显示
-                const menuRect = menu.getBoundingClientRect();
-                const listRect = groupList.getBoundingClientRect();
-                if (menuRect.right + listRect.width > window.innerWidth - 10) {
-                  groupList.style.left = 'auto';
-                  groupList.style.right = '100%';
-                  groupList.style.marginLeft = '0';
-                  groupList.style.marginRight = '5px';
-                }
-                // 检测子菜单是否溢出屏幕底部
-                const subRect5 = groupList.getBoundingClientRect();
-                if (subRect5.bottom > window.innerHeight - 10) {
-                  const overflow5 = subRect5.bottom - (window.innerHeight - 10);
-                  const currentTop5 = parseFloat(groupList.style.top) || 0;
-                  const newViewportTop5 = subRect5.top - overflow5;
-                  if (newViewportTop5 >= 10) {
-                    groupList.style.top = `${currentTop5 - overflow5}px`;
-                  } else {
-                    groupList.style.top = `${currentTop5 - (subRect5.top - 10)}px`;
-                    groupList.style.maxHeight = `${window.innerHeight - 20}px`;
-                  }
-                }
-              });
-              
-              moveOption.addEventListener('mouseleave', () => {
-                moveOption.style.background = 'transparent';
-                
-                // 移除分组列表
-                const groupList = moveOption.querySelector('#group-list');
-                if (groupList) {
-                  moveOption.removeChild(groupList);
-                }
-              });
-              
-              moveOption.addEventListener('click', () => {
-                // 点击时不做任何操作，等待用户选择分组
-              });
-              
-              menu.appendChild(moveOption);
-            } else {
-              // 普通模式下的选项
-              
-              // 添加编辑选项
-              const editOption = document.createElement('div');
-              editOption.textContent = t('context.edit');
-              editOption.style.cssText = `
-                padding: 8px 16px;
-                cursor: pointer;
-                font-size: 14px;
-                color: var(--text-normal);
-              `;
-              
-              editOption.addEventListener('mouseenter', () => {
-                editOption.style.background = 'var(--background-modifier-hover)';
-              });
-              
-              editOption.addEventListener('mouseleave', () => {
-                editOption.style.background = 'transparent';
-              });
-              
-              editOption.addEventListener('click', () => {
-                const styleContent = this.cssStyles.get(className) || '';
-                this.openCSSEditor(className, styleContent);
-                if (document.body.contains(menu)) {
-                  document.body.removeChild(menu);
-                }
-              });
-              
-              menu.appendChild(editOption);
-              
-              // 添加添加为全局规则选项
-              const addGlobalOption = document.createElement('div');
-              addGlobalOption.textContent = t('context.addAsGlobalRule');
-              addGlobalOption.style.cssText = `
-                padding: 8px 16px;
-                cursor: pointer;
-                font-size: 14px;
-                color: var(--text-normal);
-                border-top: 1px solid var(--border-color);
-              `;
-              
-              addGlobalOption.addEventListener('mouseenter', () => {
-                addGlobalOption.style.background = 'var(--background-modifier-hover)';
-              });
-              
-              addGlobalOption.addEventListener('mouseleave', () => {
-                addGlobalOption.style.background = 'transparent';
-              });
-              
-              addGlobalOption.addEventListener('click', async () => {
-                // 获取当前输入框中的值
-                const currentRegexValue = this.regexInput ? this.regexInput.getValue() : this.regexValue;
-                
-                if (currentRegexValue && currentRegexValue.trim() !== '') {
-                  // 添加为全局规则
-                  await this.plugin.addRule(currentRegexValue, className, true, this.remark);
-                  
-                  // 显示成功消息
-                  this.showSuccessMessage(t('main.globalRuleStyleAdded') + ` "${currentRegexValue}" .${className}`);
-                  
-                  // 按照固定顺序重新加载：当前文件规则 > 全局规则 > 已备注文本
-                  this.clearHistorySection();
-                  this.clearGlobalRulesSection();
-                  this.clearRemarkSection();
-                  this.addHistorySection(this.contentEl);
-                  this.addGlobalRulesSection(this.contentEl);
-                  this.addHeadingStylesSection(this.contentEl);
-                  this.addRemarkSection(this.contentEl);
-                } else {
-                  this.showErrorMessage(clone, '错误: 正则表达式不能为空');
-                }
-                
-                // 关闭菜单
-                document.body.removeChild(menu);
-              });
-              
-              menu.appendChild(addGlobalOption);
-              
-              // 添加添加为标题样式选项
-              const addHeadingOption = document.createElement('div');
-              addHeadingOption.textContent = t('context.addAsHeadingStyle');
-              addHeadingOption.style.cssText = `
-                padding: 8px 16px;
-                cursor: pointer;
-                font-size: 14px;
-                color: var(--text-normal);
-                border-top: 1px solid var(--border-color);
-                position: relative;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-              `;
-              
-              // 添加箭头指示
-              const arrow = document.createElement('span');
-              arrow.textContent = '▶';
-              arrow.style.cssText = 'font-size: 10px; margin-left: 8px;';
-              addHeadingOption.appendChild(arrow);
-              
-              // 创建标题级别列表（提前创建）
-              const headingList = document.createElement('div');
-              headingList.style.cssText = `
-                position: absolute;
-                top: -1px;
-                left: 100%;
-                background: var(--background-primary);
-                border: 1px solid var(--border-color);
-                border-radius: 4px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-                z-index: 10001;
-                padding: 4px 0;
-                min-width: 150px;
-                display: none;
-              `;
-              
-              // 添加h1~h6选项
-              const headings = [
-                { level: 1, text: t('heading.level1') },
-                { level: 2, text: t('heading.level2') },
-                { level: 3, text: t('heading.level3') },
-                { level: 4, text: t('heading.level4') },
-                { level: 5, text: t('heading.level5') },
-                { level: 6, text: t('heading.level6') }
-              ];
-              
-              headings.forEach(heading => {
-                const headingItem = document.createElement('div');
-                headingItem.textContent = heading.text;
-                headingItem.style.cssText = `
-                  padding: 8px 16px;
-                  cursor: pointer;
-                  font-size: 14px;
-                  color: var(--text-normal);
-                `;
-                
-                headingItem.addEventListener('mouseenter', () => {
-                  headingItem.style.background = 'var(--background-modifier-hover)';
-                });
-                
-                headingItem.addEventListener('mouseleave', () => {
-                  headingItem.style.background = 'transparent';
-                });
-                
-                headingItem.addEventListener('click', async () => {
-                  try {
-                    // 获取原始样式
-                    const originalStyle = this.cssStyles.get(className);
-                    if (!originalStyle) {
-                      throw new Error('未找到样式定义');
-                    }
-                    // 转换样式为适合标题显示的形式
-                    const convertedStyle = this.convertToInlineHeadingStyle(originalStyle);
-                    
-                    // 创建新的标题样式类名
-                    const newClassName = `h${heading.level}`;
-                    
-                    // 将标题样式保存到data.json（而非styles.css）
-                    if (!this.plugin.settings.headingStyles) {
-                      this.plugin.settings.headingStyles = {};
-                    }
-                    this.plugin.settings.headingStyles[newClassName] = convertedStyle;
-                    await this.plugin.saveData(this.plugin.settings);
-                    
-                    // 确保"标题样式"分组存在
-                    if (!this.plugin.config.styleCategories['标题样式']) {
-                      this.plugin.config.styleCategories['标题样式'] = [];
-                    }
-                    
-                    // 检查新类名是否已在"标题样式"分组中
-                    if (!this.plugin.config.styleCategories['标题样式'].includes(newClassName)) {
-                      this.plugin.config.styleCategories['标题样式'].push(newClassName);
-                      }
-                      
-                      // 保存配置文件
-                      const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
-                      await this.app.vault.adapter.write(configPath, JSON.stringify(this.plugin.config.styleCategories, null, 2));
-                      
-                      // 重新加载样式分类
-                      if (typeof this.plugin.loadStyleCategories === 'function') {
-                        await this.plugin.loadStyleCategories();
-                      }
-                      
-                      // 重新注入CSS内容（标题样式需要立即生效）
-                      if (typeof this.plugin.injectCSSContent === 'function') {
-                        await this.plugin.injectCSSContent();
-                      }
-                      
-                      // 同步更新模态框的cssStyles
-                      this.cssStyles.set(newClassName, convertedStyle);
-                      
-                      // 重新应用高亮
-                      if (typeof this.plugin.checkAndApplyHighlights === 'function') {
-                        this.plugin.checkAndApplyHighlights();
-                      }
-                      
-                      // 重新加载样式按钮
-                      this.onOpen();
-                      
-                      // 显示成功消息
-                      this.showSuccessMessage(t('main.styleAddedAsHeading') + ` ${heading.text}`);
-                    } catch (error) {
-                      console.error('Error adding heading style:', error);
-                      this.showErrorMessage(clone, '添加标题样式失败: ' + error.message);
-                    }
-                    
-                    // 关闭菜单
-                    if (document.body.contains(menu)) {
-                      document.body.removeChild(menu);
-                    }
-                  });
-                  
-                  headingList.appendChild(headingItem);
-                });
-                
-                // 添加到标题选项
-                addHeadingOption.appendChild(headingList);
-                
-                let hideTimeout = null;
-                
-                addHeadingOption.addEventListener('mouseenter', () => {
-                  addHeadingOption.style.background = 'var(--background-modifier-hover)';
-                  // 清除隐藏定时器
-                  if (hideTimeout) {
-                    clearTimeout(hideTimeout);
-                    hideTimeout = null;
-                  }
-                  // 显示子菜单
-                  headingList.style.display = 'block';
-                  // 检测子菜单是否溢出屏幕右侧，如果是则改为左侧显示
-                  const menuRect = menu.getBoundingClientRect();
-                  const listRect = headingList.getBoundingClientRect();
-                  if (menuRect.right + listRect.width > window.innerWidth - 10) {
-                    headingList.style.left = 'auto';
-                    headingList.style.right = '100%';
-                  } else {
-                    headingList.style.left = '100%';
-                    headingList.style.right = 'auto';
-                  }
-                  // 检测子菜单是否溢出屏幕底部
-                  const hSubRect2 = headingList.getBoundingClientRect();
-                  if (hSubRect2.bottom > window.innerHeight - 10) {
-                    const hOverflow2 = hSubRect2.bottom - (window.innerHeight - 10);
-                    const hCurrentTop2 = parseFloat(headingList.style.top) || 0;
-                    const hNewViewportTop2 = hSubRect2.top - hOverflow2;
-                    if (hNewViewportTop2 >= 10) {
-                      headingList.style.top = `${hCurrentTop2 - hOverflow2}px`;
-                    } else {
-                      headingList.style.top = `${hCurrentTop2 - (hSubRect2.top - 10)}px`;
-                      headingList.style.maxHeight = `${window.innerHeight - 20}px`;
-                      headingList.style.overflowY = 'auto';
-                    }
-                  }
-                });
-                
-                addHeadingOption.addEventListener('mouseleave', () => {
-                  addHeadingOption.style.background = 'transparent';
-                  // 延迟隐藏子菜单
-                  hideTimeout = setTimeout(() => {
-                    if (!headingList.matches(':hover')) {
-                      headingList.style.display = 'none';
-                    }
-                  }, 150);
-                });
-                
-                headingList.addEventListener('mouseenter', () => {
-                  // 清除隐藏定时器
-                  if (hideTimeout) {
-                    clearTimeout(hideTimeout);
-                    hideTimeout = null;
-                  }
-                });
-                
-                headingList.addEventListener('mouseleave', () => {
-                  // 延迟隐藏子菜单
-                  hideTimeout = setTimeout(() => {
-                    if (!addHeadingOption.matches(':hover')) {
-                      headingList.style.display = 'none';
-                    }
-                  }, 150);
-                });
-              
-              menu.appendChild(addHeadingOption);
-            }
-            
-            // 添加到文档中
-            document.body.appendChild(menu);
-            
-            // 调整菜单位置，确保不超出屏幕
-            const menuRect = menu.getBoundingClientRect();
-            const windowWidth = window.innerWidth;
-            const windowHeight = window.innerHeight;
-            if (menuRect.right > windowWidth - 10) {
-              menu.style.left = `${Math.max(10, windowWidth - menuRect.width - 10)}px`;
-            }
-            if (menuRect.bottom > windowHeight - 10) {
-              menu.style.top = `${Math.max(10, windowHeight - menuRect.height - 10)}px`;
-            }
-            
-            // 点击其他区域关闭菜单
-            setTimeout(() => {
-              document.addEventListener('click', function closeMenu(e) {
-                if (!menu.contains(e.target)) {
-                  if (document.body.contains(menu)) {
-                    document.body.removeChild(menu);
-                  }
-                  document.removeEventListener('click', closeMenu);
-                }
-              });
-            }, 0);
-          });
-        }
-      });
+      if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] Exiting multi-select mode, rebuilding panel via onOpen()');
       
       // 清空选中集合
       this.selectedStyleButtons.clear();
       this.selectedClassNames.clear();
+      
+      // 重建整个面板，恢复所有按钮的事件和样式到正常状态
+      this.onOpen();
       
       // 显示提示信息
       this.showSuccessMessage('已退出多选模式');
@@ -20065,19 +19254,8 @@ class AddRegexRuleModal extends Modal {
         // 更新样式预览
         const newStyle = this.cssStyles.get(className);
         if (newStyle) {
-          // 先清除所有现有样式，确保不会有冲突
-          styleExample.removeAttribute("style");
-          
-          // 强制重排和重绘，确保浏览器重新计算所有样式
-          styleExample.style.display = 'none';
-          styleExample.offsetHeight; // 强制重排
-          styleExample.style.display = '';
-          
-          // 应用新样式
+          // 直接应用新样式，无需强制重排
           styleExample.setAttribute("style", newStyle);
-          
-          // 强制浏览器重新计算所有CSS属性，特别是padding、border-radius、font-weight等
-          this.forceElementStyleRefresh(styleExample);
           
           // 添加更新动画效果
           buttonContainer.style.transition = "all 0.3s";
@@ -36627,7 +35805,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             ruleBadge.className = 'rule-source-badge';
             const badgeLabel = popupRuleSource === 'global' ? 'g' : 'l';
             ruleBadge.textContent = badgeLabel;
-            ruleBadge.title = popupRuleSource === 'global' ? t('main.globalRuleClickToLocal') : t('main.localRuleClickToGlobal');
+            if (!plugin.settings?.hideTooltip) ruleBadge.title = popupRuleSource === 'global' ? t('main.globalRuleClickToLocal') : t('main.localRuleClickToGlobal');
             ruleBadge.style.cssText = `
               position: absolute;
               top: 4px;
@@ -36736,6 +35914,31 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 plugin.refreshCurrentView();
                 new Notice(t('main.ruleMovedToGlobal'));
               }
+            });
+            // 中键点击移除规则
+            ruleBadge.addEventListener('auxclick', async (ce) => {
+              if (ce.button !== 1) return;
+              ce.stopPropagation();
+              ce.preventDefault();
+              if (!popupRuleRegex) return;
+
+              const popupCssClass = targetEl.className.split(' ').find(c => c !== 'highlight-tooltip-text' && c !== 'highlight-regex-text' && c !== 'rule-source-badge') || '';
+
+              if (popupRuleSource === 'global') {
+                const ruleIndex = plugin.globalRules.findIndex(r => r.regex === popupRuleRegex && r.cssClass === popupCssClass);
+                if (ruleIndex === -1) return;
+                plugin.globalRules.splice(ruleIndex, 1);
+                await plugin.saveGlobalRules(plugin.globalRules, true);
+              } else {
+                const ruleIndex = plugin.rules.findIndex(r => r.regex === popupRuleRegex && r.cssClass === popupCssClass);
+                if (ruleIndex === -1) return;
+                plugin.rules.splice(ruleIndex, 1);
+                await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+              }
+              plugin.rulesVersion++;
+              plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+              plugin.refreshCurrentView();
+              new Notice(t('main.ruleRemoved'));
             });
             popup.appendChild(ruleBadge);
           }
@@ -37030,7 +36233,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       badge.className = 'rule-source-badge';
       const label = ruleSource === 'global' ? 'g' : 'l';
       badge.textContent = label;
-      badge.title = ruleSource === 'global' ? t('main.globalRuleClickToLocal') : t('main.localRuleClickToGlobal');
+      if (!plugin.settings?.hideTooltip) badge.title = ruleSource === 'global' ? t('main.globalRuleClickToLocal') : t('main.localRuleClickToGlobal');
       badge.style.cssText = `
         position: fixed;
         transform: translateX(-50%);
@@ -37159,6 +36362,35 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         hideBadge();
       });
       
+      // 中键点击移除规则
+      badge.addEventListener('auxclick', async (ce) => {
+        if (ce.button !== 1) return;
+        ce.stopPropagation();
+        ce.preventDefault();
+        
+        const ruleRegex = target.dataset.ruleRegex;
+        if (!ruleRegex) return;
+        
+        const cssClass = target.className.split(' ').find(c => c !== 'highlight-tooltip-text' && c !== 'highlight-regex-text' && c !== 'rule-source-badge') || '';
+        
+        if (ruleSource === 'global') {
+          const ruleIndex = plugin.globalRules.findIndex(r => r.regex === ruleRegex && r.cssClass === cssClass);
+          if (ruleIndex === -1) return;
+          plugin.globalRules.splice(ruleIndex, 1);
+          await plugin.saveGlobalRules(plugin.globalRules, true);
+        } else {
+          const ruleIndex = plugin.rules.findIndex(r => r.regex === ruleRegex && r.cssClass === cssClass);
+          if (ruleIndex === -1) return;
+          plugin.rules.splice(ruleIndex, 1);
+          await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+        }
+        plugin.rulesVersion++;
+        plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+        plugin.refreshCurrentView();
+        new Notice(t('main.ruleRemoved'));
+        hideBadge();
+      });
+      
       document.body.appendChild(badge);
       currentBadge = badge;
       currentBadgeTarget = target;
@@ -37257,7 +36489,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       const badge = document.createElement('span');
       badge.className = 'remark-badge';
       badge.textContent = 'n';
-      badge.title = t('main.addRemark');
+      if (!plugin.settings?.hideTooltip) badge.title = t('main.addRemark');
       badge.style.cssText = `
         position: fixed;
         font-size: 9px;
@@ -37571,9 +36803,8 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
     modalEl.style.width = `${newWidth}px`;
     modalEl.style.maxWidth = `${newWidth}px`;
     modalEl.style.height = `${newHeight}px`;
-    const contentWidth = newWidth - 30;
-    contentEl.style.maxWidth = `${contentWidth}px`;
-    contentEl.style.width = `${contentWidth}px`;
+    contentEl.style.width = "100%";
+    contentEl.style.maxWidth = "100%";
     if (widthInput) widthInput.value = newWidth;
     updatePosition();
   };

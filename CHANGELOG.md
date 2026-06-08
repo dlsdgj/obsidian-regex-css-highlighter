@@ -2,7 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.6.6 (2026-06-07)
+## 🆕 v1.6.7 (2026-06-08)
+
+- **Sticky Title Bar** — Main panel title bar now stays fixed at the top when scrolling content
+- **Scrollbar Position Fix** — Resizing the main panel no longer causes the scrollbar to jump to the left of the close button
+- **Removed Display Settings** — Removed "Main Panel Opacity" and "Main Panel Width" settings from Display section; Ctrl+scroll and Alt+scroll shortcuts still work
+- **Instant Group Toggle** — Toggling "Hide All Groups by Default" now immediately refreshes the panel instead of waiting for next open
+- **Popup z-index Fix** — CSS editor and remark editor popups now correctly appear above the main panel
+- **Cancel Button Optimization** — Clicking "Cancel" in CSS editor no longer triggers unnecessary UI refresh
+- **Toggle Collapse Performance** — Expand/collapse operations no longer wait for file save, eliminating 1.7s delay after CSS editor closes
+- **Main Panel Open Speed** — Deferred rendering of rules/settings sections, removed forced reflows, and batched font fixes for faster panel opening
+
+## v1.6.6 (2026-06-07)
 
 - **Rule Conversion Merge** — When converting a rule between global and local, if a rule with the same regex already exists in the target, the cssClass is overwritten and remark/links are merged instead of blocking the conversion
 - **Popup Rule Source Badge** — Added l/g (local/global) badge at the top-right corner of remark popup, always visible and clickable to convert rule source

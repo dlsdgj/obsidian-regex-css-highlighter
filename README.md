@@ -89,6 +89,8 @@ An Obsidian plugin that matches text via regular expressions and applies custom 
 
 ![Add Remark](./assets/addremark.gif)
 
+https://github.com/dlsdgj/obsidian-regex-css-highlighter/blob/main/assets/PixPin_2026-06-10_04-45-38.mp4
+
 <details>
 <summary>Notes</summary>
 
@@ -576,6 +578,8 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 ### 📌 备注功能
 
 ![添加备注](./assets/addremark.gif)
+
+https://github.com/dlsdgj/obsidian-regex-css-highlighter/blob/main/assets/PixPin_2026-06-10_04-45-38.mp4
 
 <details>
 <summary>备注功能</summary>

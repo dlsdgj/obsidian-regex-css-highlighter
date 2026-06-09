@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.6.8 (2026-06-08)
+## 🆕 v1.6.9 (2026-06-09)
+
+- **Single-display Group Pin Button Fix** — Changed single-display tab 📌 button from inline to absolute positioning (matching always-visible groups), removed overflow:hidden that was clipping the button
+- **Main Panel Dark Background Fix** — Injected !important CSS rule (.rch-transparent-bg) to forcefully override Obsidian's default modal-bg background, combined with MutationObserver for triple-layer protection
+- **Main Panel Lock Improvement** — Lock button now directly sets pointer-events on modal-bg and modal-container to allow editor interaction when locked; fixed previously ineffective CSS class approach
+- **Lock Focus Stealing Fix** — When locked, focusin events not triggered by user clicks on the panel are intercepted and focus is returned to the editor, preventing the panel from stealing focus
+- **Resize Handle Follows Panel** — Right-bottom resize handle now updates position in real-time when dragging the main panel
+
+## v1.6.8 (2026-06-08)
 
 - **Popup z-index Improvement** — Sub-modals (add group, rename, CSS editor, etc.) now appear above the main panel by raising their own z-index instead of lowering the main panel's, preventing Obsidian's sidebar divider from overlapping the panel
 

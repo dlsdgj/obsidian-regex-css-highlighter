@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover } = require("obsidian");
+﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover, PluginSettingTab } = require("obsidian");
 
 // 直接将CSS规则追加到动态样式元素，确保新样式立即生效（无需重新读取文件）
 function appendCSSToDynamicStyle(cssRule) {
@@ -434,7 +434,7 @@ const i18n = {
     'main.longPress': '长按进入多选模式',
     'main.rightClickEdit': '右键编辑样式',
     'main.middleClickGlobal': '中键单击应用为全局规则',
-    'main.doubleClickGroup': '双击分组标题隐藏/显示',
+    'main.doubleClickGroup': '双击分组标题移动到单显区',
     'main.leftClickApply': '左键单击应用样式',
     'settings.display': '显示',
     'settings.readingModeLineHeight': '阅读模式行高',
@@ -487,8 +487,6 @@ const i18n = {
     'settings.hideOpenFileLink': '不显示标题后面的打开文件链接',
     'settings.styleUsageCount': '样式使用次数角标',
     'settings.hideAllStyles': '隐藏所有文本样式',
-    'settings.defaultHideEnabled': '已开启默认隐藏功能，所有分组已隐藏',
-    'settings.defaultHideDisabled': '已关闭默认隐藏功能',
     'settings.groupReordered': '分组已重新排序',
     'settings.groupSortFailed': '分组排序时出错',
     'settings.lineMarginUpdated': '阅读模式行、边距已更新',
@@ -638,13 +636,13 @@ const i18n = {
     'main.regexLabel': '正则表达式',
     'main.cannotOpenPluginLocation': '无法打开插件位置，请检查控制台获取详细信息。',
     'main.styleListGroup': '样式列表/分组',
-    'main.styleInstructions': '左键单击应用样式，长按进入多选模式，右键编辑样式，中键单击应用为全局规则，双击分组标题隐藏/显示',
+    'main.styleInstructions': '左键单击应用样式，长按进入多选模式，右键编辑样式，中键单击应用为全局规则，双击分组标题移动到单显区',
     'main.noFileOpen': '(未打开文件)',
     'main.cannotLoadCategories': '(无法加载样式类别)',
     'main.openStylesCss': '打开styles.css',
     'main.openStyleCategoriesFile': '打开样式分组文件',
-    'main.hiddenGroups': '已隐藏的分组',
-    'main.defaultHideAllGroups': '默认隐藏所有分组',
+    'main.singleDisplay': '单显',
+    'main.normalDisplay': '常显',
     'main.openDataJson': '打开data.json',
     'main.openGlobalRulesFile': '打开全局规则文件',
     'main.openRulesFile': '打开规则文件',
@@ -672,7 +670,6 @@ const i18n = {
     'settings.searchClassNamePlaceholder': '输入类名...',
     'settings.searchClassNameHint': '按Enter搜索并高亮匹配样式',
     'settings.headingLevelLabel': '标题层级标签(h1/h2...)',
-    'settings.autoExpandMode': '自动展开模式',
     'settings.scan': '扫描',
     'settings.cleanNonExistent': '清除不存在的样式',
     'settings.scanFailed': '扫描失败，请检查控制台',
@@ -860,12 +857,10 @@ const i18n = {
     'main.mergeContent': '合并内容',
     'main.merge': '合并',
     'main.addNewStyle': '添加新样式',
-    'main.dblClickHideGroup': '双击隐藏分组',
-    'main.dblClickExpandGroup': '双击展开分组',
+    'main.dblClickMoveToSingle': '双击移动到单显区',
     'main.dblClickShowGroup': '双击显示分组',
     'main.expandGroupStyles': '展开分组内样式按钮',
     'main.collapseGroupStyles': '折叠分组内样式按钮',
-    'main.hoverExpandGroup': '悬停展开分组内样式按钮',
     'main.remarkCleared': '备注已清除',
     'font.previewText': '天地玄黄，宇宙洪荒。The quick brown fox jumps.',
     'format.patternExample': '例如: \\*\\*(.+?)\\*\\*',
@@ -1041,6 +1036,8 @@ const i18n = {
     'main.category': '分类',
     'main.dragToSortGroup': '可拖拽排序分组',
     'main.reopenGroup': '重新打开分组',
+    'main.clickToExpand': '点击展开',
+    'main.pinToNormalDisplay': '钉回常显',
     'main.clickApplyStyle': '点击应用样式，可拖拽排序',
     'main.ruleMovedToGlobalSuccess': '规则已移动到全局规则',
     'main.ruleReapplied': '规则已重新应用样式',
@@ -1150,6 +1147,9 @@ const i18n = {
     'main.allStylesExist': '✓ 所有分类中的样式在 styles.css 中均存在，无需清理',
     'main.styleAndRemarkApplied': '样式和备注已应用！',
     'main.alreadyExistsInRules': '已存在于规则中',
+    'settings.redirectTitle': 'Regex CSS Highlighter',
+    'settings.redirectMsg': '插件设置已转移到主面板底部，请点击下方按钮打开主面板设置。',
+    'settings.redirectBtn': '打开主面板设置',
   },
   en: {
     'main.title': 'regex css highlighter',
@@ -1392,7 +1392,7 @@ const i18n = {
     'main.longPress': 'Long press for multi-select',
     'main.rightClickEdit': 'Right-click to edit style',
     'main.middleClickGlobal': 'Middle-click to apply as global rule',
-    'main.doubleClickGroup': 'Double-click group title to toggle',
+    'main.doubleClickGroup': 'Double-click group title to move to single display',
     'main.leftClickApply': 'Left-click to apply style',
     'settings.display': 'Display',
     'settings.readingModeLineHeight': 'Reading Mode Line Height',
@@ -1445,8 +1445,6 @@ const i18n = {
     'settings.hideOpenFileLink': 'Hide Open File Link After Title',
     'settings.styleUsageCount': 'Style Usage Count Badge',
     'settings.hideAllStyles': 'Hide All Text Styles',
-    'settings.defaultHideEnabled': 'Default hide enabled, all groups will be hidden next time',
-    'settings.defaultHideDisabled': 'Default hide disabled',
     'settings.groupReordered': 'Group reordered',
     'settings.groupSortFailed': 'Group sort failed',
     'settings.lineMarginUpdated': 'Reading mode line height and margins updated',
@@ -1596,13 +1594,13 @@ const i18n = {
     'main.regexLabel': 'Regex',
     'main.cannotOpenPluginLocation': 'Cannot open plugin location, please check console for details.',
     'main.styleListGroup': 'Style List/Groups',
-    'main.styleInstructions': 'Left-click to apply style, long-press for multi-select, right-click to edit style, middle-click to apply as global rule, double-click group title to toggle',
+    'main.styleInstructions': 'Left-click to apply style, long-press for multi-select, right-click to edit style, middle-click to apply as global rule, double-click group title to move to single display',
     'main.noFileOpen': '(No file open)',
     'main.cannotLoadCategories': '(Cannot load style categories)',
     'main.openStylesCss': 'Open styles.css',
     'main.openStyleCategoriesFile': 'Open Style Categories File',
-    'main.hiddenGroups': 'Hidden Groups',
-    'main.defaultHideAllGroups': 'Default Hide All Groups',
+    'main.singleDisplay': 'Single Display',
+    'main.normalDisplay': 'Always Visible',
     'main.openDataJson': 'Open data.json',
     'main.openGlobalRulesFile': 'Open Global Rules File',
     'main.openRulesFile': 'Open Rules File',
@@ -1630,7 +1628,6 @@ const i18n = {
     'settings.searchClassNamePlaceholder': 'Enter class name...',
     'settings.searchClassNameHint': 'Press Enter to search and highlight matching styles',
     'settings.headingLevelLabel': 'Heading Level Label (h1/h2...)',
-    'settings.autoExpandMode': 'Auto Expand Mode',
     'settings.scan': 'Scan',
     'settings.cleanNonExistent': 'Clean Non-existent Styles',
     'settings.scanFailed': 'Scan failed, check console',
@@ -1818,12 +1815,10 @@ const i18n = {
     'main.mergeContent': 'Merge Content',
     'main.merge': 'Merge',
     'main.addNewStyle': 'Add New Style',
-    'main.dblClickHideGroup': 'Double-click to hide group',
-    'main.dblClickExpandGroup': 'Double-click to expand group',
+    'main.dblClickMoveToSingle': 'Double-click to move to single display',
     'main.dblClickShowGroup': 'Double-click to show group',
     'main.expandGroupStyles': 'Expand group style buttons',
     'main.collapseGroupStyles': 'Collapse group style buttons',
-    'main.hoverExpandGroup': 'Hover to expand group style buttons',
     'main.remarkCleared': 'Remark cleared',
     'font.previewText': 'The quick brown fox jumps over the lazy dog.',
     'format.patternExample': 'e.g.: \\*\\*(.+?)\\*\\*',
@@ -1999,6 +1994,8 @@ const i18n = {
     'main.category': 'category',
     'main.dragToSortGroup': 'Drag to sort groups',
     'main.reopenGroup': 'Reopen group',
+    'main.clickToExpand': 'Click to expand',
+    'main.pinToNormalDisplay': 'Pin to always visible',
     'main.clickApplyStyle': 'Click to apply style, drag to sort',
     'main.ruleMovedToGlobalSuccess': 'Rule moved to global rules',
     'main.ruleReapplied': 'Rule reapplied with style',
@@ -2108,6 +2105,9 @@ const i18n = {
     'main.allStylesExist': '✓ All styles in categories exist in styles.css, no cleanup needed',
     'main.styleAndRemarkApplied': 'Style and remark applied!',
     'main.alreadyExistsInRules': 'already exists in rules',
+    'settings.redirectTitle': 'Regex CSS Highlighter',
+    'settings.redirectMsg': 'Plugin settings have been moved to the bottom of the main panel. Click the button below to open the main panel settings.',
+    'settings.redirectBtn': 'Open Main Panel Settings',
   }
 };
 
@@ -3426,6 +3426,9 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
   if (modalInstance._resizeHandle && document.body.contains(modalInstance._resizeHandle)) {
     document.body.removeChild(modalInstance._resizeHandle);
   }
+  if (modalInstance._resizeObserver) {
+    modalInstance._resizeObserver.disconnect();
+  }
   if (modalInstance._positionInterval) {
     clearInterval(modalInstance._positionInterval);
   }
@@ -3451,14 +3454,16 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
     resizeHandle.style.bottom = `${window.innerHeight - rect.bottom + 2}px`;
   };
   
-  setTimeout(updatePosition, 0);
-  setTimeout(updatePosition, 50);
-  setTimeout(updatePosition, 100);
-  setTimeout(updatePosition, 200);
+  // 延迟更新位置，等面板完全渲染后再计算
+  requestAnimationFrame(() => {
+    requestAnimationFrame(updatePosition);
+  });
   
   window.addEventListener("resize", updatePosition);
   
-  const positionInterval = setInterval(updatePosition, 500);
+  // 使用ResizeObserver代替定时器，只在modal尺寸变化时更新位置
+  const resizeObserver = new ResizeObserver(updatePosition);
+  if (modalEl) resizeObserver.observe(modalEl);
   
   let isResizing = false;
   let resizeStartX, resizeStartY, resizeStartWidth, resizeStartHeight;
@@ -3487,7 +3492,6 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
     contentEl.style.width = "100%";
     contentEl.style.maxWidth = "100%";
     if (widthInput) widthInput.value = newWidth;
-    updatePosition();
   };
   
   const onResizeMouseUp = () => {
@@ -3495,10 +3499,15 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
     document.removeEventListener("mousemove", onResizeMouseMove);
     document.removeEventListener("mouseup", onResizeMouseUp);
     const newWidth = modalEl.offsetWidth;
+    const newHeight = modalEl.offsetHeight;
     if (modalInstance.plugin && modalInstance.plugin.settings) {
       modalInstance.plugin.settings[widthSettingsKey] = newWidth;
+      if (options.heightSettingsKey) {
+        modalInstance.plugin.settings[options.heightSettingsKey] = newHeight;
+      }
       modalInstance.plugin.saveData(modalInstance.plugin.settings);
     }
+    updatePosition();
   };
   
   resizeHandle.addEventListener("mousedown", onResizeMouseDown);
@@ -3506,7 +3515,7 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
   modalInstance._resizeHandle = resizeHandle;
   modalInstance._resizeUpdatePosition = updatePosition;
   modalInstance._resizeListeners = { mousemove: onResizeMouseMove, mouseup: onResizeMouseUp };
-  modalInstance._positionInterval = positionInterval;
+  modalInstance._resizeObserver = resizeObserver;
 }
 
 // 高亮列表弹窗类
@@ -7892,7 +7901,7 @@ ${currentCss}
       // 刷新当前弹窗内容，确保立即显示最新的样式顺序
       if (typeof this.refreshModalContent === 'function') {
         console.log('Refreshing modal content to show updated style order...');
-        this.refreshModalContent();
+        await this.refreshModalContent();
       }
       
     } catch (error) {
@@ -7928,47 +7937,19 @@ ${currentCss}
     }
   }
   
-  refreshModalContent() {
-    // 修复：使用原生DOM方法替代jQuery方法，确保在Obsidian环境中正常工作
-    console.log('refreshModalContent: 开始刷新模态框内容');
-    
+  async refreshModalContent() {
     try {
-      // 使用原生DOM方法清空内容
       if (this.contentEl) {
-        // 先检查this.contentEl是否存在
-        console.log('refreshModalContent: 清空内容区域');
-        
-        // 原生方法清空元素内容
         while (this.contentEl.firstChild) {
           this.contentEl.removeChild(this.contentEl.firstChild);
         }
         
-        // 确保AddRegexRuleModal存在且onOpen方法可用
-        if (typeof AddRegexRuleModal !== 'undefined' && typeof AddRegexRuleModal.prototype.onOpen === 'function') {
-          console.log('refreshModalContent: 调用AddRegexRuleModal.prototype.onOpen');
-          // 重新调用onOpen方法重建内容
-          AddRegexRuleModal.prototype.onOpen.call(this);
-        } else {
-          // 备用方案：如果AddRegexRuleModal不可用，尝试使用实例自身的onOpen方法
-          if (typeof this.onOpen === 'function') {
-            console.log('refreshModalContent: 调用this.onOpen');
-            this.onOpen();
-          } else {
-            console.error('refreshModalContent: 无法找到onOpen方法');
-          }
+        if (typeof this.onOpen === 'function') {
+          await this.onOpen();
         }
-        
-        console.log('refreshModalContent: 刷新完成');
-      } else {
-        console.error('refreshModalContent: contentEl不存在');
       }
     } catch (error) {
       console.error('refreshModalContent执行错误:', error);
-      // 如果出错，尝试最简单的刷新方法
-      if (this.contentEl) {
-        console.log('refreshModalContent: 执行备用刷新');
-        this.contentEl.textContent = t('common.refreshing');
-      }
     }
   }
 }
@@ -8047,6 +8028,12 @@ class AddRegexRuleModal extends Modal {
     this.selectedClassNames = new Set(); // 存储选中的样式类名
     // 在模态框打开前保存选中文本，避免阅读模式下焦点转移导致选中丢失
     this._savedSelectedText = this.plugin.getSelectedText();
+    this._locked = false; // 锁定状态
+  }
+  
+  // 锁定时阻止点击外部关闭面板
+  shouldCloseOnExternalClick() {
+    return !this._locked;
   }
   
   // 直接将CSS代码添加到文件中，插入到第一个@keyframes之前
@@ -8796,15 +8783,22 @@ class AddRegexRuleModal extends Modal {
     const defaultWidth = _isDesktop ? 1000 : Math.min(window.innerWidth - 20, 1000);
     const savedWidth = this.plugin.settings?.modalWidth || defaultWidth;
     const userWidth = _isDesktop ? savedWidth : Math.min(savedWidth, defaultWidth);
+    const savedHeight = this.plugin.settings?.modalHeight;
     
     contentEl.style.width = "100%";
-    contentEl.style.maxHeight = "80vh";
+    contentEl.style.maxHeight = savedHeight ? `${savedHeight - 40}px` : "80vh";
     contentEl.style.overflowY = "auto";
     
     this.modalEl.style.width = `${userWidth}px`;
     this.modalEl.style.maxWidth = '95vw';
     this.modalEl.style.minWidth = _isDesktop ? "800px" : "0";
-    this.modalEl.style.maxHeight = "80vh";
+    // 恢复保存的高度，如果没有则使用默认80vh
+    if (savedHeight) {
+      this.modalEl.style.height = `${savedHeight}px`;
+      this.modalEl.style.maxHeight = 'none';
+    } else {
+      this.modalEl.style.maxHeight = "80vh";
+    }
     this.modalEl.style.padding = "0";
     
     // 允许面板溢出边界
@@ -8820,7 +8814,30 @@ class AddRegexRuleModal extends Modal {
     if (modalBg) {
       modalBg.style.overflow = "visible";
       modalBg.style.zIndex = "100";
+      
+      // 添加自定义class，用 !important CSS规则强制覆盖Obsidian的背景样式
+      modalBg.classList.add('rch-transparent-bg');
+      
+      // 同时设置内联样式作为双重保障
+      const forceTransparentBg = () => {
+        modalBg.style.background = 'none';
+        modalBg.style.backgroundColor = 'transparent';
+        modalBg.style.opacity = '1';
+        modalBg.style.backdropFilter = 'none';
+        modalBg.style.webkitBackdropFilter = 'none';
+      };
+      forceTransparentBg();
+      
+      // 使用 MutationObserver 持续覆盖 Obsidian 的样式设置
+      this._bgObserver = new MutationObserver(() => {
+        forceTransparentBg();
+      });
+      this._bgObserver.observe(modalBg, { attributes: true, attributeFilter: ['style'] });
     }
+    
+    // 保存引用以便锁定时使用
+    this._modalBg = modalBg;
+    this._modalContainer = modalContainer;
     
     // 创建标题容器
     const titleContainer = contentEl.createDiv();
@@ -8870,6 +8887,8 @@ class AddRegexRuleModal extends Modal {
         modalContainer.style.display = "block";
         modalContainer.style.position = "static";
       }
+      // 更新右下角调整大小按钮位置
+      if (this._resizeUpdatePosition) this._resizeUpdatePosition();
     });
     
     document.addEventListener("mouseup", () => {
@@ -8964,6 +8983,88 @@ class AddRegexRuleModal extends Modal {
       openPluginLink.style.visibility = 'hidden';
     });
     
+    // 右侧按钮区域
+    const titleRightBtns = titleContainer.createDiv();
+    titleRightBtns.style.display = 'flex';
+    titleRightBtns.style.alignItems = 'center';
+    titleRightBtns.style.gap = '6px';
+    titleRightBtns.style.flexShrink = '0';
+    
+    // 锁定按钮 - 钉住面板，不随点击外部关闭
+    const lockBtn = titleRightBtns.createEl('span');
+    lockBtn.textContent = '📌';
+    lockBtn.style.cssText = `
+      font-size: 14px;
+      cursor: pointer;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+      user-select: none;
+    `;
+    lockBtn.title = '锁定面板，防止点击外部时关闭';
+    
+    // 保存原始 close 方法
+    const originalClose = this.close.bind(this);
+    // 重写 close 方法，锁定时阻止关闭
+    this.close = () => {
+      if (this._locked) return;
+      originalClose();
+    };
+    
+    lockBtn.addEventListener('click', () => {
+      this._locked = !this._locked;
+      if (this._locked) {
+        lockBtn.style.opacity = '1';
+        lockBtn.title = '解锁面板，允许点击外部关闭';
+        // 锁定时设置穿透，允许操作编辑器
+        if (modalBg) {
+          modalBg.style.pointerEvents = 'none';
+        }
+        if (modalContainer) {
+          modalContainer.style.pointerEvents = 'none';
+        }
+        this.modalEl.style.pointerEvents = 'auto';
+        // 锁定时阻止面板抢夺焦点
+        this._lockFocusHandler = (e) => {
+          // 如果焦点来自面板内的用户点击，允许
+          if (this._userClickedPanel) {
+            this._userClickedPanel = false;
+            return;
+          }
+          // 否则将焦点还给编辑器
+          const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+          if (activeView && activeView.editor) {
+            e.target.blur();
+            activeView.editor.focus();
+          }
+        };
+        this._lockClickHandler = () => {
+          this._userClickedPanel = true;
+        };
+        this.modalEl.addEventListener('focusin', this._lockFocusHandler);
+        this.modalEl.addEventListener('mousedown', this._lockClickHandler);
+      } else {
+        lockBtn.style.opacity = '0.5';
+        lockBtn.title = '锁定面板，防止点击外部时关闭';
+        // 解锁时恢复
+        if (modalBg) {
+          modalBg.style.pointerEvents = '';
+        }
+        if (modalContainer) {
+          modalContainer.style.pointerEvents = '';
+        }
+        // 移除焦点保护
+        if (this._lockFocusHandler) {
+          this.modalEl.removeEventListener('focusin', this._lockFocusHandler);
+          this._lockFocusHandler = null;
+        }
+        if (this._lockClickHandler) {
+          this.modalEl.removeEventListener('mousedown', this._lockClickHandler);
+          this._lockClickHandler = null;
+        }
+        this._userClickedPanel = false;
+      }
+    });
+    
     // 应用初始透明度
     const defaultOpacity = Math.max(20, Math.min(100, this.plugin.settings?.mainModalOpacity || 100));
     this.modalEl.style.opacity = defaultOpacity / 100;
@@ -8996,6 +9097,7 @@ class AddRegexRuleModal extends Modal {
       minWidth: _isDesktop ? 800 : 300, maxWidth: 2000,
       widthStep: 50,
       widthSettingsKey: 'modalWidth',
+      heightSettingsKey: 'modalHeight',
       opacitySettingsKey: 'mainModalOpacity'
     });
     
@@ -9207,8 +9309,6 @@ class AddRegexRuleModal extends Modal {
     
     // 通过类名搜索并高亮匹配的样式按钮
     this.highlightByClassName = (className) => {
-      const isAutoExpandMode = this.plugin && this.plugin.settings && this.plugin.settings.autoExpandMode === true;
-      
       // 先清除所有高亮
       this.clearClassNameHighlight();
       
@@ -9295,7 +9395,6 @@ class AddRegexRuleModal extends Modal {
     // 高亮匹配的规则按钮和对应的CSS样式按钮
     this.highlightMatchingRuleButtons = () => {
       const inputValue = inputEl.value.trim();
-      const isAutoExpandMode = this.plugin && this.plugin.settings && this.plugin.settings.autoExpandMode === true;
       
       // 获取所有历史规则按钮和CSS样式按钮
       const historyButtons = this.contentEl.querySelectorAll('.history-section [data-rule-regex]');
@@ -9531,29 +9630,6 @@ class AddRegexRuleModal extends Modal {
       // 查找所有分组容器
       const categoryContainers = this.contentEl.querySelectorAll('[data-category]');
       
-      // 自动展开模式下，跳过对样式按钮的展开/折叠操作，由setupAutoExpandMode管理
-      if (isAutoExpandMode) {
-        // 仅高亮匹配按钮的边框，不改变display状态
-        categoryContainers.forEach(categoryContainer => {
-          const groupStyleButtons = categoryContainer.querySelectorAll('.style-option');
-          groupStyleButtons.forEach(button => {
-            const buttonClass = button.getAttribute('data-class');
-            if (buttonClass && matchingCssClasses.has(buttonClass)) {
-              button.style.border = "2px solid #ff6b35";
-              button.style.transform = "scale(1.05)";
-              button.style.boxShadow = "0 0 8px rgba(255, 107, 53, 0.5)";
-              button.style.zIndex = "10";
-            } else {
-              button.style.border = "0px solid #ddd";
-              button.style.transform = "scale(1)";
-              button.style.boxShadow = "0 1px 2px rgba(0,0,0,0.1)";
-              button.style.zIndex = "1";
-            }
-          });
-        });
-        return;
-      }
-      
       categoryContainers.forEach(categoryContainer => {
         // 查找该分组内所有样式按钮
         const groupStyleButtons = categoryContainer.querySelectorAll('.style-option');
@@ -9598,7 +9674,7 @@ class AddRegexRuleModal extends Modal {
               if (!savedStyle) {
                 categoryTitle.style.backgroundColor = '#007bff';
               }
-              categoryTitle.title = t('main.dblClickHideGroup');
+              categoryTitle.title = t('main.dblClickMoveToSingle');
             }
             
             // 更新插件的折叠状态
@@ -9972,7 +10048,7 @@ class AddRegexRuleModal extends Modal {
               
               // 刷新模态框内容
               if (typeof this.refreshModalContent === 'function') {
-                this.refreshModalContent();
+                await this.refreshModalContent();
               }
             } catch (error) {
               console.error("添加分组时出错:", error);
@@ -10001,113 +10077,80 @@ class AddRegexRuleModal extends Modal {
       addGroupLink.style.visibility = 'hidden';
     });
     
-    // 创建主容器 - 横向排列所有分类
-    const mainContainer = styleContainer.createDiv();
-    mainContainer.style.display = "flex";
-    mainContainer.style.flexDirection = "column";
-    mainContainer.style.gap = "8px"; // 增大组与组之间的间距
-    // 移除独立滚动，让样式区域作为整体的一部分
-    mainContainer.style.padding = "2px";
-    mainContainer.style.border = "1px solid #eee";
-    mainContainer.style.borderRadius = "6px";
+    // 创建单显区域（标签页栏 + 内容展开区）- 放在常显区域上方
+    const singleDisplaySection = styleContainer.createDiv();
+    singleDisplaySection.style.marginBottom = '8px';
+    singleDisplaySection.style.overflow = 'visible';
     
+    // 单显标题
+    const singleDisplayTitle = singleDisplaySection.createEl('h4', { text: t('main.singleDisplay') });
+    singleDisplayTitle.style.margin = '0 0 4px 0';
+    singleDisplayTitle.style.fontSize = '13px';
+    singleDisplayTitle.style.color = '#555';
     
-    // 创建默认折叠功能开关
-    const defaultCollapseToggle = styleContainer.createDiv();
-    defaultCollapseToggle.style.marginTop = '8px';
-    defaultCollapseToggle.style.marginBottom = '4px';
-    defaultCollapseToggle.style.padding = '4px';
-    defaultCollapseToggle.style.borderRadius = '4px';
-
-    // 创建标题和开关容器
-    const titleAndToggleContainer = defaultCollapseToggle.createDiv();
-    titleAndToggleContainer.style.marginBottom = '4px';
-    titleAndToggleContainer.style.position = 'relative';
-    
-    // 创建标题并设置为inline显示
-    const collapsedGroupsTitle = titleAndToggleContainer.createEl('h4', { text: t('main.hiddenGroups') });
-    collapsedGroupsTitle.style.margin = '0';
-    collapsedGroupsTitle.style.fontSize = '13px';
-    collapsedGroupsTitle.style.color = '#555';
-    collapsedGroupsTitle.style.display = 'inline';
-    
-    // 添加空格
-    titleAndToggleContainer.createEl('span', { text: ' ' });
-    
-    // 创建开关容器
-    const toggleContainer = titleAndToggleContainer.createDiv();
-    toggleContainer.style.display = 'inline-flex';
-    toggleContainer.style.alignItems = 'center';
-    toggleContainer.style.visibility = 'hidden'; // 默认隐藏
-    
-    // 开关标签
-    const toggleLabel = toggleContainer.createEl('span', { text: t('main.defaultHideAllGroups') });
-    toggleLabel.style.marginRight = '4px';
-    toggleLabel.style.fontSize = '12px';
-    toggleLabel.style.color = '#555';
-    toggleLabel.style.cursor = 'pointer';
-    
-    // 开关按钮
-    const toggleSwitch = toggleContainer.createEl('input');
-    toggleSwitch.type = 'checkbox';
-    toggleSwitch.checked = this.plugin.defaultCollapseCategories || false;
-    toggleSwitch.style.cursor = 'pointer';
-    toggleSwitch.style.marginRight = '4px';
-    
-    // 开关事件
-    toggleSwitch.addEventListener('change', (e) => {
-      this.plugin.defaultCollapseCategories = e.target.checked;
-      this.plugin.settings.defaultCollapseCategories = e.target.checked;
-      this.plugin.saveData(this.plugin.settings);
-
-      if (e.target.checked) {
-        new Notice(t('settings.defaultHideEnabled'));
-      } else {
-        new Notice(t('settings.defaultHideDisabled'));
-      }
-
-      // 立即刷新主面板
-      this.onOpen();
-    });
-    
-    // 为标题和开关容器添加鼠标事件监听器，控制开关容器的显示和隐藏
-    titleAndToggleContainer.addEventListener('mouseenter', () => {
-      toggleContainer.style.visibility = 'visible';
-    });
-    
-    titleAndToggleContainer.addEventListener('mouseleave', () => {
-      toggleContainer.style.visibility = 'hidden';
-    });
-    
-    // 创建折叠分类重新打开按钮容器（确保只创建一次）
-    let collapsedCategoriesContainer = styleContainer.querySelector('.collapsed-categories-container');
+    // 标签页栏容器
+    let collapsedCategoriesContainer = singleDisplaySection.querySelector('.collapsed-categories-container');
     if (!collapsedCategoriesContainer) {
-      collapsedCategoriesContainer = styleContainer.createDiv();
+      collapsedCategoriesContainer = singleDisplaySection.createDiv();
       collapsedCategoriesContainer.className = 'collapsed-categories-container';
       collapsedCategoriesContainer.style.display = 'flex';
       collapsedCategoriesContainer.style.flexWrap = 'wrap';
       collapsedCategoriesContainer.style.gap = '4px';
       collapsedCategoriesContainer.style.padding = '4px';
-      collapsedCategoriesContainer.style.marginBottom = '4px';
       collapsedCategoriesContainer.style.borderRadius = '4px';
       collapsedCategoriesContainer.style.minHeight = '24px';
-      // 默认隐藏，只有当有折叠分组时才显示
-      collapsedCategoriesContainer.style.display = 'none';
+      collapsedCategoriesContainer.style.overflow = 'visible';
     } else {
-      // 如果容器已存在，清空内容并确保隐藏
       collapsedCategoriesContainer.innerHTML = '';
-      collapsedCategoriesContainer.style.display = 'none';
     }
+    
+    // 标签页内容展开区 - 点击标签后在此处展开分组内容
+    const tabContentContainer = singleDisplaySection.createDiv();
+    tabContentContainer.className = 'tab-content-container';
+    tabContentContainer.style.display = 'none';
+    tabContentContainer.style.marginTop = '4px';
+    tabContentContainer.style.padding = '4px';
+    tabContentContainer.style.border = '1px solid #ddd';
+    tabContentContainer.style.borderRadius = '4px';
+    
+    // 记录当前展开的标签
+    let activeTabCategory = null;
+    
+    // 横线分隔单显和常显区域
+    const separator = styleContainer.createEl('hr');
+    separator.style.border = 'none';
+    separator.style.borderTop = '1px solid var(--background-modifier-border)';
+    separator.style.margin = '4px 0';
+    
+    // 常显标题
+    const normalDisplayTitle = styleContainer.createEl('h4', { text: t('main.normalDisplay') });
+    normalDisplayTitle.style.margin = '0 0 4px 0';
+    normalDisplayTitle.style.fontSize = '13px';
+    normalDisplayTitle.style.color = '#555';
+    
+    // 创建主容器 - 纵向排列所有常显分类
+    const mainContainer = styleContainer.createDiv();
+    mainContainer.style.display = "flex";
+    mainContainer.style.flexDirection = "column";
+    mainContainer.style.gap = "8px";
+    mainContainer.style.padding = "2px";
+    mainContainer.style.border = "1px solid #eee";
+    mainContainer.style.borderRadius = "6px";
     
 
     const fontSizeCheckQueue = this._fontSizeCheckQueue = [];
     
-    // 直接显示所有分类和样式 - 横向排列
-    Object.entries(styleCategories).forEach(([category, classNames]) => {
-      try {
-        if (category === '标题样式') {
-          return;
-        }
+    // 延迟渲染样式按钮，先让面板框架显示出来，避免阻塞主线程
+    // 将分类分批渲染，每帧渲染2个分类，避免单帧耗时过长
+    const categoryEntries = Object.entries(styleCategories).filter(([category]) => category !== '标题样式');
+    const batchSize = 2;
+    let batchIndex = 0;
+    
+    const renderNextBatch = () => {
+      const end = Math.min(batchIndex + batchSize, categoryEntries.length);
+      for (; batchIndex < end; batchIndex++) {
+        const [category, classNames] = categoryEntries[batchIndex];
+        try {
         
         const categoryContainer = mainContainer.createDiv();
         categoryContainer.style.display = "flex";
@@ -10314,218 +10357,99 @@ class AddRegexRuleModal extends Modal {
           categoryTitle.style.cursor = 'grab';
         });
         
-        // 添加双击事件监听器 - 隐藏/显示整个分组
+        // 添加双击事件监听器 - 移动到单显区
         categoryTitle.addEventListener("dblclick", () => {
-          // 检查当前状态 - 基于分类容器的显示状态
-          const isHidden = categoryContainer.style.display === 'none';
+          // 双击常显分组 → 移动到单显区
+          // 隐藏分组
+          categoryContainer.style.display = 'none';
+          if (!savedGroupStyleClass) {
+            categoryTitle.style.backgroundColor = '#6c757d';
+          }
+          categoryTitle.title = t('main.dblClickMoveToSingle');
           
-          if (isHidden) {
-            // 显示分组
-            categoryContainer.style.display = 'flex';
-            if (!savedGroupStyleClass) {
-              categoryTitle.style.backgroundColor = '#007bff';
-            }
-            categoryTitle.title = t('main.dblClickHideGroup');
+          // 创建标签（如果不存在）
+          let existingTab = collapsedCategoriesContainer.querySelector(`[data-category="${category}"]`);
+          
+          if (!existingTab) {
+            const tab = collapsedCategoriesContainer.createEl('button');
+            tab.className = 'collapsed-category-reopen-btn';
+            tab.style.margin = '0';
+            tab.style.fontSize = '14px';
+            tab.style.fontWeight = 'bold';
+            tab.style.padding = '1px 5px';
+            tab.style.backgroundColor = '#007bff';
+            tab.style.color = 'white';
+            tab.style.border = 'none';
+            tab.style.borderRadius = '3px';
+            tab.style.whiteSpace = 'nowrap';
+            tab.style.textAlign = 'center';
+            tab.style.cursor = 'pointer';
+            tab.style.transition = 'all 0.2s';
+            tab.style.height = '22px';
+            tab.style.minHeight = '22px';
+            tab.style.position = 'relative';
+            tab.setAttribute('data-category', category);
+            tab.title = t('main.clickToExpand') + `: ${category}`;
             
-            // 只显示分组内匹配的样式按钮，避免闪烁
-            // 先获取输入框的值
-            const inputEl = this.contentEl.querySelector('input[placeholder="' + t('main.regexPlaceholder') + '"]');
-            const inputValue = inputEl ? inputEl.value.trim() : '';
+            // 标签文本
+            const tabText = document.createElement('span');
+            tabText.textContent = category;
+            tab.appendChild(tabText);
             
-            // 显示样式按钮
-            const styleButtons = categoryContainer.querySelectorAll('.style-option');
-            
-            // 无论是否有输入值，都显示所有样式按钮
-            // 延迟显示，避免手机端同一触摸事件同时触发样式按钮的click
-            requestAnimationFrame(() => {
-              styleButtons.forEach(button => {
-                button.style.display = 'flex';
-              });
+            // 绝对定位悬浮图标（鼠标悬停时显示，与常显分组一致）
+            const tabFloatBtn = document.createElement('span');
+            tabFloatBtn.textContent = '📌';
+            tabFloatBtn.draggable = false;
+            tabFloatBtn.style.cssText = `
+              position: absolute;
+              top: -6px;
+              right: -2px;
+              font-size: 9px;
+              cursor: pointer;
+              opacity: 0;
+              transition: opacity 0.2s;
+              background: var(--background-primary);
+              border-radius: 50%;
+              padding: 0px 1px;
+              z-index: 101;
+              line-height: 1;
+            `;
+            tabFloatBtn.title = t('floating.floatThisGroup');
+            tabFloatBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              if (this.plugin && typeof this.plugin.floatButtonData === 'object') {
+                if (!this.plugin.floatButtonData.floatingBallGroupOptions) {
+                  this.plugin.floatButtonData.floatingBallGroupOptions = [];
+                }
+                if (!this.plugin.floatButtonData.floatingBallGroupOptions.includes(category)) {
+                  this.plugin.floatButtonData.floatingBallGroupOptions.push(category);
+                }
+                this.plugin.saveFloatButtonData();
+                this.plugin.renderFloatingOptionButtons();
+                new Notice(t('main.floatEnabled'));
+              }
             });
+            tabFloatBtn.addEventListener('mousedown', (e) => {
+              e.stopPropagation();
+            });
+            tab.addEventListener('mouseenter', () => {
+              tabFloatBtn.style.opacity = '1';
+            });
+            tab.addEventListener('mouseleave', () => {
+              tabFloatBtn.style.opacity = '0';
+            });
+            tab.appendChild(tabFloatBtn);
+          }
+          
+          // 保存状态到插件实例
+          if (this.plugin) {
+            this.plugin.settings = this.plugin.settings || {};
+            this.plugin.settings.collapsedCategories = this.plugin.settings.collapsedCategories || {};
+            this.plugin.settings.collapsedCategories[category] = true;
+            this.plugin.collapsedCategories = this.plugin.settings.collapsedCategories;
             
-            // 如果有输入值，可以添加额外的高亮效果来标记匹配的按钮
-            if (inputValue) {
-              const currentRules = Array.isArray(this.plugin.rules) ? this.plugin.rules : [];
-              styleButtons.forEach(button => {
-                const buttonClass = button.getAttribute('data-class');
-                if (buttonClass) {
-                  // 检查是否有匹配的规则
-                  const matchingRule = currentRules.find(rule => {
-                    const ruleParts = rule.regex.split('|');
-                    return ruleParts.includes(inputValue) || rule.regex.includes(inputValue) || inputValue.includes(rule.regex);
-                  });
-                  
-                  if (matchingRule && matchingRule.cssClass === buttonClass) {
-                    // 可以在这里添加高亮效果，但不隐藏按钮
-                    button.style.backgroundColor = 'rgba(33, 150, 243, 0.1)';
-                    button.style.borderColor = '#2196f3';
-                  } else {
-                    // 移除高亮效果
-                    button.style.backgroundColor = '';
-                    button.style.borderColor = '';
-                  }
-                }
-              });
-            }
-            
-            // 如果默认隐藏功能开启，只隐藏那些已经显示的分组
-            // 但如果有输入值（选中文本），不应用默认折叠功能
-            const hasInputValue = inputValue && inputValue.trim();
-            if (this.plugin && this.plugin.defaultCollapseCategories && !hasInputValue) {
-              // 获取所有分组容器
-              const allCategoryContainers = this.contentEl.querySelectorAll('[data-category]');
-              
-              allCategoryContainers.forEach(container => {
-                // 跳过当前正在显示的分组
-                if (container.getAttribute('data-category') !== category) {
-                  // 检查分组是否已经处于显示状态
-                  const isVisible = container.style.display === 'flex';
-                  
-                  if (isVisible) {
-                    // 隐藏已经显示的其他分组
-                    const containerCategory = container.getAttribute('data-category');
-                    const containerTitle = container.querySelector('.category-title');
-                    
-                    // 设置隐藏状态
-                    container.style.display = 'none';
-                    if (containerTitle) {
-                      containerTitle.style.backgroundColor = '#6c757d';
-                      containerTitle.title = t('main.dblClickShowGroup');
-                    }
-                    
-                    // 检查是否已经有对应的重新打开按钮
-                    let existingReopenButton = collapsedCategoriesContainer.querySelector(`[data-category="${containerCategory}"]`);
-                    
-                    if (!existingReopenButton) {
-                      // 创建重新打开按钮
-                      const reopenButton = collapsedCategoriesContainer.createEl('button');
-                      reopenButton.className = 'collapsed-category-reopen-btn';
-                      reopenButton.textContent = containerCategory;
-                      reopenButton.style.margin = '0';
-                      reopenButton.style.fontSize = '14px';
-                      reopenButton.style.fontWeight = 'bold';
-                      reopenButton.style.padding = '1px 5px';
-                      reopenButton.style.backgroundColor = '#007bff';
-                      reopenButton.style.color = 'white';
-                      reopenButton.style.border = 'none';
-                      reopenButton.style.borderRadius = '3px';
-                      reopenButton.style.whiteSpace = 'nowrap';
-                      reopenButton.style.textAlign = 'center';
-                      reopenButton.style.cursor = 'pointer';
-                      reopenButton.style.transition = 'all 0.2s';
-                      reopenButton.style.height = '22px';
-                      reopenButton.style.minHeight = '22px';
-                      reopenButton.style.overflow = 'hidden';
-                      reopenButton.style.textOverflow = 'ellipsis';
-                      reopenButton.style.position = 'relative';
-                      reopenButton.setAttribute('data-category', containerCategory);
-                      reopenButton.title = t('main.reopenGroup') + `: ${containerCategory}`;
-                      
-                      // 显示隐藏分类容器
-                      collapsedCategoriesContainer.style.display = 'flex';
-                    }
-                    
-                    // 更新插件的隐藏状态
-                    if (this.plugin) {
-                      this.plugin.settings = this.plugin.settings || {};
-                      this.plugin.settings.collapsedCategories = this.plugin.settings.collapsedCategories || {};
-                      this.plugin.settings.collapsedCategories[containerCategory] = true;
-                      this.plugin.collapsedCategories = this.plugin.settings.collapsedCategories;
-                    }
-                  }
-                }
-              });
-              
-              // 保存更新后的隐藏状态
-              if (this.plugin) {
-                this.plugin.saveData(this.plugin.settings);
-              }
-            } else {
-              // 移除对应的重新打开按钮
-              const reopenButton = collapsedCategoriesContainer.querySelector(`[data-category="${category}"]`);
-              if (reopenButton) {
-                reopenButton.remove();
-                
-                // 如果没有更多的重新打开按钮，隐藏分类容器
-                if (collapsedCategoriesContainer.children.length === 0) {
-                  collapsedCategoriesContainer.style.display = 'none';
-                }
-              }
-            }
-            
-            // 保存当前分组的显示状态到插件实例
-            if (this.plugin) {
-              this.plugin.settings = this.plugin.settings || {};
-              this.plugin.settings.collapsedCategories = this.plugin.settings.collapsedCategories || {};
-              delete this.plugin.settings.collapsedCategories[category];
-              this.plugin.collapsedCategories = this.plugin.settings.collapsedCategories;
-              this.plugin.saveData(this.plugin.settings);
-              
-              // 记录用户手动展开的状态
-              this.plugin.manuallyExpandedCategories = this.plugin.manuallyExpandedCategories || {};
-              this.plugin.manuallyExpandedCategories[category] = true;
-              
-              // 更新settings对象并保存到data.json
-              this.plugin.settings.manuallyExpandedCategories = this.plugin.manuallyExpandedCategories;
-              this.plugin.saveData(this.plugin.settings);
-            }
-          } else {
-            // 隐藏分组
-            categoryContainer.style.display = 'none';
-            if (!savedGroupStyleClass) {
-              categoryTitle.style.backgroundColor = '#6c757d';
-            }
-            categoryTitle.title = t('main.dblClickShowGroup');
-            
-            // 创建重新打开按钮
-            // 检查是否已经有对应的重新打开按钮
-            let existingReopenButton = collapsedCategoriesContainer.querySelector(`[data-category="${category}"]`);
-            
-            if (!existingReopenButton) {
-              const reopenButton = collapsedCategoriesContainer.createEl('button');
-              reopenButton.className = 'collapsed-category-reopen-btn';
-              reopenButton.textContent = category;
-              reopenButton.style.margin = '0';
-              reopenButton.style.fontSize = '14px';
-              reopenButton.style.fontWeight = 'bold';
-              reopenButton.style.padding = '1px 5px';
-              reopenButton.style.backgroundColor = '#007bff';
-              reopenButton.style.color = 'white';
-              reopenButton.style.border = 'none';
-              reopenButton.style.borderRadius = '3px';
-              reopenButton.style.whiteSpace = 'nowrap';
-              reopenButton.style.textAlign = 'center';
-              reopenButton.style.cursor = 'pointer';
-              reopenButton.style.transition = 'all 0.2s';
-              reopenButton.style.height = '22px';
-              reopenButton.style.minHeight = '22px';
-              reopenButton.style.overflow = 'hidden';
-              reopenButton.style.textOverflow = 'ellipsis';
-              reopenButton.style.position = 'relative';
-              reopenButton.setAttribute('data-category', category);
-              reopenButton.title = t('main.reopenGroup') + `: ${category}`;
-            }
-            
-            // 显示隐藏分类容器
-            collapsedCategoriesContainer.style.display = 'flex';
-            
-            // 保存状态到插件实例
-            if (this.plugin) {
-              this.plugin.settings = this.plugin.settings || {};
-              this.plugin.settings.collapsedCategories = this.plugin.settings.collapsedCategories || {};
-              this.plugin.settings.collapsedCategories[category] = true;
-              this.plugin.collapsedCategories = this.plugin.settings.collapsedCategories;
-              this.plugin.saveData(this.plugin.settings);
-              
-              // 清除用户手动展开的状态记录
-              if (this.plugin.manuallyExpandedCategories) {
-                delete this.plugin.manuallyExpandedCategories[category];
-                
-                // 更新settings对象并保存到data.json
-                this.plugin.settings.manuallyExpandedCategories = this.plugin.manuallyExpandedCategories;
-                this.plugin.saveData(this.plugin.settings);
-              }
-            }
+            this.plugin.saveData(this.plugin.settings);
           }
         });
         
@@ -10641,7 +10565,7 @@ class AddRegexRuleModal extends Modal {
                         
                         // 刷新模态框内容
                         if (typeof this.refreshModalContent === 'function') {
-                          this.refreshModalContent();
+                          await this.refreshModalContent();
                         }
                       } catch (error) {
                         console.error("添加分组时出错:", error);
@@ -10695,7 +10619,7 @@ class AddRegexRuleModal extends Modal {
                         
                         // 刷新模态框内容
                         if (typeof this.refreshModalContent === 'function') {
-                          this.refreshModalContent();
+                          await this.refreshModalContent();
                         }
                       } catch (error) {
                         console.error("删除分组时出错:", error);
@@ -11205,39 +11129,6 @@ class AddRegexRuleModal extends Modal {
             
             // 获取当前样式按钮所在的分组
             const buttonGroup = e.target.closest('[data-category]');
-            if (buttonGroup) {
-              // 检查分组是否处于折叠状态
-              const isGroupCollapsed = buttonGroup.style.display === 'none';
-              
-              if (isGroupCollapsed && this.plugin && this.plugin.defaultCollapseCategories) {
-                // 如果分组处于折叠状态且默认折叠功能开启，展开该分组后需要折叠其他已展开的分组
-                const allCategoryContainers = this.contentEl.querySelectorAll('[data-category]');
-                const currentCategory = buttonGroup.getAttribute('data-category');
-                
-                allCategoryContainers.forEach(container => {
-                  const containerCategory = container.getAttribute('data-category');
-                  if (containerCategory !== currentCategory && container.style.display === 'flex') {
-                    // 折叠其他已展开的分组
-                    container.style.display = 'none';
-                    
-                    // 更新标题的视觉效果
-                    const otherCategoryTitle = container.querySelector('h4');
-                    if (otherCategoryTitle) {
-                      otherCategoryTitle.style.backgroundColor = '#6c757d';
-                      otherCategoryTitle.title = t('main.dblClickExpandGroup');
-                    }
-                    
-                    // 更新插件的折叠状态
-                    if (this.plugin) {
-                      this.plugin.settings = this.plugin.settings || {};
-                      this.plugin.settings.collapsedCategories = this.plugin.settings.collapsedCategories || {};
-                      this.plugin.settings.collapsedCategories[containerCategory] = true;
-                      this.plugin.collapsedCategories = this.plugin.settings.collapsedCategories;
-                    }
-                  }
-                });
-              }
-            }
             
             // 获取当前输入框中的值
             const currentRegexValue = regexInput ? regexInput.getValue() : regexValue;
@@ -12448,107 +12339,45 @@ class AddRegexRuleModal extends Modal {
         }
       });
       
-      // 应用保存的折叠状态或默认折叠功能
-      const shouldDefaultCollapse = this.plugin && this.plugin.defaultCollapseCategories;
+      // 应用保存的折叠状态
       const wasCollapsed = this.plugin && this.plugin.collapsedCategories && this.plugin.collapsedCategories[category];
       
       // 检查当前输入是否有值
       const inputEl = this.contentEl.querySelector('input[placeholder="' + t('main.regexPlaceholder') + '"]');
       const hasInputValue = inputEl && inputEl.value.trim();
       
-      // 检查是否有手动展开的分组存储
-      if (this.plugin && !this.plugin.manuallyExpandedCategories) {
-        this.plugin.manuallyExpandedCategories = {};
-      }
-      
-      // 获取用户手动展开的状态
-      const userManuallyExpanded = this.plugin && this.plugin.manuallyExpandedCategories && this.plugin.manuallyExpandedCategories[category];
-      
-      // 应用保存的折叠状态或默认折叠功能
-      // 当有输入值时，根据用户手动设置的状态决定是否折叠
-      // 当没有输入值时，应用默认折叠功能或保存的折叠状态
+      // 决定是否折叠分组
       let shouldCollapse = false;
       
       if (hasInputValue) {
-        // 有输入值时，如果勾选了默认隐藏所有分组，优先应用默认隐藏设置
-        if (shouldDefaultCollapse) {
-          // 如果勾选了默认隐藏所有分组，无论之前是否手动展开，都按照匹配规则决定是否折叠
+        if (!wasCollapsed) {
+          shouldCollapse = false;
+        } else {
+          // 分组之前是折叠的，按照匹配规则决定是否折叠
           const inputValue = inputEl.value.trim();
           const currentRules = Array.isArray(this.plugin.rules) ? this.plugin.rules : [];
           const globalRules = Array.isArray(this.plugin.globalRules) ? this.plugin.globalRules : [];
           
-          // 查找匹配的规则
           const matchingRules = [...currentRules, ...globalRules].filter(rule => {
             const ruleParts = rule.regex.split('|');
             return ruleParts.some(part => inputValue.includes(part) || part.includes(inputValue));
           });
           
           if (matchingRules.length > 0) {
-            // 有匹配的规则，检查当前分组是否包含这些规则的CSS类
             const matchingCssClasses = new Set(matchingRules.map(rule => rule.cssClass));
             const styleButtons = Array.from(categoryContainer.querySelectorAll('.style-option'));
             const hasMatchingStyleInCategory = styleButtons.some(button => {
               const buttonCssClass = button.getAttribute('data-class');
               return matchingCssClasses.has(buttonCssClass);
             });
-            
-            // 只有当分组包含匹配的规则时才不折叠
             shouldCollapse = !hasMatchingStyleInCategory;
           } else {
-            // 没有匹配的规则，显示所有分组让用户选择样式
-            shouldCollapse = false;
-          }
-        } else {
-          // 如果没有勾选默认隐藏所有分组，尊重用户的状态
-          if (userManuallyExpanded) {
-            // 用户手动展开了分组，保持显示状态
-            shouldCollapse = false;
-          } else if (!wasCollapsed) {
-            // 分组之前是显示的，保持显示状态
-            // 即使没有匹配的规则，也不自动折叠
-            shouldCollapse = false;
-          } else {
-            // 分组之前是折叠的，按照匹配规则决定是否折叠
-            const inputValue = inputEl.value.trim();
-            const currentRules = Array.isArray(this.plugin.rules) ? this.plugin.rules : [];
-            const globalRules = Array.isArray(this.plugin.globalRules) ? this.plugin.globalRules : [];
-            
-            // 查找匹配的规则
-            const matchingRules = [...currentRules, ...globalRules].filter(rule => {
-              const ruleParts = rule.regex.split('|');
-              return ruleParts.some(part => inputValue.includes(part) || part.includes(inputValue));
-            });
-            
-            if (matchingRules.length > 0) {
-              // 有匹配的规则，检查当前分组是否包含这些规则的CSS类
-              const matchingCssClasses = new Set(matchingRules.map(rule => rule.cssClass));
-              const styleButtons = Array.from(categoryContainer.querySelectorAll('.style-option'));
-              const hasMatchingStyleInCategory = styleButtons.some(button => {
-                const buttonCssClass = button.getAttribute('data-class');
-                return matchingCssClasses.has(buttonCssClass);
-              });
-              
-              // 只有当分组包含匹配的规则时才不折叠
-              shouldCollapse = !hasMatchingStyleInCategory;
-            } else {
-              // 没有匹配的规则，保持折叠状态
-              shouldCollapse = true;
-            }
+            shouldCollapse = true;
           }
         }
       } else {
-        // 没有输入值，应用默认折叠功能或保存的折叠状态
-        // 如果勾选了默认隐藏所有分组，无论之前是否手动展开，都应该隐藏所有分组
-        if (shouldDefaultCollapse) {
-          shouldCollapse = true;
-        } else {
-          // 如果没有勾选默认隐藏所有分组，再检查用户是否手动展开了分组
-          if (userManuallyExpanded) {
-            shouldCollapse = false;
-          } else {
-            shouldCollapse = wasCollapsed;
-          }
-        }
+        // 没有输入值，应用保存的折叠状态
+        shouldCollapse = wasCollapsed;
       }
       
       if (shouldCollapse) {
@@ -12558,42 +12387,77 @@ class AddRegexRuleModal extends Modal {
         if (!savedGroupStyleClass) {
           categoryTitle.style.backgroundColor = '#6c757d';
         }
-        categoryTitle.title = t('main.dblClickExpandGroup');
+        categoryTitle.title = t('main.dblClickMoveToSingle');
         
-        // 如果是默认折叠功能，更新插件的折叠状态
-        if (shouldDefaultCollapse) {
-          if (this.plugin) {
-            this.plugin.settings = this.plugin.settings || {};
-            this.plugin.settings.collapsedCategories = this.plugin.settings.collapsedCategories || {};
-            this.plugin.settings.collapsedCategories[category] = true;
-            this.plugin.collapsedCategories = this.plugin.settings.collapsedCategories;
-            // 不需要立即保存，避免频繁写入
-          }
+        // 创建标签（如果不存在）
+        let existingTab = collapsedCategoriesContainer.querySelector(`[data-category="${category}"]`);
+        
+        if (!existingTab) {
+          const tab = collapsedCategoriesContainer.createEl('button');
+          tab.className = 'collapsed-category-reopen-btn';
+          tab.textContent = category;
+          tab.style.margin = '0';
+          tab.style.fontSize = '14px';
+          tab.style.fontWeight = 'bold';
+          tab.style.padding = '1px 5px';
+          tab.style.backgroundColor = '#007bff';
+          tab.style.color = 'white';
+          tab.style.border = 'none';
+          tab.style.borderRadius = '3px';
+          tab.style.whiteSpace = 'nowrap';
+          tab.style.textAlign = 'center';
+          tab.style.cursor = 'pointer';
+          tab.style.transition = 'all 0.2s';
+          tab.style.height = '22px';
+          tab.style.minHeight = '22px';
+          tab.style.position = 'relative';
+          tab.setAttribute('data-category', category);
+          tab.title = t('main.clickToExpand') + `: ${category}`;
+          
+          // 添加悬浮图标
+          const tabFloatBtn = document.createElement('span');
+          tabFloatBtn.textContent = '📌';
+          tabFloatBtn.draggable = false;
+          tabFloatBtn.style.cssText = `
+            position: absolute;
+            top: -8px;
+            right: -4px;
+            font-size: 9px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            background: var(--background-primary);
+            border-radius: 50%;
+            padding: 1px;
+            z-index: 101;
+          `;
+          tabFloatBtn.title = t('floating.floatThisGroup');
+          tabFloatBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            if (this.plugin && typeof this.plugin.floatButtonData === 'object') {
+              if (!this.plugin.floatButtonData.floatingBallGroupOptions) {
+                this.plugin.floatButtonData.floatingBallGroupOptions = [];
+              }
+              if (!this.plugin.floatButtonData.floatingBallGroupOptions.includes(category)) {
+                this.plugin.floatButtonData.floatingBallGroupOptions.push(category);
+              }
+              this.plugin.saveFloatButtonData();
+              this.plugin.renderFloatingOptionButtons();
+              new Notice(t('main.floatEnabled'));
+            }
+          });
+          tabFloatBtn.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+          });
+          tab.addEventListener('mouseenter', () => {
+            tabFloatBtn.style.opacity = '1';
+          });
+          tab.addEventListener('mouseleave', () => {
+            tabFloatBtn.style.opacity = '0';
+          });
+          tab.appendChild(tabFloatBtn);
         }
-        
-        // 创建重新打开按钮
-        const reopenButton = collapsedCategoriesContainer.createEl('button');
-        reopenButton.className = 'collapsed-category-reopen-btn';
-        reopenButton.textContent = category;
-        reopenButton.style.margin = '0';
-        reopenButton.style.fontSize = '14px';
-        reopenButton.style.fontWeight = 'bold';
-        reopenButton.style.padding = '1px 5px';
-        reopenButton.style.backgroundColor = '#007bff';
-        reopenButton.style.color = 'white';
-        reopenButton.style.border = 'none';
-        reopenButton.style.borderRadius = '3px';
-        reopenButton.style.whiteSpace = 'nowrap';
-        reopenButton.style.textAlign = 'center';
-        reopenButton.style.cursor = 'pointer';
-        reopenButton.style.transition = 'all 0.2s';
-        reopenButton.style.height = '22px';
-        reopenButton.style.minHeight = '22px';
-        reopenButton.style.overflow = 'hidden';
-        reopenButton.style.textOverflow = 'ellipsis';
-        reopenButton.style.position = 'relative';
-        reopenButton.setAttribute('data-category', category);
-        reopenButton.title = t('main.reopenGroup') + `: ${category}`;
         
         // 显示折叠分类容器
         collapsedCategoriesContainer.style.display = 'flex';
@@ -12680,7 +12544,7 @@ class AddRegexRuleModal extends Modal {
         if (!savedGroupStyleClass) {
           categoryTitle.style.backgroundColor = '#007bff';
         }
-        categoryTitle.title = t('main.dblClickHideGroup');
+        categoryTitle.title = t('main.dblClickMoveToSingle');
       }
       
       // 在每个分组后面添加"添加"按钮
@@ -12727,11 +12591,8 @@ class AddRegexRuleModal extends Modal {
       this.plugin.settings = this.plugin.settings || {};
       this.plugin.settings.collapsedGroupStyles = this.plugin.settings.collapsedGroupStyles || {};
       
-      // 检查是否开启自动展开模式
-      const isAutoExpandMode = this.plugin.settings.autoExpandMode === true;
-      
       // 从设置中读取分组的折叠状态，如果没有保存的状态，默认展开
-      const isGroupCollapsed = isAutoExpandMode || this.plugin.settings.collapsedGroupStyles[categoryName] || false;
+      const isGroupCollapsed = this.plugin.settings.collapsedGroupStyles[categoryName] || false;
       
       // 初始状态下设置样式按钮的可见性
       const styleButtons = categoryContainer.querySelectorAll('.style-option');
@@ -12786,10 +12647,7 @@ class AddRegexRuleModal extends Modal {
       const hasVisibleButtons = Array.from(styleButtons).some(button => button.style.display !== 'none');
       
       // 根据样式按钮的可见性和是否有选中文本设置切换按钮的初始状态
-      if (isAutoExpandMode) {
-        toggleBtn.textContent = ">";
-        toggleBtn.title = t('main.hoverExpandGroup');
-      } else if (!isInputEmpty) {
+      if (!isInputEmpty) {
         // 如果有选中文本，根据分组的折叠状态和可见按钮数量决定切换按钮状态
         if (!isGroupCollapsed) {
           // 如果分组是展开状态，显示为折叠图标
@@ -12901,35 +12759,106 @@ class AddRegexRuleModal extends Modal {
     } catch (error) {
       console.error('渲染分类时出错:', category, error);
     }
-  });
+      } // end for batchIndex
 
-      // 所有分组创建完成后,再次调用高亮函数以确保输入框有值时能展开匹配的分组
-      setTimeout(() => {
-        this.highlightMatchingRuleButtons();
-      }, 50);
+      if (batchIndex < categoryEntries.length) {
+        // 还有未渲染的分类，下一帧继续
+        requestAnimationFrame(renderNextBatch);
+      } else {
+        // 所有分组创建完成后,再次调用高亮函数以确保输入框有值时能展开匹配的分组
+        setTimeout(() => {
+          this.highlightMatchingRuleButtons();
+        }, 50);
+
+        // 字体大小批量调整（在样式按钮创建后执行）
+        requestAnimationFrame(() => {
+          const queue = this._fontSizeCheckQueue;
+          if (queue && queue.length > 0) {
+            for (const el of queue) {
+              el.style.fontSize = "14px";
+            }
+            queue.length = 0;
+          }
+        });
+
+        // 更新角标（在样式按钮创建后执行）
+        setTimeout(async () => {
+          await this.updateStyleCountBadges();
+          this.highlightMatchingRuleButtons();
+        }, 100);
+      }
+    }; // end renderNextBatch
+
+    // 启动第一批渲染
+    requestAnimationFrame(renderNextBatch);
 
       // 添加样式到历史记录按钮
 
-    // 添加高亮历史记录区域（延迟渲染，加快首屏显示）
+    // 添加高亮历史记录区域（分帧延迟渲染，加快首屏显示）
     requestAnimationFrame(() => {
       this.addHistorySection(contentEl);
       this.addGlobalRulesSection(contentEl);
-      this.addHeadingStylesSection(contentEl);
-      this.addRemarkSection(contentEl);
-      this.addWidthSettingsSection(contentEl);
-      if (this.plugin.settings?.enableDebugLog) console.timeEnd('[主面板] onOpen总耗时');
+      requestAnimationFrame(() => {
+        this.addHeadingStylesSection(contentEl);
+        this.addRemarkSection(contentEl);
+        this.addWidthSettingsSection(contentEl);
+        if (this.plugin.settings?.enableDebugLog) console.timeEnd('[主面板] onOpen总耗时');
+      });
     });
     
     // 添加重新打开按钮的点击事件监听器
     collapsedCategoriesContainer.addEventListener('click', (e) => {
-      if (e.target.classList.contains('collapsed-category-reopen-btn')) {
-        const category = e.target.getAttribute('data-category');
+      const tab = e.target.closest('.collapsed-category-reopen-btn');
+      if (!tab) return;
+      
+      const category = tab.getAttribute('data-category');
+      
+      if (activeTabCategory === category) {
+        // 再次点击已展开的标签 → 折叠内容
+        const categoryContainer = tabContentContainer.querySelector(`[data-category="${category}"]`);
+        if (categoryContainer) {
+          // 恢复分组标题显示
+          const catTitle = categoryContainer.querySelector('h4');
+          if (catTitle) catTitle.style.display = '';
+          // 将分组容器移回 mainContainer（隐藏状态）
+          categoryContainer.style.display = 'none';
+          mainContainer.appendChild(categoryContainer);
+        }
+        tabContentContainer.style.display = 'none';
+        tab.style.backgroundColor = '#007bff';
+        tab.style.fontWeight = 'bold';
+        activeTabCategory = null;
+      } else {
+        // 点击新标签 → 切换到该标签
+        
+        // 先折叠当前展开的标签内容
+        if (activeTabCategory) {
+          const prevContainer = tabContentContainer.querySelector(`[data-category="${activeTabCategory}"]`);
+          if (prevContainer) {
+            // 恢复前一个分组的标题显示
+            const prevTitle = prevContainer.querySelector('h4');
+            if (prevTitle) prevTitle.style.display = '';
+            prevContainer.style.display = 'none';
+            mainContainer.appendChild(prevContainer);
+          }
+          const prevTab = collapsedCategoriesContainer.querySelector(`[data-category="${activeTabCategory}"]`);
+          if (prevTab) {
+            prevTab.style.backgroundColor = '#007bff';
+            prevTab.style.fontWeight = 'bold';
+          }
+        }
         
         // 找到对应的分类容器
         const categoryContainer = mainContainer.querySelector(`[data-category="${category}"]`);
         if (categoryContainer) {
-          // 展开分组
+          // 展开分组并移到标签内容区
           categoryContainer.style.display = 'flex';
+          tabContentContainer.appendChild(categoryContainer);
+          tabContentContainer.style.display = 'block';
+          
+          // 隐藏分组标题（单显模式下标签已显示分组名）
+          const catTitle = categoryContainer.querySelector('h4');
+          if (catTitle) catTitle.style.display = 'none';
           
           // 确保分组内的所有样式按钮都显示出来
           const styleButtons = categoryContainer.querySelectorAll('.style-option');
@@ -12946,7 +12875,7 @@ class AddRegexRuleModal extends Modal {
             toggleBtn.title = t('main.collapseGroupStyles');
           }
           
-          // 找到分类标题并更新视觉效果
+          // 更新分类标题视觉效果
           const categoryTitle = categoryContainer.querySelector('h4');
           if (categoryTitle) {
             const catName = categoryContainer.getAttribute('data-category');
@@ -12954,83 +12883,118 @@ class AddRegexRuleModal extends Modal {
             if (!savedStyle) {
               categoryTitle.style.backgroundColor = '#007bff';
             }
-            categoryTitle.title = t('main.dblClickHideGroup');
+            categoryTitle.title = t('main.dblClickMoveToSingle');
           }
-          
-          // 如果默认折叠功能开启，只折叠那些已经展开的分组
-          if (this.plugin && this.plugin.defaultCollapseCategories) {
-            // 获取所有分组容器
-            const allCategoryContainers = this.contentEl.querySelectorAll('[data-category]');
-            
-            allCategoryContainers.forEach(container => {
-              // 跳过当前正在展开的分组
-              if (container.getAttribute('data-category') !== category) {
-                // 检查分组是否已经处于展开状态
-                const isExpanded = container.style.display === 'flex';
-                
-                if (isExpanded) {
-                  // 折叠已经展开的其他分组
-                  container.style.display = 'none';
-                  const containerCategory = container.getAttribute('data-category');
-                  const containerTitle = container.querySelector('h4');
-                  
-                  // 更新标题的视觉效果
-                  if (containerTitle) {
-                    containerTitle.style.backgroundColor = '#6c757d';
-                    containerTitle.title = t('main.dblClickExpandGroup');
-                  }
-                  
-                  // 检查是否已经有对应的重新打开按钮
-                  let existingReopenButton = collapsedCategoriesContainer.querySelector(`[data-category="${containerCategory}"]`);
-                  
-                  if (!existingReopenButton) {
-                    // 创建重新打开按钮
-                    const reopenButton = collapsedCategoriesContainer.createEl('button');
-                    reopenButton.className = 'collapsed-category-reopen-btn';
-                    reopenButton.textContent = containerCategory;
-                    reopenButton.style.margin = '0';
-                    reopenButton.style.fontSize = '14px';
-                    reopenButton.style.fontWeight = 'bold';
-                    reopenButton.style.padding = '1px 5px';
-                    reopenButton.style.backgroundColor = '#007bff';
-                    reopenButton.style.color = 'white';
-                    reopenButton.style.border = 'none';
-                    reopenButton.style.borderRadius = '3px';
-                    reopenButton.style.whiteSpace = 'nowrap';
-                    reopenButton.style.textAlign = 'center';
-                    reopenButton.style.cursor = 'pointer';
-                    reopenButton.style.transition = 'all 0.2s';
-                    reopenButton.style.height = '22px';
-                    reopenButton.style.minHeight = '22px';
-                    reopenButton.style.overflow = 'hidden';
-                    reopenButton.style.textOverflow = 'ellipsis';
-                    reopenButton.style.position = 'relative';
-                    reopenButton.setAttribute('data-category', containerCategory);
-                    reopenButton.title = t('main.reopenGroup') + `: ${containerCategory}`;
-                  }
-                  
-                  // 更新插件的折叠状态
-                  if (this.plugin) {
-                    this.plugin.settings = this.plugin.settings || {};
-                    this.plugin.settings.collapsedCategories = this.plugin.settings.collapsedCategories || {};
-                    this.plugin.settings.collapsedCategories[containerCategory] = true;
-                    this.plugin.collapsedCategories = this.plugin.settings.collapsedCategories;
-                  }
-                }
-              }
-            });
+        }
+        
+        // 高亮选中的标签
+        tab.style.backgroundColor = '#0056b3';
+        tab.style.fontWeight = '900';
+        activeTabCategory = category;
+      }
+    });
+    
+    // 标签双击 → 钉回常显
+    collapsedCategoriesContainer.addEventListener('dblclick', (e) => {
+      const tab = e.target.closest('.collapsed-category-reopen-btn');
+      if (!tab) return;
+      
+      const category = tab.getAttribute('data-category');
+      
+      // 如果当前标签是展开状态，先折叠内容
+      if (activeTabCategory === category) {
+        const categoryContainer = tabContentContainer.querySelector(`[data-category="${category}"]`);
+        if (categoryContainer) {
+          // 恢复分组标题显示
+          const catTitle = categoryContainer.querySelector('h4');
+          if (catTitle) catTitle.style.display = '';
+          categoryContainer.style.display = 'flex';
+          mainContainer.appendChild(categoryContainer);
+        }
+        tabContentContainer.style.display = 'none';
+        activeTabCategory = null;
+      } else {
+        // 分组在 mainContainer 中隐藏，改为显示
+        const categoryContainer = mainContainer.querySelector(`[data-category="${category}"]`);
+        if (categoryContainer) {
+          categoryContainer.style.display = 'flex';
+        }
+      }
+      
+      // 更新分类标题视觉效果
+      const categoryContainer = mainContainer.querySelector(`[data-category="${category}"]`);
+      if (categoryContainer) {
+        const categoryTitle = categoryContainer.querySelector('h4');
+        if (categoryTitle) {
+          const catName = categoryContainer.getAttribute('data-category');
+          const savedStyle = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[catName];
+          if (!savedStyle) {
+            categoryTitle.style.backgroundColor = '#007bff';
           }
-          
-          // 移除点击的重新打开按钮
-          e.target.remove();
-          
-          // 如果没有更多的重新打开按钮，隐藏折叠分类容器
-          if (collapsedCategoriesContainer.children.length === 0) {
-            collapsedCategoriesContainer.style.display = 'none';
+          categoryTitle.title = t('main.dblClickMoveToSingle');
+        }
+      }
+      
+      // 移除标签
+      tab.remove();
+      
+      // 更新插件的折叠状态
+      if (this.plugin) {
+        this.plugin.settings = this.plugin.settings || {};
+        this.plugin.settings.collapsedCategories = this.plugin.settings.collapsedCategories || {};
+        delete this.plugin.settings.collapsedCategories[category];
+        this.plugin.collapsedCategories = this.plugin.settings.collapsedCategories;
+        
+        this.plugin.saveData(this.plugin.settings);
+      }
+    });
+    
+    // 标签右键 → 钉回常显
+    collapsedCategoriesContainer.addEventListener('contextmenu', (e) => {
+      const tab = e.target.closest('.collapsed-category-reopen-btn');
+      if (!tab) return;
+      
+      e.preventDefault();
+      const category = tab.getAttribute('data-category');
+      
+      const menu = new Menu();
+      menu.addItem((item) => {
+        item.setTitle(t('main.pinToNormalDisplay')).onClick(() => {
+          // 如果当前标签是展开状态，先折叠内容
+          if (activeTabCategory === category) {
+            const categoryContainer = tabContentContainer.querySelector(`[data-category="${category}"]`);
+            if (categoryContainer) {
+              // 恢复分组标题显示
+              const catTitle = categoryContainer.querySelector('h4');
+              if (catTitle) catTitle.style.display = '';
+              categoryContainer.style.display = 'flex';
+              mainContainer.appendChild(categoryContainer);
+            }
+            tabContentContainer.style.display = 'none';
+            activeTabCategory = null;
           } else {
-            // 确保折叠分类容器可见
-            collapsedCategoriesContainer.style.display = 'flex';
+            const categoryContainer = mainContainer.querySelector(`[data-category="${category}"]`);
+            if (categoryContainer) {
+              categoryContainer.style.display = 'flex';
+            }
           }
+          
+          // 更新分类标题视觉效果
+          const categoryContainer = mainContainer.querySelector(`[data-category="${category}"]`);
+          if (categoryContainer) {
+            const categoryTitle = categoryContainer.querySelector('h4');
+            if (categoryTitle) {
+              const catName = categoryContainer.getAttribute('data-category');
+              const savedStyle = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[catName];
+              if (!savedStyle) {
+                categoryTitle.style.backgroundColor = '#007bff';
+              }
+              categoryTitle.title = t('main.dblClickMoveToSingle');
+            }
+          }
+          
+          // 移除标签
+          tab.remove();
           
           // 更新插件的折叠状态
           if (this.plugin) {
@@ -13038,115 +13002,17 @@ class AddRegexRuleModal extends Modal {
             this.plugin.settings.collapsedCategories = this.plugin.settings.collapsedCategories || {};
             delete this.plugin.settings.collapsedCategories[category];
             this.plugin.collapsedCategories = this.plugin.settings.collapsedCategories;
-            this.plugin.saveData(this.plugin.settings);
             
-            // 记录用户手动展开的状态
-            this.plugin.manuallyExpandedCategories = this.plugin.manuallyExpandedCategories || {};
-            this.plugin.manuallyExpandedCategories[category] = true;
-            
-            // 更新settings对象并保存到data.json
-            this.plugin.settings.manuallyExpandedCategories = this.plugin.manuallyExpandedCategories;
             this.plugin.saveData(this.plugin.settings);
           }
-        }
-      }
+        });
+      });
+      menu.showAtMouseEvent(e);
     });
-    
-    requestAnimationFrame(() => {
-      const queue = this._fontSizeCheckQueue;
-      if (queue && queue.length > 0) {
-        // 批量设置，避免逐个getComputedStyle导致多次reflow
-        for (const el of queue) {
-          el.style.fontSize = "14px";
-        }
-        queue.length = 0;
-      }
-    });
-    
-    setTimeout(async () => {
-      await this.updateStyleCountBadges();
-      
-      this.highlightMatchingRuleButtons();
-      
-      // 自动展开模式：折叠所有分组，添加hover展开/离开折叠行为
-      this.setupAutoExpandMode();
-      
-    }, 100);
   }
   
   // 计算每个样式在当前文件中的使用次数
   // 同步版本的计算函数，避免循环调用
-  setupAutoExpandMode() {
-    const autoExpandMode = this.plugin && this.plugin.settings && this.plugin.settings.autoExpandMode === true;
-    if (!autoExpandMode) return;
-    
-    // 注入淡入动画样式（仅一次）
-    if (!document.getElementById('rch-auto-expand-anim')) {
-      const animStyle = document.createElement('style');
-      animStyle.id = 'rch-auto-expand-anim';
-      animStyle.textContent = `@keyframes rchFadeIn { from { opacity: 0; } to { opacity: 1; } }`;
-      document.head.appendChild(animStyle);
-    }
-    
-    const categoryContainers = this.contentEl.querySelectorAll('[data-category]');
-    categoryContainers.forEach(container => {
-      const categoryName = container.getAttribute('data-category');
-      if (categoryName === '标题样式') return;
-      
-      const styleButtons = container.querySelectorAll('.style-option');
-      const toggleBtn = container.querySelector('.style-toggle-btn');
-      
-      // 确保所有分组的样式按钮已折叠（渲染时已处理，此处确保状态一致）
-      styleButtons.forEach(button => {
-        if (button.style.display !== 'none') {
-          button.style.display = 'none';
-        }
-      });
-      
-      // 移除之前可能添加的自动展开事件
-      if (toggleBtn) {
-        toggleBtn.removeEventListener('mouseenter', toggleBtn._autoExpandHandler);
-      }
-      container.removeEventListener('mouseleave', container._autoCollapseHandler);
-      
-      // 鼠标移入">"按钮时展开（带淡入动画）
-      if (toggleBtn) {
-        toggleBtn._autoExpandHandler = () => {
-          requestAnimationFrame(() => {
-            styleButtons.forEach(button => {
-              button.style.display = 'flex';
-              button.style.animation = 'rchFadeIn 0.2s ease';
-            });
-          });
-          toggleBtn.textContent = "<";
-          toggleBtn.title = t('main.collapseGroupStyles');
-        };
-        toggleBtn.addEventListener('mouseenter', toggleBtn._autoExpandHandler);
-      }
-      
-      // 鼠标移出分组时折叠（延迟检测，避免右键菜单导致误折叠）
-      container._autoCollapseHandler = (evt) => {
-        // 延迟检测鼠标是否移到了右键菜单上
-        setTimeout(() => {
-          // 检查鼠标是否在右键菜单或其子元素上
-          const hoveredMenu = document.querySelector('.rch-context-menu:hover');
-          if (hoveredMenu) return;
-          // 检查鼠标是否仍在当前容器内
-          if (container.matches(':hover')) return;
-          styleButtons.forEach(button => {
-            button.style.display = 'none';
-            button.style.animation = '';
-          });
-          if (toggleBtn) {
-            toggleBtn.textContent = ">";
-            toggleBtn.title = t('main.hoverExpandGroup');
-          }
-        }, 50);
-      };
-      container.addEventListener('mouseleave', container._autoCollapseHandler);
-    });
-  }
-
   calculateStyleUsageCounts() {
     const counts = {};
     const activeFile = this.app.workspace.getActiveFile();
@@ -13228,11 +13094,6 @@ class AddRegexRuleModal extends Modal {
       const className = button.getAttribute('data-class');
       
       if (!className) {
-        // 如果没有data-class属性，尝试从其他属性获取
-        const classAttr = button.getAttribute('class');
-        if (classAttr) {
-          console.log('按钮没有data-class属性，className:', classAttr);
-        }
         return;
       }
       
@@ -13906,33 +13767,6 @@ class AddRegexRuleModal extends Modal {
       this.addHeadingStylesSection(this.contentEl);
     });
 
-    // 添加自动展开模式的开关
-    const autoExpandRow = displayContent.createDiv();
-    autoExpandRow.style.display = "flex";
-    autoExpandRow.style.alignItems = "center";
-    autoExpandRow.style.marginBottom = "5px";
-    
-    const autoExpandLabel = autoExpandRow.createEl("span");
-    autoExpandLabel.textContent = t('settings.autoExpandMode') + ": ";
-    autoExpandLabel.style.marginRight = "10px";
-    autoExpandLabel.style.fontSize = "14px";
-    
-    const autoExpandInput = autoExpandRow.createEl("input");
-    autoExpandInput.type = "checkbox";
-    autoExpandInput.checked = this.plugin.settings && this.plugin.settings.autoExpandMode === true;
-    
-    autoExpandInput.addEventListener("change", async (e) => {
-      const isChecked = e.target.checked;
-      if (!this.plugin.settings) {
-        this.plugin.settings = {};
-      }
-      this.plugin.settings.autoExpandMode = isChecked;
-      await this.plugin.saveData(this.plugin.settings);
-      
-      // 重新加载面板以应用自动展开模式
-      this.onOpen();
-    });
-    
     // 添加折叠时显示最近规则的开关
     const showRecentRulesRow = displayContent.createDiv();
     showRecentRulesRow.style.display = "flex";
@@ -17936,7 +17770,7 @@ class AddRegexRuleModal extends Modal {
       // 刷新当前弹窗内容，确保立即显示最新的样式顺序
       if (typeof this.refreshModalContent === 'function') {
         console.log('Refreshing modal content to show updated style order...');
-        this.refreshModalContent();
+        await this.refreshModalContent();
       }
       
     } catch (error) {
@@ -19664,8 +19498,7 @@ class AddRegexRuleModal extends Modal {
                 // 方法1: 尝试使用refreshModalContent（如果存在）
                 if (typeof self.refreshModalContent === 'function') {
                   try {
-                    console.log('尝试使用refreshModalContent重建内容');
-                    self.refreshModalContent();
+                    await self.refreshModalContent();
                     contentRebuilt = true;
                   } catch (e) {
                     console.error('refreshModalContent执行失败:', e);
@@ -19917,6 +19750,33 @@ class AddRegexRuleModal extends Modal {
   }
 
   onClose() {
+    // 清理透明背景和锁定样式
+    const modalBg = this.modalEl?.closest('.modal-bg');
+    const modalContainer = this.modalEl?.closest('.modal-container');
+    if (modalBg) {
+      modalBg.classList.remove('rch-transparent-bg');
+      modalBg.classList.remove('rch-locked-bg');
+      modalBg.style.pointerEvents = '';
+    }
+    if (modalContainer) {
+      modalContainer.style.pointerEvents = '';
+    }
+    // 停止 MutationObserver
+    if (this._bgObserver) {
+      this._bgObserver.disconnect();
+      this._bgObserver = null;
+    }
+    this._locked = false;
+    // 清理焦点保护事件
+    if (this._lockFocusHandler) {
+      this.modalEl?.removeEventListener('focusin', this._lockFocusHandler);
+      this._lockFocusHandler = null;
+    }
+    if (this._lockClickHandler) {
+      this.modalEl?.removeEventListener('mousedown', this._lockClickHandler);
+      this._lockClickHandler = null;
+    }
+    this._userClickedPanel = false;
     if (this._resizeHandle && document.body.contains(this._resizeHandle)) {
       document.body.removeChild(this._resizeHandle);
     }
@@ -19934,9 +19794,63 @@ class AddRegexRuleModal extends Modal {
   }
 }
 
+class RegexHighlightSettingTab extends PluginSettingTab {
+  constructor(app, plugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+
+  display() {
+    const { containerEl } = this;
+    containerEl.empty();
+
+    containerEl.createEl('h2', { text: t('settings.redirectTitle') });
+
+    const msgEl = containerEl.createDiv();
+    msgEl.style.marginBottom = '16px';
+    msgEl.style.color = 'var(--text-muted)';
+    msgEl.textContent = t('settings.redirectMsg');
+
+    const btn = containerEl.createEl('button');
+    btn.textContent = t('settings.redirectBtn');
+    btn.style.cursor = 'pointer';
+    btn.style.padding = '8px 16px';
+    btn.style.borderRadius = '6px';
+    btn.style.background = 'var(--interactive-accent)';
+    btn.style.color = 'var(--text-on-accent)';
+    btn.style.border = 'none';
+    btn.style.fontSize = '14px';
+    btn.addEventListener('click', () => {
+      // 关闭Obsidian设置面板
+      const settingEl = document.querySelector('.modal-bg.settings-modal');
+      if (settingEl) settingEl.click();
+      // 打开主面板并滚动到设置区域
+      const modal = new AddRegexRuleModal(this.app, this.plugin);
+      modal.open();
+      setTimeout(() => {
+        const settingsPanel = document.querySelector('.regex-highlighter-settings');
+        if (settingsPanel) {
+          settingsPanel.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+      }, 300);
+    });
+  }
+}
+
 module.exports = class MinimalRegexHighlightPlugin extends Plugin {
   async onload() {
     const { MarkdownView, Notice } = require('obsidian');
+    
+    // 注入主面板透明背景CSS规则（!important覆盖Obsidian默认样式）
+    appendCSSToDynamicStyle(`
+      .rch-transparent-bg {
+        background: none !important;
+        background-color: transparent !important;
+        opacity: 1 !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+    `);
     
     this.settings = await this.loadData() || {};
     
@@ -20004,11 +19918,6 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       await this.saveData(this.settings);
     }
 
-    if (this.settings.autoExpandMode === undefined) {
-      this.settings.autoExpandMode = false;
-      await this.saveData(this.settings);
-    }
-
     if (this.settings.showRecentRulesWhenCollapsed === undefined) {
       this.settings.showRecentRulesWhenCollapsed = true;
       await this.saveData(this.settings);
@@ -20035,12 +19944,6 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     this.collapsedCategories = this.settings.collapsedCategories || {};
     if (!this.settings.collapsedCategories) {
       this.settings.collapsedCategories = this.collapsedCategories;
-      await this.saveData(this.settings);
-    }
-    
-    this.defaultCollapseCategories = this.settings.defaultCollapseCategories === undefined ? false : this.settings.defaultCollapseCategories;
-    if (this.settings.defaultCollapseCategories === undefined) {
-      this.settings.defaultCollapseCategories = this.defaultCollapseCategories;
       await this.saveData(this.settings);
     }
     
@@ -20183,11 +20086,6 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     this.currentFilePath = null;
     this.rules = [];
     this.globalRules = [];
-    this.manuallyExpandedCategories = this.settings.manuallyExpandedCategories || {};
-    if (!this.settings.manuallyExpandedCategories) {
-      this.settings.manuallyExpandedCategories = this.manuallyExpandedCategories;
-      await this.saveData(this.settings);
-    }
     
     this.rulesUpdateEmitter = new EventTarget();
     this.pinyinUpdateEmitter = new EventTarget();
@@ -20548,6 +20446,9 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       this.clampFloatingElementsPosition();
     };
     window.addEventListener('resize', this._floatingResizeHandler);
+    
+    // 注册插件设置页（提示用户设置在主面板底部）
+    this.addSettingTab(new RegexHighlightSettingTab(this.app, this));
     
   }
   
@@ -21281,7 +21182,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         // 直接在悬浮球上显示半透明效果（模拟鼠标离开时的状态）
         floatingBall.style.opacity = newOpacity.toString();
       }
-    });
+    }, { passive: false });
     
     // 添加到文档
     document.body.appendChild(floatingBall);
@@ -32675,7 +32576,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               span.dataset.remark = remark;
             }
             if (links && links.length > 0) span.dataset.links = JSON.stringify(links);
-            }
             if (ruleSource) {
               span.dataset.ruleSource = ruleSource;
             }
@@ -32689,6 +32589,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             node.parentNode.replaceChild(frag, node);
           }
         }
+      }
     };
 
     // 逐条规则应用高亮
@@ -36739,6 +36640,9 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
   if (modalInstance._resizeHandle && document.body.contains(modalInstance._resizeHandle)) {
     document.body.removeChild(modalInstance._resizeHandle);
   }
+  if (modalInstance._resizeObserver) {
+    modalInstance._resizeObserver.disconnect();
+  }
   if (modalInstance._positionInterval) {
     clearInterval(modalInstance._positionInterval);
   }
@@ -36764,14 +36668,16 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
     resizeHandle.style.bottom = `${window.innerHeight - rect.bottom + 2}px`;
   };
   
-  setTimeout(updatePosition, 0);
-  setTimeout(updatePosition, 50);
-  setTimeout(updatePosition, 100);
-  setTimeout(updatePosition, 200);
+  // 延迟更新位置，等面板完全渲染后再计算
+  requestAnimationFrame(() => {
+    requestAnimationFrame(updatePosition);
+  });
   
   window.addEventListener("resize", updatePosition);
   
-  const positionInterval = setInterval(updatePosition, 500);
+  // 使用ResizeObserver代替定时器，只在modal尺寸变化时更新位置
+  const resizeObserver = new ResizeObserver(updatePosition);
+  if (modalEl) resizeObserver.observe(modalEl);
   
   let isResizing = false;
   let resizeStartX, resizeStartY, resizeStartWidth, resizeStartHeight;
@@ -36800,7 +36706,6 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
     contentEl.style.width = "100%";
     contentEl.style.maxWidth = "100%";
     if (widthInput) widthInput.value = newWidth;
-    updatePosition();
   };
   
   const onResizeMouseUp = () => {
@@ -36808,10 +36713,15 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
     document.removeEventListener("mousemove", onResizeMouseMove);
     document.removeEventListener("mouseup", onResizeMouseUp);
     const newWidth = modalEl.offsetWidth;
+    const newHeight = modalEl.offsetHeight;
     if (modalInstance.plugin && modalInstance.plugin.settings) {
       modalInstance.plugin.settings[widthSettingsKey] = newWidth;
+      if (options.heightSettingsKey) {
+        modalInstance.plugin.settings[options.heightSettingsKey] = newHeight;
+      }
       modalInstance.plugin.saveData(modalInstance.plugin.settings);
     }
+    updatePosition();
   };
   
   resizeHandle.addEventListener("mousedown", onResizeMouseDown);
@@ -36819,7 +36729,7 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
   modalInstance._resizeHandle = resizeHandle;
   modalInstance._resizeUpdatePosition = updatePosition;
   modalInstance._resizeListeners = { mousemove: onResizeMouseMove, mouseup: onResizeMouseUp };
-  modalInstance._positionInterval = positionInterval;
+  modalInstance._resizeObserver = resizeObserver;
 }
 
 // 高亮列表弹窗类

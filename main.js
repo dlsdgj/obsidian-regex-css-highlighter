@@ -1,4 +1,4 @@
-﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover, PluginSettingTab } = require("obsidian");
+﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover, PluginSettingTab } = require("obsidian");
 
 // 直接将CSS规则追加到动态样式元素，确保新样式立即生效（无需重新读取文件）
 function appendCSSToDynamicStyle(cssRule) {
@@ -18,6 +18,9 @@ document.head.appendChild(_langSwitchStyle);
 
 // 跨平台文件操作工具：桌面端用 Node.js fs 模块（快速），手机端用 Obsidian Vault Adapter（兼容）
 const _isDesktop = typeof process !== 'undefined' && process.versions && !!process.versions.electron;
+
+// 全局跟踪当前活跃的右键菜单关闭监听器，确保切换菜单时清理旧的监听器
+let _activeContextMenuCleanup = null;
 
 const crossFS = {
   // 读取文件内容（异步）
@@ -205,6 +208,7 @@ const i18n = {
     'main.openCssEditor': '打开样式编辑器',
     'main.openStyleCategories': '打开样式分组',
     'main.addGroup': '添加分组',
+    'main.getMoreStyles': '获取更多样式',
     'main.defaultHide': '默认隐藏',
     'main.defaultShow': '默认显示',
     'main.styleCount': '样式数',
@@ -484,6 +488,7 @@ const i18n = {
     'settings.debugLog': '调试耗时日志',
     'settings.disableHeadingStyle': '禁用标题样式',
     'settings.showRecentRules': '折叠时显示最近规则',
+    'settings.showRecentRulesDesc': '（高亮规则标题折叠时，在标题下方显示最近添加/修改的规则）',
     'settings.hideOpenFileLink': '不显示标题后面的打开文件链接',
     'settings.styleUsageCount': '样式使用次数角标',
     'settings.hideAllStyles': '隐藏所有文本样式',
@@ -677,6 +682,8 @@ const i18n = {
     'settings.leftMargin': '左边距',
     'settings.rightMargin2': '右边距',
     'settings.mobilePreviewMargins': '手机版阅读模式边距',
+    'settings.mobileReadingLineMargin': '手机版阅读模式行、边距',
+    'settings.mobilePanelOpacity': '面板透明度',
     'settings.previewFontSize': '预览字体大小',
     'settings.remarkPopupWidth': '备注弹窗宽度',
     'settings.remarkPopupBorderWidth': '备注弹窗边框宽度',
@@ -781,6 +788,8 @@ const i18n = {
     'settings.remarkBadgeThresholdHint': '匹配文本字数大于此值时显示标记(0=始终显示)',
     'settings.remarkDebugLog': '备注调试日志',
     'settings.remarkDebugLogHint': '在控制台输出备注相关调试信息',
+    'settings.popupHoverDelay': '悬浮显示延迟',
+    'settings.popupHoverDelayHint': '鼠标悬浮在匹配词上多久后显示备注弹窗(毫秒)',
     'settings.popupAltWheel': 'Alt + 滚轮：调整弹窗宽度',
     'settings.popupCtrlWheel': 'Ctrl + 滚轮：调整弹窗透明度',
     'settings.enableFontSwitch': '启用字体切换功能',
@@ -801,6 +810,14 @@ const i18n = {
     'global.description': '单击输入到表达式编辑框 | 长按移动到当前文件规则 | 中键点击删除 | 右键编辑备注 | Shift+右键禁用规则',
     'heading.autoApply': '自动应用到Obsidian原生标题元素',
     'heading.noStyles': '暂无标题样式，右键样式按钮选择「添加为标题样式」来创建',
+    'heading.saveCurrentStyle': '保存当前风格',
+    'heading.presetName': '输入风格名称',
+    'heading.presetSaved': '风格已保存',
+    'heading.presetApplied': '风格已应用',
+    'heading.presetDeleted': '风格已删除',
+    'heading.applyPreset': '应用',
+    'heading.currentGroup': '当前',
+    'heading.applyGroup': '应用',
     'history.description': '单击输入到表达式编辑框 | 长按移动到全局规则 | 中键点击删除 | 右键编辑备注',
     'ai.chatHistory': '对话历史',
     'ai.reply': 'AI 回复',
@@ -1163,6 +1180,7 @@ const i18n = {
     'main.openCssEditor': 'Open Style Editor',
     'main.openStyleCategories': 'Open Style Categories',
     'main.addGroup': 'Add Group',
+    'main.getMoreStyles': 'Get More Styles',
     'main.defaultHide': 'Default Hide',
     'main.defaultShow': 'Default Show',
     'main.styleCount': 'Style Count',
@@ -1442,6 +1460,7 @@ const i18n = {
     'settings.debugLog': 'Debug Timing Log',
     'settings.disableHeadingStyle': 'Disable Heading Styles',
     'settings.showRecentRules': 'Show Recent Rules when Collapsed',
+    'settings.showRecentRulesDesc': '(Show recently added/modified rules below the title when panel is collapsed)',
     'settings.hideOpenFileLink': 'Hide Open File Link After Title',
     'settings.styleUsageCount': 'Style Usage Count Badge',
     'settings.hideAllStyles': 'Hide All Text Styles',
@@ -1635,6 +1654,8 @@ const i18n = {
     'settings.leftMargin': 'Left Margin',
     'settings.rightMargin2': 'Right Margin',
     'settings.mobilePreviewMargins': 'Mobile Reading Mode Margins',
+    'settings.mobileReadingLineMargin': 'Mobile Reading Mode Line & Margin',
+    'settings.mobilePanelOpacity': 'Panel Opacity',
     'settings.previewFontSize': 'Preview Font Size',
     'settings.remarkPopupWidth': 'Remark Popup Width',
     'settings.remarkPopupBorderWidth': 'Remark Popup Border Width',
@@ -1739,6 +1760,8 @@ const i18n = {
     'settings.remarkBadgeThresholdHint': 'Show badge when matched text length exceeds this value (0=always show)',
     'settings.remarkDebugLog': 'Remark Debug Log',
     'settings.remarkDebugLogHint': 'Output remark debug messages to console',
+    'settings.popupHoverDelay': 'Hover Display Delay',
+    'settings.popupHoverDelayHint': 'How long to hover over matched text before showing remark popup (ms)',
     'settings.popupAltWheel': 'Alt + Scroll: Adjust popup width',
     'settings.popupCtrlWheel': 'Ctrl + Scroll: Adjust popup opacity',
     'settings.enableFontSwitch': 'Enable Font Switch',
@@ -1759,6 +1782,14 @@ const i18n = {
     'global.description': 'Click to input | Long press to move to file rules | Middle-click to delete | Right-click to edit remark | Shift+Right-click to disable',
     'heading.autoApply': 'Auto-apply to Obsidian native heading elements',
     'heading.noStyles': 'No heading styles. Right-click style button and select "Add as Heading Style" to create',
+    'heading.saveCurrentStyle': 'Save Current Style',
+    'heading.presetName': 'Enter style name',
+    'heading.presetSaved': 'Style preset saved',
+    'heading.presetApplied': 'Style preset applied',
+    'heading.presetDeleted': 'Style preset deleted',
+    'heading.applyPreset': 'Apply',
+    'heading.currentGroup': 'Current',
+    'heading.applyGroup': 'Apply',
     'history.description': 'Click to input | Long press to move to global rules | Middle-click to delete | Right-click to edit remark',
     'ai.chatHistory': 'Chat History',
     'ai.reply': 'AI Reply',
@@ -6742,6 +6773,12 @@ class CSSEditorModal extends Modal {
         '.' + previewClassName
       );
       
+      // 修复没有类名前缀的伪元素规则（如 "::before { ... }"），添加预览类名前缀
+      processedCss = processedCss.replace(
+        /(^|\n)\s*(::[a-zA-Z-]+(?:\([^)]*\))?)\s*\{/g,
+        `$1.${previewClassName}$2 {`
+      );
+      
       // 更新样式表
       previewStyleEl.textContent = processedCss;
       
@@ -7097,6 +7134,7 @@ ${currentCss}
 
   async loadFullCssRule() {
     try {
+      // 先尝试从styles.css加载
       const cssPath = '.obsidian/plugins/Regex-Css-Highlighter/styles.css';
       const cssContent = await this.app.vault.adapter.read(cssPath);
       const escapedClassName = this.className.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -7108,6 +7146,28 @@ ${currentCss}
     } catch (error) {
       console.log('Failed to load full CSS rule:', error.message);
     }
+    
+    // 如果styles.css中没有，尝试从headingStyles构建完整规则
+    try {
+      const plugin = this.plugin || (this.app?.plugins?.plugins?.['regex-css-highlighter']);
+      if (plugin && plugin.settings && plugin.settings.headingStyles) {
+        const headingStyles = plugin.settings.headingStyles;
+        if (headingStyles[this.className]) {
+          let fullRule = `.${this.className} {\n  ${headingStyles[this.className]}\n}`;
+          const pseudoSuffixes = ['::before', '::after', '::first-line', '::first-letter'];
+          pseudoSuffixes.forEach(ps => {
+            const pseudoKey = this.className + ps;
+            if (headingStyles[pseudoKey]) {
+              fullRule += `\n\n.${this.className}${ps} {\n  ${headingStyles[pseudoKey]}\n}`;
+            }
+          });
+          return fullRule;
+        }
+      }
+    } catch (error) {
+      console.log('Failed to load heading style rule:', error.message);
+    }
+    
     return null;
   }
 
@@ -8779,20 +8839,21 @@ class AddRegexRuleModal extends Modal {
     contentEl.style.padding = "0 5px 0 5px";
     contentEl.style.boxSizing = "border-box";
     
-    // 内容区域宽度设置，使用用户配置的宽度减去边距
+    // 内容区域宽度设置，手机版不使用桌面版的保存设置
     const defaultWidth = _isDesktop ? 1000 : Math.min(window.innerWidth - 20, 1000);
-    const savedWidth = this.plugin.settings?.modalWidth || defaultWidth;
-    const userWidth = _isDesktop ? savedWidth : Math.min(savedWidth, defaultWidth);
-    const savedHeight = this.plugin.settings?.modalHeight;
+    const savedWidth = _isDesktop ? (this.plugin.settings?.modalWidth || defaultWidth) : defaultWidth;
+    const userWidth = _isDesktop ? savedWidth : defaultWidth;
+    const savedHeight = _isDesktop ? this.plugin.settings?.modalHeight : null;
     
     contentEl.style.width = "100%";
     contentEl.style.maxHeight = savedHeight ? `${savedHeight - 40}px` : "80vh";
     contentEl.style.overflowY = "auto";
+    contentEl.style.scrollbarGutter = "stable"; // 始终保留滚动条空间，避免滚动条出现时按钮重排
     
     this.modalEl.style.width = `${userWidth}px`;
     this.modalEl.style.maxWidth = '95vw';
     this.modalEl.style.minWidth = _isDesktop ? "800px" : "0";
-    // 恢复保存的高度，如果没有则使用默认80vh
+    // 恢复保存的高度（仅桌面版），如果没有则使用默认80vh
     if (savedHeight) {
       this.modalEl.style.height = `${savedHeight}px`;
       this.modalEl.style.maxHeight = 'none';
@@ -8805,10 +8866,27 @@ class AddRegexRuleModal extends Modal {
     this.modalEl.style.position = "fixed";
     this.modalEl.style.overflow = "visible";
     this.modalEl.style.zIndex = "100";
+    
     const modalContainer = this.modalEl.closest('.modal-container');
     if (modalContainer) {
       modalContainer.style.overflow = "visible";
       modalContainer.style.zIndex = "100";
+    }
+    
+    // 恢复保存的面板位置（仅桌面版）
+    const savedPosition = _isDesktop ? this.plugin.settings?.modalPosition : null;
+    if (savedPosition && savedPosition.left !== undefined && savedPosition.top !== undefined) {
+      // 确保位置在可见范围内
+      const posLeft = Math.min(savedPosition.left, window.innerWidth - 100);
+      const posTop = Math.min(savedPosition.top, window.innerHeight - 100);
+      this.modalEl.style.left = `${Math.max(0, posLeft)}px`;
+      this.modalEl.style.top = `${Math.max(0, posTop)}px`;
+      this.modalEl.style.transform = "none";
+      if (modalContainer) {
+        modalContainer.style.display = "flex";
+        modalContainer.style.justifyContent = "flex-start";
+        modalContainer.style.alignItems = "flex-start";
+      }
     }
     const modalBg = this.modalEl.closest('.modal-bg');
     if (modalBg) {
@@ -8882,10 +8960,11 @@ class AddRegexRuleModal extends Modal {
       this.modalEl.style.left = `${modalStartX + dx}px`;
       this.modalEl.style.top = `${modalStartY + dy}px`;
       this.modalEl.style.transform = "none";
-      // 确保容器也不居中定位
+      // 确保容器不居中定位
       if (modalContainer) {
-        modalContainer.style.display = "block";
-        modalContainer.style.position = "static";
+        modalContainer.style.display = "flex";
+        modalContainer.style.justifyContent = "flex-start";
+        modalContainer.style.alignItems = "flex-start";
       }
       // 更新右下角调整大小按钮位置
       if (this._resizeUpdatePosition) this._resizeUpdatePosition();
@@ -8895,6 +8974,18 @@ class AddRegexRuleModal extends Modal {
       if (isDragging) {
         isDragging = false;
         titleContainer.style.cursor = "grab";
+        // 保存面板位置（仅桌面版）
+        if (_isDesktop) {
+          const rect = this.modalEl.getBoundingClientRect();
+          if (this.plugin) {
+            this.plugin.settings = this.plugin.settings || {};
+            this.plugin.settings.modalPosition = {
+              left: rect.left,
+              top: rect.top
+            };
+            this.plugin.saveData(this.plugin.settings);
+          }
+        }
       }
     });
     
@@ -8928,6 +9019,19 @@ class AddRegexRuleModal extends Modal {
       this.onOpen();
     });
     
+    // 中键点击语言切换按钮打开插件目录
+    langSwitch.addEventListener('auxclick', (e) => {
+      if (e.button !== 1) return;
+      e.preventDefault();
+      try {
+        const pluginRelativePath = '.obsidian/plugins/Regex-Css-Highlighter';
+        const systemPath = require('path').join(this.app.vault.adapter.basePath, pluginRelativePath);
+        require('electron').shell.openPath(systemPath);
+      } catch (error) {
+        // 静默失败
+      }
+    });
+    
     // 创建标题并设置为inline显示
     const pluginVersion = this.plugin && this.plugin.manifest ? this.plugin.manifest.version : '';
     const titleText = pluginVersion ? `regex css highlighter v${pluginVersion}` : "regex css highlighter";
@@ -8944,45 +9048,6 @@ class AddRegexRuleModal extends Modal {
     // 添加空格
     mainTitleContainer.createEl('span', { text: " " });
     
-    // 创建"打开插件位置"链接
-    const openPluginLink = mainTitleContainer.createEl('span');
-    openPluginLink.textContent = t('main.openPluginLocation');
-    openPluginLink.style.padding = '0 4px';
-    openPluginLink.style.fontSize = '12px';
-    openPluginLink.style.color = '#0066cc';
-    openPluginLink.style.textDecoration = 'underline';
-    openPluginLink.style.cursor = 'pointer';
-    openPluginLink.style.visibility = 'hidden'; // 默认隐藏
-    openPluginLink.style.whiteSpace = 'nowrap'; // 防止链接换行
-    
-    // 链接点击事件
-    openPluginLink.addEventListener('click', () => {
-      try {
-        // 直接使用文件管理器打开插件目录（绕过Obsidian路径解析问题）
-        // 使用this.app.vault.adapter.basePath获取Vault的绝对路径
-        // 然后拼接完整的插件目录路径
-        const pluginRelativePath = '.obsidian/plugins/Regex-Css-Highlighter';
-        const systemPath = require('path').join(this.app.vault.adapter.basePath, pluginRelativePath);
-        
-        // 使用electron.shell.openPath直接打开文件夹
-        require('electron').shell.openPath(systemPath);
-        console.log('已直接进入插件文件夹:', systemPath);
-      } catch (error) {
-        console.error('打开插件位置失败:', error);
-        const { Notice } = require('obsidian');
-        new Notice(t('main.cannotOpenPluginLocation'));
-      }
-    });
-    
-    // 添加鼠标事件监听器，控制链接的显示和隐藏
-    mainTitleContainer.addEventListener('mouseenter', () => {
-      openPluginLink.style.visibility = 'visible';
-    });
-    
-    mainTitleContainer.addEventListener('mouseleave', () => {
-      openPluginLink.style.visibility = 'hidden';
-    });
-    
     // 右侧按钮区域
     const titleRightBtns = titleContainer.createDiv();
     titleRightBtns.style.display = 'flex';
@@ -8990,7 +9055,7 @@ class AddRegexRuleModal extends Modal {
     titleRightBtns.style.gap = '6px';
     titleRightBtns.style.flexShrink = '0';
     
-    // 锁定按钮 - 钉住面板，不随点击外部关闭
+    // 锁定按钮 - 钉住面板，不随点击外部关闭（手机版隐藏）
     const lockBtn = titleRightBtns.createEl('span');
     lockBtn.textContent = '📌';
     lockBtn.style.cssText = `
@@ -8999,6 +9064,7 @@ class AddRegexRuleModal extends Modal {
       opacity: 0.5;
       transition: opacity 0.2s;
       user-select: none;
+      ${!_isDesktop ? 'display: none;' : ''}
     `;
     lockBtn.title = '锁定面板，防止点击外部时关闭';
     
@@ -9042,6 +9108,19 @@ class AddRegexRuleModal extends Modal {
         };
         this.modalEl.addEventListener('focusin', this._lockFocusHandler);
         this.modalEl.addEventListener('mousedown', this._lockClickHandler);
+        // 锁定时监听编辑器选中文本，自动填入正则输入框
+        this._selectionChangeHandler = () => {
+          const selection = window.getSelection();
+          if (selection && selection.toString().trim()) {
+            const selectedText = selection.toString().trim();
+            // 确保选中文本来自编辑区而非面板自身
+            const anchorNode = selection.anchorNode;
+            if (anchorNode && !this.modalEl.contains(anchorNode) && this.regexInput) {
+              this.regexInput.setValue(selectedText);
+            }
+          }
+        };
+        document.addEventListener('selectionchange', this._selectionChangeHandler);
       } else {
         lockBtn.style.opacity = '0.5';
         lockBtn.title = '锁定面板，防止点击外部时关闭';
@@ -9060,6 +9139,11 @@ class AddRegexRuleModal extends Modal {
         if (this._lockClickHandler) {
           this.modalEl.removeEventListener('mousedown', this._lockClickHandler);
           this._lockClickHandler = null;
+        }
+        // 移除选中文本监听
+        if (this._selectionChangeHandler) {
+          document.removeEventListener('selectionchange', this._selectionChangeHandler);
+          this._selectionChangeHandler = null;
         }
         this._userClickedPanel = false;
       }
@@ -9999,6 +10083,18 @@ class AddRegexRuleModal extends Modal {
     addGroupLink.style.cursor = 'pointer';
     addGroupLink.style.visibility = 'hidden'; // 默认隐藏链接
     
+    // 创建"获取更多样式"链接
+    const getMoreStylesLink = titleAndLinkContainer.createEl('a');
+    getMoreStylesLink.textContent = t('main.getMoreStyles') || '获取更多样式';
+    getMoreStylesLink.href = 'https://github.com/dlsdgj/obsidian-regex-css-highlighter/discussions/1';
+    getMoreStylesLink.target = '_blank';
+    getMoreStylesLink.style.padding = '0 4px';
+    getMoreStylesLink.style.fontSize = '12px';
+    getMoreStylesLink.style.color = '#0066cc';
+    getMoreStylesLink.style.textDecoration = 'underline';
+    getMoreStylesLink.style.cursor = 'pointer';
+    getMoreStylesLink.style.visibility = 'hidden'; // 默认隐藏链接
+    
     // 链接点击事件
     addGroupLink.addEventListener('click', async () => {
       try {
@@ -10069,12 +10165,14 @@ class AddRegexRuleModal extends Modal {
       openStylesCssLink.style.visibility = 'visible';
       openStyleCategoriesLink.style.visibility = 'visible';
       addGroupLink.style.visibility = 'visible';
+      getMoreStylesLink.style.visibility = 'visible';
     });
     
     titleAndLinkContainer.addEventListener('mouseleave', () => {
       openStylesCssLink.style.visibility = 'hidden';
       openStyleCategoriesLink.style.visibility = 'hidden';
       addGroupLink.style.visibility = 'hidden';
+      getMoreStylesLink.style.visibility = 'hidden';
     });
     
     // 创建单显区域（标签页栏 + 内容展开区）- 放在常显区域上方
@@ -10440,6 +10538,17 @@ class AddRegexRuleModal extends Modal {
               tabFloatBtn.style.opacity = '0';
             });
             tab.appendChild(tabFloatBtn);
+            
+            // 恢复保存的分组样式
+            const savedGroupStyleClass = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[category];
+            if (savedGroupStyleClass) {
+              tab.className = `collapsed-category-reopen-btn group-btn-style-${savedGroupStyleClass}`;
+              tab.style.backgroundColor = '';
+              tab.style.color = '';
+              tab.style.border = '';
+              tab.style.boxShadow = '';
+              this.plugin.applyGroupButtonStyleRules(savedGroupStyleClass);
+            }
           }
           
           // 保存状态到插件实例
@@ -11316,10 +11425,15 @@ class AddRegexRuleModal extends Modal {
             e.preventDefault();
             e.stopPropagation();
             
-            // 关闭已有的右键菜单
+            // 关闭已有的右键菜单并清理旧的监听器
             const existingMenu = document.querySelector('.rch-context-menu');
             if (existingMenu && document.body.contains(existingMenu)) {
               document.body.removeChild(existingMenu);
+            }
+            // 清理旧的关闭监听器
+            if (_activeContextMenuCleanup) {
+              _activeContextMenuCleanup();
+              _activeContextMenuCleanup = null;
             }
             
             console.log('Right-click on style button:', className);
@@ -11567,7 +11681,10 @@ class AddRegexRuleModal extends Modal {
                 // 点击时不做任何操作，等待用户选择分组
               });
               
-              menu.appendChild(moveOption);
+              // 手机版不显示"移动到分组"子菜单
+              if (_isDesktop) {
+                menu.appendChild(moveOption);
+              }
             } else {
               // 普通模式下的选项
               
@@ -11897,7 +12014,44 @@ class AddRegexRuleModal extends Modal {
                     if (!this.plugin.settings.headingStyles) {
                       this.plugin.settings.headingStyles = {};
                     }
+                    // 清除该标题级别旧的样式和伪元素条目
+                    delete this.plugin.settings.headingStyles[newClassName];
+                    const oldPseudoKeys = Object.keys(this.plugin.settings.headingStyles).filter(k => k.startsWith(newClassName + '::'));
+                    oldPseudoKeys.forEach(k => delete this.plugin.settings.headingStyles[k]);
+                    
                     this.plugin.settings.headingStyles[newClassName] = convertedStyle;
+                    
+                    // 从cssStyles中提取伪元素规则（::before, ::after等）
+                    const pseudoSuffixes = ['::before', '::after', '::first-line', '::first-letter'];
+                    let pseudoFound = false;
+                    pseudoSuffixes.forEach(pseudoSuffix => {
+                      const pseudoClassName = className + pseudoSuffix;
+                      const pseudoStyle = this.cssStyles.get(pseudoClassName);
+                      if (pseudoStyle) {
+                        this.plugin.settings.headingStyles[newClassName + pseudoSuffix] = pseudoStyle;
+                        pseudoFound = true;
+                      }
+                    });
+                    
+                    // 如果cssStyles中没有伪元素，尝试直接从CSS文件中提取
+                    if (!pseudoFound) {
+                      try {
+                        const cssContent = await this.app.vault.adapter.read('.obsidian/plugins/Regex-Css-Highlighter/styles.css');
+                        const escapedName = className.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const pseudoRegex = new RegExp('\\.' + escapedName + '(::[a-zA-Z-]+(?:\\([^)]*\\))?)\\s*\\{([^}]*)\\}', 'g');
+                        let pseudoMatch;
+                        while ((pseudoMatch = pseudoRegex.exec(cssContent)) !== null) {
+                          const pseudoElement = pseudoMatch[1]; // e.g. "::before"
+                          const pseudoStyle = pseudoMatch[2].trim();
+                          if (pseudoStyle) {
+                            this.plugin.settings.headingStyles[newClassName + pseudoElement] = pseudoStyle;
+                          }
+                        }
+                      } catch (e) {
+                        // 读取CSS文件失败时忽略
+                      }
+                    }
+                    
                     await this.plugin.saveData(this.plugin.settings);
                     
                     // 确保"标题样式"分组存在
@@ -11914,15 +12068,20 @@ class AddRegexRuleModal extends Modal {
                     const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
                     await this.app.vault.adapter.write(configPath, JSON.stringify(this.plugin.config.styleCategories, null, 2));
                     
-                    // 重新注入CSS内容（使用已有的动态样式内容，避免重新读取styles.css）
+                    // 重新注入CSS内容（直接从文件读取，确保最新）
                     if (typeof this.plugin.injectCSSContent === 'function') {
-                      const existingStyleEl = document.getElementById('Regex-Css-Highlighter-dynamic-styles');
-                      const existingCss = existingStyleEl ? existingStyleEl.textContent.replace(/\/\* Obsidian 标题样式支持 \*\/[\s\S]*$/, '').trim() : null;
-                      await this.plugin.injectCSSContent(existingCss || undefined);
+                      await this.plugin.injectCSSContent();
                     }
                     
                     // 同步更新模态框的cssStyles
                     this.cssStyles.set(newClassName, convertedStyle);
+                    // 同步伪元素到cssStyles
+                    pseudoSuffixes.forEach(ps => {
+                      const key = newClassName + ps;
+                      if (this.plugin.settings.headingStyles[key]) {
+                        this.cssStyles.set(key, this.plugin.settings.headingStyles[key]);
+                      }
+                    });
                     
                     // 重新应用高亮
                     if (typeof this.plugin.checkAndApplyHighlights === 'function') {
@@ -11953,73 +12112,89 @@ class AddRegexRuleModal extends Modal {
               
               let hideTimeout = null;
               
-              addHeadingOption.addEventListener('mouseenter', () => {
-                addHeadingOption.style.background = 'var(--background-modifier-hover)';
-                // 清除隐藏定时器
-                if (hideTimeout) {
-                  clearTimeout(hideTimeout);
-                  hideTimeout = null;
-                }
-                // 显示子菜单
-                headingList.style.display = 'block';
-                // 检测子菜单是否溢出屏幕右侧，如果是则改为左侧显示
-                const menuRect = menu.getBoundingClientRect();
-                const listRect = headingList.getBoundingClientRect();
-                if (menuRect.right + listRect.width > window.innerWidth - 10) {
-                  headingList.style.left = 'auto';
-                  headingList.style.right = '100%';
-                } else {
-                  headingList.style.left = '100%';
-                  headingList.style.right = 'auto';
-                }
-                // 检测子菜单是否溢出屏幕底部
-                const hSubRect = headingList.getBoundingClientRect();
-                if (hSubRect.bottom > window.innerHeight - 10) {
-                  const hOverflow = hSubRect.bottom - (window.innerHeight - 10);
-                  const hCurrentTop = parseFloat(headingList.style.top) || 0;
-                  const hNewViewportTop = hSubRect.top - hOverflow;
-                  if (hNewViewportTop >= 10) {
-                    headingList.style.top = `${hCurrentTop - hOverflow}px`;
+              if (_isDesktop) {
+                // 桌面版：使用 mouseenter/mouseleave 显示/隐藏子菜单
+                addHeadingOption.addEventListener('mouseenter', () => {
+                  addHeadingOption.style.background = 'var(--background-modifier-hover)';
+                  if (hideTimeout) { clearTimeout(hideTimeout); hideTimeout = null; }
+                  headingList.style.display = 'block';
+                  const menuRect = menu.getBoundingClientRect();
+                  const listRect = headingList.getBoundingClientRect();
+                  if (menuRect.right + listRect.width > window.innerWidth - 10) {
+                    headingList.style.left = 'auto';
+                    headingList.style.right = '100%';
                   } else {
-                    headingList.style.top = `${hCurrentTop - (hSubRect.top - 10)}px`;
-                    headingList.style.maxHeight = `${window.innerHeight - 20}px`;
-                    headingList.style.overflowY = 'auto';
+                    headingList.style.left = '100%';
+                    headingList.style.right = 'auto';
                   }
-                }
-              });
-              
-              addHeadingOption.addEventListener('mouseleave', () => {
-                addHeadingOption.style.background = 'transparent';
-                // 延迟隐藏子菜单
-                hideTimeout = setTimeout(() => {
-                  if (!headingList.matches(':hover')) {
-                    headingList.style.display = 'none';
+                  const hSubRect = headingList.getBoundingClientRect();
+                  if (hSubRect.bottom > window.innerHeight - 10) {
+                    const hOverflow = hSubRect.bottom - (window.innerHeight - 10);
+                    const hCurrentTop = parseFloat(headingList.style.top) || 0;
+                    const hNewViewportTop = hSubRect.top - hOverflow;
+                    if (hNewViewportTop >= 10) {
+                      headingList.style.top = `${hCurrentTop - hOverflow}px`;
+                    } else {
+                      headingList.style.top = `${hCurrentTop - (hSubRect.top - 10)}px`;
+                      headingList.style.maxHeight = `${window.innerHeight - 20}px`;
+                      headingList.style.overflowY = 'auto';
+                    }
                   }
-                }, 150);
-              });
-              
-              headingList.addEventListener('mouseenter', () => {
-                // 清除隐藏定时器
-                if (hideTimeout) {
-                  clearTimeout(hideTimeout);
-                  hideTimeout = null;
-                }
-              });
-              
-              headingList.addEventListener('mouseleave', () => {
-                // 延迟隐藏子菜单
-                hideTimeout = setTimeout(() => {
-                  if (!addHeadingOption.matches(':hover')) {
-                    headingList.style.display = 'none';
+                });
+                
+                addHeadingOption.addEventListener('mouseleave', () => {
+                  addHeadingOption.style.background = 'transparent';
+                  hideTimeout = setTimeout(() => {
+                    if (!headingList.matches(':hover')) {
+                      headingList.style.display = 'none';
+                    }
+                  }, 150);
+                });
+                
+                headingList.addEventListener('mouseenter', () => {
+                  if (hideTimeout) { clearTimeout(hideTimeout); hideTimeout = null; }
+                });
+                
+                headingList.addEventListener('mouseleave', () => {
+                  hideTimeout = setTimeout(() => {
+                    if (!addHeadingOption.matches(':hover')) {
+                      headingList.style.display = 'none';
+                    }
+                  }, 150);
+                });
+              } else {
+                // 手机版：点击切换子菜单显示/隐藏
+                addHeadingOption.addEventListener('click', (ce) => {
+                  ce.stopPropagation();
+                  const isVisible = headingList.style.display === 'block';
+                  // 先关闭所有其他子菜单
+                  menu.querySelectorAll('.rch-submenu-list').forEach(sl => sl.style.display = 'none');
+                  if (!isVisible) {
+                    headingList.style.display = 'block';
+                    // 手机版：子菜单改为向下展开而非侧边
+                    headingList.style.position = 'relative';
+                    headingList.style.left = '0';
+                    headingList.style.right = 'auto';
+                    headingList.style.top = '0';
+                    headingList.style.marginLeft = '0';
+                    headingList.style.marginRight = '0';
+                    headingList.style.width = '100%';
+                    headingList.style.maxHeight = '150px';
                   }
-                }, 150);
-              });
+                });
+                headingList.classList.add('rch-submenu-list');
+              }
               
-              addHeadingOption.addEventListener('click', () => {
-                // 点击时不做任何操作，等待用户选择标题级别
-              });
+              if (_isDesktop) {
+                addHeadingOption.addEventListener('click', () => {
+                  // 桌面版：点击时不做任何操作，等待用户选择标题级别
+                });
+              }
 
-              menu.appendChild(addHeadingOption);
+              // 手机版不显示"添加为标题样式"子菜单
+              if (_isDesktop) {
+                menu.appendChild(addHeadingOption);
+              }
 
               // 添加悬浮显示选项
               const floatOption = document.createElement('div');
@@ -12268,7 +12443,10 @@ class AddRegexRuleModal extends Modal {
                 // 点击时不做任何操作，等待用户选择分组
               });
 
-              menu.appendChild(moveOption);
+              // 手机版不显示"移动到分组"子菜单
+              if (_isDesktop) {
+                menu.appendChild(moveOption);
+              }
             }
 
             document.body.appendChild(menu);
@@ -12284,17 +12462,49 @@ class AddRegexRuleModal extends Modal {
               menu.style.top = `${Math.max(10, windowHeight - menuRect.height - 10)}px`;
             }
             
-            // 点击其他地方关闭菜单
+            // 手机版：阻止菜单上的触摸事件冒泡，避免立即触发closeMenu
+            if (!_isDesktop) {
+              menu.addEventListener('touchstart', (te) => {
+                te.stopPropagation();
+              }, { passive: true });
+            }
+            
+            // 关闭菜单并清理所有监听器
             const closeMenu = (event) => {
               if (!menu.contains(event.target)) {
                 if (document.body.contains(menu)) {
                   document.body.removeChild(menu);
                 }
                 document.removeEventListener('click', closeMenu);
+                if (!_isDesktop) {
+                  document.removeEventListener('touchstart', closeMenuTouch);
+                }
+                _activeContextMenuCleanup = null;
               }
             };
             
+            // 手机版：触摸其他地方也关闭菜单
+            const closeMenuTouch = (event) => {
+              if (!menu.contains(event.target)) {
+                if (document.body.contains(menu)) {
+                  document.body.removeChild(menu);
+                }
+                document.removeEventListener('click', closeMenu);
+                document.removeEventListener('touchstart', closeMenuTouch);
+                _activeContextMenuCleanup = null;
+              }
+            };
+            
+            // 保存清理函数，以便下次弹出菜单时清理
+            _activeContextMenuCleanup = () => {
+              document.removeEventListener('click', closeMenu);
+              document.removeEventListener('touchstart', closeMenuTouch);
+            };
+            
             document.addEventListener('click', closeMenu);
+            if (!_isDesktop) {
+              document.addEventListener('touchstart', closeMenuTouch, { passive: true });
+            }
           });
           
           styleOption.addEventListener("mouseenter", () => {
@@ -12457,9 +12667,18 @@ class AddRegexRuleModal extends Modal {
             tabFloatBtn.style.opacity = '0';
           });
           tab.appendChild(tabFloatBtn);
+          
+          // 恢复保存的分组样式
+          const savedTabStyleClass = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[category];
+          if (savedTabStyleClass) {
+            tab.className = `collapsed-category-reopen-btn group-btn-style-${savedTabStyleClass}`;
+            tab.style.backgroundColor = '';
+            tab.style.color = '';
+            tab.style.border = '';
+            tab.style.boxShadow = '';
+            this.plugin.applyGroupButtonStyleRules(savedTabStyleClass);
+          }
         }
-        
-        // 显示折叠分类容器
         collapsedCategoriesContainer.style.display = 'flex';
       } else {
         // 当分组不应该折叠时，根据输入值控制样式按钮的显示
@@ -12958,6 +13177,8 @@ class AddRegexRuleModal extends Modal {
       const category = tab.getAttribute('data-category');
       
       const menu = new Menu();
+
+      // 固定到常显区
       menu.addItem((item) => {
         item.setTitle(t('main.pinToNormalDisplay')).onClick(() => {
           // 如果当前标签是展开状态，先折叠内容
@@ -13007,6 +13228,333 @@ class AddRegexRuleModal extends Modal {
           }
         });
       });
+
+      // 重命名选项
+      menu.addItem((item) => {
+        item
+          .setTitle(t('context.renameGroup'))
+          .setIcon("pencil")
+          .onClick(async () => {
+            try {
+              const modal = new InputModal(
+                this.app,
+                t('main.renameGroup'),
+                t('main.inputNewGroupName'),
+                category,
+                async (newName) => {
+                  try {
+                    const trimmedName = newName.trim();
+                    if (!trimmedName) {
+                      new Notice(t('main.groupNameEmpty'));
+                      return;
+                    }
+                    if (trimmedName === category) return;
+                    if (styleCategories[trimmedName]) {
+                      new Notice(t('main.groupNameExists'));
+                      return;
+                    }
+                    if (styleCategories[category]) {
+                      styleCategories[trimmedName] = styleCategories[category];
+                      delete styleCategories[category];
+                      const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
+                      await this.app.vault.adapter.write(configPath, JSON.stringify(styleCategories, null, 2));
+                      new Notice(t('main.groupRenamed'));
+                      this.close();
+                      setTimeout(() => {
+                        if (this.plugin && this.plugin.loadStyleCategories) {
+                          this.plugin.loadStyleCategories();
+                        }
+                      }, 100);
+                    }
+                  } catch (error) {
+                    console.error("重命名分组时出错:", error);
+                    new Notice(t('main.groupAddFailed'));
+                  }
+                }
+              );
+              this.openSubModal(modal);
+            } catch (error) {
+              console.error("打开重命名对话框时出错:", error);
+              new Notice(t('main.cannotOpenEditor'));
+            }
+          });
+      });
+
+      // 添加分组选项
+      menu.addItem((item) => {
+        item
+          .setTitle(t('context.addGroup'))
+          .setIcon("folder-plus")
+          .onClick(async () => {
+            try {
+              const modal = new InputModal(
+                this.app,
+                t('main.addGroup'),
+                t('main.newGroupName'),
+                t('main.newGroup'),
+                async (newGroupName) => {
+                  try {
+                    const trimmedName = newGroupName.trim();
+                    if (!trimmedName) {
+                      new Notice(t('main.groupNameEmpty'));
+                      return;
+                    }
+                    if (styleCategories[trimmedName]) {
+                      new Notice(t('main.groupNameExists'));
+                      return;
+                    }
+                    styleCategories[trimmedName] = [];
+                    const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
+                    await this.app.vault.adapter.write(configPath, JSON.stringify(styleCategories, null, 2));
+                    new Notice(t('main.groupCreated'));
+                    if (this.plugin && typeof this.plugin.loadStyleCategories === 'function') {
+                      await this.plugin.loadStyleCategories();
+                    }
+                    if (typeof this.refreshModalContent === 'function') {
+                      await this.refreshModalContent();
+                    }
+                  } catch (error) {
+                    console.error("添加分组时出错:", error);
+                    new Notice(t('main.groupAddFailed'));
+                  }
+                }
+              );
+              this.openSubModal(modal);
+            } catch (error) {
+              console.error("打开添加分组对话框时出错:", error);
+              new Notice(t('main.cannotOpenEditor'));
+            }
+          });
+      });
+
+      // 删除分组选项
+      menu.addItem((item) => {
+        item
+          .setTitle(t('context.deleteGroup'))
+          .setIcon("trash")
+          .onClick(async () => {
+            try {
+              const hasStyles = styleCategories[category] && styleCategories[category].length > 0;
+              const confirmMessage = hasStyles 
+                ? t('main.deleteGroupWithStyles') + ` (${styleCategories[category].length})`
+                : t('main.deleteEmptyGroup');
+              const modal = new ConfirmModal(
+                this.app,
+                t('main.confirmDeleteGroup'),
+                confirmMessage,
+                async () => {
+                  try {
+                    delete styleCategories[category];
+                    const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
+                    await this.app.vault.adapter.write(configPath, JSON.stringify(styleCategories, null, 2));
+                    new Notice(t('main.groupDeleted'));
+                    if (this.plugin && typeof this.plugin.loadStyleCategories === 'function') {
+                      await this.plugin.loadStyleCategories();
+                    }
+                    if (typeof this.refreshModalContent === 'function') {
+                      await this.refreshModalContent();
+                    }
+                  } catch (error) {
+                    console.error("删除分组时出错:", error);
+                    new Notice(t('main.groupAddFailed'));
+                  }
+                }
+              );
+              this.openSubModal(modal);
+            } catch (error) {
+              console.error("打开删除确认对话框时出错:", error);
+              new Notice(t('main.cannotOpenEditor'));
+            }
+          });
+      });
+
+      // 添加到悬浮球选项
+      const floatingBallGroups = this.plugin?.floatButtonData?.floatingBallGroups || [];
+      const isInFloatingBall = floatingBallGroups.includes(category);
+      
+      menu.addItem((item) => {
+        item
+          .setTitle(isInFloatingBall ? t('main.removeFromFloatingBall') : t('main.addToFloatingBall'))
+          .setIcon(isInFloatingBall ? "minus-circle" : "plus-circle")
+          .onClick(async () => {
+            try {
+              if (isInFloatingBall) {
+                const index = floatingBallGroups.indexOf(category);
+                if (index > -1) {
+                  floatingBallGroups.splice(index, 1);
+                }
+                this.plugin.floatButtonData.floatingBallGroups = floatingBallGroups;
+                new Notice(t('main.groupDeleted'));
+              } else {
+                floatingBallGroups.push(category);
+                this.plugin.floatButtonData.floatingBallGroups = floatingBallGroups;
+                new Notice(t('main.groupAdded'));
+              }
+              await this.plugin.saveFloatButtonData();
+            } catch (error) {
+              console.error("设置悬浮球分组时出错:", error);
+              new Notice(t('main.groupAddFailed'));
+            }
+          });
+      });
+
+      // 悬浮显示分组
+      menu.addItem((item) => {
+        item
+          .setTitle(t('floating.floatThisGroup'))
+          .setIcon("layout-grid")
+          .onClick(async () => {
+            try {
+              if (!this.plugin.floatButtonData.floatingBallGroupOptions) {
+                this.plugin.floatButtonData.floatingBallGroupOptions = [];
+              }
+              if (!this.plugin.floatButtonData.floatingBallGroupOptions.includes(category)) {
+                this.plugin.floatButtonData.floatingBallGroupOptions.push(category);
+              }
+              await this.plugin.saveFloatButtonData();
+              this.plugin.renderFloatingOptionButtons();
+              new Notice(t('main.floatEnabled'));
+            } catch (error) {
+              console.error("悬浮显示分组时出错:", error);
+              new Notice(t('main.groupAddFailed'));
+            }
+          });
+      });
+
+      // 编辑分组样式
+      menu.addItem((item) => {
+        item
+          .setTitle(t('context.editGroupStyle'))
+          .setIcon("palette")
+          .onClick(async () => {
+            try {
+              const currentStyleClass = this.plugin.floatButtonData?.groupButtonStyleClasses?.[category] || '';
+
+              const styleModal = new Modal(this.app);
+              styleModal.titleEl.textContent = t('main.groupStyleEditTitle');
+              styleModal.contentEl.addClass('input-modal');
+
+              const styleDiv = styleModal.contentEl.createDiv();
+              styleDiv.style.marginBottom = '12px';
+
+              const styleName = styleDiv.createEl('label');
+              styleName.textContent = t('floating.styleClassNameLabel') + ': ';
+              styleName.style.display = 'block';
+              styleName.style.marginBottom = '4px';
+              styleName.style.fontWeight = 'bold';
+
+              const styleHint = styleDiv.createEl('span');
+              styleHint.textContent = t('floating.styleClassHint');
+              styleHint.style.fontSize = '12px';
+              styleHint.style.color = 'var(--text-muted)';
+              styleHint.style.display = 'block';
+              styleHint.style.marginBottom = '4px';
+
+              const styleInput = styleDiv.createEl('input');
+              styleInput.type = 'text';
+              styleInput.placeholder = t('floating.inputCssClass');
+              styleInput.value = currentStyleClass;
+              styleInput.style.width = '100%';
+              styleInput.style.padding = '8px';
+              styleInput.style.border = '1px solid var(--background-modifier-border)';
+              styleInput.style.borderRadius = '4px';
+
+              const previewDiv = styleModal.contentEl.createDiv();
+              previewDiv.style.marginBottom = '16px';
+
+              const previewLabel = previewDiv.createEl('label');
+              previewLabel.textContent = t('floating.preview') + ': ';
+              previewLabel.style.display = 'block';
+              previewLabel.style.marginBottom = '4px';
+              previewLabel.style.fontWeight = 'bold';
+
+              const previewEl = previewDiv.createEl('span');
+              previewEl.textContent = category;
+              previewEl.style.display = 'inline-block';
+              previewEl.style.padding = '1px 5px';
+              previewEl.style.borderRadius = '3px';
+              previewEl.style.whiteSpace = 'nowrap';
+              previewEl.style.fontSize = '14px';
+              previewEl.style.fontWeight = 'bold';
+
+              const updatePreview = (className) => {
+                if (className) {
+                  previewEl.className = `group-btn-style-${className}`;
+                  previewEl.style.backgroundColor = '';
+                  previewEl.style.color = '';
+                  previewEl.style.border = '';
+                  previewEl.style.boxShadow = '';
+                  this.plugin.applyGroupButtonStyleRules(className);
+                } else {
+                  previewEl.className = '';
+                  previewEl.style.backgroundColor = '#007bff';
+                  previewEl.style.color = 'white';
+                  previewEl.style.border = '';
+                  previewEl.style.boxShadow = '';
+                }
+              };
+
+              updatePreview(currentStyleClass);
+
+              styleInput.addEventListener('input', () => {
+                updatePreview(styleInput.value.trim());
+              });
+
+              const buttonContainer = styleModal.contentEl.createEl('div');
+              buttonContainer.style.display = 'flex';
+              buttonContainer.style.justifyContent = 'flex-end';
+              buttonContainer.style.gap = '8px';
+
+              const cancelBtn = buttonContainer.createEl('button');
+              cancelBtn.textContent = t('main.cancel');
+              cancelBtn.style.padding = '6px 16px';
+              cancelBtn.addEventListener('click', () => styleModal.close());
+
+              const confirmBtn = buttonContainer.createEl('button');
+              confirmBtn.textContent = t('main.confirm');
+              confirmBtn.style.padding = '6px 16px';
+              confirmBtn.style.backgroundColor = 'var(--interactive-accent)';
+              confirmBtn.style.color = 'white';
+              confirmBtn.style.border = 'none';
+              confirmBtn.style.borderRadius = '4px';
+              confirmBtn.addEventListener('click', async () => {
+                const newStyleClass = styleInput.value.trim();
+
+                if (!this.plugin.floatButtonData.groupButtonStyleClasses) {
+                  this.plugin.floatButtonData.groupButtonStyleClasses = {};
+                }
+                this.plugin.floatButtonData.groupButtonStyleClasses[category] = newStyleClass;
+                await this.plugin.saveFloatButtonData();
+
+                // 更新标签按钮的样式
+                if (newStyleClass) {
+                  tab.className = `collapsed-category-reopen-btn group-btn-style-${newStyleClass}`;
+                  tab.style.backgroundColor = '';
+                  tab.style.color = '';
+                  tab.style.border = '';
+                  tab.style.boxShadow = '';
+                  this.plugin.applyGroupButtonStyleRules(newStyleClass);
+                } else {
+                  tab.className = 'collapsed-category-reopen-btn';
+                  tab.style.backgroundColor = '#007bff';
+                  tab.style.color = 'white';
+                  tab.style.border = '';
+                  tab.style.boxShadow = '';
+                }
+
+                new Notice(t('main.groupStyleUpdated'));
+                styleModal.close();
+              });
+
+              setTimeout(() => styleInput.focus(), 100);
+              this.openSubModal(styleModal);
+            } catch (error) {
+              console.error("编辑分组样式时出错:", error);
+              new Notice(t('main.cannotOpenEditor'));
+            }
+          });
+      });
+
       menu.showAtMouseEvent(e);
     });
   }
@@ -13778,6 +14326,12 @@ class AddRegexRuleModal extends Modal {
     showRecentRulesLabel.style.marginRight = "10px";
     showRecentRulesLabel.style.fontSize = "14px";
     
+    const showRecentRulesDesc = showRecentRulesRow.createEl("span");
+    showRecentRulesDesc.textContent = t('settings.showRecentRulesDesc') || '（面板折叠时，在标题下方显示最近添加/修改的规则）';
+    showRecentRulesDesc.style.fontSize = "12px";
+    showRecentRulesDesc.style.color = "var(--text-muted)";
+    showRecentRulesDesc.style.marginRight = "10px";
+    
     const showRecentRulesInput = showRecentRulesRow.createEl("input");
     showRecentRulesInput.type = "checkbox";
     showRecentRulesInput.checked = this.plugin.settings && this.plugin.settings.showRecentRulesWhenCollapsed !== false;
@@ -14003,7 +14557,7 @@ class AddRegexRuleModal extends Modal {
 
     // 手机版阅读模式行、边距设置
     if (!_isDesktop) {
-      const mobileMarginOutline = createOutlineSection(displayContent, '手机版阅读模式行、边距', { isCollapsed: true, icon: '📱' });
+      const mobileMarginOutline = createOutlineSection(displayContent, t('settings.mobileReadingLineMargin'), { isCollapsed: true, icon: '📱' });
       const mobileMarginContainer = mobileMarginOutline.content;
 
       // 行距
@@ -14113,7 +14667,7 @@ class AddRegexRuleModal extends Modal {
 
     // 手机版面板透明度设置
     if (!_isDesktop) {
-      const mobileOpacityOutline = createOutlineSection(displayContent, '面板透明度', { isCollapsed: true, icon: '🔲' });
+      const mobileOpacityOutline = createOutlineSection(displayContent, t('settings.mobilePanelOpacity'), { isCollapsed: true, icon: '🔲' });
       const mobileOpacityContainer = mobileOpacityOutline.content;
 
       // 主面板透明度
@@ -14218,6 +14772,39 @@ class AddRegexRuleModal extends Modal {
       this.plugin.settings.remarkKeepOpen = isChecked;
       await this.plugin.saveData(this.plugin.settings);
     });
+
+    // 添加悬浮显示延迟设置
+    const popupHoverDelayRow = popupSettingsContent.createDiv();
+    popupHoverDelayRow.style.display = "flex";
+    popupHoverDelayRow.style.alignItems = "center";
+    popupHoverDelayRow.style.marginBottom = "5px";
+    popupHoverDelayRow.style.flexWrap = "wrap";
+
+    const popupHoverDelayLabel = popupHoverDelayRow.createEl("span");
+    popupHoverDelayLabel.textContent = t('settings.popupHoverDelay') + ': ';
+    popupHoverDelayLabel.style.marginRight = "10px";
+    popupHoverDelayLabel.style.fontSize = "14px";
+
+    const popupHoverDelayInput = popupHoverDelayRow.createEl("input");
+    popupHoverDelayInput.type = "number";
+    popupHoverDelayInput.value = this.plugin.settings?.popupHoverDelay !== undefined ? this.plugin.settings.popupHoverDelay : 300;
+    popupHoverDelayInput.min = "0";
+    popupHoverDelayInput.max = "2000";
+    popupHoverDelayInput.step = "50";
+    popupHoverDelayInput.style.width = "80px";
+    popupHoverDelayInput.style.padding = "4px";
+    popupHoverDelayInput.style.border = "1px solid var(--background-modifier-border)";
+    popupHoverDelayInput.style.borderRadius = "4px";
+
+    const popupHoverDelayUnit = popupHoverDelayRow.createEl("span", { text: "ms" });
+    popupHoverDelayUnit.style.marginLeft = "5px";
+    popupHoverDelayUnit.style.fontSize = "14px";
+
+    const popupHoverDelayHint = popupHoverDelayRow.createEl("span");
+    popupHoverDelayHint.textContent = t('settings.popupHoverDelayHint');
+    popupHoverDelayHint.style.fontSize = "12px";
+    popupHoverDelayHint.style.color = "var(--text-muted)";
+    popupHoverDelayHint.style.marginLeft = "8px";
 
     // 添加备注弹窗字体大小设置
     const fontSizeSettingRow = popupSettingsContent.createDiv();
@@ -14461,6 +15048,7 @@ class AddRegexRuleModal extends Modal {
         this.plugin.settings.showRemarkBadge = showRemarkBadgeCheckbox.checked;
         this.plugin.settings.remarkBadgeThreshold = parseInt(remarkBadgeThresholdInput.value) || 0;
         this.plugin.settings.remarkDebugLog = remarkDebugLogCheckbox.checked;
+        this.plugin.settings.popupHoverDelay = parseInt(popupHoverDelayInput.value) || 0;
         await this.plugin.saveData(this.plugin.settings);
         new Notice(t('settings.remarkPopupSaved'));
         this.plugin.refreshCurrentView();
@@ -15232,15 +15820,31 @@ class AddRegexRuleModal extends Modal {
           // 添加右键菜单到页面
           document.body.appendChild(menu);
           
+          // 手机版：阻止菜单上的触摸事件冒泡
+          if (!_isDesktop) {
+            menu.addEventListener('touchstart', (te) => { te.stopPropagation(); }, { passive: true });
+          }
+          
           // 点击页面其他地方关闭右键菜单
           const closeMenu = () => {
             if (document.body.contains(menu)) {
               document.body.removeChild(menu);
             }
             document.removeEventListener("click", closeMenu);
+            if (!_isDesktop) document.removeEventListener("touchstart", closeMenuTouch);
+          };
+          
+          // 手机版：触摸其他地方也关闭菜单
+          const closeMenuTouch = () => {
+            if (document.body.contains(menu)) {
+              document.body.removeChild(menu);
+            }
+            document.removeEventListener("click", closeMenu);
+            document.removeEventListener("touchstart", closeMenuTouch);
           };
           
           document.addEventListener("click", closeMenu);
+          if (!_isDesktop) document.addEventListener("touchstart", closeMenuTouch, { passive: true });
         });
       });
     };
@@ -16255,6 +16859,13 @@ class AddRegexRuleModal extends Modal {
               menu.style.top = `${Math.max(10, windowHeight - menuRect.height - 10)}px`;
             }
             
+            // 手机版：阻止菜单上的触摸事件冒泡
+            if (!_isDesktop) {
+              menu.addEventListener('touchstart', (te) => {
+                te.stopPropagation();
+              }, { passive: true });
+            }
+            
             // 点击其他地方关闭菜单
             const closeMenu = (event) => {
               if (!menu.contains(event.target)) {
@@ -16262,10 +16873,27 @@ class AddRegexRuleModal extends Modal {
                   document.body.removeChild(menu);
                 }
                 document.removeEventListener('click', closeMenu);
+                if (!_isDesktop) {
+                  document.removeEventListener('touchstart', closeMenuTouch);
+                }
+              }
+            };
+            
+            // 手机版：触摸其他地方也关闭菜单
+            const closeMenuTouch = (event) => {
+              if (!menu.contains(event.target)) {
+                if (document.body.contains(menu)) {
+                  document.body.removeChild(menu);
+                }
+                document.removeEventListener('click', closeMenu);
+                document.removeEventListener('touchstart', closeMenuTouch);
               }
             };
             
             document.addEventListener('click', closeMenu);
+            if (!_isDesktop) {
+              document.addEventListener('touchstart', closeMenuTouch, { passive: true });
+            }
           }
         });
       });
@@ -16276,7 +16904,7 @@ class AddRegexRuleModal extends Modal {
   }
 
   // 添加标题样式部分
-  addHeadingStylesSection(contentEl) {
+  addHeadingStylesSection(contentEl, initialActivePreset = null) {
     // 先清理已存在的标题样式容器
     this.clearHeadingStylesSection();
     
@@ -16290,7 +16918,7 @@ class AddRegexRuleModal extends Modal {
     headingSection.className = 'heading-styles-section'; // 添加类名便于识别
     headingSection.style.marginTop = "0px";
     headingSection.style.padding = "3px";
-    headingSection.style.border = "1px solid #ddd";
+    headingSection.style.border = "1px solid transparent";
     headingSection.style.borderRadius = "6px";
     
     // 先将标题样式容器从DOM中移除（如果被自动添加了）
@@ -16324,11 +16952,16 @@ class AddRegexRuleModal extends Modal {
     titleContainer.style.marginBottom = '8px';
     titleContainer.style.position = 'relative'; // 设置为相对定位，作为绝对定位元素的容器
     
+    titleContainer.style.cursor = 'pointer';
+    titleContainer.style.padding = '4px 6px';
+    titleContainer.style.borderRadius = '4px';
+    titleContainer.style.background = 'var(--background-modifier-hover)';
+
     const headingTitle = titleContainer.createEl("h3", { text: t('main.headingStyles') + ' ▼' });
     headingTitle.style.margin = "0";
     headingTitle.style.fontSize = "14px";
-    headingTitle.style.color = "#333";
-    headingTitle.style.cursor = "pointer";
+    headingTitle.style.display = "inline";
+    headingTitle.style.pointerEvents = "none";
 
     // 从插件设置中读取折叠状态（持久化），优先使用设置中的值
     this.plugin.isHeadingStylesCollapsed = this.plugin.settings.isHeadingStylesCollapsed ?? this.plugin.isHeadingStylesCollapsed ?? false;
@@ -16353,7 +16986,7 @@ class AddRegexRuleModal extends Modal {
     headingContent.addClass('history-content');
     headingContent.style.overflow = "hidden";
     headingContent.style.transition = "max-height 0.3s ease";
-    headingContent.style.maxHeight = isHeadingCollapsed ? "0" : "300px";
+    headingContent.style.maxHeight = isHeadingCollapsed ? "0" : "600px";
     
     // 实现折叠/展开功能
     const toggleHeadingCollapse = async () => {
@@ -16375,18 +17008,246 @@ class AddRegexRuleModal extends Modal {
       // 控制说明文本的显示
       headingDescription.style.display = isHeadingCollapsed ? 'none' : 'block';
       // 控制内容的显示
-      headingContent.style.maxHeight = isHeadingCollapsed ? "0" : "300px";
+      headingContent.style.maxHeight = isHeadingCollapsed ? "0" : "600px";
       if (this.plugin.settings?.enableDebugLog) console.timeEnd('[标题样式] toggleHeadingCollapse');
     };
 
     // 绑定标题点击事件
-    headingTitle.addEventListener('click', toggleHeadingCollapse);
+    titleContainer.addEventListener('click', toggleHeadingCollapse);
 
     // 根据初始状态设置箭头方向
     if (isHeadingCollapsed) {
       headingTitle.textContent = headingTitle.textContent.replace('▼', '▶');
     }
 
+    // ===== 风格预设标签栏（在样式按钮上方） =====
+    const presets = this.plugin.settings.headingStylePresets || {};
+    const presetNames = Object.keys(presets);
+    let activePresetTab = initialActivePreset || null;
+    
+    const presetBar = headingContent.createDiv();
+    presetBar.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    `;
+    
+    // "当前"标签 - 始终在最前面
+    const currentTab = presetBar.createEl('span');
+    currentTab.textContent = t('heading.currentGroup') || '当前';
+    currentTab.style.cssText = `
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 3px;
+      background: #28a745;
+      color: white;
+      user-select: none;
+      opacity: 1;
+    `;
+    
+    // 保存当前风格按钮
+    const savePresetBtn = presetBar.createEl('button');
+    savePresetBtn.textContent = t('heading.saveCurrentStyle') || '保存当前风格';
+    savePresetBtn.style.cssText = `
+      padding: 3px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid var(--background-modifier-border);
+      border-radius: 4px;
+      background: var(--background-secondary);
+      color: var(--text-normal);
+      white-space: nowrap;
+    `;
+    
+    // 保存输入框（初始隐藏）
+    const saveInputContainer = presetBar.createDiv();
+    saveInputContainer.style.cssText = `display: none; align-items: center; gap: 4px;`;
+    
+    const saveInput = saveInputContainer.createEl('input');
+    saveInput.type = 'text';
+    saveInput.placeholder = t('heading.presetName') || '输入风格名称';
+    saveInput.style.cssText = `
+      width: 120px;
+      padding: 3px 6px;
+      font-size: 12px;
+      border: 1px solid var(--background-modifier-border);
+      border-radius: 4px;
+    `;
+    
+    const saveConfirmBtn = saveInputContainer.createEl('button');
+    saveConfirmBtn.textContent = '✓';
+    saveConfirmBtn.style.cssText = `
+      padding: 3px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid var(--background-modifier-border);
+      border-radius: 4px;
+      background: var(--interactive-accent);
+      color: var(--text-on-accent);
+    `;
+    
+    const saveCancelBtn = saveInputContainer.createEl('button');
+    saveCancelBtn.textContent = '✕';
+    saveCancelBtn.style.cssText = `
+      padding: 3px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid var(--background-modifier-border);
+      border-radius: 4px;
+      background: var(--background-secondary);
+      color: var(--text-normal);
+    `;
+    
+    savePresetBtn.addEventListener('click', () => {
+      saveInputContainer.style.display = 'flex';
+      savePresetBtn.style.display = 'none';
+      saveInput.value = '';
+      setTimeout(() => saveInput.focus(), 50);
+    });
+    
+    saveCancelBtn.addEventListener('click', () => {
+      saveInputContainer.style.display = 'none';
+      savePresetBtn.style.display = '';
+    });
+    
+    // 保存风格预设
+    const doSavePreset = async () => {
+      const name = saveInput.value.trim();
+      if (!name) {
+        new Notice(t('main.groupNameEmpty') || '名称不能为空');
+        return;
+      }
+      if (!this.plugin.settings.headingStylePresets) {
+        this.plugin.settings.headingStylePresets = {};
+      }
+      if (this.plugin.settings.headingStylePresets[name]) {
+        new Notice(t('main.groupNameExists') || '名称已存在');
+        return;
+      }
+      // 保存当前所有标题样式到预设
+      const currentStyles = {};
+      const allHeadingStyles = this.plugin.config.styleCategories['标题样式'] || [];
+      allHeadingStyles.forEach(cn => {
+        let sc = null;
+        if (this.plugin.settings.headingStyles && this.plugin.settings.headingStyles[cn]) {
+          sc = this.plugin.settings.headingStyles[cn];
+        } else {
+          sc = this.cssStyles.get(cn);
+        }
+        if (sc) currentStyles[cn] = sc;
+        // 也保存伪元素
+        const pseudoSuffixes = ['::before', '::after', '::first-line', '::first-letter'];
+        pseudoSuffixes.forEach(ps => {
+          const pseudoKey = cn + ps;
+          if (this.plugin.settings.headingStyles && this.plugin.settings.headingStyles[pseudoKey]) {
+            currentStyles[pseudoKey] = this.plugin.settings.headingStyles[pseudoKey];
+          }
+        });
+      });
+      this.plugin.settings.headingStylePresets[name] = currentStyles;
+      await this.plugin.saveData(this.plugin.settings);
+      saveInputContainer.style.display = 'none';
+      savePresetBtn.style.display = '';
+      new Notice(t('heading.presetSaved') || '风格已保存');
+      this.clearHeadingStylesSection();
+      this.addHeadingStylesSection(this.contentEl, name);
+    };
+    
+    saveConfirmBtn.addEventListener('click', doSavePreset);
+    saveInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doSavePreset();
+      if (e.key === 'Escape') {
+        saveInputContainer.style.display = 'none';
+        savePresetBtn.style.display = '';
+      }
+    });
+    
+    // 更新标签高亮的函数
+    const updateTabHighlight = (activeName) => {
+      currentTab.style.opacity = activeName === null ? '1' : '0.6';
+      presetTabElements.forEach(pt => pt.el.style.opacity = pt.name === activeName ? '1' : '0.6');
+    };
+    
+    // "当前"标签点击
+    currentTab.addEventListener('click', () => {
+      activePresetTab = null;
+      updateTabHighlight(null);
+      renderHeadingStyleButtons(headingStyles);
+    });
+    
+    // 预设标签按钮
+    const presetTabElements = [];
+    presetNames.forEach(presetName => {
+      const presetTab = presetBar.createEl('span');
+      presetTab.textContent = presetName;
+      presetTab.setAttribute('data-preset', presetName);
+      presetTab.style.cssText = `
+        display: inline-block;
+        padding: 2px 8px;
+        font-size: 12px;
+        cursor: pointer;
+        border-radius: 3px;
+        background: #007bff;
+        color: white;
+        user-select: none;
+        opacity: 0.6;
+      `;
+      presetTabElements.push({ name: presetName, el: presetTab });
+      
+      // 单击：选中该预设，显示其样式
+      presetTab.addEventListener('click', () => {
+        activePresetTab = presetName;
+        updateTabHighlight(presetName);
+        const presetData = presets[presetName];
+        const presetClassNames = Object.keys(presetData).filter(k => !k.includes('::'));
+        renderHeadingStyleButtons(presetClassNames, presetData);
+      });
+      
+      // 双击：应用该预设
+      presetTab.addEventListener('dblclick', async () => {
+        if (!this.plugin.settings.headingStyles) {
+          this.plugin.settings.headingStyles = {};
+        }
+        // 清除所有旧的标题样式（包括伪元素）
+        this.plugin.settings.headingStyles = {};
+        Object.entries(presets[presetName]).forEach(([cn, sc]) => {
+          this.plugin.settings.headingStyles[cn] = sc;
+        });
+        await this.plugin.saveData(this.plugin.settings);
+        if (typeof this.plugin.injectCSSContent === 'function') {
+          await this.plugin.injectCSSContent();
+        }
+        this.plugin.checkAndApplyHighlights();
+        new Notice(t('heading.presetApplied') || '风格已应用');
+        this.clearHeadingStylesSection();
+        this.addHeadingStylesSection(this.contentEl, presetName);
+      });
+      
+      // 右键：删除预设
+      presetTab.addEventListener('contextmenu', async (e) => {
+        e.preventDefault();
+        const menu = new Menu();
+        menu.addItem((item) => {
+          item.setTitle(t('context.deleteGroup') || '删除').setIcon('trash').onClick(async () => {
+            delete this.plugin.settings.headingStylePresets[presetName];
+            await this.plugin.saveData(this.plugin.settings);
+            new Notice(t('heading.presetDeleted') || '风格已删除');
+            this.clearHeadingStylesSection();
+            this.addHeadingStylesSection(this.contentEl);
+          });
+        });
+        menu.showAtMouseEvent(e);
+      });
+    });
+    
+    // 初始高亮
+    updateTabHighlight(activePresetTab && presetNames.includes(activePresetTab) ? activePresetTab : null);
+    
+    // ===== 标题样式按钮区域 =====
     const headingList = headingContent.createDiv();
     headingList.style.display = "flex";
     headingList.style.flexWrap = "wrap";
@@ -16403,282 +17264,259 @@ class AddRegexRuleModal extends Modal {
         if (match) {
           return parseInt(match[1] || match[2], 10);
         }
-        return 99; // 无法识别的放最后
+        return 99;
       };
       return getLevel(a) - getLevel(b);
     });
     
-    // 为每个标题样式创建按钮
-    headingStyles.forEach(className => {
-      // 优先从data.json的headingStyles读取，其次从cssStyles读取
-      let styleContent = null;
-      if (this.plugin && this.plugin.settings && this.plugin.settings.headingStyles && this.plugin.settings.headingStyles[className]) {
-        styleContent = this.plugin.settings.headingStyles[className];
-      } else {
-        styleContent = this.cssStyles.get(className);
+    // 渲染标题样式按钮的函数
+    const renderHeadingStyleButtons = (classNames, presetData = null) => {
+      headingList.innerHTML = '';
+      
+      // 预设模式下，在最前面添加一个"应用"按钮
+      if (presetData && activePresetTab) {
+        const groupApplyBtn = headingList.createEl('button');
+        groupApplyBtn.textContent = t('heading.applyGroup') || '应用';
+        groupApplyBtn.style.cssText = `
+          padding: 4px 12px;
+          font-size: 12px;
+          cursor: pointer;
+          border: 1px solid var(--interactive-accent);
+          border-radius: 4px;
+          background: var(--interactive-accent);
+          color: var(--text-on-accent);
+          white-space: nowrap;
+          font-weight: bold;
+          margin-right: 4px;
+        `;
+        groupApplyBtn.addEventListener('click', async () => {
+          if (!this.plugin.settings.headingStyles) {
+            this.plugin.settings.headingStyles = {};
+          }
+          // 清除所有旧的标题样式（包括伪元素）
+          this.plugin.settings.headingStyles = {};
+          Object.entries(presetData).forEach(([cn, sc]) => {
+            this.plugin.settings.headingStyles[cn] = sc;
+          });
+          await this.plugin.saveData(this.plugin.settings);
+          if (typeof this.plugin.injectCSSContent === 'function') {
+            await this.plugin.injectCSSContent();
+          }
+          this.plugin.checkAndApplyHighlights();
+          new Notice(t('heading.presetApplied') || '风格已应用');
+          this.clearHeadingStylesSection();
+          this.addHeadingStylesSection(this.contentEl, activePresetTab);
+        });
       }
-      if (!styleContent) {
-        console.log('标题样式未找到CSS定义:', className);
+      
+      if (classNames.length === 0) {
+        const noStyles = headingList.createDiv();
+        noStyles.style.width = "100%";
+        noStyles.style.color = "#999";
+        noStyles.style.fontSize = "12px";
+        noStyles.style.textAlign = "center";
+        noStyles.style.padding = "10px";
+        noStyles.textContent = t('heading.noStyles');
         return;
       }
       
-      // 标题级别映射
       const headingLevelMap = {
-        '1': '一级标题',
-        '2': '二级标题',
-        '3': '三级标题',
-        '4': '四级标题',
-        '5': '五级标题',
-        '6': '六级标题'
+        '1': '一级标题', '2': '二级标题', '3': '三级标题',
+        '4': '四级标题', '5': '五级标题', '6': '六级标题'
       };
       
-      // 从类名中提取标题级别
-    const levelMatch = className.match(/h([1-6])|([1-6])(?:st|nd|rd|th)/i);
-    let headingLevel = '';
-    let headingLabel = '';
-    
-    if (levelMatch) {
-      const level = levelMatch[1] || levelMatch[2];
-      headingLevel = level;
-      headingLabel = headingLevelMap[level] || `H${level}`;
-    } else {
-      headingLabel = className;
-    }
-    
-    // 提取样式内容用于预览
-    const previewStyle = styleContent.replace(/[{}]/g, '').trim();
-    
-    // 创建按钮容器 - 每个标题样式一行，自适应大小
-    const buttonContainer = headingList.createDiv();
-    buttonContainer.style.cssText = `
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin: 2px 4px 2px 0;
-    `;
-    
-    // 创建预览元素 - 根据标题级别设置字体大小
-    const headingSizes = {
-      '1': '24px',
-      '2': '20px',
-      '3': '18px',
-      '4': '16px',
-      '5': '14px',
-      '6': '13px'
-    };
-    const headingSize = headingLevel ? headingSizes[headingLevel] : '14px';
-    
-    const stylePreview = buttonContainer.createDiv();
-    stylePreview.style.cssText = `
-      padding: 4px 10px;
-      background-color: #f5f5f5;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: ${headingSize};
-      color: #333;
-      font-weight: ${headingLevel ? 'bold' : 'normal'};
-    `;
-    
-    // 应用样式预览
-    try {
-      const styleElement = document.createElement('style');
-      styleElement.textContent = `.preview-${className} { ${previewStyle} }`;
-      document.head.appendChild(styleElement);
-      setTimeout(() => styleElement.remove(), 100);
-    } catch (e) {}
-    
-    // 设置预览文字 - 只显示标题级别描述
-    const previewText = headingLevel ? headingLevelMap[headingLevel] : headingLabel;
-    stylePreview.textContent = previewText;
-    stylePreview.title = previewStyle;
-    
-    // 应用样式到预览元素
-    try {
-      const inlineStyle = previewStyle.replace(/;$/, '').split(';').filter(s => s.trim());
-      inlineStyle.forEach(rule => {
-        const [prop, value] = rule.split(':').map(s => s.trim());
-        if (prop && value && prop !== 'display' && prop !== 'width') {
-          stylePreview.style[prop] = value;
+      classNames.forEach(className => {
+        let styleContent = null;
+        if (presetData && presetData[className]) {
+          styleContent = presetData[className];
+        } else if (this.plugin?.settings?.headingStyles?.[className]) {
+          styleContent = this.plugin.settings.headingStyles[className];
+        } else {
+          styleContent = this.cssStyles.get(className);
         }
-      });
-      // 确保是inline-block显示
-      stylePreview.style.display = 'inline-block';
-    } catch (e) {
-      console.log('应用样式失败:', e);
-    }
-      
-      // 左键点击：显示已应用
-      stylePreview.addEventListener('click', () => {
-        new Notice(t('heading.styleApplied'));
-      });
-      
-      // 中键点击：删除标题样式
-      stylePreview.addEventListener('mousedown', async (e) => {
-        if (e.button === 1) { // 中键
-          e.preventDefault();
-          e.stopPropagation();
-          
-          // 从"标题样式"分类中移除
-          const index = this.plugin.config.styleCategories['标题样式'].indexOf(className);
-          if (index > -1) {
-            this.plugin.config.styleCategories['标题样式'].splice(index, 1);
-            
-            // 保存配置
-            const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
-            await this.app.vault.adapter.write(configPath, JSON.stringify(this.plugin.config.styleCategories, null, 2));
-            
-            // 从data.json中删除标题样式
-            if (this.plugin.settings.headingStyles && this.plugin.settings.headingStyles[className]) {
-              delete this.plugin.settings.headingStyles[className];
-              await this.plugin.saveData(this.plugin.settings);
-            }
-            
-            // 刷新显示
-            this.clearHeadingStylesSection();
-            this.addHeadingStylesSection(this.contentEl);
-            
-            // 重新注入CSS（使用已有的CSS内容，避免重新读取styles.css）
-            if (typeof this.plugin.injectCSSContent === 'function') {
-              const existingStyleEl = document.getElementById('Regex-Css-Highlighter-dynamic-styles');
-              const existingCss = existingStyleEl ? existingStyleEl.textContent.replace(/\/\* Obsidian 标题样式支持 \*\/[\s\S]*$/, '').trim() : undefined;
-              await this.plugin.injectCSSContent(existingCss);
-            }
-            
-            new Notice(t('heading.styleDeleted'));
-          }
-        }
-      });
-      
-      // 右键点击：弹出选项菜单
-      stylePreview.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
+        if (!styleContent) return;
         
-        const menu = document.createElement('div');
-        menu.style.cssText = `
-          position: fixed;
-          top: ${e.clientY}px;
-          left: ${e.clientX}px;
-          background: var(--background-primary);
-          border: 1px solid var(--border-color);
-          border-radius: 6px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-          z-index: 10000;
-          padding: 4px 0;
-          min-width: 120px;
+        const levelMatch = className.match(/h([1-6])|([1-6])(?:st|nd|rd|th)/i);
+        let headingLevel = '';
+        let headingLabel = '';
+        if (levelMatch) {
+          headingLevel = levelMatch[1] || levelMatch[2];
+          headingLabel = headingLevelMap[headingLevel] || `H${headingLevel}`;
+        } else {
+          headingLabel = className;
+        }
+        
+        const previewStyle = styleContent.replace(/[{}]/g, '').trim();
+        
+        const buttonContainer = headingList.createDiv();
+        buttonContainer.style.cssText = `display: inline-flex; align-items: center; gap: 6px; margin: 2px 4px 2px 0;`;
+        
+        const stylePreview = buttonContainer.createDiv();
+        stylePreview.style.cssText = `
+          padding: 4px 10px;
+          background-color: #f5f5f5;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+          color: #333;
         `;
         
-        // 创建菜单选项的函数
-        const createMenuItem = (text, onClick) => {
-          const item = document.createElement('div');
-          item.textContent = text;
-          item.style.cssText = `
-            padding: 8px 16px;
-            cursor: pointer;
-            font-size: 14px;
-            color: var(--text-normal);
-          `;
-          item.addEventListener('mouseenter', () => {
-            item.style.background = 'var(--background-modifier-hover)';
-          });
-          item.addEventListener('mouseleave', () => {
-            item.style.background = 'transparent';
-          });
-          item.addEventListener('click', () => {
-            onClick();
-            // 安全地移除菜单
-            if (menu.parentNode) {
-              menu.remove();
+        stylePreview.textContent = headingLevel ? headingLevelMap[headingLevel] : headingLabel;
+        stylePreview.title = previewStyle;
+        
+        try {
+          const inlineStyle = previewStyle.replace(/;$/, '').split(';').filter(s => s.trim());
+          inlineStyle.forEach(rule => {
+            const [prop, value] = rule.split(':').map(s => s.trim());
+            if (prop && value && prop !== 'display' && prop !== 'width') {
+              stylePreview.style[prop] = value;
             }
           });
-          return item;
-        };
+          stylePreview.style.display = 'inline-block';
+        } catch (e) {}
         
-        // 编辑选项
-        const editOption = createMenuItem(t('main.edit'), () => {
-          // 调用打开CSS编辑器的函数
-          if (typeof this.plugin.openCSSEditor === 'function') {
-            this.plugin.openCSSEditor(className, styleContent);
-          } else if (typeof this.openCSSEditor === 'function') {
-            this.openCSSEditor(className, styleContent);
-          } else {
-            new Notice(t('main.cannotOpenEditor'));
+        // 为预览按钮添加伪元素样式（通过scoped CSS）
+        const pseudoSuffixes = ['::before', '::after'];
+        let hasPseudo = false;
+        let pseudoCss = '';
+        const previewId = `hp-${className.replace(/[^a-zA-Z0-9]/g, '')}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+        pseudoSuffixes.forEach(ps => {
+          let pseudoStyle = null;
+          if (presetData && presetData[className + ps]) {
+            pseudoStyle = presetData[className + ps];
+          } else if (this.plugin?.settings?.headingStyles?.[className + ps]) {
+            pseudoStyle = this.plugin.settings.headingStyles[className + ps];
+          }
+          if (pseudoStyle) {
+            hasPseudo = true;
+            pseudoCss += `.${previewId}${ps} { ${pseudoStyle} } `;
           }
         });
-        menu.appendChild(editOption);
-        
-        // 删除选项
-        const deleteOption = createMenuItem(t('context.deleteHeadingStyle'), async () => {
-          // 从"标题样式"分类中移除
-          const index = this.plugin.config.styleCategories['标题样式'].indexOf(className);
-          if (index > -1) {
-            this.plugin.config.styleCategories['标题样式'].splice(index, 1);
-            
-            // 保存配置
-            const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
-            await this.app.vault.adapter.write(configPath, JSON.stringify(this.plugin.config.styleCategories, null, 2));
-            
-            // 从data.json中删除标题样式
-            if (this.plugin.settings.headingStyles && this.plugin.settings.headingStyles[className]) {
-              delete this.plugin.settings.headingStyles[className];
-              await this.plugin.saveData(this.plugin.settings);
-            }
-            
-            // 刷新显示
-            this.clearHeadingStylesSection();
-            this.addHeadingStylesSection(this.contentEl);
-            
-            // 重新注入CSS（使用已有的CSS内容，避免重新读取styles.css）
-            if (typeof this.plugin.injectCSSContent === 'function') {
-              const existingStyleEl = document.getElementById('Regex-Css-Highlighter-dynamic-styles');
-              const existingCss = existingStyleEl ? existingStyleEl.textContent.replace(/\/\* Obsidian 标题样式支持 \*\/[\s\S]*$/, '').trim() : undefined;
-              await this.plugin.injectCSSContent(existingCss);
-            }
-            
-            new Notice(t('heading.styleDeleted'));
-          }
-        });
-        
-        menu.appendChild(deleteOption);
-        document.body.appendChild(menu);
-        
-        // 调整菜单位置，确保不超出屏幕
-        const menuRect = menu.getBoundingClientRect();
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
-        if (menuRect.right > windowWidth - 10) {
-          menu.style.left = `${Math.max(10, windowWidth - menuRect.width - 10)}px`;
-        }
-        if (menuRect.bottom > windowHeight - 10) {
-          menu.style.top = `${Math.max(10, windowHeight - menuRect.height - 10)}px`;
+        if (hasPseudo) {
+          stylePreview.className = previewId;
+          const pseudoStyleEl = document.createElement('style');
+          pseudoStyleEl.textContent = pseudoCss;
+          headingList.appendChild(pseudoStyleEl);
         }
         
-        // 点击其他地方关闭菜单
-        const closeMenu = (event) => {
-          if (!menu.contains(event.target)) {
-            // 检查菜单是否仍是body的子元素
-            if (menu.parentNode) {
-              menu.remove();
+        if (presetData) {
+          // 预设模式：不添加单独的应用按钮，由组级别的"应用"按钮统一应用
+        } else {
+          // 当前样式模式
+          stylePreview.addEventListener('click', () => {
+            new Notice(t('heading.styleApplied'));
+          });
+          
+          stylePreview.addEventListener('mousedown', async (e) => {
+            if (e.button === 1) {
+              e.preventDefault();
+              e.stopPropagation();
+              const index = this.plugin.config.styleCategories['标题样式'].indexOf(className);
+              if (index > -1) {
+                this.plugin.config.styleCategories['标题样式'].splice(index, 1);
+                const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
+                await this.app.vault.adapter.write(configPath, JSON.stringify(this.plugin.config.styleCategories, null, 2));
+                if (this.plugin.settings.headingStyles?.[className]) {
+                  const oldPseudoKeys = Object.keys(this.plugin.settings.headingStyles).filter(k => k.startsWith(className + '::'));
+                  oldPseudoKeys.forEach(k => delete this.plugin.settings.headingStyles[k]);
+                  delete this.plugin.settings.headingStyles[className];
+                  await this.plugin.saveData(this.plugin.settings);
+                }
+                this.clearHeadingStylesSection();
+                this.addHeadingStylesSection(this.contentEl, activePresetTab);
+                if (typeof this.plugin.injectCSSContent === 'function') {
+                  await this.plugin.injectCSSContent();
+                }
+                new Notice(t('heading.styleDeleted'));
+              }
             }
-            document.removeEventListener('click', closeMenu);
-          }
-        };
-        setTimeout(() => {
-          document.addEventListener('click', closeMenu);
-        }, 0);
+          });
+          
+          stylePreview.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const menu = document.createElement('div');
+            menu.style.cssText = `
+              position: fixed; top: ${e.clientY}px; left: ${e.clientX}px;
+              background: var(--background-primary); border: 1px solid var(--border-color);
+              border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+              z-index: 10000; padding: 4px 0; min-width: 120px;
+            `;
+            const createMenuItem = (text, onClick) => {
+              const item = document.createElement('div');
+              item.textContent = text;
+              item.style.cssText = `padding: 8px 16px; cursor: pointer; font-size: 14px; color: var(--text-normal);`;
+              item.addEventListener('mouseenter', () => item.style.background = 'var(--background-modifier-hover)');
+              item.addEventListener('mouseleave', () => item.style.background = 'transparent');
+              item.addEventListener('click', () => { onClick(); if (menu.parentNode) menu.remove(); });
+              return item;
+            };
+            menu.appendChild(createMenuItem(t('main.edit'), () => {
+              // 构建包含伪元素的完整CSS规则（带类名选择器）
+              let fullStyleContent = `.${className} {\n  ${styleContent}\n}`;
+              const pseudoSuffixes = ['::before', '::after', '::first-line', '::first-letter'];
+              pseudoSuffixes.forEach(ps => {
+                const pseudoKey = className + ps;
+                const pseudoStyle = this.plugin?.settings?.headingStyles?.[pseudoKey];
+                if (pseudoStyle) {
+                  fullStyleContent += `\n\n.${className}${ps} {\n  ${pseudoStyle}\n}`;
+                }
+              });
+              if (typeof this.plugin.openCSSEditor === 'function') this.plugin.openCSSEditor(className, fullStyleContent);
+              else if (typeof this.openCSSEditor === 'function') this.openCSSEditor(className, fullStyleContent);
+              else new Notice(t('main.cannotOpenEditor'));
+            }));
+            menu.appendChild(createMenuItem(t('context.deleteHeadingStyle'), async () => {
+              const index = this.plugin.config.styleCategories['标题样式'].indexOf(className);
+              if (index > -1) {
+                this.plugin.config.styleCategories['标题样式'].splice(index, 1);
+                const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
+                await this.app.vault.adapter.write(configPath, JSON.stringify(this.plugin.config.styleCategories, null, 2));
+                if (this.plugin.settings.headingStyles?.[className]) {
+                  const oldPseudoKeys = Object.keys(this.plugin.settings.headingStyles).filter(k => k.startsWith(className + '::'));
+                  oldPseudoKeys.forEach(k => delete this.plugin.settings.headingStyles[k]);
+                  delete this.plugin.settings.headingStyles[className];
+                  await this.plugin.saveData(this.plugin.settings);
+                }
+                this.clearHeadingStylesSection();
+                this.addHeadingStylesSection(this.contentEl, activePresetTab);
+                if (typeof this.plugin.injectCSSContent === 'function') {
+                  await this.plugin.injectCSSContent();
+                }
+                new Notice(t('heading.styleDeleted'));
+              }
+            }));
+            document.body.appendChild(menu);
+            const menuRect = menu.getBoundingClientRect();
+            if (menuRect.right > window.innerWidth - 10) menu.style.left = `${Math.max(10, window.innerWidth - menuRect.width - 10)}px`;
+            if (menuRect.bottom > window.innerHeight - 10) menu.style.top = `${Math.max(10, window.innerHeight - menuRect.height - 10)}px`;
+            // 手机版：阻止菜单上的触摸事件冒泡
+            if (!_isDesktop) {
+              menu.addEventListener('touchstart', (te) => { te.stopPropagation(); }, { passive: true });
+            }
+            const closeMenu = (event) => {
+              if (!menu.contains(event.target)) { if (menu.parentNode) menu.remove(); document.removeEventListener('click', closeMenu); if (!_isDesktop) document.removeEventListener('touchstart', closeMenuTouch); }
+            };
+            const closeMenuTouch = (event) => {
+              if (!menu.contains(event.target)) { if (menu.parentNode) menu.remove(); document.removeEventListener('click', closeMenu); document.removeEventListener('touchstart', closeMenuTouch); }
+            };
+            setTimeout(() => {
+              document.addEventListener('click', closeMenu);
+              if (!_isDesktop) document.addEventListener('touchstart', closeMenuTouch, { passive: true });
+            }, 0);
+          });
+        }
       });
-    });
+    };
     
-    // 如果没有标题样式，显示提示
-    if (headingStyles.length === 0) {
-      const noStyles = headingList.createDiv();
-      noStyles.style.width = "100%";
-      noStyles.style.color = "#999";
-      noStyles.style.fontSize = "12px";
-      noStyles.style.textAlign = "center";
-      noStyles.style.padding = "10px";
-      noStyles.textContent = t('heading.noStyles');
+    // 初始渲染
+    if (activePresetTab && presets[activePresetTab]) {
+      const presetData = presets[activePresetTab];
+      const presetClassNames = Object.keys(presetData).filter(k => !k.includes('::'));
+      renderHeadingStyleButtons(presetClassNames, presetData);
+    } else {
+      renderHeadingStyleButtons(headingStyles);
     }
   }
 
@@ -17371,6 +18209,16 @@ class AddRegexRuleModal extends Modal {
             menu.style.top = `${Math.max(10, windowHeight - menuRect.height - 10)}px`;
           }
           
+          // 手机版：阻止菜单上的触摸事件冒泡
+          if (!_isDesktop) {
+            menu.addEventListener('touchstart', (te) => {
+              te.stopPropagation();
+            }, { passive: true });
+            menu.addEventListener('click', (ce) => {
+              ce.stopPropagation();
+            }, true);
+          }
+          
           // 点击其他地方关闭菜单
           const closeMenu = (event) => {
             if (!menu.contains(event.target)) {
@@ -17378,10 +18226,27 @@ class AddRegexRuleModal extends Modal {
                 document.body.removeChild(menu);
               }
               document.removeEventListener('click', closeMenu);
+              if (!_isDesktop) {
+                document.removeEventListener('touchstart', closeMenuTouch);
+              }
+            }
+          };
+          
+          // 手机版：触摸其他地方也关闭菜单
+          const closeMenuTouch = (event) => {
+            if (!menu.contains(event.target)) {
+              if (document.body.contains(menu)) {
+                document.body.removeChild(menu);
+              }
+              document.removeEventListener('click', closeMenu);
+              document.removeEventListener('touchstart', closeMenuTouch);
             }
           };
           
           document.addEventListener('click', closeMenu);
+          if (!_isDesktop) {
+            document.addEventListener('touchstart', closeMenuTouch, { passive: true });
+          }
         });
       });
       
@@ -17851,22 +18716,50 @@ class AddRegexRuleModal extends Modal {
         if (isHeadingStyle) {
           // 标题样式：保存到data.json
           // fullCssRule可能是纯样式属性（如"color: red;"）或完整CSS规则（如".h2 { color: red; }"）
+          // 也可能包含伪元素（如"::before { content: '⟦'; } ::after { content: '⟧'; }"）
           let headingStyleContent = styleContent;
           if (!headingStyleContent) {
-            // 如果从完整CSS规则提取失败，直接使用fullCssRule作为纯样式属性
             headingStyleContent = fullCssRule.trim();
           }
-          this.plugin.settings.headingStyles[className] = headingStyleContent;
+          
+          // 解析伪元素部分并分别保存
+          // 清除该标题级别旧的伪元素条目
+          const oldPseudoKeys = Object.keys(this.plugin.settings.headingStyles).filter(k => k.startsWith(className + '::'));
+          oldPseudoKeys.forEach(k => delete this.plugin.settings.headingStyles[k]);
+          
+          // 从fullCssRule中提取伪元素规则
+          const pseudoRegex = /(::[a-zA-Z-]+(?:\([^)]*\))?)\s*\{([^}]*)\}/g;
+          let pseudoMatch;
+          let baseStyle = headingStyleContent;
+          while ((pseudoMatch = pseudoRegex.exec(fullCssRule)) !== null) {
+            const pseudoElement = pseudoMatch[1]; // e.g. "::before"
+            const pseudoStyle = pseudoMatch[2].trim();
+            if (pseudoStyle) {
+              this.plugin.settings.headingStyles[className + pseudoElement] = pseudoStyle;
+            }
+            // 从基础样式中移除伪元素部分
+            baseStyle = baseStyle.replace(pseudoMatch[0], '').trim();
+          }
+          // 清理baseStyle中残留的伪元素文本
+          baseStyle = baseStyle.replace(/::[a-zA-Z-]+\s*\{[^}]*\}/g, '').trim();
+          
+          this.plugin.settings.headingStyles[className] = baseStyle || headingStyleContent;
           await this.plugin.saveData(this.plugin.settings);
           console.log('Heading style saved to data.json:', className);
           
           // 更新内存中的样式缓存
-          this.cssStyles.set(className, headingStyleContent);
+          this.cssStyles.set(className, baseStyle || headingStyleContent);
+          // 同步伪元素到cssStyles
+          const pseudoSuffixes = ['::before', '::after', '::first-line', '::first-letter'];
+          pseudoSuffixes.forEach(ps => {
+            const key = className + ps;
+            if (this.plugin.settings.headingStyles[key]) {
+              this.cssStyles.set(key, this.plugin.settings.headingStyles[key]);
+            }
+          });
           
-          // 重新加载样式到页面（标题样式保存在data.json中，使用已有的CSS内容避免重新读取styles.css）
-          const existingStyleEl = document.getElementById('Regex-Css-Highlighter-dynamic-styles');
-          const existingCss = existingStyleEl ? existingStyleEl.textContent.replace(/\/\* Obsidian 标题样式支持 \*\/[\s\S]*$/, '').trim() : undefined;
-          this.reloadStyles(existingCss);
+          // 重新加载样式到页面（标题样式保存在data.json中，直接从文件读取确保最新）
+          this.reloadStyles();
         } else {
           // 普通样式：保存到styles.css
           // 读取现有的CSS文件内容
@@ -18175,10 +19068,40 @@ class AddRegexRuleModal extends Modal {
 .markdown-source-view.mod-cm6 .cm-line.HyperMD-header-${level} .cm-header {
   ${styleContent}
 }`;
+            
+            // 生成伪元素规则（::before, ::after等）
+            const pseudoKeys = Object.keys(storedHeadingStyles).filter(k => k.startsWith(className + '::'));
+            const hasAfterPseudo = pseudoKeys.some(k => k === className + '::after');
+            pseudoKeys.forEach(pseudoKey => {
+              const pseudoElement = pseudoKey.substring(className.length); // e.g. "::before"
+              let pseudoStyle = storedHeadingStyles[pseudoKey];
+              
+              // 如果是::after且需要显示层级标签，合并层级标签内容
+              if (pseudoElement === '::after' && showLevelLabel && !disableHeadingStyle) {
+                // 在现有content后追加层级标签
+                const contentMatch = pseudoStyle.match(/content:\s*["']([^"']*)["']/);
+                if (contentMatch) {
+                  // 已有content，追加层级标签
+                  const existingContent = contentMatch[1];
+                  const newContent = existingContent + ' ' + levelLabel;
+                  pseudoStyle = pseudoStyle.replace(/content:\s*["'][^"']*["']/, `content: "${newContent}"`);
+                } else {
+                  // 没有content，添加层级标签
+                  pseudoStyle = `content: " ${levelLabel}"; ` + pseudoStyle;
+                }
+              }
+              
+              headingStyles += `\n\n/* 标题级别 ${level} ${pseudoElement} 样式 */
+.markdown-preview-view h${level}${pseudoElement},
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header-${level} .cm-header${pseudoElement} {
+  ${pseudoStyle}
+}`;
+            });
           }
           
           // 层级标签伪元素（禁用样式时仍保留）
-          if (showLevelLabel) {
+          // 如果标题样式已有::after伪元素，层级标签已合并到::after中，不再单独生成
+          if (showLevelLabel && !hasAfterPseudo) {
             headingStyles += `\n\n/* 标题级别 ${level} 层级标签 */
 .markdown-preview-view h${level}::after,
 .markdown-source-view.mod-cm6 .cm-line.HyperMD-header-${level} .cm-header::after {
@@ -18922,7 +19845,10 @@ class AddRegexRuleModal extends Modal {
               // 点击时不做任何操作，等待用户选择分组
             });
             
-            menu.appendChild(moveOption);
+            // 手机版不显示"移动到分组"子菜单
+            if (_isDesktop) {
+              menu.appendChild(moveOption);
+            }
             
             // 添加到文档中
             document.body.appendChild(menu);
@@ -18938,6 +19864,16 @@ class AddRegexRuleModal extends Modal {
               menu.style.top = `${Math.max(10, windowHeight - menuRect.height - 10)}px`;
             }
             
+            // 手机版：阻止菜单上的触摸事件冒泡
+            if (!_isDesktop) {
+              menu.addEventListener('touchstart', (te) => {
+                te.stopPropagation();
+              }, { passive: true });
+              menu.addEventListener('click', (ce) => {
+                ce.stopPropagation();
+              }, true);
+            }
+            
             // 点击其他区域关闭菜单
             setTimeout(() => {
               document.addEventListener('click', function closeMenu(e) {
@@ -18946,8 +19882,24 @@ class AddRegexRuleModal extends Modal {
                     document.body.removeChild(menu);
                   }
                   document.removeEventListener('click', closeMenu);
+                  if (!_isDesktop) {
+                    document.removeEventListener('touchstart', closeMenuTouch);
+                  }
                 }
               });
+              // 手机版：触摸其他地方也关闭菜单
+              if (!_isDesktop) {
+                const closeMenuTouch = (event) => {
+                  if (!menu.contains(event.target)) {
+                    if (document.body.contains(menu)) {
+                      document.body.removeChild(menu);
+                    }
+                    document.removeEventListener('click', closeMenu);
+                    document.removeEventListener('touchstart', closeMenuTouch);
+                  }
+                };
+                document.addEventListener('touchstart', closeMenuTouch, { passive: true });
+              }
             }, 0);
           });
         }
@@ -19776,6 +20728,11 @@ class AddRegexRuleModal extends Modal {
       this.modalEl?.removeEventListener('mousedown', this._lockClickHandler);
       this._lockClickHandler = null;
     }
+    // 清理选中文本监听
+    if (this._selectionChangeHandler) {
+      document.removeEventListener('selectionchange', this._selectionChangeHandler);
+      this._selectionChangeHandler = null;
+    }
     this._userClickedPanel = false;
     if (this._resizeHandle && document.body.contains(this._resizeHandle)) {
       document.body.removeChild(this._resizeHandle);
@@ -19791,6 +20748,23 @@ class AddRegexRuleModal extends Modal {
       clearInterval(this._positionInterval);
     }
     this.contentEl.empty();
+    // 清理所有残留的右键菜单
+    document.querySelectorAll('.rch-context-menu').forEach(m => m.remove());
+  }
+
+  async refreshModalContent() {
+    try {
+      if (this.contentEl) {
+        while (this.contentEl.firstChild) {
+          this.contentEl.removeChild(this.contentEl.firstChild);
+        }
+        if (typeof this.onOpen === 'function') {
+          await this.onOpen();
+        }
+      }
+    } catch (error) {
+      console.error('refreshModalContent执行错误:', error);
+    }
   }
 }
 
@@ -19902,6 +20876,9 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     }
     if (this.settings.remarkDebugLog === undefined) {
       this.settings.remarkDebugLog = false;
+    }
+    if (this.settings.popupHoverDelay === undefined) {
+      this.settings.popupHoverDelay = 300;
     }
     if (this.settings.searchClassName === undefined) {
       this.settings.searchClassName = '';
@@ -20995,7 +21972,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         top = Math.max(margin, windowH - rect.height - margin);
         floatingBall.style.top = `${top}px`;
       }
-      this.floatButtonData.floatingBallPosition = { x: left, y: top };
+      const positionKey = _isDesktop ? 'floatingBallPosition' : 'floatingBallPositionMobile';
+      this.floatButtonData[positionKey] = { x: left, y: top };
       this.saveFloatButtonData();
     }
 
@@ -21030,8 +22008,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
       
       if (changed && btn.dataset.optionId) {
-        if (!this.floatButtonData.floatingBallOptionPositions) {
-          this.floatButtonData.floatingBallOptionPositions = {};
+        const positionsKey = _isDesktop ? 'floatingBallOptionPositions' : 'floatingBallOptionPositionsMobile';
+        if (!this.floatButtonData[positionsKey]) {
+          this.floatButtonData[positionsKey] = {};
         }
         const pos = { top: btn.style.top };
         if (btn.style.right && btn.style.right !== 'auto') {
@@ -21042,7 +22021,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         // 保留透明度和缩放
         if (btn.dataset.opacity) pos.opacity = parseFloat(btn.dataset.opacity);
         if (btn.dataset.scale) pos.scale = parseFloat(btn.dataset.scale);
-        this.floatButtonData.floatingBallOptionPositions[btn.dataset.optionId] = pos;
+        this.floatButtonData[positionsKey][btn.dataset.optionId] = pos;
       }
     });
     if (optionBtns.length > 0) {
@@ -21123,8 +22102,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     // 设置悬浮球图标
     floatingBall.innerHTML = `<span style="color:white;font-weight:400;font-size:${_isDesktop ? '10px' : '12px'};">rch</span>`;
     
-    // 加载保存的位置，新装插件时默认放在屏幕右侧中间
-    const savedPosition = this.floatButtonData.floatingBallPosition || { 
+    // 加载保存的位置（按平台分开存储），新装插件时默认放在屏幕右侧中间
+    const positionKey = _isDesktop ? 'floatingBallPosition' : 'floatingBallPositionMobile';
+    const savedPosition = this.floatButtonData[positionKey] || { 
       x: window.innerWidth - 40, 
       y: window.innerHeight / 2 - ballSize / 2 
     };
@@ -21261,7 +22241,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           y: parseFloat(floatingBall.style.top) || 0
         };
         
-        this.floatButtonData.floatingBallPosition = position;
+        this.floatButtonData[_isDesktop ? 'floatingBallPosition' : 'floatingBallPositionMobile'] = position;
         this.saveFloatButtonData();
       }
       
@@ -21356,7 +22336,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           x: parseFloat(floatingBall.style.left) || 0,
           y: parseFloat(floatingBall.style.top) || 0
         };
-        this.floatButtonData.floatingBallPosition = position;
+        this.floatButtonData[_isDesktop ? 'floatingBallPosition' : 'floatingBallPositionMobile'] = position;
         this.saveFloatButtonData();
       } else if (!touchMoved) {
         // 轻触：显示菜单（手机端无hover，用点击替代）
@@ -21469,6 +22449,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         pinBtn.style.marginLeft = '8px';
         pinBtn.style.cursor = 'pointer';
         pinBtn.style.fontSize = '0.85em';
+        if (!_isDesktop) pinBtn.style.display = 'none';
         pinBtn.title = isFloating ? t('floating.cancelFloat') : t('floating.floatDisplay');
         pinBtn.onclick = async (e) => {
           e.stopPropagation();
@@ -22117,12 +23098,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             this.floatingBallEditorChangeListener = null;
           }
           floatingBall.style.display = 'flex';
-          this.floatButtonData.floatingBallPosition = this.floatButtonData.floatingBallPosition || { 
+          const positionKey = _isDesktop ? 'floatingBallPosition' : 'floatingBallPositionMobile';
+          this.floatButtonData[positionKey] = this.floatButtonData[positionKey] || { 
             x: window.innerWidth / 2 - 10, 
             y: window.innerHeight / 2 - 10 
           };
-          floatingBall.style.left = `${this.floatButtonData.floatingBallPosition.x}px`;
-          floatingBall.style.top = `${this.floatButtonData.floatingBallPosition.y}px`;
+          floatingBall.style.left = `${this.floatButtonData[positionKey].x}px`;
+          floatingBall.style.top = `${this.floatButtonData[positionKey].y}px`;
         }
 
         new Notice(t('main.modeSwitched') + ': ' + (newMode === 'always' ? t('main.alwaysMode') : t('main.followMode')));
@@ -22136,7 +23118,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (isOptionVisible('switchMode')) menu.appendChild(switchModeOption);
 
       const hideFloatingBtnsOption = document.createElement('div');
-      const isHideFloatingBtns = this.floatButtonData.hideFloatingOptionButtons || false;
+      const hideKey = _isDesktop ? 'hideFloatingOptionButtons' : 'hideFloatingOptionButtonsMobile';
+      const isHideFloatingBtns = this.floatButtonData[hideKey] || false;
       hideFloatingBtnsOption.textContent = isHideFloatingBtns ? t('main.showFloatingBtns') : t('main.hideFloatingBtns');
       hideFloatingBtnsOption.style.cssText = `
         padding: 8px 16px;
@@ -22154,10 +23137,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       });
 
       hideFloatingBtnsOption.addEventListener('click', async () => {
-        this.floatButtonData.hideFloatingOptionButtons = !this.floatButtonData.hideFloatingOptionButtons;
+        this.floatButtonData[hideKey] = !this.floatButtonData[hideKey];
         await this.saveFloatButtonData();
         this.renderFloatingOptionButtons();
-        new Notice(this.floatButtonData.hideFloatingOptionButtons ? t('main.floatingBtnsHidden') : t('main.floatingBtnsShown'));
+        new Notice(this.floatButtonData[hideKey] ? t('main.floatingBtnsHidden') : t('main.floatingBtnsShown'));
         if (document.body.contains(menu)) {
           document.body.removeChild(menu);
         }
@@ -22230,8 +23213,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const idx = this.floatButtonData.floatingBallGroupOptions.indexOf(groupName);
           if (idx >= 0) {
             this.floatButtonData.floatingBallGroupOptions.splice(idx, 1);
-            if (this.floatButtonData.floatingBallOptionPositions) {
-              delete this.floatButtonData.floatingBallOptionPositions[`group_${groupName}`];
+            const positionsKey = _isDesktop ? 'floatingBallOptionPositions' : 'floatingBallOptionPositionsMobile';
+            if (this.floatButtonData[positionsKey]) {
+              delete this.floatButtonData[positionsKey][`group_${groupName}`];
             }
             groupPinBtn.textContent = '📌';
             groupPinBtn.title = t('floating.floatDisplay');
@@ -23016,24 +24000,25 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     this._floatingOptionListeners = [];
 
     const existingBtns = document.querySelectorAll('.floating-option-btn');
+    const positionsKey = _isDesktop ? 'floatingBallOptionPositions' : 'floatingBallOptionPositionsMobile';
     existingBtns.forEach(btn => {
       const optionId = btn.dataset.optionId;
       if (optionId) {
-        if (!this.floatButtonData.floatingBallOptionPositions) {
-          this.floatButtonData.floatingBallOptionPositions = {};
+        if (!this.floatButtonData[positionsKey]) {
+          this.floatButtonData[positionsKey] = {};
         }
         const rect = btn.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const isRight = centerX > window.innerWidth / 2;
         if (isRight) {
-          this.floatButtonData.floatingBallOptionPositions[optionId] = {
+          this.floatButtonData[positionsKey][optionId] = {
             right: `${window.innerWidth - rect.right}px`,
             top: `${rect.top}px`,
             opacity: parseFloat(btn.dataset.opacity) || undefined,
             scale: parseFloat(btn.dataset.scale) || undefined
           };
         } else {
-          this.floatButtonData.floatingBallOptionPositions[optionId] = {
+          this.floatButtonData[positionsKey][optionId] = {
             left: `${rect.left}px`,
             top: `${rect.top}px`,
             opacity: parseFloat(btn.dataset.opacity) || undefined,
@@ -23047,7 +24032,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const existingSubmenus = document.querySelectorAll('.floating-option-submenu');
     existingSubmenus.forEach(submenu => submenu.remove());
 
-    if (this.floatButtonData.hideFloatingOptionButtons) {
+    const hideKey = _isDesktop ? 'hideFloatingOptionButtons' : 'hideFloatingOptionButtonsMobile';
+    if (this.floatButtonData[hideKey]) {
       document.querySelectorAll('.floating-style-window').forEach(win => {
         win.style.display = 'none';
       });
@@ -23058,7 +24044,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       win.style.display = '';
     });
 
-    const savedPositions = this.floatButtonData.floatingBallOptionPositions || {};
+    // 手机版不使用桌面版保存的位置，但共享选项列表
+    const savedPositions = _isDesktop ? (this.floatButtonData.floatingBallOptionPositions || {}) : (this.floatButtonData.floatingBallOptionPositionsMobile || {});
     const floatingOptions = this.floatButtonData.floatingBallOptions || [];
     const floatingBallGroupOptions = this.floatButtonData.floatingBallGroupOptions || [];
 
@@ -23474,8 +24461,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         btn.style.zIndex = '9998';
 
         if (hasDragged) {
-          if (!this.floatButtonData.floatingBallOptionPositions) {
-            this.floatButtonData.floatingBallOptionPositions = {};
+          if (!this.floatButtonData[positionsKey]) {
+            this.floatButtonData[positionsKey] = {};
           }
           const btnRect = btn.getBoundingClientRect();
           const btnCenterX = btnRect.left + btnRect.width / 2;
@@ -23485,14 +24472,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             const rightVal = window.innerWidth - btnRect.right;
             btn.style.right = `${rightVal}px`;
             btn.style.left = 'auto';
-            this.floatButtonData.floatingBallOptionPositions[optionId] = {
+            this.floatButtonData[positionsKey][optionId] = {
               right: `${rightVal}px`,
               top: btn.style.top,
               opacity: parseFloat(btn.dataset.opacity) || undefined,
               scale: parseFloat(btn.dataset.scale) || undefined
             };
           } else {
-            this.floatButtonData.floatingBallOptionPositions[optionId] = {
+            this.floatButtonData[positionsKey][optionId] = {
               left: btn.style.left,
               top: btn.style.top,
               opacity: parseFloat(btn.dataset.opacity) || undefined,
@@ -23550,8 +24537,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         btn.style.zIndex = '9998';
 
         if (touchHasMoved) {
-          if (!this.floatButtonData.floatingBallOptionPositions) {
-            this.floatButtonData.floatingBallOptionPositions = {};
+          if (!this.floatButtonData[positionsKey]) {
+            this.floatButtonData[positionsKey] = {};
           }
           const btnRect = btn.getBoundingClientRect();
           const btnCenterX = btnRect.left + btnRect.width / 2;
@@ -23561,14 +24548,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             const rightVal = window.innerWidth - btnRect.right;
             btn.style.right = `${rightVal}px`;
             btn.style.left = 'auto';
-            this.floatButtonData.floatingBallOptionPositions[optionId] = {
+            this.floatButtonData[positionsKey][optionId] = {
               right: `${rightVal}px`,
               top: btn.style.top,
               opacity: parseFloat(btn.dataset.opacity) || undefined,
               scale: parseFloat(btn.dataset.scale) || undefined
             };
           } else {
-            this.floatButtonData.floatingBallOptionPositions[optionId] = {
+            this.floatButtonData[positionsKey][optionId] = {
               left: btn.style.left,
               top: btn.style.top,
               opacity: parseFloat(btn.dataset.opacity) || undefined,
@@ -24205,8 +25192,21 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
 
       btn.onclick = () => {
-        if (hasDragged) return;
-        if (!hasSubmenu && handler) {
+        if (hasDragged && !touchHasMoved) {
+          // 桌面端拖动后不触发点击
+          return;
+        }
+        if (touchHasMoved) return;
+        if (hasSubmenu) {
+          // 点击分组按钮时展开/收起子菜单
+          if (currentSubmenu) {
+            document.querySelectorAll('.floating-style-classname-label').forEach(el => el.remove());
+            currentSubmenu.remove();
+            currentSubmenu = null;
+          } else {
+            showSubmenu();
+          }
+        } else if (handler) {
           handler();
         }
       };
@@ -24416,8 +25416,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             const idx = this.floatButtonData.floatingBallGroupOptions.indexOf(groupName);
             if (idx >= 0) {
               this.floatButtonData.floatingBallGroupOptions.splice(idx, 1);
-              if (this.floatButtonData.floatingBallOptionPositions) {
-                delete this.floatButtonData.floatingBallOptionPositions[optionId];
+              if (this.floatButtonData[positionsKey]) {
+                delete this.floatButtonData[positionsKey][optionId];
               }
               await this.saveFloatButtonData();
               btn.remove();
@@ -24432,8 +25432,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             const idx = this.floatButtonData.floatingBallOptions.indexOf(optionId);
             if (idx >= 0) {
               this.floatButtonData.floatingBallOptions.splice(idx, 1);
-              if (this.floatButtonData.floatingBallOptionPositions) {
-                delete this.floatButtonData.floatingBallOptionPositions[optionId];
+              if (this.floatButtonData[positionsKey]) {
+                delete this.floatButtonData[positionsKey][optionId];
               }
               await this.saveFloatButtonData();
               btn.remove();
@@ -24462,6 +25462,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           menu.style.top = `${windowH - menuRect.height - 10}px`;
         }
 
+        // 手机版：阻止菜单上的触摸事件冒泡
+        if (!_isDesktop) {
+          menu.addEventListener('touchstart', (te) => { te.stopPropagation(); }, { passive: true });
+        }
+
         // 点击其他地方关闭菜单
         const closeMenu = (event) => {
           if (!menu.contains(event.target)) {
@@ -24469,10 +25474,19 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               menu.remove();
             }
             document.removeEventListener('click', closeMenu);
+            if (!_isDesktop) document.removeEventListener('touchstart', closeMenuTouch);
+          }
+        };
+        const closeMenuTouch = (event) => {
+          if (!menu.contains(event.target)) {
+            if (menu.parentNode) menu.remove();
+            document.removeEventListener('click', closeMenu);
+            document.removeEventListener('touchstart', closeMenuTouch);
           }
         };
         setTimeout(() => {
           document.addEventListener('click', closeMenu);
+          if (!_isDesktop) document.addEventListener('touchstart', closeMenuTouch, { passive: true });
         }, 0);
       };
 
@@ -24489,13 +25503,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           btn.dataset.opacity = currentOpacity.toString();
           btn.style.opacity = currentOpacity.toString();
           // 保存透明度到设置
-          if (!this.floatButtonData.floatingBallOptionPositions) {
-            this.floatButtonData.floatingBallOptionPositions = {};
+          if (!this.floatButtonData[positionsKey]) {
+            this.floatButtonData[positionsKey] = {};
           }
-          if (!this.floatButtonData.floatingBallOptionPositions[optionId]) {
-            this.floatButtonData.floatingBallOptionPositions[optionId] = {};
+          if (!this.floatButtonData[positionsKey][optionId]) {
+            this.floatButtonData[positionsKey][optionId] = {};
           }
-          this.floatButtonData.floatingBallOptionPositions[optionId].opacity = currentOpacity;
+          this.floatButtonData[positionsKey][optionId].opacity = currentOpacity;
           this.saveFloatButtonData();
         } else if (e.altKey) {
           // Alt+滚轮调整大小
@@ -24506,13 +25520,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           btn.style.transform = `scale(${currentScale})`;
           btn.style.transformOrigin = 'center center';
           // 保存缩放到设置
-          if (!this.floatButtonData.floatingBallOptionPositions) {
-            this.floatButtonData.floatingBallOptionPositions = {};
+          if (!this.floatButtonData[positionsKey]) {
+            this.floatButtonData[positionsKey] = {};
           }
-          if (!this.floatButtonData.floatingBallOptionPositions[optionId]) {
-            this.floatButtonData.floatingBallOptionPositions[optionId] = {};
+          if (!this.floatButtonData[positionsKey][optionId]) {
+            this.floatButtonData[positionsKey][optionId] = {};
           }
-          this.floatButtonData.floatingBallOptionPositions[optionId].scale = currentScale;
+          this.floatButtonData[positionsKey][optionId].scale = currentScale;
           this.saveFloatButtonData();
         }
       }, { passive: false });
@@ -25038,6 +26052,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         menu.style.top = `${windowH - menuRect.height - 10}px`;
       }
 
+      // 手机版：阻止菜单上的触摸事件冒泡
+      if (!_isDesktop) {
+        menu.addEventListener('touchstart', (te) => { te.stopPropagation(); }, { passive: true });
+      }
+
       // 点击其他地方关闭菜单
       const closeMenu = (event) => {
         if (!menu.contains(event.target)) {
@@ -25045,10 +26064,19 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             menu.remove();
           }
           document.removeEventListener('click', closeMenu);
+          if (!_isDesktop) document.removeEventListener('touchstart', closeMenuTouch);
+        }
+      };
+      const closeMenuTouch = (event) => {
+        if (!menu.contains(event.target)) {
+          if (menu.parentNode) menu.remove();
+          document.removeEventListener('click', closeMenu);
+          document.removeEventListener('touchstart', closeMenuTouch);
         }
       };
       setTimeout(() => {
         document.addEventListener('click', closeMenu);
+        if (!_isDesktop) document.addEventListener('touchstart', closeMenuTouch, { passive: true });
       }, 0);
     });
 
@@ -25586,16 +26614,30 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         menu.style.top = `${windowH - menuRect.height - 10}px`;
       }
 
+      // 手机版：阻止菜单上的触摸事件冒泡
+      if (!_isDesktop) {
+        menu.addEventListener('touchstart', (te) => { te.stopPropagation(); }, { passive: true });
+      }
+
       const closeMenu = (event) => {
         if (!menu.contains(event.target)) {
           if (menu.parentNode) {
             menu.remove();
           }
           document.removeEventListener('click', closeMenu);
+          if (!_isDesktop) document.removeEventListener('touchstart', closeMenuTouch);
+        }
+      };
+      const closeMenuTouch = (event) => {
+        if (!menu.contains(event.target)) {
+          if (menu.parentNode) menu.remove();
+          document.removeEventListener('click', closeMenu);
+          document.removeEventListener('touchstart', closeMenuTouch);
         }
       };
       setTimeout(() => {
         document.addEventListener('click', closeMenu);
+        if (!_isDesktop) document.addEventListener('touchstart', closeMenuTouch, { passive: true });
       }, 0);
     });
   }
@@ -33511,12 +34553,40 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             // 生成基础类名规则（如 .h2 { ... }）
             const baseRule = `.${className} { ${styleContent} }`;
             extendedContent += '\n' + baseRule;
-          }
-
-          // 基础类名伪元素（显示层级标签）
-          if (showLevelLabel) {
-            const basePseudoRule = `.${className}::after { content: " ${levelLabel}"; font-size: 0.6em; opacity: 0.5; vertical-align: super; margin-left: 4px; -webkit-text-fill-color: initial; background: none; -webkit-background-clip: initial; background-clip: initial; }`;
-            extendedContent += '\n' + basePseudoRule;
+            
+            // 生成基础类名伪元素规则（::before, ::after等）
+            const basePseudoKeys = Object.keys(headingStyles).filter(k => k.startsWith(className + '::'));
+            const baseHasAfterPseudo = basePseudoKeys.some(k => k === className + '::after');
+            basePseudoKeys.forEach(pseudoKey => {
+              const pseudoElement = pseudoKey.substring(className.length);
+              let pseudoStyle = headingStyles[pseudoKey];
+              // 如果是::after且需要显示层级标签，合并层级标签内容
+              if (pseudoElement === '::after' && showLevelLabel) {
+                const contentMatch = pseudoStyle.match(/content:\s*["']([^"']*)["']/);
+                if (contentMatch) {
+                  const existingContent = contentMatch[1];
+                  const newContent = existingContent + ' ' + levelLabel;
+                  pseudoStyle = pseudoStyle.replace(/content:\s*["'][^"']*["']/, `content: "${newContent}"`);
+                } else {
+                  pseudoStyle = `content: " ${levelLabel}"; ` + pseudoStyle;
+                }
+              }
+              const basePseudoRule = `.${className}${pseudoElement} { ${pseudoStyle} }`;
+              extendedContent += '\n' + basePseudoRule;
+            });
+            
+            // 基础类名层级标签（仅在没有::after伪元素时单独生成）
+            if (showLevelLabel && !baseHasAfterPseudo) {
+              const basePseudoRule = `.${className}::after { content: " ${levelLabel}"; font-size: 0.6em; opacity: 0.5; vertical-align: super; margin-left: 4px; -webkit-text-fill-color: initial; background: none; -webkit-background-clip: initial; background-clip: initial; }`;
+              extendedContent += '\n' + basePseudoRule;
+            }
+          } else if (showLevelLabel) {
+            // 禁用样式时仍保留层级标签
+            const baseHasAfterPseudo = Object.keys(headingStyles).some(k => k === className + '::after');
+            if (!baseHasAfterPseudo) {
+              const basePseudoRule = `.${className}::after { content: " ${levelLabel}"; font-size: 0.6em; opacity: 0.5; vertical-align: super; margin-left: 4px; -webkit-text-fill-color: initial; background: none; -webkit-background-clip: initial; background-clip: initial; }`;
+              extendedContent += '\n' + basePseudoRule;
+            }
           }
 
           if (!disableHeadingStyle) {
@@ -33524,18 +34594,47 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             mapping.obsidianSelectors.forEach(selector => {
               const newRule = `${selector} { ${styleContent}; width: fit-content; }`;
               extendedContent += '\n' + newRule;
-              // 阅读模式标题伪元素（显示层级标签）
-              if (showLevelLabel) {
+            });
+            
+            // 生成伪元素规则（::before, ::after等）
+            const pseudoKeys = Object.keys(headingStyles).filter(k => k.startsWith(className + '::'));
+            const hasAfterPseudo = pseudoKeys.some(k => k === className + '::after');
+            pseudoKeys.forEach(pseudoKey => {
+              const pseudoElement = pseudoKey.substring(className.length); // e.g. "::before"
+              let pseudoStyle = headingStyles[pseudoKey];
+              // 如果是::after且需要显示层级标签，合并层级标签内容
+              if (pseudoElement === '::after' && showLevelLabel) {
+                const contentMatch = pseudoStyle.match(/content:\s*["']([^"']*)["']/);
+                if (contentMatch) {
+                  const existingContent = contentMatch[1];
+                  const newContent = existingContent + ' ' + levelLabel;
+                  pseudoStyle = pseudoStyle.replace(/content:\s*["'][^"']*["']/, `content: "${newContent}"`);
+                } else {
+                  pseudoStyle = `content: " ${levelLabel}"; ` + pseudoStyle;
+                }
+              }
+              mapping.obsidianSelectors.forEach(selector => {
+                const pseudoRule = `${selector}${pseudoElement} { ${pseudoStyle} }`;
+                extendedContent += '\n' + pseudoRule;
+              });
+            });
+            
+            // 阅读模式标题层级标签（仅在没有::after伪元素时单独生成）
+            if (showLevelLabel && !hasAfterPseudo) {
+              mapping.obsidianSelectors.forEach(selector => {
                 const pseudoRule = `${selector}::after { content: " ${levelLabel}"; font-size: 0.6em; opacity: 0.5; vertical-align: super; margin-left: 4px; -webkit-text-fill-color: initial; background: none; -webkit-background-clip: initial; background-clip: initial; }`;
                 extendedContent += '\n' + pseudoRule;
-              }
-            });
+              });
+            }
           } else if (showLevelLabel) {
             // 禁用样式时仍保留层级标签伪元素
-            mapping.obsidianSelectors.forEach(selector => {
-              const pseudoRule = `${selector}::after { content: " ${levelLabel}"; font-size: 0.6em; opacity: 0.5; vertical-align: super; margin-left: 4px; -webkit-text-fill-color: initial; background: none; -webkit-background-clip: initial; background-clip: initial; }`;
-              extendedContent += '\n' + pseudoRule;
-            });
+            const hasAfterPseudo = Object.keys(headingStyles).some(k => k === className + '::after');
+            if (!hasAfterPseudo) {
+              mapping.obsidianSelectors.forEach(selector => {
+                const pseudoRule = `${selector}::after { content: " ${levelLabel}"; font-size: 0.6em; opacity: 0.5; vertical-align: super; margin-left: 4px; -webkit-text-fill-color: initial; background: none; -webkit-background-clip: initial; background-clip: initial; }`;
+                extendedContent += '\n' + pseudoRule;
+              });
+            }
           }
         }
       });
@@ -34152,7 +35251,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         clearTimeout(showTimeout);
       }
       
-      // 减少显示延迟以提高响应速度
+      // 使用设置的悬浮显示延迟
+      const hoverDelay = plugin.settings?.popupHoverDelay !== undefined ? plugin.settings.popupHoverDelay : 300;
       showTimeout = setTimeout(async () => {
         try {
           // 获取有效的 DOM 元素（使用closest找到的高亮元素）
@@ -34199,7 +35299,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           popup.style.padding = `${popupSpacing}px`;
           popup.style.width = `${popupMaxWidth}px`;
-          popup.style.maxWidth = `${popupMaxWidth}px`;
+          popup.style.maxWidth = _isDesktop ? `${popupMaxWidth}px` : `${Math.min(popupMaxWidth, window.innerWidth - 20)}px`;
           popup.style.minWidth = '15px';
           popup.style.maxHeight = 'none'; // 由动态计算控制
           popup.style.backgroundColor = 'var(--background-primary)';
@@ -34828,7 +35928,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             addBtn.className = 'remark-add-btn';
             addBtn.textContent = '+';
             addBtn.title = '添加备注';
-            addBtn.style.cssText = 'position:sticky;bottom:0;float:right;font-weight:800;font-size:14px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1CB5E0, #000046, #1CB5E0, #6a11cb);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 181, 224, 0.8));background-color:rgba(28, 181, 224, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 181, 224, 0.3), 0 0 15px rgba(0, 0, 70, 0.2);animation:hp-blue-shift 4s ease infinite;margin-top:6px;line-height:1;';
+            addBtn.style.cssText = `position:sticky;bottom:0;${_isDesktop ? 'float:right;' : 'display:block;margin:6px auto 0;'}font-weight:800;font-size:14px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1CB5E0, #000046, #1CB5E0, #6a11cb);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 181, 224, 0.8));background-color:rgba(28, 181, 224, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 181, 224, 0.3), 0 0 15px rgba(0, 0, 70, 0.2);animation:hp-blue-shift 4s ease infinite;margin-top:6px;line-height:1;${!_isDesktop ? 'width:36px;height:36px;aspect-ratio:1/1;' : ''}`;
             // 添加动画 keyframes
             const addBtnStyle = document.createElement('style');
             addBtnStyle.textContent = '@keyframes hp-blue-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }';
@@ -36055,7 +37155,26 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         } catch (err) {
           console.error('[Remark] 错误:', err);
         }
-      }, 100);
+      }, hoverDelay);
+    });
+    
+    // 鼠标离开高亮元素时，取消备注弹窗的显示定时器
+    this.registerDomEvent(document, 'mouseout', (e) => {
+      if (!(e.target instanceof Element)) return;
+      const highlightEl = e.target.closest('.highlight-tooltip-text, .highlight-regex-text');
+      if (!highlightEl) return;
+      
+      // 检查鼠标是否移到了同一个高亮元素内的子节点（如span），如果是则不取消
+      const relatedTarget = e.relatedTarget;
+      if (relatedTarget && (highlightEl.contains(relatedTarget) || relatedTarget === highlightEl)) {
+        return;
+      }
+      
+      // 鼠标离开了高亮元素，取消显示定时器
+      if (showTimeout) {
+        clearTimeout(showTimeout);
+        showTimeout = null;
+      }
     });
   }
   
@@ -36096,6 +37215,292 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       badge.style.left = (rect.left + rect.width / 2) + 'px';
       badge.style.top = (rect.top - 10) + 'px';
     };
+    
+    // 手机版：点击高亮文字时在悬浮球旁展开操作按钮
+    if (!_isDesktop) {
+      let mobileHighlightActions = null;
+      let mobileHighlightTarget = null;
+      
+      const hideMobileHighlightActions = () => {
+        if (mobileHighlightActions) {
+          mobileHighlightActions.remove();
+          mobileHighlightActions = null;
+          mobileHighlightTarget = null;
+        }
+      };
+      
+      this.registerDomEvent(document, 'click', (e) => {
+        if (!(e.target instanceof Element)) return;
+        
+        // 点击非高亮区域时隐藏
+        const target = e.target.closest('.highlight-regex-text');
+        if (!target) {
+          hideMobileHighlightActions();
+          return;
+        }
+        
+        // 如果点击的是已展开按钮的同一个目标，收起
+        if (mobileHighlightTarget === target && mobileHighlightActions) {
+          hideMobileHighlightActions();
+          return;
+        }
+        
+        if (plugin.settings?.showRuleSourceBadge === false && !plugin.settings?.showRemarkBadge) return;
+        
+        const ruleSource = target.dataset.ruleSource;
+        
+        // 至少有一个可显示的按钮才展开
+        const showGL = plugin.settings?.showRuleSourceBadge !== false && ruleSource;
+        const showN = plugin.settings?.showRemarkBadge;
+        if (!showGL && !showN) return;
+        
+        hideMobileHighlightActions();
+        mobileHighlightTarget = target;
+        
+        const floatingBall = document.getElementById('regex-highlighter-floating-ball');
+        
+        const container = document.createElement('div');
+        container.className = 'mobile-highlight-actions';
+        container.style.cssText = `
+          position: fixed;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          z-index: 10000;
+        `;
+        
+        // 定位在悬浮球旁边
+        if (floatingBall) {
+          const ballRect = floatingBall.getBoundingClientRect();
+          const isRightSide = ballRect.left > window.innerWidth / 2;
+          if (isRightSide) {
+            container.style.right = `${window.innerWidth - ballRect.left + 8}px`;
+            container.style.left = 'auto';
+          } else {
+            container.style.left = `${ballRect.right + 8}px`;
+          }
+          container.style.top = `${ballRect.top}px`;
+        } else {
+          // 没有悬浮球时，定位在点击位置附近
+          const rect = target.getBoundingClientRect();
+          container.style.left = `${rect.left}px`;
+          container.style.top = `${rect.bottom + 8}px`;
+        }
+        
+        // g/l 按钮
+        if (showGL) {
+          const glBtn = document.createElement('button');
+          const label = ruleSource === 'global' ? 'g' : 'l';
+          glBtn.textContent = label;
+          glBtn.style.cssText = `
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 1px solid var(--background-modifier-border);
+            background: var(--background-primary);
+            color: var(--text-muted);
+            font-size: 14px; font-weight: bold;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          `;
+          if (!plugin.settings?.hideTooltip) glBtn.title = ruleSource === 'global' ? t('main.globalRuleClickToLocal') : t('main.localRuleClickToGlobal');
+          
+          glBtn.addEventListener('click', async (ce) => {
+            ce.stopPropagation();
+            ce.preventDefault();
+            
+            const ruleRegex = target.dataset.ruleRegex;
+            if (!ruleRegex) { new Notice(t('main.cannotGetRuleInfo')); return; }
+            const cssClass = target.className.split(' ').find(c => c !== 'highlight-tooltip-text' && c !== 'highlight-regex-text' && c !== 'rule-source-badge') || '';
+            
+            if (ruleSource === 'global') {
+              const ruleIndex = plugin.globalRules.findIndex(r => r.regex === ruleRegex && r.cssClass === cssClass);
+              if (ruleIndex === -1) { new Notice(t('main.globalRuleNotFound')); return; }
+              const rule = plugin.globalRules[ruleIndex];
+              if (!plugin.rules) plugin.rules = [];
+              const existsInLocal = plugin.rules.find(r => r.regex === rule.regex);
+              if (existsInLocal) {
+                existsInLocal.cssClass = rule.cssClass;
+                if (rule.remark && rule.remark.trim()) {
+                  const existingRemark = (existsInLocal.remark || '').trim();
+                  if (existingRemark && !existingRemark.includes(rule.remark.trim())) {
+                    existsInLocal.remark = existingRemark + '\n' + rule.remark.trim();
+                  } else if (!existingRemark) {
+                    existsInLocal.remark = rule.remark.trim();
+                  }
+                }
+                if (rule.links && rule.links.length > 0) {
+                  if (!existsInLocal.links) existsInLocal.links = [];
+                  for (const link of rule.links) {
+                    const isDuplicate = existsInLocal.links.some(l => l.filePath === link.filePath && (l.timestamp ? l.timestamp === link.timestamp : l.searchText === link.searchText));
+                    if (!isDuplicate) existsInLocal.links.push(link);
+                  }
+                }
+                plugin.globalRules.splice(ruleIndex, 1);
+              } else {
+                plugin.rules.push({ regex: rule.regex, cssClass: rule.cssClass, remark: rule.remark || '', ...(rule.links ? { links: rule.links } : {}) });
+                plugin.globalRules.splice(ruleIndex, 1);
+              }
+              await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+              await plugin.saveGlobalRules(plugin.globalRules, true);
+              plugin.rulesVersion++;
+              plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+              plugin.refreshCurrentView();
+              new Notice(t('main.ruleMovedToLocal'));
+            } else {
+              const ruleIndex = plugin.rules.findIndex(r => r.regex === ruleRegex && r.cssClass === cssClass);
+              if (ruleIndex === -1) { new Notice(t('main.localRuleNotFound')); return; }
+              const rule = plugin.rules[ruleIndex];
+              const existsInGlobal = plugin.globalRules.find(r => r.regex === rule.regex);
+              if (existsInGlobal) {
+                existsInGlobal.cssClass = rule.cssClass;
+                if (rule.remark && rule.remark.trim()) {
+                  const existingRemark = (existsInGlobal.remark || '').trim();
+                  if (existingRemark && !existingRemark.includes(rule.remark.trim())) {
+                    existsInGlobal.remark = existingRemark + '\n' + rule.remark.trim();
+                  } else if (!existingRemark) {
+                    existsInGlobal.remark = rule.remark.trim();
+                  }
+                }
+                if (rule.links && rule.links.length > 0) {
+                  if (!existsInGlobal.links) existsInGlobal.links = [];
+                  for (const link of rule.links) {
+                    const isDuplicate = existsInGlobal.links.some(l => l.filePath === link.filePath && (l.timestamp ? l.timestamp === link.timestamp : l.searchText === link.searchText));
+                    if (!isDuplicate) existsInGlobal.links.push(link);
+                  }
+                }
+                plugin.rules.splice(ruleIndex, 1);
+              } else {
+                plugin.globalRules.push({ regex: rule.regex, cssClass: rule.cssClass, remark: rule.remark || '', ...(rule.links ? { links: rule.links } : {}) });
+                plugin.rules.splice(ruleIndex, 1);
+              }
+              await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+              await plugin.saveGlobalRules(plugin.globalRules, true);
+              plugin.rulesVersion++;
+              plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+              plugin.refreshCurrentView();
+              new Notice(t('main.ruleMovedToGlobal'));
+            }
+            hideMobileHighlightActions();
+          });
+          
+          // 长按删除高亮规则
+          let longPressTimer = null;
+          let longPressTriggered = false;
+          
+          glBtn.addEventListener('touchstart', (te) => {
+            longPressTriggered = false;
+            longPressTimer = setTimeout(async () => {
+              longPressTriggered = true;
+              te.preventDefault();
+              
+              const ruleRegex = target.dataset.ruleRegex;
+              if (!ruleRegex) return;
+              const cssClass = target.className.split(' ').find(c => c !== 'highlight-tooltip-text' && c !== 'highlight-regex-text' && c !== 'rule-source-badge') || '';
+              
+              if (ruleSource === 'global') {
+                const ruleIndex = plugin.globalRules.findIndex(r => r.regex === ruleRegex && r.cssClass === cssClass);
+                if (ruleIndex !== -1) {
+                  plugin.globalRules.splice(ruleIndex, 1);
+                  await plugin.saveGlobalRules(plugin.globalRules, true);
+                }
+              } else {
+                const ruleIndex = plugin.rules.findIndex(r => r.regex === ruleRegex && r.cssClass === cssClass);
+                if (ruleIndex !== -1) {
+                  plugin.rules.splice(ruleIndex, 1);
+                  await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                }
+              }
+              plugin.rulesVersion++;
+              plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+              plugin.refreshCurrentView();
+              new Notice(t('main.highlightRemoved'));
+              hideMobileHighlightActions();
+            }, 600);
+          }, { passive: true });
+          
+          glBtn.addEventListener('touchend', () => {
+            if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+          });
+          
+          glBtn.addEventListener('touchmove', () => {
+            if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+          });
+          
+          // 阻止长按触发click
+          glBtn.addEventListener('click', (ce) => {
+            if (longPressTriggered) { ce.stopPropagation(); ce.preventDefault(); longPressTriggered = false; }
+          }, true);
+          
+          container.appendChild(glBtn);
+        }
+        
+        // n 按钮
+        if (showN) {
+          const nBtn = document.createElement('button');
+          nBtn.textContent = 'n';
+          nBtn.style.cssText = `
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 1px solid var(--background-modifier-border);
+            background: var(--background-primary);
+            color: var(--text-muted);
+            font-size: 14px; font-weight: bold;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          `;
+          if (!plugin.settings?.hideTooltip) nBtn.title = t('main.addRemark');
+          
+          nBtn.addEventListener('click', async (ce) => {
+            ce.stopPropagation();
+            ce.preventDefault();
+            
+            const ruleRegex = target.dataset.ruleRegex;
+            const ruleSrc = target.dataset.ruleSource;
+            const matchedText = target.textContent || '';
+            const isGlobalRule = ruleSrc === 'global';
+            
+            const av = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+            const linkFilePath = av?.file?.path || plugin.currentFilePath;
+            const newLink = { filePath: linkFilePath || '', searchText: matchedText, remark: '', timestamp: Date.now() };
+            
+            if (isGlobalRule) {
+              const rule = plugin.globalRules.find(r => r.regex === ruleRegex);
+              if (rule) {
+                if (!rule.links) rule.links = [];
+                rule.links.push(newLink);
+                await plugin.saveGlobalRules(plugin.globalRules, true);
+              }
+            } else {
+              const rule = plugin.rules.find(r => r.regex === ruleRegex);
+              if (rule) {
+                if (!rule.links) rule.links = [];
+                rule.links.push(newLink);
+                await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+              }
+            }
+            
+            try {
+              const rule = isGlobalRule ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
+              if (rule && rule.links) {
+                target.dataset.links = JSON.stringify(rule.links);
+              }
+            } catch (err) {}
+            
+            // 触发备注弹窗：模拟mouseover事件到目标高亮元素
+            target.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true }));
+            
+            hideMobileHighlightActions();
+          });
+          container.appendChild(nBtn);
+        }
+        
+        document.body.appendChild(container);
+        mobileHighlightActions = container;
+        
+        // 3秒后自动隐藏
+        setTimeout(() => { hideMobileHighlightActions(); }, 3000);
+      });
+      
+      return; // 手机版不注册桌面端的mouseover事件
+    }
     
     this.registerDomEvent(document, 'mouseover', (e) => {
       if (!(e.target instanceof Element)) return;
@@ -36356,6 +37761,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       badge.style.left = (rect.right - 8) + 'px';
       badge.style.top = (rect.top - 2) + 'px';
     };
+
+    // 手机版：备注按钮已在initRuleSourceBadge中统一处理，此处跳过
+    if (!_isDesktop) return;
 
     this.registerDomEvent(document, 'mouseover', (e) => {
       if (!(e.target instanceof Element)) return;

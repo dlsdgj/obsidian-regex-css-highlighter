@@ -2,7 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.6.9 (2026-06-09)
+## 🆕 v1.7.0 (2026-06-10)
+
+- **Mobile Context Menu Fix** — Fixed long-press style button options freezing, clicks not responding, and options remaining visible after closing the main panel on mobile
+- **Mobile Submenu Removal** — Removed "Add as Heading Style" and "Move to Group" submenus on mobile (they rely on mouse hover events which don't work on touch devices)
+- **Remark Popup Hover Delay** — Added setting to control how long the mouse must hover over matched text before the remark popup appears; moving the mouse away before the delay cancels the popup, preventing accidental triggers
+- **Add Group Instant Refresh** — Fixed new groups not appearing in the main panel after adding; panel now refreshes immediately
+
+## v1.6.9 (2026-06-09)
 
 - **Single-display Group Pin Button Fix** — Changed single-display tab 📌 button from inline to absolute positioning (matching always-visible groups), removed overflow:hidden that was clipping the button
 - **Main Panel Dark Background Fix** — Injected !important CSS rule (.rch-transparent-bg) to forcefully override Obsidian's default modal-bg background, combined with MutationObserver for triple-layer protection

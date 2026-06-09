@@ -87,9 +87,7 @@ An Obsidian plugin that matches text via regular expressions and applies custom 
 
 ### 📌 Notes
 
-![Add Remark](./assets/addremark.gif)
-
-https://github.com/dlsdgj/obsidian-regex-css-highlighter/blob/main/assets/PixPin_2026-06-10_04-45-38.mp4
+![Add Remark](./assets/PixPin_2026-06-10_05-02-10.gif)
 
 <details>
 <summary>Notes</summary>

@@ -577,9 +577,7 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 ### 📌 备注功能
 
-![添加备注](./assets/addremark.gif)
-
-https://github.com/dlsdgj/obsidian-regex-css-highlighter/blob/main/assets/PixPin_2026-06-10_04-45-38.mp4
+![添加备注](./assets/PixPin_2026-06-10_05-02-10.gif)
 
 <details>
 <summary>备注功能</summary>

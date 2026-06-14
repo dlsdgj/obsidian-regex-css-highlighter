@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.7.0 (2026-06-10)
+## 🆕 v1.7.1 (2026-06-14)
+
+- **Remark Badge Click Popup Fix** — Fixed remark popup not appearing immediately when clicking the "n" badge to add a remark while hover delay is non-zero; popup now shows instantly and is protected from accidental mouseout cancellation
+- **Default Settings for New Install** — New installs now default to: showRemarkBadge=true, remarkBadgeThreshold=2, popupLineHeight=1.5, popupBorderWidth=2, popupBorderColor=#ffffff
+
+## v1.7.0 (2026-06-10)
 
 - **Mobile Context Menu Fix** — Fixed long-press style button options freezing, clicks not responding, and options remaining visible after closing the main panel on mobile
 - **Mobile Submenu Removal** — Removed "Add as Heading Style" and "Move to Group" submenus on mobile (they rely on mouse hover events which don't work on touch devices)

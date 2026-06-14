@@ -1,4 +1,4 @@
-﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover, PluginSettingTab } = require("obsidian");
+const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover, PluginSettingTab } = require("obsidian");
 
 // 直接将CSS规则追加到动态样式元素，确保新样式立即生效（无需重新读取文件）
 function appendCSSToDynamicStyle(cssRule) {
@@ -2473,7 +2473,7 @@ class AddRemarkModal extends Modal {
     const pluginSettings = this.plugin?.settings || {};
     const popupFontSize = pluginSettings.popupFontSize !== undefined ? pluginSettings.popupFontSize : 14;
     const popupSpacing = pluginSettings.popupSpacing !== undefined ? pluginSettings.popupSpacing : 10;
-    const popupWidth = pluginSettings.popupWidth !== undefined ? pluginSettings.popupWidth : 300;
+    const popupWidth = pluginSettings.popupWidth !== undefined ? pluginSettings.popupWidth : 600;
     const popupBorderWidth = pluginSettings.popupBorderWidth !== undefined ? pluginSettings.popupBorderWidth : 1;
     const popupBorderColor = pluginSettings.popupBorderColor || 'var(--text-accent)';
     const savedOpacity = pluginSettings.popupOpacity !== undefined ? pluginSettings.popupOpacity : 1;
@@ -10475,8 +10475,6 @@ class AddRegexRuleModal extends Modal {
             tab.style.fontSize = '14px';
             tab.style.fontWeight = 'bold';
             tab.style.padding = '1px 5px';
-            tab.style.backgroundColor = '#007bff';
-            tab.style.color = 'white';
             tab.style.border = 'none';
             tab.style.borderRadius = '3px';
             tab.style.whiteSpace = 'nowrap';
@@ -10489,11 +10487,20 @@ class AddRegexRuleModal extends Modal {
             tab.setAttribute('data-category', category);
             tab.title = t('main.clickToExpand') + `: ${category}`;
             
+            // 恢复保存的分组样式
+            const savedGroupStyleClass = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[category];
+            if (savedGroupStyleClass) {
+              tab.className = `collapsed-category-reopen-btn group-btn-style-${savedGroupStyleClass}`;
+              this.plugin.applyGroupButtonStyleRules(savedGroupStyleClass);
+            } else {
+              tab.style.backgroundColor = '#007bff';
+              tab.style.color = 'white';
+            }
+            
             // 标签文本
             const tabText = document.createElement('span');
             tabText.textContent = category;
             tab.appendChild(tabText);
-            
             // 绝对定位悬浮图标（鼠标悬停时显示，与常显分组一致）
             const tabFloatBtn = document.createElement('span');
             tabFloatBtn.textContent = '📌';
@@ -10539,16 +10546,7 @@ class AddRegexRuleModal extends Modal {
             });
             tab.appendChild(tabFloatBtn);
             
-            // 恢复保存的分组样式
-            const savedGroupStyleClass = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[category];
-            if (savedGroupStyleClass) {
-              tab.className = `collapsed-category-reopen-btn group-btn-style-${savedGroupStyleClass}`;
-              tab.style.backgroundColor = '';
-              tab.style.color = '';
-              tab.style.border = '';
-              tab.style.boxShadow = '';
-              this.plugin.applyGroupButtonStyleRules(savedGroupStyleClass);
-            }
+
           }
           
           // 保存状态到插件实例
@@ -10905,7 +10903,6 @@ class AddRegexRuleModal extends Modal {
                     if (newStyleClass) {
                       categoryTitle.style.backgroundColor = '';
                       categoryTitle.style.color = '';
-                      categoryTitle.style.border = '';
                       categoryTitle.style.boxShadow = '';
                       categoryTitle.className = `group-btn-style-${newStyleClass}`;
                       this.plugin.applyGroupButtonStyleRules(newStyleClass);
@@ -10913,7 +10910,6 @@ class AddRegexRuleModal extends Modal {
                       categoryTitle.className = '';
                       categoryTitle.style.backgroundColor = '#007bff';
                       categoryTitle.style.color = 'white';
-                      categoryTitle.style.border = '';
                       categoryTitle.style.boxShadow = '';
                     }
 
@@ -10932,6 +10928,11 @@ class AddRegexRuleModal extends Modal {
 
           // 显示菜单
           menu.showAtMouseEvent(e);
+          // 提升右键菜单z-index，避免被主面板(z-index:100)遮挡
+          const menuEls = document.querySelectorAll('.menu');
+          if (menuEls.length > 0) {
+            menuEls[menuEls.length - 1].style.zIndex = '10000';
+          }
         });
       
       // 移除了嵌套的网格容器，按钮将直接添加到主容器中
@@ -13044,8 +13045,14 @@ class AddRegexRuleModal extends Modal {
           mainContainer.appendChild(categoryContainer);
         }
         tabContentContainer.style.display = 'none';
-        tab.style.backgroundColor = '#007bff';
+        const tabSavedStyle = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[category];
+        if (!tabSavedStyle) {
+          tab.style.backgroundColor = '#007bff';
+        } else {
+          tab.style.backgroundColor = '';
+        }
         tab.style.fontWeight = 'bold';
+        tab.style.borderBottom = '';
         activeTabCategory = null;
       } else {
         // 点击新标签 → 切换到该标签
@@ -13062,8 +13069,14 @@ class AddRegexRuleModal extends Modal {
           }
           const prevTab = collapsedCategoriesContainer.querySelector(`[data-category="${activeTabCategory}"]`);
           if (prevTab) {
-            prevTab.style.backgroundColor = '#007bff';
+            const prevSavedStyle = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[activeTabCategory];
+            if (!prevSavedStyle) {
+              prevTab.style.backgroundColor = '#007bff';
+            } else {
+              prevTab.style.backgroundColor = '';
+            }
             prevTab.style.fontWeight = 'bold';
+            prevTab.style.borderBottom = '';
           }
         }
         
@@ -13106,8 +13119,8 @@ class AddRegexRuleModal extends Modal {
           }
         }
         
-        // 高亮选中的标签
-        tab.style.backgroundColor = '#0056b3';
+        // 用底部横线标识选中的标签
+        tab.style.borderBottom = '2px solid currentColor';
         tab.style.fontWeight = '900';
         activeTabCategory = category;
       }
@@ -13531,14 +13544,12 @@ class AddRegexRuleModal extends Modal {
                   tab.className = `collapsed-category-reopen-btn group-btn-style-${newStyleClass}`;
                   tab.style.backgroundColor = '';
                   tab.style.color = '';
-                  tab.style.border = '';
                   tab.style.boxShadow = '';
                   this.plugin.applyGroupButtonStyleRules(newStyleClass);
                 } else {
                   tab.className = 'collapsed-category-reopen-btn';
                   tab.style.backgroundColor = '#007bff';
                   tab.style.color = 'white';
-                  tab.style.border = '';
                   tab.style.boxShadow = '';
                 }
 
@@ -13556,6 +13567,10 @@ class AddRegexRuleModal extends Modal {
       });
 
       menu.showAtMouseEvent(e);
+      const menuEls2 = document.querySelectorAll('.menu');
+      if (menuEls2.length > 0) {
+        menuEls2[menuEls2.length - 1].style.zIndex = '10000';
+      }
     });
   }
   
@@ -14881,6 +14896,31 @@ class AddRegexRuleModal extends Modal {
     lineHeightUnit.style.marginLeft = "5px";
     lineHeightUnit.style.fontSize = "14px";
 
+    // 添加备注弹窗宽度设置
+    const popupWidthSettingRow = popupSettingsContent.createDiv();
+    popupWidthSettingRow.style.display = "flex";
+    popupWidthSettingRow.style.alignItems = "center";
+    popupWidthSettingRow.style.marginBottom = "5px";
+
+    const popupWidthLabel = popupWidthSettingRow.createEl("span", { text: t('settings.remarkPopupWidth') + ": " });
+    popupWidthLabel.style.marginRight = "10px";
+    popupWidthLabel.style.fontSize = "14px";
+
+    const popupWidthInput = popupWidthSettingRow.createEl("input");
+    popupWidthInput.type = "number";
+    popupWidthInput.value = this.plugin.settings?.popupWidth !== undefined ? this.plugin.settings.popupWidth : 600;
+    popupWidthInput.min = "200";
+    popupWidthInput.max = "1200";
+    popupWidthInput.step = "50";
+    popupWidthInput.style.width = "80px";
+    popupWidthInput.style.padding = "4px";
+    popupWidthInput.style.border = "1px solid var(--background-modifier-border)";
+    popupWidthInput.style.borderRadius = "4px";
+
+    const popupWidthUnit = popupWidthSettingRow.createEl("span", { text: "px" });
+    popupWidthUnit.style.marginLeft = "5px";
+    popupWidthUnit.style.fontSize = "14px";
+
     // 弹窗宽度/透明度快捷键提示
     const popupShortcutHint = popupSettingsContent.createDiv();
     popupShortcutHint.style.cssText = 'margin-bottom:8px;padding:8px 12px;border-radius:6px;background:var(--background-secondary);border:1px solid var(--border-color);font-size:12px;color:var(--text-muted);line-height:1.6;';
@@ -15042,6 +15082,7 @@ class AddRegexRuleModal extends Modal {
         this.plugin.settings.popupFontSize = parseInt(fontSizeInput.value);
         this.plugin.settings.popupSpacing = parseInt(spacingInput.value);
         this.plugin.settings.popupLineHeight = parseFloat(lineHeightInput.value);
+        this.plugin.settings.popupWidth = parseInt(popupWidthInput.value) || 600;
         this.plugin.settings.popupBorderWidth = parseInt(popupBorderWidthInput.value);
         this.plugin.settings.popupBorderColor = popupBorderColorInput.value;
         this.plugin.settings.remarkPopupOnlyOnSelection = remarkPopupOnlyOnSelectionCheckbox.checked;
@@ -17241,6 +17282,10 @@ class AddRegexRuleModal extends Modal {
           });
         });
         menu.showAtMouseEvent(e);
+        const menuEls3 = document.querySelectorAll('.menu');
+        if (menuEls3.length > 0) {
+          menuEls3[menuEls3.length - 1].style.zIndex = '10000';
+        }
       });
     });
     
@@ -18758,8 +18803,11 @@ class AddRegexRuleModal extends Modal {
             }
           });
           
-          // 重新加载样式到页面（标题样式保存在data.json中，直接从文件读取确保最新）
-          this.reloadStyles();
+          // 重新加载样式到页面（标题样式保存在data.json中，使用已有的CSS内容避免重新读取styles.css）
+          const existingStyleEl = document.getElementById('Regex-Css-Highlighter-dynamic-styles');
+          const existingCss = existingStyleEl ? existingStyleEl.textContent.replace(/\/\* Obsidian 标题样式支持 \*\/[\s\S]*$/, '').trim() : undefined;
+
+          this.reloadStyles(existingCss);
         } else {
           // 普通样式：保存到styles.css
           // 读取现有的CSS文件内容
@@ -18883,6 +18931,7 @@ class AddRegexRuleModal extends Modal {
           }
           
           // 重新加载样式到页面
+
           this.reloadStyles();
         }
         
@@ -18910,16 +18959,8 @@ class AddRegexRuleModal extends Modal {
     };
     
     // 监听CSS编辑器关闭事件，更新按钮显示和整个弹窗内容
-    const originalOnClose = cssEditor.onClose.bind(cssEditor);
     cssEditor.onClose = async () => {
-      
-      // 只有保存后才刷新UI，取消时不刷新
-      if (!cssEditor.saved) {
-        console.log('CSS editor canceled, skipping UI refresh');
-        return;
-      }
-      
-      console.log('CSS editor closed after save, refreshing UI...');
+      console.log('CSS editor closed, refreshing UI...');
       
       try {
         // 并行执行异步操作，减少等待时间
@@ -18937,6 +18978,7 @@ class AddRegexRuleModal extends Modal {
         await Promise.all(refreshPromises);
         
         // 3. 重新加载页面上的样式
+
         self.reloadStyles();
         
         // 4. 直接执行UI更新，无需延迟
@@ -18984,7 +19026,6 @@ class AddRegexRuleModal extends Modal {
   
   async injectCSSContent(providedCssContent) {
     try {
-      // 优先使用传入的CSS内容，避免读写不一致的缓存问题
       let cssContent = providedCssContent;
       if (!cssContent) {
         cssContent = await crossFS.read(this.app.vault, '.obsidian/plugins/Regex-Css-Highlighter/styles.css');
@@ -19055,11 +19096,12 @@ class AddRegexRuleModal extends Modal {
     
     headingMappings.forEach(mapping => {
       mapping.classNames.forEach(className => {
-        // 优先从headingStyles读取
         if (storedHeadingStyles[className]) {
           const styleContent = storedHeadingStyles[className];
           const level = mapping.level;
           const levelLabel = `h${level}`;
+          const pseudoKeys = Object.keys(storedHeadingStyles).filter(k => k.startsWith(className + '::'));
+          const hasAfterPseudo = pseudoKeys.some(k => k === className + '::after');
           
           if (!disableHeadingStyle) {
             // 生成Obsidian标题选择器
@@ -19070,8 +19112,7 @@ class AddRegexRuleModal extends Modal {
 }`;
             
             // 生成伪元素规则（::before, ::after等）
-            const pseudoKeys = Object.keys(storedHeadingStyles).filter(k => k.startsWith(className + '::'));
-            const hasAfterPseudo = pseudoKeys.some(k => k === className + '::after');
+
             pseudoKeys.forEach(pseudoKey => {
               const pseudoElement = pseudoKey.substring(className.length); // e.g. "::before"
               let pseudoStyle = storedHeadingStyles[pseudoKey];
@@ -20942,10 +20983,10 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       this.settings.popupFontSize = 14;
     }
     if (this.settings.popupSpacing === undefined) {
-      this.settings.popupSpacing = 10;
+      this.settings.popupSpacing = 2;
     }
     if (this.settings.popupWidth === undefined) {
-      this.settings.popupWidth = 300;
+      this.settings.popupWidth = 600;
     }
     if (this.settings.popupOpacity === undefined) {
       this.settings.popupOpacity = 1;
@@ -20953,11 +20994,20 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     if (this.settings.remarkPopupOnlyOnSelection === undefined) {
       this.settings.remarkPopupOnlyOnSelection = false;
     }
+    if (this.settings.popupLineHeight === undefined) {
+      this.settings.popupLineHeight = 1.5;
+    }
+    if (this.settings.popupBorderWidth === undefined) {
+      this.settings.popupBorderWidth = 2;
+    }
+    if (this.settings.popupBorderColor === undefined) {
+      this.settings.popupBorderColor = "#ffffff";
+    }
     if (this.settings.showRemarkBadge === undefined) {
-      this.settings.showRemarkBadge = false;
+      this.settings.showRemarkBadge = true;
     }
     if (this.settings.remarkBadgeThreshold === undefined) {
-      this.settings.remarkBadgeThreshold = 1;
+      this.settings.remarkBadgeThreshold = 2;
     }
     if (this.settings.defaultPreviewTextCN === undefined) {
       this.settings.defaultPreviewTextCN = '';
@@ -21077,6 +21127,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     
     await this.loadGlobalRules();
     
+
     try {
       await this.injectCSSContent();
       this.cacheHoverStyles();
@@ -21295,31 +21346,19 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     
     // 监听规则更新事件，更新标题和标签页样式，并刷新当前视图
     this.rulesUpdateEmitter.addEventListener('update', () => {
-      // 弹窗操作期间跳过视图刷新，避免阅读模式下 targetEl 被 DOM 替换导致弹窗跳到左上角
-      if (this._skipRefreshForPopup) {
-        this.remarkLog('[RegexCssHL] rulesUpdateEmitter: 弹窗打开期间，跳过视图刷新');
-        return;
-      }
-      
-      this.remarkLog('[RegexCssHL] rulesUpdateEmitter: 执行视图刷新');
-      
-      // 刷新当前视图以应用新规则
+
       this.refreshCurrentView();
       
-      // 额外处理：确保所有实时预览模式下的CodeMirror 6装饰立即更新
-      // 获取所有打开的Markdown视图并强制更新
       const markdownViews = this.app.workspace.getLeavesOfType('markdown').map(leaf => leaf.view);
       for (const view of markdownViews) {
         if (view && view instanceof MarkdownView && view.editor?.cm) {
           const cmView = view.editor.cm;
           
-          // 强制重新计算装饰 - 多次调用确保更新
           for (let i = 0; i < 2; i++) {
             cmView.dispatch({
               effects: [],
               changes: { from: 0, to: 0, insert: '' }
             });
-            // 强制视图重绘
             cmView.requestMeasure();
           }
         }
@@ -27558,6 +27597,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   
   // 卸载插件时清理资源
   onunload() {
+
     if (this.floatingStyleWindows) {
       const windowsData = [];
       this.floatingStyleWindows.forEach(win => {
@@ -34472,7 +34512,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
   async injectCSSContent(providedCssContent) {
     try {
-      // 优先使用传入的CSS内容，避免读写不一致的缓存问题
       let cssContent = providedCssContent;
       if (!cssContent) {
         cssContent = await crossFS.read(this.app.vault, '.obsidian/plugins/Regex-Css-Highlighter/styles.css');
@@ -35193,6 +35232,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     let showTimeout = null;
     let currentTargetEl = null;
     let isClosing = false;
+
     const plugin = this;
     
     this.registerDomEvent(document, 'mouseover', async (e) => {
@@ -35252,7 +35292,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
       
       // 使用设置的悬浮显示延迟
-      const hoverDelay = plugin.settings?.popupHoverDelay !== undefined ? plugin.settings.popupHoverDelay : 300;
+      const hoverDelay = plugin._skipHoverDelay ? 0 : (plugin.settings?.popupHoverDelay !== undefined ? plugin.settings.popupHoverDelay : 300);
+      plugin._skipHoverDelay = false;
       showTimeout = setTimeout(async () => {
         try {
           // 获取有效的 DOM 元素（使用closest找到的高亮元素）
@@ -35293,7 +35334,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 使用插件设置中的值
           const popupFontSize = plugin.settings.popupFontSize !== undefined ? plugin.settings.popupFontSize : 14;
           const popupSpacing = plugin.settings.popupSpacing !== undefined ? plugin.settings.popupSpacing : 10;
-          const popupMaxWidth = plugin.settings.popupWidth !== undefined ? plugin.settings.popupWidth : 300;
+          const popupMaxWidth = plugin.settings.popupWidth !== undefined ? plugin.settings.popupWidth : 600;
           const popupBorderWidth = plugin.settings.popupBorderWidth !== undefined ? plugin.settings.popupBorderWidth : 1;
           const popupBorderColor = plugin.settings.popupBorderColor || 'var(--text-accent)';
           
@@ -37066,6 +37107,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             });
             
             menu.showAtMouseEvent(e);
+            const menuEls4 = document.querySelectorAll('.menu');
+            if (menuEls4.length > 0) {
+              menuEls4[menuEls4.length - 1].style.zIndex = '10000';
+            }
           });
           
           // 必须在添加到 DOM 后获取 rect
@@ -37171,6 +37216,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
       
       // 鼠标离开了高亮元素，取消显示定时器
+      if (plugin._protectShowTimeout) {
+        plugin._protectShowTimeout = false;
+        return;
+      }
       if (showTimeout) {
         clearTimeout(showTimeout);
         showTimeout = null;
@@ -37889,7 +37938,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           }
         } catch(e) {}
 
-        // 触发 mouseover 让弹窗显示
+        // 触发 mouseover 让弹窗显示（跳过延迟，立即显示）
+        plugin._skipHoverDelay = true;
+        plugin._protectShowTimeout = true;
         target.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true }));
 
         // 等待弹窗出现后自动进入编辑模式

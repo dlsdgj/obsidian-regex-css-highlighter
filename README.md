@@ -134,6 +134,14 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 <summary>Changelog</summary>
 
 <details>
+<summary>v1.7.1 (2026-06-14)</summary>
+
+- **Remark Badge Click Popup Fix** — Fixed remark popup not appearing immediately when clicking the "n" badge to add a remark while hover delay is non-zero; popup now shows instantly and is protected from accidental mouseout cancellation
+- **Default Settings for New Install** — New installs now default to: showRemarkBadge=true, remarkBadgeThreshold=2, popupLineHeight=1.5, popupBorderWidth=2, popupBorderColor=#ffffff
+
+</details>
+
+<details>
 <summary>v1.7.0 (2026-06-10)</summary>
 
 - **Mobile Context Menu Fix** — Fixed long-press style button options freezing, clicks not responding, and options remaining visible after closing the main panel on mobile
@@ -620,6 +628,14 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 <details>
 <summary>更新日志</summary>
+
+<details>
+<summary>v1.7.1 (2026-06-14)</summary>
+
+- **备注徽章点击弹窗修复** — 修复悬浮延迟非0时点击"n"徽章添加备注弹窗不立即显示的问题；弹窗现在立即显示且不受鼠标移出意外取消
+- **新装插件默认设置** — 新安装默认值：showRemarkBadge=true, remarkBadgeThreshold=2, popupLineHeight=1.5, popupBorderWidth=2, popupBorderColor=#ffffff
+
+</details>
 
 <details>
 <summary>v1.7.0 (2026-06-10)</summary>

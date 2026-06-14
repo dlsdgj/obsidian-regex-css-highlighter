@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.7.3 (2026-06-14)
+## 🆕 v1.7.3.1 (2026-06-14)
+
+- **Release Asset Fix** — Fixed missing main.js and manifest.json in GitHub release assets
+
+## v1.7.3 (2026-06-14)
 
 - **Release Asset Fix** — Fixed missing main.js and manifest.json in v1.7.2 GitHub release assets
 

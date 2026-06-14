@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.7.4 (2026-06-14)
+## 🆕 v1.7.5 (2026-06-15)
+
+- **Remark Popup File Name Sync Fix** — Fixed file name in remark popup not updating after renaming a note; `handleFileRenameOrMove` now updates `links[].filePath` in all rules (current file, global, and other files) and persists changes to disk
+
+## v1.7.4 (2026-06-14)
 
 - **Dark Mode Title Visibility Fix** — Removed hardcoded `#555` color from "Single Display" and "Always Display" section titles, now uses default theme text color for proper visibility in dark mode
 - **Single-display Tab Arrow Indicator** — Added a downward-pointing triangle arrow below the active single-display tab, visually connecting the tab to the content panel below

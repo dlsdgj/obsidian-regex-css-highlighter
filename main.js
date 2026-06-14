@@ -6215,8 +6215,7 @@ ${this.selectedText}
                 // 添加到全局规则
                 this.plugin.globalRules.push({
                   regex: entityName,
-                  cssClass: className,
-                  remark: ''
+                  cssClass: className
                 });
                 
                 // 保存全局规则
@@ -6472,8 +6471,7 @@ ${this.selectedText}
             if (existingRule.regex.includes("|")) {
               existingData.rules.push({
                 regex: entityName,
-                cssClass: style.className,
-                remark: ""
+                cssClass: style.className
               });
             } else {
               existingData.rules[existingRuleIndex].regex = entityName;
@@ -6481,8 +6479,7 @@ ${this.selectedText}
           } else {
             existingData.rules.push({
               regex: entityName,
-              cssClass: style.className,
-              remark: ""
+              cssClass: style.className
             });
           }
         }
@@ -6591,11 +6588,10 @@ ${this.selectedText}
               }
             }
           } else if (!foundInCompositeRule) {
-            ruleMap.set(regex, {
-              regex: regex,
-              cssClass: style.className,
-              remark: ""
-            });
+              ruleMap.set(regex, {
+                regex: regex,
+                cssClass: style.className
+              });
             addedCount++;
           }
         }
@@ -24840,8 +24836,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 } else {
                   this.globalRules.push({
                     regex: selectedText,
-                    cssClass: className,
-                    remark: ''
+                    cssClass: className
                   });
                   await this.saveGlobalRules(this.globalRules);
                   new Notice(t('main.globalRuleAdded'));
@@ -32363,6 +32358,53 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           this.currentFilePath = newPath;
         }
         
+        // 更新所有规则中 links 引用的旧路径
+        const updateLinksFilePath = (rules, oldP, newP) => {
+          let changed = false;
+          for (const rule of rules) {
+            if (rule.links && Array.isArray(rule.links)) {
+              for (const link of rule.links) {
+                if (link.filePath === oldP) {
+                  link.filePath = newP;
+                  changed = true;
+                }
+              }
+            }
+          }
+          return changed;
+        };
+        
+        // 更新当前文件规则中的 links
+        const currentRules = this.fileRules.get(newPath);
+        if (currentRules) {
+          updateLinksFilePath(currentRules, oldPath, newPath);
+        }
+        
+        // 更新全局规则中的 links
+        if (this.globalRules) {
+          const globalChanged = updateLinksFilePath(this.globalRules, oldPath, newPath);
+          if (globalChanged) {
+            await this.saveGlobalRules(this.globalRules, true);
+          }
+        }
+        
+        // 更新其他文件规则中的 links
+        if (this.fileRules) {
+          for (const [fp, rules] of this.fileRules) {
+            if (fp !== newPath) {
+              const changed = updateLinksFilePath(rules, oldPath, newPath);
+              if (changed) {
+                await this.saveFileRules(fp, rules, true);
+              }
+            }
+          }
+        }
+        
+        // 保存当前文件规则（含更新后的 links）
+        if (currentRules) {
+          await this.saveFileRules(newPath, currentRules, true);
+        }
+        
         await this.loadFileRules(newPath);
         
         this.refreshCurrentView();
@@ -33195,7 +33237,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         this.rules.push({
           regex: trimmedSelection,
           cssClass: selectedStyle,
-          remark: '',
+
           timestamp: Date.now()
         });
         this.randomHighlightState.currentRuleIndex = this.rules.length - 1;
@@ -33287,8 +33329,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       } else {
         this.globalRules.push({
           regex: trimmedSelection,
-          cssClass: selectedStyle,
-          remark: ''
+          cssClass: selectedStyle
         });
         new Notice(t('main.globalHighlightAdded'));
       }

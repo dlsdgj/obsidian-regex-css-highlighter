@@ -134,14 +134,15 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 <summary>Changelog</summary>
 
 <details>
-<summary>v1.7.3.1 (2026-06-14)</summary>
+<summary>v1.7.4 (2026-06-14)</summary>
 
-- **Release Asset Fix** — Fixed missing main.js and manifest.json in GitHub release assets
+- **Dark Mode Title Visibility Fix** — Removed hardcoded `#555` color from "Single Display" and "Always Display" section titles, now uses default theme text color for proper visibility in dark mode
+- **Single-display Tab Arrow Indicator** — Added a downward-pointing triangle arrow below the active single-display tab, visually connecting the tab to the content panel below
 
 </details>
 
 <details>
-<summary>v1.7.3 (2026-06-14)</summary>
+<summary>v1.7.3.1 (2026-06-14)</summary>
 
 - **Release Asset Fix** — Fixed missing main.js and manifest.json in v1.7.2 GitHub release assets
 
@@ -653,14 +654,15 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 <summary>更新日志</summary>
 
 <details>
-<summary>v1.7.3.1 (2026-06-14)</summary>
+<summary>v1.7.4 (2026-06-14)</summary>
 
-- **Release 资源文件修复** — 修复 GitHub release 中缺少 main.js 和 manifest.json 的问题
+- **深色模式标题可见性修复** — 移除"单显"和"常显"标题的 `#555` 硬编码颜色，现在使用默认主题文字颜色，深色模式下可正常显示
+- **单显标签箭头指示器** — 在激活的单显标签下方添加向下的三角箭头，视觉上连接标签与下方内容面板
 
 </details>
 
 <details>
-<summary>v1.7.3 (2026-06-14)</summary>
+<summary>v1.7.3.1 (2026-06-14)</summary>
 
 - **Release 资源文件修复** — 修复 v1.7.2 GitHub release 中缺少 main.js 和 manifest.json 的问题
 

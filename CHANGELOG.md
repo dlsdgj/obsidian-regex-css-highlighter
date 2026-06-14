@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.7.3.1 (2026-06-14)
+## 🆕 v1.7.4 (2026-06-14)
+
+- **Dark Mode Title Visibility Fix** — Removed hardcoded `#555` color from "Single Display" and "Always Display" section titles, now uses default theme text color for proper visibility in dark mode
+- **Single-display Tab Arrow Indicator** — Added a downward-pointing triangle arrow below the active single-display tab, visually connecting the tab to the content panel below
+
+## v1.7.3.1 (2026-06-14)
 
 - **Release Asset Fix** — Fixed missing main.js and manifest.json in GitHub release assets
 

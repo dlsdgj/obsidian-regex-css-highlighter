@@ -10212,6 +10212,19 @@ class AddRegexRuleModal extends Modal {
     tabContentContainer.style.border = '1px solid #ddd';
     tabContentContainer.style.borderRadius = '4px';
     
+    const setTabArrow = (tab, show) => {
+      const existing = tab.querySelector('.tab-arrow');
+      if (show) {
+        if (!existing) {
+          const arrow = tab.createEl('span');
+          arrow.className = 'tab-arrow';
+          arrow.style.cssText = 'position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:5px solid #ddd;pointer-events:none;';
+        }
+      } else if (existing) {
+        existing.remove();
+      }
+    };
+
     // 记录当前展开的标签
     let activeTabCategory = this.plugin?.settings?.activeTabCategory || null;
     
@@ -12679,6 +12692,7 @@ class AddRegexRuleModal extends Modal {
           if (activeTab) {
             activeTab.style.borderBottom = '2px solid currentColor';
             activeTab.style.fontWeight = '900';
+            setTabArrow(activeTab, true);
           }
           const toggleBtn = categoryContainer.querySelector('.style-toggle-btn');
           if (toggleBtn) toggleBtn.textContent = '<';
@@ -13061,6 +13075,7 @@ class AddRegexRuleModal extends Modal {
         }
         tab.style.fontWeight = 'bold';
         tab.style.borderBottom = '';
+        setTabArrow(tab, false);
         activeTabCategory = null;
         if (this.plugin) {
           this.plugin.settings.activeTabCategory = null;
@@ -13092,6 +13107,7 @@ class AddRegexRuleModal extends Modal {
             }
             prevTab.style.fontWeight = 'bold';
             prevTab.style.borderBottom = '';
+            setTabArrow(prevTab, false);
           }
         }
         
@@ -13138,6 +13154,7 @@ class AddRegexRuleModal extends Modal {
         // 用底部横线标识选中的标签
         tab.style.borderBottom = '2px solid currentColor';
         tab.style.fontWeight = '900';
+        setTabArrow(tab, true);
         activeTabCategory = category;
         if (this.plugin) {
           this.plugin.settings.activeTabCategory = category;

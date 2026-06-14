@@ -134,6 +134,13 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 <summary>Changelog</summary>
 
 <details>
+<summary>v1.7.3 (2026-06-14)</summary>
+
+- **Release Asset Fix** — Fixed missing main.js and manifest.json in v1.7.2 GitHub release assets
+
+</details>
+
+<details>
 <summary>v1.7.2 (2026-06-14)</summary>
 
 - **Group Button Default Style** — Changed group button default style from blue background with white text to white background with black text; custom styles now properly override the default
@@ -637,6 +644,13 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 <details>
 <summary>更新日志</summary>
+
+<details>
+<summary>v1.7.3 (2026-06-14)</summary>
+
+- **Release 资源文件修复** — 修复 v1.7.2 GitHub release 中缺少 main.js 和 manifest.json 的问题
+
+</details>
 
 <details>
 <summary>v1.7.2 (2026-06-14)</summary>

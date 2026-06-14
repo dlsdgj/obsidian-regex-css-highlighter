@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.7.2 (2026-06-14)
+## 🆕 v1.7.3 (2026-06-14)
+
+- **Release Asset Fix** — Fixed missing main.js and manifest.json in v1.7.2 GitHub release assets
+
+## v1.7.2 (2026-06-14)
 
 - **Group Button Default Style** — Changed group button default style from blue background with white text to white background with black text; custom styles now properly override the default
 - **Single-display Tab Element Fix** — Changed single-display tab from `<button>` to `<h4>` element, fixing custom styles (gradient backgrounds, custom colors) not applying correctly

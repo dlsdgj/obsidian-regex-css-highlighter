@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.7.1 (2026-06-14)
+## 🆕 v1.7.2 (2026-06-14)
+
+- **Group Button Default Style** — Changed group button default style from blue background with white text to white background with black text; custom styles now properly override the default
+- **Single-display Tab Element Fix** — Changed single-display tab from `<button>` to `<h4>` element, fixing custom styles (gradient backgrounds, custom colors) not applying correctly
+- **Single-display Active State Persistence** — Single-display group active state is now saved and restored when reopening the main panel
+
+## v1.7.1 (2026-06-14)
 
 - **Remark Badge Click Popup Fix** — Fixed remark popup not appearing immediately when clicking the "n" badge to add a remark while hover delay is non-zero; popup now shows instantly and is protected from accidental mouseout cancellation
 - **Default Settings for New Install** — New installs now default to: showRemarkBadge=true, remarkBadgeThreshold=2, popupLineHeight=1.5, popupBorderWidth=2, popupBorderColor=#ffffff

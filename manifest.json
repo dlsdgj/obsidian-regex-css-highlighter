@@ -1,7 +1,7 @@
 {
   "id": "regex-css-highlighter",
   "name": "Regex Css Highlighter",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "minAppVersion": "0.15.0",
   "description": "Regex matching + CSS highlighting with real-time preview and instant effects.",
   "author": "nilmarko",

@@ -9756,7 +9756,8 @@ class AddRegexRuleModal extends Modal {
               const catName = categoryContainer.getAttribute('data-category');
               const savedStyle = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[catName];
               if (!savedStyle) {
-                categoryTitle.style.backgroundColor = '#007bff';
+                categoryTitle.style.backgroundColor = 'white';
+                categoryTitle.style.color = 'black';
               }
               categoryTitle.title = t('main.dblClickMoveToSingle');
             }
@@ -10212,7 +10213,7 @@ class AddRegexRuleModal extends Modal {
     tabContentContainer.style.borderRadius = '4px';
     
     // 记录当前展开的标签
-    let activeTabCategory = null;
+    let activeTabCategory = this.plugin?.settings?.activeTabCategory || null;
     
     // 横线分隔单显和常显区域
     const separator = styleContainer.createEl('hr');
@@ -10270,8 +10271,9 @@ class AddRegexRuleModal extends Modal {
         categoryTitle.style.fontSize = "14px";
         categoryTitle.style.fontWeight = "bold";
         categoryTitle.style.padding = "1px 5px";
-        categoryTitle.style.backgroundColor = "#007bff";
-        categoryTitle.style.color = "white";
+        categoryTitle.style.backgroundColor = "white";
+        categoryTitle.style.color = "black";
+
         categoryTitle.style.borderRadius = "3px";
         categoryTitle.style.whiteSpace = "nowrap";
         categoryTitle.style.minWidth = "auto";
@@ -10469,20 +10471,17 @@ class AddRegexRuleModal extends Modal {
           let existingTab = collapsedCategoriesContainer.querySelector(`[data-category="${category}"]`);
           
           if (!existingTab) {
-            const tab = collapsedCategoriesContainer.createEl('button');
+            const tab = collapsedCategoriesContainer.createEl('h4', { text: category });
             tab.className = 'collapsed-category-reopen-btn';
             tab.style.margin = '0';
             tab.style.fontSize = '14px';
             tab.style.fontWeight = 'bold';
             tab.style.padding = '1px 5px';
-            tab.style.border = 'none';
+            tab.style.backgroundColor = 'white';
+            tab.style.color = 'black';
             tab.style.borderRadius = '3px';
             tab.style.whiteSpace = 'nowrap';
-            tab.style.textAlign = 'center';
             tab.style.cursor = 'pointer';
-            tab.style.transition = 'all 0.2s';
-            tab.style.height = '22px';
-            tab.style.minHeight = '22px';
             tab.style.position = 'relative';
             tab.setAttribute('data-category', category);
             tab.title = t('main.clickToExpand') + `: ${category}`;
@@ -10490,17 +10489,13 @@ class AddRegexRuleModal extends Modal {
             // 恢复保存的分组样式
             const savedGroupStyleClass = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[category];
             if (savedGroupStyleClass) {
+              tab.style.backgroundColor = '';
+              tab.style.color = '';
               tab.className = `collapsed-category-reopen-btn group-btn-style-${savedGroupStyleClass}`;
               this.plugin.applyGroupButtonStyleRules(savedGroupStyleClass);
-            } else {
-              tab.style.backgroundColor = '#007bff';
-              tab.style.color = 'white';
             }
             
-            // 标签文本
-            const tabText = document.createElement('span');
-            tabText.textContent = category;
-            tab.appendChild(tabText);
+
             // 绝对定位悬浮图标（鼠标悬停时显示，与常显分组一致）
             const tabFloatBtn = document.createElement('span');
             tabFloatBtn.textContent = '📌';
@@ -10861,8 +10856,8 @@ class AddRegexRuleModal extends Modal {
                       this.plugin.applyGroupButtonStyleRules(className);
                     } else {
                       previewEl.className = '';
-                      previewEl.style.backgroundColor = '#007bff';
-                      previewEl.style.color = 'white';
+                      previewEl.style.backgroundColor = 'white';
+                      previewEl.style.color = 'black';
                       previewEl.style.border = '';
                       previewEl.style.boxShadow = '';
                     }
@@ -10908,8 +10903,8 @@ class AddRegexRuleModal extends Modal {
                       this.plugin.applyGroupButtonStyleRules(newStyleClass);
                     } else {
                       categoryTitle.className = '';
-                      categoryTitle.style.backgroundColor = '#007bff';
-                      categoryTitle.style.color = 'white';
+                      categoryTitle.style.backgroundColor = 'white';
+                      categoryTitle.style.color = 'black';
                       categoryTitle.style.boxShadow = '';
                     }
 
@@ -12604,23 +12599,17 @@ class AddRegexRuleModal extends Modal {
         let existingTab = collapsedCategoriesContainer.querySelector(`[data-category="${category}"]`);
         
         if (!existingTab) {
-          const tab = collapsedCategoriesContainer.createEl('button');
+          const tab = collapsedCategoriesContainer.createEl('h4', { text: category });
           tab.className = 'collapsed-category-reopen-btn';
-          tab.textContent = category;
           tab.style.margin = '0';
           tab.style.fontSize = '14px';
           tab.style.fontWeight = 'bold';
           tab.style.padding = '1px 5px';
-          tab.style.backgroundColor = '#007bff';
-          tab.style.color = 'white';
-          tab.style.border = 'none';
+          tab.style.backgroundColor = 'white';
+          tab.style.color = 'black';
           tab.style.borderRadius = '3px';
           tab.style.whiteSpace = 'nowrap';
-          tab.style.textAlign = 'center';
           tab.style.cursor = 'pointer';
-          tab.style.transition = 'all 0.2s';
-          tab.style.height = '22px';
-          tab.style.minHeight = '22px';
           tab.style.position = 'relative';
           tab.setAttribute('data-category', category);
           tab.title = t('main.clickToExpand') + `: ${category}`;
@@ -12672,15 +12661,29 @@ class AddRegexRuleModal extends Modal {
           // 恢复保存的分组样式
           const savedTabStyleClass = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[category];
           if (savedTabStyleClass) {
-            tab.className = `collapsed-category-reopen-btn group-btn-style-${savedTabStyleClass}`;
             tab.style.backgroundColor = '';
             tab.style.color = '';
-            tab.style.border = '';
-            tab.style.boxShadow = '';
+
+            tab.className = `collapsed-category-reopen-btn group-btn-style-${savedTabStyleClass}`;
             this.plugin.applyGroupButtonStyleRules(savedTabStyleClass);
           }
         }
         collapsedCategoriesContainer.style.display = 'flex';
+        if (category === activeTabCategory) {
+          categoryContainer.style.display = 'flex';
+          tabContentContainer.appendChild(categoryContainer);
+          tabContentContainer.style.display = 'block';
+          const catTitle = categoryContainer.querySelector('h4');
+          if (catTitle) catTitle.style.display = 'none';
+          const activeTab = collapsedCategoriesContainer.querySelector(`[data-category="${category}"]`);
+          if (activeTab) {
+            activeTab.style.borderBottom = '2px solid currentColor';
+            activeTab.style.fontWeight = '900';
+          }
+          const toggleBtn = categoryContainer.querySelector('.style-toggle-btn');
+          if (toggleBtn) toggleBtn.textContent = '<';
+          categoryContainer.querySelectorAll('.style-option').forEach(b => b.style.display = 'flex');
+        }
       } else {
         // 当分组不应该折叠时，根据输入值控制样式按钮的显示
         const styleButtons = categoryContainer.querySelectorAll('.style-option');
@@ -12762,7 +12765,8 @@ class AddRegexRuleModal extends Modal {
         // 确保分组容器可见
         categoryContainer.style.display = 'flex';
         if (!savedGroupStyleClass) {
-          categoryTitle.style.backgroundColor = '#007bff';
+          categoryTitle.style.backgroundColor = 'white';
+          categoryTitle.style.color = 'black';
         }
         categoryTitle.title = t('main.dblClickMoveToSingle');
       }
@@ -13026,6 +13030,7 @@ class AddRegexRuleModal extends Modal {
       });
     });
     
+
     // 添加重新打开按钮的点击事件监听器
     collapsedCategoriesContainer.addEventListener('click', (e) => {
       const tab = e.target.closest('.collapsed-category-reopen-btn');
@@ -13047,13 +13052,20 @@ class AddRegexRuleModal extends Modal {
         tabContentContainer.style.display = 'none';
         const tabSavedStyle = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[category];
         if (!tabSavedStyle) {
-          tab.style.backgroundColor = '#007bff';
+          tab.style.backgroundColor = 'white';
+          tab.style.color = 'black';
         } else {
           tab.style.backgroundColor = '';
+          tab.style.color = '';
+
         }
         tab.style.fontWeight = 'bold';
         tab.style.borderBottom = '';
         activeTabCategory = null;
+        if (this.plugin) {
+          this.plugin.settings.activeTabCategory = null;
+          this.plugin.saveData(this.plugin.settings);
+        }
       } else {
         // 点击新标签 → 切换到该标签
         
@@ -13071,9 +13083,12 @@ class AddRegexRuleModal extends Modal {
           if (prevTab) {
             const prevSavedStyle = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[activeTabCategory];
             if (!prevSavedStyle) {
-              prevTab.style.backgroundColor = '#007bff';
+              prevTab.style.backgroundColor = 'white';
+              prevTab.style.color = 'black';
             } else {
               prevTab.style.backgroundColor = '';
+              prevTab.style.color = '';
+
             }
             prevTab.style.fontWeight = 'bold';
             prevTab.style.borderBottom = '';
@@ -13113,7 +13128,8 @@ class AddRegexRuleModal extends Modal {
             const catName = categoryContainer.getAttribute('data-category');
             const savedStyle = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[catName];
             if (!savedStyle) {
-              categoryTitle.style.backgroundColor = '#007bff';
+              categoryTitle.style.backgroundColor = 'white';
+              categoryTitle.style.color = 'black';
             }
             categoryTitle.title = t('main.dblClickMoveToSingle');
           }
@@ -13123,6 +13139,10 @@ class AddRegexRuleModal extends Modal {
         tab.style.borderBottom = '2px solid currentColor';
         tab.style.fontWeight = '900';
         activeTabCategory = category;
+        if (this.plugin) {
+          this.plugin.settings.activeTabCategory = category;
+          this.plugin.saveData(this.plugin.settings);
+        }
       }
     });
     
@@ -13145,6 +13165,10 @@ class AddRegexRuleModal extends Modal {
         }
         tabContentContainer.style.display = 'none';
         activeTabCategory = null;
+        if (this.plugin) {
+          this.plugin.settings.activeTabCategory = null;
+          this.plugin.saveData(this.plugin.settings);
+        }
       } else {
         // 分组在 mainContainer 中隐藏，改为显示
         const categoryContainer = mainContainer.querySelector(`[data-category="${category}"]`);
@@ -13161,7 +13185,8 @@ class AddRegexRuleModal extends Modal {
           const catName = categoryContainer.getAttribute('data-category');
           const savedStyle = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[catName];
           if (!savedStyle) {
-            categoryTitle.style.backgroundColor = '#007bff';
+            categoryTitle.style.backgroundColor = 'white';
+            categoryTitle.style.color = 'black';
           }
           categoryTitle.title = t('main.dblClickMoveToSingle');
         }
@@ -13206,6 +13231,10 @@ class AddRegexRuleModal extends Modal {
             }
             tabContentContainer.style.display = 'none';
             activeTabCategory = null;
+            if (this.plugin) {
+              this.plugin.settings.activeTabCategory = null;
+              this.plugin.saveData(this.plugin.settings);
+            }
           } else {
             const categoryContainer = mainContainer.querySelector(`[data-category="${category}"]`);
             if (categoryContainer) {
@@ -13221,7 +13250,8 @@ class AddRegexRuleModal extends Modal {
               const catName = categoryContainer.getAttribute('data-category');
               const savedStyle = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[catName];
               if (!savedStyle) {
-                categoryTitle.style.backgroundColor = '#007bff';
+                categoryTitle.style.backgroundColor = 'white';
+                categoryTitle.style.color = 'black';
               }
               categoryTitle.title = t('main.dblClickMoveToSingle');
             }
@@ -13500,8 +13530,8 @@ class AddRegexRuleModal extends Modal {
                   this.plugin.applyGroupButtonStyleRules(className);
                 } else {
                   previewEl.className = '';
-                  previewEl.style.backgroundColor = '#007bff';
-                  previewEl.style.color = 'white';
+                  previewEl.style.backgroundColor = 'white';
+                  previewEl.style.color = 'black';
                   previewEl.style.border = '';
                   previewEl.style.boxShadow = '';
                 }
@@ -13541,16 +13571,14 @@ class AddRegexRuleModal extends Modal {
 
                 // 更新标签按钮的样式
                 if (newStyleClass) {
-                  tab.className = `collapsed-category-reopen-btn group-btn-style-${newStyleClass}`;
                   tab.style.backgroundColor = '';
                   tab.style.color = '';
-                  tab.style.boxShadow = '';
+                  tab.className = `collapsed-category-reopen-btn group-btn-style-${newStyleClass}`;
                   this.plugin.applyGroupButtonStyleRules(newStyleClass);
                 } else {
                   tab.className = 'collapsed-category-reopen-btn';
-                  tab.style.backgroundColor = '#007bff';
-                  tab.style.color = 'white';
-                  tab.style.boxShadow = '';
+                  tab.style.backgroundColor = 'white';
+                  tab.style.color = 'black';
                 }
 
                 new Notice(t('main.groupStyleUpdated'));

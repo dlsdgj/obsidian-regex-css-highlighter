@@ -18,118 +18,92 @@ document.head.appendChild(_langSwitchStyle);
 
 // 跨平台文件操作工具：桌面端用 Node.js fs 模块（快速），手机端用 Obsidian Vault Adapter（兼容）
 const _isDesktop = typeof process !== 'undefined' && process.versions && !!process.versions.electron;
+const _nodeFs = _isDesktop ? require('fs') : null;
+const _nodePath = _isDesktop ? require('path') : null;
+const _CSS_REL_PATH = '.obsidian/plugins/Regex-Css-Highlighter/styles.css';
+let _cachedCssContent = null;
 
-// 全局跟踪当前活跃的右键菜单关闭监听器，确保切换菜单时清理旧的监听器
 let _activeContextMenuCleanup = null;
 
 const crossFS = {
-  // 读取文件内容（异步）
   async read(vault, relativePath) {
     if (_isDesktop) {
-      const fs = require('fs');
-      const path = require('path');
-      const absPath = path.join(vault.adapter.basePath, relativePath);
-      return fs.promises.readFile(absPath, 'utf-8');
+      const absPath = _nodePath.join(vault.adapter.basePath, relativePath);
+      return _nodeFs.promises.readFile(absPath, 'utf-8');
     } else {
       return vault.adapter.read(relativePath);
     }
   },
 
-  // 读取文件内容（同步，仅桌面端可用，手机端抛异常）
   readSync(vault, relativePath) {
     if (_isDesktop) {
-      const fs = require('fs');
-      const path = require('path');
-      const absPath = path.join(vault.adapter.basePath, relativePath);
-      return fs.readFileSync(absPath, 'utf-8');
+      const absPath = _nodePath.join(vault.adapter.basePath, relativePath);
+      return _nodeFs.readFileSync(absPath, 'utf-8');
     } else {
       throw new Error('readSync is not supported on mobile');
     }
   },
 
-  // 写入文件内容（异步）
   async write(vault, relativePath, content) {
     if (_isDesktop) {
-      const fs = require('fs');
-      const path = require('path');
-      const absPath = path.join(vault.adapter.basePath, relativePath);
-      return fs.promises.writeFile(absPath, content, 'utf-8');
+      const absPath = _nodePath.join(vault.adapter.basePath, relativePath);
+      return _nodeFs.promises.writeFile(absPath, content, 'utf-8');
     } else {
       return vault.adapter.write(relativePath, content);
     }
   },
 
-  // 写入文件内容（同步，仅桌面端可用，手机端抛异常）
   writeSync(vault, relativePath, content) {
     if (_isDesktop) {
-      const fs = require('fs');
-      const path = require('path');
-      const absPath = path.join(vault.adapter.basePath, relativePath);
-      return fs.writeFileSync(absPath, content, 'utf-8');
+      const absPath = _nodePath.join(vault.adapter.basePath, relativePath);
+      return _nodeFs.writeFileSync(absPath, content, 'utf-8');
     } else {
       throw new Error('writeSync is not supported on mobile');
     }
   },
 
-  // 检查文件/目录是否存在（异步）
   async exists(vault, relativePath) {
     if (_isDesktop) {
-      const fs = require('fs');
-      const path = require('path');
-      const absPath = path.join(vault.adapter.basePath, relativePath);
-      return fs.existsSync(absPath);
+      const absPath = _nodePath.join(vault.adapter.basePath, relativePath);
+      return _nodeFs.existsSync(absPath);
     } else {
       return vault.adapter.exists(relativePath);
     }
   },
 
-  // 检查文件/目录是否存在（同步，仅桌面端可用）
   existsSync(vault, relativePath) {
     if (_isDesktop) {
-      const fs = require('fs');
-      const path = require('path');
-      const absPath = path.join(vault.adapter.basePath, relativePath);
-      return fs.existsSync(absPath);
+      const absPath = _nodePath.join(vault.adapter.basePath, relativePath);
+      return _nodeFs.existsSync(absPath);
     } else {
       throw new Error('existsSync is not supported on mobile');
     }
   },
 
-  // 列出目录下的文件（异步）
   async list(vault, relativePath) {
     if (_isDesktop) {
-      const fs = require('fs');
-      const path = require('path');
-      const absPath = path.join(vault.adapter.basePath, relativePath);
-      return fs.readdirSync(absPath);
+      const absPath = _nodePath.join(vault.adapter.basePath, relativePath);
+      return _nodeFs.readdirSync(absPath);
     } else {
       const result = await vault.adapter.list(relativePath);
-      // adapter.list 返回 { files: [], folders: [] }
-      // 只返回文件名部分
       return result.files.map(f => f.split('/').pop());
     }
   },
 
-  // 列出目录下的文件（同步，仅桌面端可用）
   readdirSync(vault, relativePath) {
     if (_isDesktop) {
-      const fs = require('fs');
-      const path = require('path');
-      const absPath = path.join(vault.adapter.basePath, relativePath);
-      return fs.readdirSync(absPath);
+      const absPath = _nodePath.join(vault.adapter.basePath, relativePath);
+      return _nodeFs.readdirSync(absPath);
     } else {
       throw new Error('readdirSync is not supported on mobile');
     }
   },
 
-  // 创建目录（异步）
   async mkdir(vault, relativePath) {
     if (_isDesktop) {
-      const fs = require('fs');
-      const path = require('path');
-      const absPath = path.join(vault.adapter.basePath, relativePath);
-      if (!fs.existsSync(absPath)) {
-        fs.mkdirSync(absPath, { recursive: true });
+      const absPath = _nodePath.join(vault.adapter.basePath, relativePath);
+      if (!_nodeFs.existsSync(absPath)) {
+        _nodeFs.mkdirSync(absPath, { recursive: true });
       }
     } else {
       const exists = await vault.adapter.exists(relativePath);
@@ -139,55 +113,43 @@ const crossFS = {
     }
   },
 
-  // 创建目录（同步，仅桌面端可用）
   mkdirSync(vault, relativePath) {
     if (_isDesktop) {
-      const fs = require('fs');
-      const path = require('path');
-      const absPath = path.join(vault.adapter.basePath, relativePath);
-      if (!fs.existsSync(absPath)) {
-        fs.mkdirSync(absPath, { recursive: true });
+      const absPath = _nodePath.join(vault.adapter.basePath, relativePath);
+      if (!_nodeFs.existsSync(absPath)) {
+        _nodeFs.mkdirSync(absPath, { recursive: true });
       }
     } else {
       throw new Error('mkdirSync is not supported on mobile');
     }
   },
 
-  // 删除文件（异步）
   async remove(vault, relativePath) {
     if (_isDesktop) {
-      const fs = require('fs');
-      const path = require('path');
-      const absPath = path.join(vault.adapter.basePath, relativePath);
-      return fs.promises.unlink(absPath);
+      const absPath = _nodePath.join(vault.adapter.basePath, relativePath);
+      return _nodeFs.promises.unlink(absPath);
     } else {
       return vault.adapter.remove(relativePath);
     }
   },
 
-  // 删除文件（同步，仅桌面端可用）
   unlinkSync(vault, relativePath) {
     if (_isDesktop) {
-      const fs = require('fs');
-      const path = require('path');
-      const absPath = path.join(vault.adapter.basePath, relativePath);
-      return fs.unlinkSync(absPath);
+      const absPath = _nodePath.join(vault.adapter.basePath, relativePath);
+      return _nodeFs.unlinkSync(absPath);
     } else {
       throw new Error('unlinkSync is not supported on mobile');
     }
   },
 
-  // 拼接相对路径（辅助方法）
   join(...parts) {
     if (_isDesktop) {
-      return require('path').join(...parts);
+      return _nodePath.join(...parts);
     } else {
-      // 手机端使用 / 分隔符
       return parts.join('/').replace(/\\/g, '/');
     }
   },
 
-  // 判断是否为桌面端
   isDesktop() {
     return _isDesktop;
   }
@@ -8809,7 +8771,7 @@ class AddRegexRuleModal extends Modal {
       }
 
       if (this.plugin) {
-        this.plugin.cacheHoverStyles();
+        this.plugin.cacheHoverStyles(true);
       }
     } catch (error) {
       this.loadDefaultStyles();
@@ -11155,7 +11117,7 @@ class AddRegexRuleModal extends Modal {
           
           // 检查CSS类是否有hover样式，如果有则添加hover事件监听器
           try {
-            // 从缓存中获取hover样式
+            this.plugin.cacheHoverStyles();
             const hoverStyles = this.plugin.hoverStylesCache.get(className);
             if (hoverStyles) {
               const originalStyles = {};
@@ -19069,7 +19031,12 @@ class AddRegexRuleModal extends Modal {
     try {
       let cssContent = providedCssContent;
       if (!cssContent) {
-        cssContent = await crossFS.read(this.app.vault, '.obsidian/plugins/Regex-Css-Highlighter/styles.css');
+        if (_cachedCssContent) {
+          cssContent = _cachedCssContent;
+        } else {
+          cssContent = await crossFS.read(this.app.vault, _CSS_REL_PATH);
+          _cachedCssContent = cssContent;
+        }
       }
 
       const obsidianHeadingStyles = this.generateObsidianHeadingStyles(cssContent);
@@ -20908,9 +20875,10 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       }
     `);
     
-    this.settings = await this.loadData() || {};
-    
-    await this.loadFloatButtonData();
+    const loadDataPromise = this.loadData();
+    const loadFloatPromise = this.loadFloatButtonData();
+    this.settings = await loadDataPromise || {};
+    await loadFloatPromise;
     
     const floatButtonKeys = [
       'floatingBallMode', 'floatingBallGroups', 'floatingBallGroupOptions',
@@ -20935,164 +20903,88 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
         settingsCleaned = true;
       }
     });
-    if (migrated) {
-      await this.saveFloatButtonData();
-    }
-    if (settingsCleaned) {
-      await this.saveData(this.settings);
-    }
 
-    if (this.settings.language === undefined) {
-      this.settings.language = 'en';
-      await this.saveData(this.settings);
+    const _settingsDefaults = {
+      language: 'en',
+      showStyleUsageCount: true,
+      searchClassName: '',
+      showHeadingLevelLabel: true,
+      disableHeadingStyle: true,
+      showRecentRulesWhenCollapsed: true,
+      remarkKeepOpen: false,
+      hideOpenFileLink: true,
+      headingStyles: {},
+      collapsedCategories: {},
+      isHistoryCollapsed: false,
+      isGlobalHistoryCollapsed: false,
+      enableDebugLog: false,
+      remarkDebugLog: false,
+      popupHoverDelay: 300,
+      popupFontSize: 14,
+      popupSpacing: 2,
+      popupWidth: 600,
+      popupOpacity: 1,
+      remarkPopupOnlyOnSelection: false,
+      popupLineHeight: 1.5,
+      popupBorderWidth: 2,
+      popupBorderColor: "#ffffff",
+      showRemarkBadge: true,
+      remarkBadgeThreshold: 2,
+      defaultPreviewTextCN: '',
+      defaultPreviewTextEN: '',
+      enableFontSwitch: false,
+      customFontFamily: '',
+      customLineHeight: '',
+      customLeftMargin: '',
+      customRightMargin: '',
+      favoriteFonts: []
+    };
+    let settingsNeedSave = settingsCleaned;
+    for (const [key, defaultVal] of Object.entries(_settingsDefaults)) {
+      if (key === 'headingStyles') {
+        if (!this.settings.headingStyles) {
+          this.settings.headingStyles = defaultVal;
+          settingsNeedSave = true;
+        }
+      } else if (key === 'collapsedCategories') {
+        this.collapsedCategories = this.settings.collapsedCategories || {};
+        if (!this.settings.collapsedCategories) {
+          this.settings.collapsedCategories = this.collapsedCategories;
+          settingsNeedSave = true;
+        }
+      } else if (key === 'isHistoryCollapsed') {
+        this.isHistoryCollapsed = this.settings.isHistoryCollapsed || false;
+        if (this.settings.isHistoryCollapsed === undefined) {
+          this.settings.isHistoryCollapsed = this.isHistoryCollapsed;
+          settingsNeedSave = true;
+        }
+      } else if (key === 'isGlobalHistoryCollapsed') {
+        this.isGlobalHistoryCollapsed = this.settings.isGlobalHistoryCollapsed || false;
+        if (this.settings.isGlobalHistoryCollapsed === undefined) {
+          this.settings.isGlobalHistoryCollapsed = this.isGlobalHistoryCollapsed;
+          settingsNeedSave = true;
+        }
+      } else {
+        if (this.settings[key] === undefined) {
+          this.settings[key] = defaultVal;
+          settingsNeedSave = true;
+        }
+      }
     }
-    _currentLang = this.settings.language || 'en';
-
-    if (this.settings.showStyleUsageCount === undefined) {
-      this.settings.showStyleUsageCount = true;
-      await this.saveData(this.settings);
-    }
-    
-    if (this.settings.enableDebugLog === undefined) {
-      this.settings.enableDebugLog = false;
-    }
-    if (this.settings.remarkDebugLog === undefined) {
-      this.settings.remarkDebugLog = false;
-    }
-    if (this.settings.popupHoverDelay === undefined) {
-      this.settings.popupHoverDelay = 300;
-    }
-    if (this.settings.searchClassName === undefined) {
-      this.settings.searchClassName = '';
-      await this.saveData(this.settings);
-    }
-
-    if (this.settings.showHeadingLevelLabel === undefined) {
-      this.settings.showHeadingLevelLabel = true;
-      await this.saveData(this.settings);
-    }
-
-    if (this.settings.disableHeadingStyle === undefined) {
-      this.settings.disableHeadingStyle = true;
-      await this.saveData(this.settings);
-    }
-
-    if (this.settings.showRecentRulesWhenCollapsed === undefined) {
-      this.settings.showRecentRulesWhenCollapsed = true;
-      await this.saveData(this.settings);
-    }
-
-    if (this.settings.remarkKeepOpen === undefined) {
-      this.settings.remarkKeepOpen = false;
-      await this.saveData(this.settings);
-    }
-
-    if (this.settings.hideOpenFileLink === undefined) {
-      this.settings.hideOpenFileLink = true;
-      await this.saveData(this.settings);
-    }
-    
-    // 初始化标题样式存储（从styles.css迁移到data.json）
-    if (!this.settings.headingStyles) {
-      this.settings.headingStyles = {};
-      await this.saveData(this.settings);
-    }
-    
     this.buttonTexts = this.settings.buttonTexts || {};
-    
-    this.collapsedCategories = this.settings.collapsedCategories || {};
-    if (!this.settings.collapsedCategories) {
-      this.settings.collapsedCategories = this.collapsedCategories;
-      await this.saveData(this.settings);
-    }
-    
-    this.isHistoryCollapsed = this.settings.isHistoryCollapsed || false;
-    if (this.settings.isHistoryCollapsed === undefined) {
-      this.settings.isHistoryCollapsed = this.isHistoryCollapsed;
-      await this.saveData(this.settings);
-    }
-    
-    this.isGlobalHistoryCollapsed = this.settings.isGlobalHistoryCollapsed || false;
-    if (this.settings.isGlobalHistoryCollapsed === undefined) {
-      this.settings.isGlobalHistoryCollapsed = this.isGlobalHistoryCollapsed;
-      await this.saveData(this.settings);
-    }
-    
-    this.hoverStylesCache = new Map();
-    
-    if (this.settings.popupFontSize === undefined) {
-      this.settings.popupFontSize = 14;
-    }
-    if (this.settings.popupSpacing === undefined) {
-      this.settings.popupSpacing = 2;
-    }
-    if (this.settings.popupWidth === undefined) {
-      this.settings.popupWidth = 600;
-    }
-    if (this.settings.popupOpacity === undefined) {
-      this.settings.popupOpacity = 1;
-    }
-    if (this.settings.remarkPopupOnlyOnSelection === undefined) {
-      this.settings.remarkPopupOnlyOnSelection = false;
-    }
-    if (this.settings.popupLineHeight === undefined) {
-      this.settings.popupLineHeight = 1.5;
-    }
-    if (this.settings.popupBorderWidth === undefined) {
-      this.settings.popupBorderWidth = 2;
-    }
-    if (this.settings.popupBorderColor === undefined) {
-      this.settings.popupBorderColor = "#ffffff";
-    }
-    if (this.settings.showRemarkBadge === undefined) {
-      this.settings.showRemarkBadge = true;
-    }
-    if (this.settings.remarkBadgeThreshold === undefined) {
-      this.settings.remarkBadgeThreshold = 2;
-    }
-    if (this.settings.defaultPreviewTextCN === undefined) {
-      this.settings.defaultPreviewTextCN = '';
-    }
-    if (this.settings.defaultPreviewTextEN === undefined) {
-      this.settings.defaultPreviewTextEN = '';
-    }
-    if (this.floatButtonData.floatingBallMode === undefined) {
-      this.floatButtonData.floatingBallMode = 'always';
-    }
-    if (this.floatButtonData.floatingBallGroups === undefined) {
-      this.floatButtonData.floatingBallGroups = [];
-    }
-    
-    // 预缓存拼音数据，供 PostProcessor 同步使用
-    this._pinyinCache = null;
-    this._pinyinLocalCache = {};
-    this._preloadPinyinData();
-    if (this.floatButtonData.floatingBallGroupOptions === undefined) {
-      this.floatButtonData.floatingBallGroupOptions = [];
-    }
-    if (this.floatButtonData.floatingBallOpacity === undefined) {
-      this.floatButtonData.floatingBallOpacity = 0.5;
-    }
-    if (this.floatButtonData.floatingBallOptions === undefined) {
-      this.floatButtonData.floatingBallOptions = [];
-    }
-    if (this.floatButtonData.floatingBallOptionPositions === undefined) {
-      this.floatButtonData.floatingBallOptionPositions = {};
-    }
-    if (this.floatButtonData.floatingBallOptionLabels === undefined) {
-      this.floatButtonData.floatingBallOptionLabels = {};
-    }
-    if (this.floatButtonData.floatingBallOptionStyleClasses === undefined) {
-      this.floatButtonData.floatingBallOptionStyleClasses = {};
-    }
-    if (this.floatButtonData.groupButtonStyleClasses === undefined) {
-      this.floatButtonData.groupButtonStyleClasses = {};
-    }
-    if (this.floatButtonData.hideFloatingOptionButtons === undefined) {
-      this.floatButtonData.hideFloatingOptionButtons = false;
-    }
-    if (this.floatButtonData.floatingBallVisibleOptions === undefined) {
-      this.floatButtonData.floatingBallVisibleOptions = {
+
+    const _floatDefaults = {
+      floatingBallMode: 'always',
+      floatingBallGroups: [],
+      floatingBallGroupOptions: [],
+      floatingBallOpacity: 0.5,
+      floatingBallOptions: [],
+      floatingBallOptionPositions: {},
+      floatingBallOptionLabels: {},
+      floatingBallOptionStyleClasses: {},
+      groupButtonStyleClasses: {},
+      hideFloatingOptionButtons: false,
+      floatingBallVisibleOptions: {
         openMainPanel: true,
         formatReplace: false,
         addRemark: true,
@@ -21105,44 +20997,35 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
         switchMode: false,
         hideFloatingBtns: false,
         hideTextStyles: false
-      };
+      },
+      hiddenFloatingStyleWindows: []
+    };
+    let floatNeedSave = migrated;
+    for (const [key, defaultVal] of Object.entries(_floatDefaults)) {
+      if (this.floatButtonData[key] === undefined) {
+        this.floatButtonData[key] = defaultVal;
+        floatNeedSave = true;
+      }
     }
-    if (this.floatButtonData.hiddenFloatingStyleWindows === undefined) {
-      this.floatButtonData.hiddenFloatingStyleWindows = [];
+
+    if (migrated || floatNeedSave) {
+      await this.saveFloatButtonData();
     }
-    await this.saveFloatButtonData();
-    if (this.settings.enableFontSwitch === undefined) {
-      this.settings.enableFontSwitch = false;
+    if (settingsNeedSave) {
+      await this.saveData(this.settings);
     }
-    if (this.settings.customFontFamily === undefined) {
-      this.settings.customFontFamily = '';
-    }
-    if (this.settings.customLineHeight === undefined) {
-      this.settings.customLineHeight = '';
-    }
-    if (this.settings.customLeftMargin === undefined) {
-      this.settings.customLeftMargin = '';
-    }
-    if (this.settings.customRightMargin === undefined) {
-      this.settings.customRightMargin = '';
-    }
-    if (this.settings.favoriteFonts === undefined) {
-      this.settings.favoriteFonts = [];
-    }
-    await this.saveData(this.settings);
+
+    _currentLang = this.settings.language || 'en';
+    
+    this.hoverStylesCache = new Map();
+    
+    this._pinyinCache = null;
+    this._pinyinLocalCache = {};
+
     
     if (typeof window !== 'undefined') {
       window.regexCssHighlighterPlugin = this;
     }
-    
-    await this.generateDefaultFiles();
-    
-    await this.loadStyleCategories();
-    
-    await this.syncStylesToCategories();
-    
-    this.cssStyles = new Map();
-    await this.loadPluginCssStyles();
     
     this.registerCategoryShortcuts();
 
@@ -21157,7 +21040,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     
     this.rulesUpdateEmitter = new EventTarget();
     this.pinyinUpdateEmitter = new EventTarget();
-    this._skipRefreshForPopup = false; // 弹窗操作期间跳过视图刷新
+    this._skipRefreshForPopup = false;
     this.rulesVersion = 0;
     
     this.randomHighlightState = {
@@ -21166,12 +21049,23 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       currentRuleIndex: -1
     };
     
-    await this.loadGlobalRules();
-    
 
+    await this.generateDefaultFiles();
+    
+    await Promise.all([
+      this.loadStyleCategories(),
+      this.loadGlobalRules(),
+      this._preloadPinyinData()
+    ]);
+    
+    await this.syncStylesToCategories();
+    
+    this.cssStyles = new Map();
+    await this.loadPluginCssStyles();
+    
     try {
       await this.injectCSSContent();
-      this.cacheHoverStyles();
+
       await this.restoreFloatingStyleWindows();
     } catch (e) {
       console.error('Failed to inject CSS on load:', e);
@@ -23546,6 +23440,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             
             // 检查hover样式
             try {
+              this.cacheHoverStyles();
               const hoverStyles = this.hoverStylesCache?.get(className);
               if (hoverStyles) {
                 const originalStyles = {};
@@ -24477,13 +24372,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         btn.style.padding = '0';
         // 创建内部span承载样式，并注入完整CSS规则（含伪元素）
         const innerSpan = document.createElement('span');
-        innerSpan.className = `floating-option-style-${styleClass}`;
+        innerSpan.className = `floating-option-style-span floating-option-style-${styleClass}`;
         // 获取纯文本标签，去除已有的箭头字符，避免重复
-        let labelText = btn.textContent.replace(/\s*▶\s*$/, '').trim();
+        let labelText = btn.textContent.replace(/\s*[◀▶]\s*$/, '').trim();
         // 如果有子菜单，箭头放在innerSpan内部，节省空间
         if (hasSubmenu) {
           innerSpan.textContent = labelText;
           const arrow = document.createElement('span');
+          arrow.className = 'floating-option-arrow';
           arrow.style.marginLeft = '4px';
           arrow.textContent = '▶';
           innerSpan.appendChild(arrow);
@@ -24499,6 +24395,41 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
 
       document.body.appendChild(btn);
+
+      const updateArrowDirection = () => {
+        const btnRect = btn.getBoundingClientRect();
+        const btnCenterX = btnRect.left + btnRect.width / 2;
+        const isOnRight = btnCenterX > window.innerWidth / 2;
+        const innerSpan = btn.querySelector('.floating-option-style-span');
+        if (innerSpan) {
+          const arrow = innerSpan.querySelector('.floating-option-arrow');
+          if (arrow) {
+            if (isOnRight) {
+              arrow.textContent = '◀';
+              arrow.style.marginLeft = '0';
+              arrow.style.marginRight = '4px';
+              if (innerSpan.firstChild !== arrow) {
+                innerSpan.insertBefore(arrow, innerSpan.firstChild);
+              }
+            } else {
+              arrow.textContent = '▶';
+              arrow.style.marginLeft = '4px';
+              arrow.style.marginRight = '0';
+              if (innerSpan.lastChild !== arrow) {
+                innerSpan.appendChild(arrow);
+              }
+            }
+          }
+        } else if (hasSubmenu) {
+          const labelText = btn.textContent.replace(/\s*[◀▶]\s*$/, '').trim();
+          if (isOnRight) {
+            btn.innerHTML = `<span style="margin-right:4px;">◀</span>${labelText}`;
+          } else {
+            btn.innerHTML = `${labelText} <span style="margin-left:4px;">▶</span>`;
+          }
+        }
+      };
+      updateArrowDirection();
 
       let isDragging = false;
       let hasDragged = false;
@@ -24567,6 +24498,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             };
           }
           await this.saveFloatButtonData();
+          updateArrowDirection();
           setTimeout(() => { hasDragged = false; }, 0);
         }
       };
@@ -24643,6 +24575,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             };
           }
           await this.saveFloatButtonData();
+          updateArrowDirection();
         }
       });
 
@@ -25480,6 +25413,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             this.floatButtonData.floatingBallOptionStyleClasses[optionId] = newStyleClass;
 
             await this.saveFloatButtonData();
+            updateArrowDirection();
             new Notice(t('main.floatOptionUpdated'));
             modal.close();
           });
@@ -26247,7 +26181,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     // 读取CSS文件内容（只读取一次）
     let cssContent = '';
     try {
-      cssContent = await this.app.vault.adapter.read('.obsidian/plugins/Regex-Css-Highlighter/styles.css');
+      if (_cachedCssContent) {
+        cssContent = _cachedCssContent;
+      } else {
+        cssContent = await this.app.vault.adapter.read(_CSS_REL_PATH);
+        _cachedCssContent = cssContent;
+      }
     } catch (error) {
       console.log('读取CSS文件失败:', error);
     }
@@ -32049,7 +31988,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   }
 
   async syncStylesToCategories() {
-    const cssRelPath = '.obsidian/plugins/Regex-Css-Highlighter/styles.css';
+    const cssRelPath = _CSS_REL_PATH;
     const categoriesRelPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
 
     try {
@@ -32058,7 +31997,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         return;
       }
       
-      const cssContent = await crossFS.read(this.app.vault, cssRelPath);
+      const cssContent = _cachedCssContent || await crossFS.read(this.app.vault, cssRelPath);
+      if (!_cachedCssContent) _cachedCssContent = cssContent;
       
       const classNameRegex = /\.([\w\u4e00-\u9fa5_-][\w\u4e00-\u9fa50-9_-]*)\s*\{/g;
       const cssClasses = new Set();
@@ -32067,14 +32007,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         cssClasses.add(match[1]);
       }
       
-      const categoriesExists = await crossFS.exists(this.app.vault, categoriesRelPath);
-      let categories = {};
-      if (categoriesExists) {
-        const categoriesContent = await crossFS.read(this.app.vault, categoriesRelPath);
-        if (categoriesContent && categoriesContent.trim()) {
-          categories = JSON.parse(categoriesContent);
-        }
-      }
+      const categories = styleCategories || {};
       
       const existingClasses = new Set();
       for (const category of Object.values(categories)) {
@@ -32119,7 +32052,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   // 加载插件CSS样式到cssStyles Map
   async loadPluginCssStyles() {
     try {
-      const cssContent = await this.app.vault.adapter.read('.obsidian/plugins/Regex-Css-Highlighter/styles.css');
+      const cssContent = _cachedCssContent || await this.app.vault.adapter.read(_CSS_REL_PATH);
+      if (!_cachedCssContent) _cachedCssContent = cssContent;
       
       const cssRules = cssContent.match(/\.([^{]+)\s*\{([^}]+)\}/g) || [];
       
@@ -32144,9 +32078,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   }
 
   // 缓存所有hover样式
-  cacheHoverStyles() {
+  cacheHoverStyles(forceRefresh) {
+    if (!forceRefresh && this._hoverStylesCacheReady) return;
+    this._hoverStylesCacheReady = true;
     try {
-      const startTime = performance.now();
       this.hoverStylesCache.clear();
       
       const styleSheets = document.styleSheets;
@@ -32223,8 +32158,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 }`;
         
         await crossFS.write(this.app.vault, cssRelPath, cssContent);
+        _cachedCssContent = cssContent;
       } else {
-        cssContent = await crossFS.read(this.app.vault, cssRelPath);
+        if (_cachedCssContent) {
+          cssContent = _cachedCssContent;
+        } else {
+          cssContent = await crossFS.read(this.app.vault, cssRelPath);
+          _cachedCssContent = cssContent;
+        }
       }
 
       const categoriesRelPath = pluginRelDir + '/style-categories.json';
@@ -34600,7 +34541,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     try {
       let cssContent = providedCssContent;
       if (!cssContent) {
-        cssContent = await crossFS.read(this.app.vault, '.obsidian/plugins/Regex-Css-Highlighter/styles.css');
+        if (_cachedCssContent) {
+          cssContent = _cachedCssContent;
+        } else {
+          cssContent = await crossFS.read(this.app.vault, _CSS_REL_PATH);
+          _cachedCssContent = cssContent;
+        }
       }
       
       const extendedCssContent = this.extendCssForObsidianHeadings(cssContent);

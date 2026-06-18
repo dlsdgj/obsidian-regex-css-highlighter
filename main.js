@@ -37914,7 +37914,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 左下角版本标签（固定在弹窗底部，不随内容滚动）
           const versionLabel = document.createElement('div');
           const pluginVersion = plugin && plugin.manifest ? plugin.manifest.version : '';
-          versionLabel.textContent = 'Regex CSS Highlighter' + (pluginVersion ? ' v' + pluginVersion : '');
+          versionLabel.textContent = 'SwiftGloss' + (pluginVersion ? ' v' + pluginVersion : '');
           versionLabel.style.cssText = 'position:absolute;bottom:2px;left:6px;font-size:8px;color:var(--text-faint);opacity:0.3;user-select:none;-webkit-user-select:none;line-height:1;pointer-events:none;';
           popup.appendChild(versionLabel);
           

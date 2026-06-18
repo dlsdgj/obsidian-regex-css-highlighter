@@ -1,4 +1,6 @@
-# Regex CSS Highlighter / 正则CSS高亮器
+# SwiftGloss / 正则CSS高亮器
+
+> Formerly known as Regex CSS Highlighter
 
 An Obsidian plugin that matches text via regular expressions and applies custom CSS styles for highlighting.
 一个 Obsidian 插件，通过正则表达式匹配文本并应用自定义 CSS 样式高亮显示。

@@ -2,7 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.7.6 (2026-06-17)
+## 🆕 v1.7.7 (2026-06-19)
+
+- **Snippet Manager** — New CSS Snippets management feature with a frosted-glass popup window: toggle snippets on/off via chips, add/edit/delete/copy snippets, edit with external program, drag chips to reorder
+- **Snippet Groups** — Organize snippets into collapsible groups; right-click to add/rename/delete groups; drag chips between groups; "Ungrouped" section for unassigned snippets
+- **Status Bar Button** — Optional "CSS" button in the status bar for quick access to the snippet manager
+- **Enable Heading Styles** — Reversed "Disable Heading Styles" setting to "Enable Heading Styles" with inverted logic; heading styles are now enabled by default
+- **Snippet Manager Toggle** — Added master switch to enable/disable the entire snippet manager feature
+- **Custom Input Dialog** — Replaced unsupported Electron `prompt()` with a custom frosted-glass input dialog for group naming
+
+## v1.7.6 (2026-06-17)
 
 - **Plugin Startup Performance Optimization** — Cached `require('fs')`/`require('path')` at module level to eliminate repeated `require` calls; cached `styles.css` content to reduce 5 disk reads to 1; batched all `saveData()` calls in `onload()` from 10+ async writes to at most 1; parallelized independent async operations (`loadStyleCategories`, `loadGlobalRules`, `_preloadPinyinData`) with `Promise.all`; eliminated duplicate `style-categories.json` reads in `syncStylesToCategories`; deferred `cacheHoverStyles()` to lazy-load on first use instead of blocking startup; fixed `_preloadPinyinData()` being called twice
 

@@ -448,7 +448,7 @@ const i18n = {
     'settings.completeAiConfig': '请填写完整的AI配置信息',
     'settings.deepSeekModelHint': 'DeepSeek模型名称可能不正确，建议使用',
     'settings.debugLog': '调试耗时日志',
-    'settings.disableHeadingStyle': '禁用标题样式',
+    'settings.enableHeadingStyle': '启用标题样式',
     'settings.showRecentRules': '折叠时显示最近规则',
     'settings.showRecentRulesDesc': '（高亮规则标题折叠时，在标题下方显示最近添加/修改的规则）',
     'settings.hideOpenFileLink': '不显示标题后面的打开文件链接',
@@ -655,6 +655,7 @@ const i18n = {
     'context.formatReplace': '格式替换',
     'context.delete': '删除',
     'context.edit': '编辑',
+    'context.copy': '复制',
     'heading.level1': '一级标题h1',
     'heading.level2': '二级标题h2',
     'heading.level3': '三级标题h3',
@@ -1100,6 +1101,7 @@ const i18n = {
     'floating.switchMode': '模式切换',
     'floating.hideFloatingBtns': '隐藏悬浮按钮',
     'floating.hideTextStyles': '隐藏/显示文本样式',
+    'floating.manageSnippets': '管理 CSS Snippets',
     'floating.alwaysModeDesc': '常显模式：悬浮球始终显示在屏幕上',
     'floating.followModeDesc': '跟随选中模式：选中文字时悬浮球出现在鼠标位置附近',
     'floating.opacityTip': '鼠标移到悬浮球上Ctrl+鼠标滚轮调整透明度',
@@ -1129,6 +1131,30 @@ const i18n = {
     'settings.redirectTitle': 'Regex CSS Highlighter',
     'settings.redirectMsg': '插件设置已转移到主面板底部，请点击下方按钮打开主面板设置。',
     'settings.redirectBtn': '打开主面板设置',
+    'settings.manageSnippets': '管理 CSS Snippets',
+    'settings.snippetEnabled': '已启用',
+    'settings.snippetDisabled': '已禁用',
+    'settings.addSnippet': '添加 Snippet',
+    'settings.snippetTitle': '标题',
+    'settings.snippetContent': 'CSS 内容',
+    'settings.snippetTitlePlaceholder': '输入 snippet 标题...',
+    'settings.snippetContentPlaceholder': '输入 CSS 内容...',
+    'settings.snippetAdded': 'Snippet 已添加',
+    'settings.snippetAddFailed': '添加 Snippet 失败',
+    'settings.snippetToggled': 'Snippet 状态已切换',
+    'settings.snippetToggleFailed': '切换 Snippet 状态失败',
+    'settings.restartRequired': '需要重启生效',
+    'settings.noSnippets': '暂无 CSS Snippets',
+    'settings.snippetStatusBar': '固定在状态栏',
+    'settings.enableSnippetManager': '启用 Snippet 管理器',
+    'settings.snippetUngrouped': '未分组',
+    'settings.snippetAddGroup': '添加分组',
+    'settings.snippetGroupName': '分组名称',
+    'settings.snippetRenameGroup': '重命名分组',
+    'settings.snippetEditExternal': '编辑(外部程序打开)',
+    'settings.snippetMoveToGroup': '移入分组',
+    'settings.snippetRemoveFromGroup': '移出分组',
+    'settings.snippetCopied': '已复制',
   },
   en: {
     'main.title': 'regex css highlighter',
@@ -1420,7 +1446,7 @@ const i18n = {
     'settings.completeAiConfig': 'Please complete AI configuration',
     'settings.deepSeekModelHint': 'DeepSeek model name may be incorrect, recommended',
     'settings.debugLog': 'Debug Timing Log',
-    'settings.disableHeadingStyle': 'Disable Heading Styles',
+    'settings.enableHeadingStyle': 'Enable Heading Styles',
     'settings.showRecentRules': 'Show Recent Rules when Collapsed',
     'settings.showRecentRulesDesc': '(Show recently added/modified rules below the title when panel is collapsed)',
     'settings.hideOpenFileLink': 'Hide Open File Link After Title',
@@ -1627,6 +1653,7 @@ const i18n = {
     'context.formatReplace': 'Format Replace',
     'context.delete': 'Delete',
     'context.edit': 'Edit',
+    'context.copy': 'Copy',
     'heading.level1': 'Heading 1 (h1)',
     'heading.level2': 'Heading 2 (h2)',
     'heading.level3': 'Heading 3 (h3)',
@@ -2072,6 +2099,7 @@ const i18n = {
     'floating.switchMode': 'Switch Mode',
     'floating.hideFloatingBtns': 'Hide Floating Buttons',
     'floating.hideTextStyles': 'Hide/Show Text Styles',
+    'floating.manageSnippets': 'Manage CSS Snippets',
     'floating.alwaysModeDesc': 'Always mode: Floating ball always visible on screen',
     'floating.followModeDesc': 'Follow selection mode: Floating ball appears near cursor when text is selected',
     'floating.opacityTip': 'Hover over floating ball + Ctrl + scroll to adjust opacity',
@@ -2101,6 +2129,30 @@ const i18n = {
     'settings.redirectTitle': 'Regex CSS Highlighter',
     'settings.redirectMsg': 'Plugin settings have been moved to the bottom of the main panel. Click the button below to open the main panel settings.',
     'settings.redirectBtn': 'Open Main Panel Settings',
+    'settings.manageSnippets': 'Manage CSS Snippets',
+    'settings.snippetEnabled': 'Enabled',
+    'settings.snippetDisabled': 'Disabled',
+    'settings.addSnippet': 'Add Snippet',
+    'settings.snippetTitle': 'Title',
+    'settings.snippetContent': 'CSS Content',
+    'settings.snippetTitlePlaceholder': 'Enter snippet title...',
+    'settings.snippetContentPlaceholder': 'Enter CSS content...',
+    'settings.snippetAdded': 'Snippet added',
+    'settings.snippetAddFailed': 'Failed to add snippet',
+    'settings.snippetToggled': 'Snippet toggled',
+    'settings.snippetToggleFailed': 'Failed to toggle snippet',
+    'settings.restartRequired': 'Restart required',
+    'settings.noSnippets': 'No CSS Snippets',
+    'settings.snippetStatusBar': 'Pin to Status Bar',
+    'settings.enableSnippetManager': 'Enable Snippet Manager',
+    'settings.snippetUngrouped': 'Ungrouped',
+    'settings.snippetAddGroup': 'Add Group',
+    'settings.snippetGroupName': 'Group Name',
+    'settings.snippetRenameGroup': 'Rename Group',
+    'settings.snippetEditExternal': 'Edit (Open Externally)',
+    'settings.snippetMoveToGroup': 'Move to Group',
+    'settings.snippetRemoveFromGroup': 'Remove from Group',
+    'settings.snippetCopied': 'Copied',
   }
 };
 
@@ -14308,20 +14360,20 @@ class AddRegexRuleModal extends Modal {
     disableHeadingStyleRow.style.marginBottom = "5px";
     
     const disableHeadingStyleLabel = disableHeadingStyleRow.createEl("span");
-    disableHeadingStyleLabel.textContent = t('settings.disableHeadingStyle') + ": ";
+    disableHeadingStyleLabel.textContent = t('settings.enableHeadingStyle') + ": ";
     disableHeadingStyleLabel.style.marginRight = "10px";
     disableHeadingStyleLabel.style.fontSize = "14px";
     
     const disableHeadingStyleInput = disableHeadingStyleRow.createEl("input");
     disableHeadingStyleInput.type = "checkbox";
-    disableHeadingStyleInput.checked = this.plugin.settings && this.plugin.settings.disableHeadingStyle === true;
+    disableHeadingStyleInput.checked = this.plugin.settings && this.plugin.settings.disableHeadingStyle !== true;
     
     disableHeadingStyleInput.addEventListener("change", async (e) => {
       const isChecked = e.target.checked;
       if (!this.plugin.settings) {
         this.plugin.settings = {};
       }
-      this.plugin.settings.disableHeadingStyle = isChecked;
+      this.plugin.settings.disableHeadingStyle = !isChecked;
       await this.plugin.saveData(this.plugin.settings);
       
       // 重新注入CSS以更新标题样式
@@ -16202,8 +16254,266 @@ class AddRegexRuleModal extends Modal {
     });
 
 
+    // 添加管理 CSS Snippets 设置区域
+    const snippetsOutline = createOutlineSection(settingsContent, t('settings.manageSnippets'), { isCollapsed: true, icon: '🎨' });
+    const snippetsContent = snippetsOutline.content;
 
-    
+    const enableSnippetManagerRow = snippetsContent.createDiv();
+    enableSnippetManagerRow.style.display = 'flex';
+    enableSnippetManagerRow.style.alignItems = 'center';
+    enableSnippetManagerRow.style.marginBottom = '8px';
+
+    const enableSnippetManagerLabel = enableSnippetManagerRow.createEl('span');
+    enableSnippetManagerLabel.textContent = t('settings.enableSnippetManager') + ': ';
+    enableSnippetManagerLabel.style.marginRight = '10px';
+    enableSnippetManagerLabel.style.fontSize = '14px';
+
+    const enableSnippetManagerInput = enableSnippetManagerRow.createEl('input');
+    enableSnippetManagerInput.type = 'checkbox';
+    enableSnippetManagerInput.checked = this.plugin.settings?.enableSnippetManager !== false;
+    enableSnippetManagerInput.style.cursor = 'pointer';
+
+    enableSnippetManagerInput.addEventListener('change', async (e) => {
+      if (!this.plugin.settings) this.plugin.settings = {};
+      this.plugin.settings.enableSnippetManager = e.target.checked;
+      await this.plugin.saveData(this.plugin.settings);
+      if (!e.target.checked) {
+        this.plugin.removeSnippetStatusBarItem();
+      } else if (this.plugin.settings.snippetStatusBar) {
+        this.plugin.addSnippetStatusBarItem();
+      }
+    });
+
+    const snippetsChipsContainer = snippetsContent.createDiv();
+    snippetsChipsContainer.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:28px;';
+
+    const loadAndRenderSnippets = async () => {
+      snippetsChipsContainer.empty();
+      let enabledSnippets = [];
+      try {
+        const appearancePath = _nodePath.join(this.app.vault.adapter.basePath, '.obsidian', 'appearance.json');
+        const appearance = JSON.parse(_nodeFs.readFileSync(appearancePath, 'utf-8'));
+        enabledSnippets = appearance.enabledCssSnippets || [];
+      } catch (e) {
+        try {
+          const cc = this.app.customCss;
+          if (cc && Array.isArray(cc.enabledCssSnippets)) {
+            enabledSnippets = [...cc.enabledCssSnippets];
+          }
+        } catch (e2) {
+          enabledSnippets = [];
+        }
+      }
+
+      let snippetFiles = [];
+      try {
+        if (_isDesktop) {
+          const snippetsDir = _nodePath.join(this.app.vault.adapter.basePath, '.obsidian', 'snippets');
+          if (_nodeFs.existsSync(snippetsDir)) {
+            snippetFiles = _nodeFs.readdirSync(snippetsDir)
+              .filter(f => f.endsWith('.css') || f.endsWith('.js'))
+              .map(f => f.replace(/\.(css|js)$/, ''));
+          }
+        } else {
+          const result = await this.app.vault.adapter.list('.obsidian/snippets');
+          snippetFiles = (result.files || []).map(f => {
+            const name = f.split('/').pop();
+            return name.replace(/\.(css|js)$/, '');
+          }).filter(n => n);
+        }
+      } catch (e) {
+        snippetFiles = [];
+      }
+
+      if (snippetFiles.length === 0) {
+        const noSnippetsHint = snippetsChipsContainer.createEl('span');
+        noSnippetsHint.textContent = t('settings.noSnippets');
+        noSnippetsHint.style.cssText = 'font-size:12px;color:var(--text-muted);';
+      }
+
+      const toggleSnippet = async (snippetName, enable) => {
+        const cc2 = this.app.customCss;
+        if (cc2 && typeof cc2.setCssEnabledStatus === 'function') {
+          cc2.setCssEnabledStatus(snippetName, enable);
+          return;
+        }
+        let app2 = {};
+        try {
+          const data = await this.app.vault.adapter.read('.obsidian/appearance.json');
+          app2 = JSON.parse(data);
+        } catch (e) {}
+        if (!app2.enabledCssSnippets) app2.enabledCssSnippets = [];
+        if (enable) {
+          if (!app2.enabledCssSnippets.includes(snippetName)) app2.enabledCssSnippets.push(snippetName);
+        } else {
+          app2.enabledCssSnippets = app2.enabledCssSnippets.filter(s => s !== snippetName);
+        }
+        await this.app.vault.adapter.write('.obsidian/appearance.json', JSON.stringify(app2, null, 2));
+        new Notice(t('settings.snippetToggleFailed') + ' - ' + t('settings.restartRequired'));
+      };
+
+      snippetFiles.forEach(snippetName => {
+        let isEnabled = enabledSnippets.includes(snippetName);
+        const chip = snippetsChipsContainer.createEl('span');
+        chip.textContent = snippetName;
+        chip.style.cssText = `
+          display:inline-block;padding:3px 10px;border-radius:14px;font-size:12px;cursor:pointer;
+          user-select:none;transition:all 0.15s ease;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+          border:1px solid ${isEnabled ? 'var(--interactive-accent)' : 'var(--background-modifier-border)'};
+          background:${isEnabled ? 'var(--interactive-accent)' : 'var(--background-secondary)'};
+          color:${isEnabled ? '#fff' : 'var(--text-muted)'};
+        `;
+        chip.title = snippetName + (isEnabled ? ' (' + t('settings.snippetEnabled') + ')' : ' (' + t('settings.snippetDisabled') + ')');
+
+        chip.addEventListener('click', async () => {
+          try {
+            const newState = !isEnabled;
+            toggleSnippet(snippetName, newState);
+            isEnabled = newState;
+            chip.style.border = '1px solid ' + (newState ? 'var(--interactive-accent)' : 'var(--background-modifier-border)');
+            chip.style.background = newState ? 'var(--interactive-accent)' : 'var(--background-secondary)';
+            chip.style.color = newState ? '#fff' : 'var(--text-muted)';
+            chip.title = snippetName + (newState ? ' (' + t('settings.snippetEnabled') + ')' : ' (' + t('settings.snippetDisabled') + ')');
+            new Notice(snippetName + ' ' + t('settings.snippetToggled'));
+          } catch (e) {
+            console.error('切换 snippet 状态失败:', e);
+            new Notice(t('settings.snippetToggleFailed'));
+          }
+        });
+
+        chip.addEventListener('contextmenu', async (e) => {
+          e.preventDefault();
+          if (confirm(t('context.delete') + ' "' + snippetName + '"?')) {
+            try {
+              await toggleSnippet(snippetName, false);
+              const snippetPath = '.obsidian/snippets/' + snippetName + '.css';
+              const jsSnippetPath = '.obsidian/snippets/' + snippetName + '.js';
+              let deleted = false;
+              try { await this.app.vault.adapter.remove(snippetPath); deleted = true; } catch(e) {}
+              if (!deleted) { try { await this.app.vault.adapter.remove(jsSnippetPath); } catch(e) {} }
+              await loadAndRenderSnippets();
+            } catch(e) {
+              console.error('删除 snippet 失败:', e);
+            }
+          }
+        });
+      });
+
+      const addChip = snippetsChipsContainer.createEl('span');
+      addChip.textContent = '+';
+      addChip.style.cssText = `
+        display:inline-flex;align-items:center;justify-content:center;
+        width:26px;height:26px;border-radius:14px;font-size:16px;font-weight:bold;
+        cursor:pointer;user-select:none;transition:all 0.15s ease;
+        border:1px dashed var(--background-modifier-border);
+        background:var(--background-secondary);color:var(--text-muted);
+      `;
+      addChip.title = t('settings.addSnippet');
+      addChip.addEventListener('mouseenter', () => {
+        addChip.style.borderColor = 'var(--interactive-accent)';
+        addChip.style.color = 'var(--interactive-accent)';
+      });
+      addChip.addEventListener('mouseleave', () => {
+        addChip.style.borderColor = 'var(--background-modifier-border)';
+        addChip.style.color = 'var(--text-muted)';
+      });
+      addChip.addEventListener('click', () => {
+        const modal = new Modal(this.app);
+        modal.onOpen = () => {
+          const { contentEl } = modal;
+          contentEl.empty();
+          modal.modalEl.style.zIndex = '200';
+          const subContainer = modal.modalEl?.closest('.modal-container');
+          if (subContainer) subContainer.style.zIndex = '200';
+          const subBg = modal.modalEl?.closest('.modal-bg');
+          if (subBg) subBg.style.zIndex = '200';
+          contentEl.createEl('h2', { text: t('settings.addSnippet') });
+
+          const titleLabel = contentEl.createEl('label', { text: t('settings.snippetTitle') + ': ' });
+          titleLabel.style.cssText = 'display:block;margin-bottom:4px;font-size:13px;font-weight:600;';
+          const titleInput = contentEl.createEl('input', { type: 'text' });
+          titleInput.placeholder = t('settings.snippetTitlePlaceholder');
+          titleInput.style.cssText = 'width:100%;padding:6px 8px;margin-bottom:12px;border:1px solid var(--background-modifier-border);border-radius:4px;';
+
+          const contentLabel = contentEl.createEl('label', { text: t('settings.snippetContent') + ': ' });
+          contentLabel.style.cssText = 'display:block;margin-bottom:4px;font-size:13px;font-weight:600;';
+          const contentTextarea = contentEl.createEl('textarea');
+          contentTextarea.placeholder = t('settings.snippetContentPlaceholder');
+          contentTextarea.style.cssText = 'width:100%;height:180px;padding:8px;border:1px solid var(--background-modifier-border);border-radius:4px;font-family:monospace;font-size:12px;resize:vertical;';
+
+          const btnRow = contentEl.createDiv();
+          btnRow.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-top:12px;';
+
+          const cancelBtn = btnRow.createEl('button', { text: t('main.cancel') });
+          cancelBtn.addEventListener('click', () => modal.close());
+
+          const saveBtn = btnRow.createEl('button', { text: t('main.save') });
+          saveBtn.style.cssText = 'background-color:var(--interactive-accent);color:#fff;border:none;border-radius:4px;padding:6px 16px;cursor:pointer;';
+          saveBtn.addEventListener('click', async () => {
+            const title = titleInput.value.trim();
+            const cssContent = contentTextarea.value.trim();
+            if (!title) return;
+
+            try {
+              const snippetPath = '.obsidian/snippets/' + title + '.css';
+              await this.app.vault.adapter.write(snippetPath, cssContent || '/* ' + title + ' */\n');
+              const cc = this.app.customCss;
+              if (cc && typeof cc.setCssEnabledStatus === 'function') {
+                cc.setCssEnabledStatus(title, true);
+              }
+              new Notice(t('settings.snippetAdded'));
+              modal.close();
+              await loadAndRenderSnippets();
+            } catch (e) {
+              console.error('添加 snippet 失败:', e);
+              new Notice(t('settings.snippetAddFailed'));
+            }
+          });
+
+          titleInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              contentTextarea.focus();
+            }
+          });
+
+          setTimeout(() => titleInput.focus(), 100);
+        };
+        modal.onClose = () => { modal.contentEl.empty(); };
+        modal.open();
+      });
+    };
+
+    loadAndRenderSnippets();
+
+    const snippetStatusBarRow = snippetsContent.createDiv();
+    snippetStatusBarRow.style.display = 'flex';
+    snippetStatusBarRow.style.alignItems = 'center';
+    snippetStatusBarRow.style.marginBottom = '5px';
+
+    const snippetStatusBarLabel = snippetStatusBarRow.createEl('span');
+    snippetStatusBarLabel.textContent = t('settings.snippetStatusBar') + ': ';
+    snippetStatusBarLabel.style.marginRight = '10px';
+    snippetStatusBarLabel.style.fontSize = '14px';
+
+    const snippetStatusBarInput = snippetStatusBarRow.createEl('input');
+    snippetStatusBarInput.type = 'checkbox';
+    snippetStatusBarInput.checked = this.plugin.settings?.snippetStatusBar || false;
+    snippetStatusBarInput.style.cursor = 'pointer';
+
+    snippetStatusBarInput.addEventListener('change', async (e) => {
+      if (!this.plugin.settings) this.plugin.settings = {};
+      this.plugin.settings.snippetStatusBar = e.target.checked;
+      await this.plugin.saveData(this.plugin.settings);
+      if (e.target.checked) {
+        this.plugin.addSnippetStatusBarItem();
+      } else {
+        this.plugin.removeSnippetStatusBarItem();
+      }
+    });
+
+
+
   }
   
   showErrorMessage(styleOption, message) {
@@ -20909,7 +21219,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       showStyleUsageCount: true,
       searchClassName: '',
       showHeadingLevelLabel: true,
-      disableHeadingStyle: true,
+      disableHeadingStyle: false,
       showRecentRulesWhenCollapsed: true,
       remarkKeepOpen: false,
       hideOpenFileLink: true,
@@ -20937,7 +21247,9 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       customLineHeight: '',
       customLeftMargin: '',
       customRightMargin: '',
-      favoriteFonts: []
+      favoriteFonts: [],
+      snippetStatusBar: false,
+      enableSnippetManager: true
     };
     let settingsNeedSave = settingsCleaned;
     for (const [key, defaultVal] of Object.entries(_settingsDefaults)) {
@@ -21384,6 +21696,10 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     this.createFloatingBall();
     
     this.renderFloatingOptionButtons();
+    
+    if (this.settings.enableSnippetManager !== false && this.settings.snippetStatusBar) {
+      this.addSnippetStatusBarItem();
+    }
     
     // 加载自定义字体
     if (this.settings.enableFontSwitch) {
@@ -22040,6 +22356,588 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     }
   }
   
+  addSnippetStatusBarItem() {
+    if (this._snippetStatusBarEl) return;
+    const item = this.addStatusBarItem();
+    item.setText('CSS');
+    item.title = t('settings.manageSnippets');
+    item.style.cursor = 'pointer';
+    item.style.opacity = '0.7';
+    item.addEventListener('click', () => this.openSnippetsPopup());
+    this._snippetStatusBarEl = item;
+  }
+
+  removeSnippetStatusBarItem() {
+    if (this._snippetStatusBarEl) {
+      this._snippetStatusBarEl.remove();
+      this._snippetStatusBarEl = null;
+    }
+  }
+
+  openSnippetsPopup() {
+    if (this.settings.enableSnippetManager === false) { new Notice(t('settings.enableSnippetManager')); return; }
+    const existing = document.getElementById('rch-snippets-popup');
+    if (existing) { existing.remove(); const ov = document.getElementById('rch-snippets-overlay'); if (ov) ov.remove(); return; }
+
+    const overlay = document.createElement('div');
+    overlay.id = 'rch-snippets-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;';
+    overlay.addEventListener('click', () => { popup.remove(); overlay.remove(); });
+
+    const popup = document.createElement('div');
+    popup.id = 'rch-snippets-popup';
+    popup.style.cssText = `
+      position:fixed;
+      background:rgba(var(--mono-rgb-0),0.75);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
+      border:1px solid rgba(255,255,255,0.12);border-radius:12px;
+      box-shadow:0 12px 40px rgba(0,0,0,0.35);z-index:10000;
+      padding:16px 20px;min-width:360px;max-width:560px;max-height:75vh;overflow-y:auto;
+    `;
+    requestAnimationFrame(() => {
+      const w = popup.offsetWidth, h = popup.offsetHeight;
+      popup.style.left = Math.round((window.innerWidth - w) / 2) + 'px';
+      popup.style.top = Math.round((window.innerHeight - h) / 2) + 'px';
+    });
+
+    const header = popup.createDiv();
+    header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;cursor:move;';
+    const title = header.createEl('h3', { text: t('settings.manageSnippets') });
+    title.style.cssText = 'margin:0;font-size:15px;color:var(--text-normal);';
+    const closeBtn = header.createEl('span');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = 'cursor:pointer;font-size:16px;color:var(--text-muted);padding:2px 6px;';
+    closeBtn.addEventListener('click', () => { popup.remove(); overlay.remove(); });
+
+    let isDraggingPopup = false, dragOffX = 0, dragOffY = 0;
+    header.addEventListener('mousedown', (e) => {
+      if (e.target === closeBtn) return;
+      isDraggingPopup = true;
+      const rect = popup.getBoundingClientRect();
+      dragOffX = e.clientX - Math.round(rect.left);
+      dragOffY = e.clientY - Math.round(rect.top);
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!isDraggingPopup) return;
+      popup.style.left = Math.round(e.clientX - dragOffX) + 'px';
+      popup.style.top = Math.round(e.clientY - dragOffY) + 'px';
+    });
+    document.addEventListener('mouseup', () => { isDraggingPopup = false; });
+
+    const contentArea = popup.createDiv();
+    contentArea.style.cssText = 'min-height:60px;';
+    this._dragData = null;
+
+    if (!this.settings.snippetGroups) this.settings.snippetGroups = {};
+    if (!this.settings.snippetGroupOrder) this.settings.snippetGroupOrder = [];
+    if (!this.settings.snippetCollapsedGroups) this.settings.snippetCollapsedGroups = {};
+    const snippetGroups = this.settings.snippetGroups;
+    const snippetGroupOrder = this.settings.snippetGroupOrder;
+    const snippetCollapsedGroups = this.settings.snippetCollapsedGroups;
+
+    const renderContent = async () => {
+      contentArea.empty();
+      let enabledSnippets = [];
+      try {
+        const appearancePath = _nodePath.join(this.app.vault.adapter.basePath, '.obsidian', 'appearance.json');
+        const appearance = JSON.parse(_nodeFs.readFileSync(appearancePath, 'utf-8'));
+        enabledSnippets = appearance.enabledCssSnippets || [];
+      } catch (e) {}
+
+      let snippetFiles = [];
+      try {
+        const snippetsDir = _nodePath.join(this.app.vault.adapter.basePath, '.obsidian', 'snippets');
+        if (_nodeFs.existsSync(snippetsDir)) {
+          snippetFiles = _nodeFs.readdirSync(snippetsDir)
+            .filter(f => f.endsWith('.css') || f.endsWith('.js'))
+            .map(f => f.replace(/\.(css|js)$/, ''));
+        }
+      } catch (e) {}
+
+      if (snippetFiles.length === 0) {
+        const hint = contentArea.createEl('span');
+        hint.textContent = t('settings.noSnippets');
+        hint.style.cssText = 'font-size:12px;color:var(--text-muted);';
+        return;
+      }
+
+      for (const members of Object.values(snippetGroups)) {
+        for (let i = members.length - 1; i >= 0; i--) {
+          if (!snippetFiles.includes(members[i])) members.splice(i, 1);
+        }
+      }
+
+      const isEnabled = (name) => enabledSnippets.includes(name);
+
+      const orderedGroups = snippetGroupOrder.filter(g => snippetGroups[g]);
+
+      for (const gName of orderedGroups) {
+        const members = snippetGroups[gName];
+        if (!members) continue;
+        const isCollapsed = snippetCollapsedGroups[gName] || false;
+
+        const groupEl = contentArea.createDiv();
+        groupEl.style.cssText = 'margin-bottom:10px;';
+
+        const groupHeader = groupEl.createDiv();
+        groupHeader.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:6px;user-select:none;';
+
+        const collapseIcon = groupHeader.createEl('span');
+        collapseIcon.textContent = isCollapsed ? '▶' : '▼';
+        collapseIcon.style.cssText = 'font-size:10px;color:var(--text-muted);cursor:pointer;';
+
+        const groupLabel = groupHeader.createEl('span');
+        groupLabel.textContent = gName + ' (' + members.length + ')';
+        groupLabel.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-normal);cursor:pointer;';
+
+        groupHeader.addEventListener('contextmenu', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          const menu = document.createElement('div');
+          menu.style.cssText = `position:fixed;left:${e.clientX}px;top:${e.clientY}px;background:rgba(var(--mono-rgb-0),0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--background-modifier-border);border-radius:6px;padding:4px 0;z-index:10001;box-shadow:0 4px 16px rgba(0,0,0,0.25);min-width:120px;`;
+          const mkItem = (label, action) => {
+            const item = document.createElement('div');
+            item.textContent = label;
+            item.style.cssText = 'padding:6px 16px;cursor:pointer;font-size:13px;color:var(--text-normal);';
+            item.addEventListener('mouseenter', () => { item.style.background = 'var(--background-modifier-hover)'; });
+            item.addEventListener('mouseleave', () => { item.style.background = 'transparent'; });
+            item.addEventListener('click', async () => { menu.remove(); await action(); });
+            menu.appendChild(item);
+          };
+          mkItem(t('settings.snippetRenameGroup') || '重命名分组', async () => {
+            const newName = await this._promptInput(t('settings.snippetRenameGroup') || '重命名分组', gName);
+            if (newName && newName !== gName) {
+              snippetGroups[newName] = snippetGroups[gName];
+              delete snippetGroups[gName];
+              const idx = snippetGroupOrder.indexOf(gName);
+              if (idx !== -1) snippetGroupOrder[idx] = newName;
+              if (snippetCollapsedGroups[gName] !== undefined) {
+                snippetCollapsedGroups[newName] = snippetCollapsedGroups[gName];
+                delete snippetCollapsedGroups[gName];
+              }
+              await this._saveSnippetGroups();
+              renderContent();
+            }
+          });
+          mkItem(t('context.deleteGroup') || '删除分组', async () => {
+            delete snippetGroups[gName];
+            const idx = snippetGroupOrder.indexOf(gName);
+            if (idx !== -1) snippetGroupOrder.splice(idx, 1);
+            delete snippetCollapsedGroups[gName];
+            await this._saveSnippetGroups();
+            renderContent();
+          });
+          document.body.appendChild(menu);
+          const closeMenu = () => { if (document.body.contains(menu)) menu.remove(); document.removeEventListener('click', closeMenu); };
+          setTimeout(() => document.addEventListener('click', closeMenu), 10);
+        });
+
+        const chipsContainer = groupEl.createDiv();
+        chipsContainer.className = 'rch-group-chips';
+        chipsContainer.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;min-height:28px;padding:4px;border-radius:6px;border:1px dashed transparent;transition:border-color 0.15s ease;';
+        chipsContainer.style.display = isCollapsed ? 'none' : 'flex';
+
+        const toggleCollapse = async () => {
+          const collapsed = !snippetCollapsedGroups[gName];
+          snippetCollapsedGroups[gName] = collapsed;
+          await this._saveSnippetGroups();
+          collapseIcon.textContent = collapsed ? '▶' : '▼';
+          chipsContainer.style.display = collapsed ? 'none' : 'flex';
+        };
+        collapseIcon.addEventListener('click', toggleCollapse);
+        groupLabel.addEventListener('click', toggleCollapse);
+
+        chipsContainer.addEventListener('dragover', (e) => {
+          e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+          chipsContainer.style.borderColor = 'var(--interactive-accent)';
+        });
+        chipsContainer.addEventListener('dragleave', () => { chipsContainer.style.borderColor = 'transparent'; });
+        chipsContainer.addEventListener('drop', async (e) => {
+          e.preventDefault(); chipsContainer.style.borderColor = 'transparent';
+          if (!this._dragData) return;
+          const sn = this._dragData.snippetName;
+          const srcGroup = this._dragData.sourceGroup;
+          if (srcGroup === gName) return;
+          for (const members of Object.values(snippetGroups)) {
+            const idx = members.indexOf(sn);
+            if (idx !== -1) members.splice(idx, 1);
+          }
+          if (!snippetGroups[gName]) { snippetGroups[gName] = []; snippetGroupOrder.push(gName); }
+          if (!snippetGroups[gName].includes(sn)) snippetGroups[gName].push(sn);
+          this._dragData = null;
+          await this._saveSnippetGroups();
+          renderContent();
+        });
+
+        members.forEach(snippetName => {
+          this._createSnippetChip(chipsContainer, snippetName, isEnabled(snippetName), gName, renderContent, popup);
+        });
+      }
+
+      const groupedSnippets = new Set();
+      for (const members of Object.values(snippetGroups)) members.forEach(s => groupedSnippets.add(s));
+      const ungrouped = snippetFiles.filter(n => !groupedSnippets.has(n));
+
+      if (ungrouped.length > 0) {
+        const isCollapsed = snippetCollapsedGroups['__ungrouped__'] || false;
+        const groupEl = contentArea.createDiv();
+        groupEl.style.cssText = 'margin-bottom:10px;';
+
+        const groupHeader = groupEl.createDiv();
+        groupHeader.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:6px;user-select:none;';
+
+        const collapseIcon = groupHeader.createEl('span');
+        collapseIcon.textContent = isCollapsed ? '▶' : '▼';
+        collapseIcon.style.cssText = 'font-size:10px;color:var(--text-muted);cursor:pointer;';
+
+        const groupLabel = groupHeader.createEl('span');
+        groupLabel.textContent = (t('settings.snippetUngrouped') || '未分组') + ' (' + ungrouped.length + ')';
+        groupLabel.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;';
+
+        const chipsContainer = groupEl.createDiv();
+        chipsContainer.className = 'rch-group-chips';
+        chipsContainer.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;min-height:28px;padding:4px;border-radius:6px;border:1px dashed transparent;transition:border-color 0.15s ease;';
+        chipsContainer.style.display = isCollapsed ? 'none' : 'flex';
+
+        const toggleCollapse = async () => {
+          const collapsed = !snippetCollapsedGroups['__ungrouped__'];
+          snippetCollapsedGroups['__ungrouped__'] = collapsed;
+          await this._saveSnippetGroups();
+          collapseIcon.textContent = collapsed ? '▶' : '▼';
+          chipsContainer.style.display = collapsed ? 'none' : 'flex';
+        };
+        collapseIcon.addEventListener('click', toggleCollapse);
+        groupLabel.addEventListener('click', toggleCollapse);
+
+        chipsContainer.addEventListener('dragover', (e) => {
+          e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+          chipsContainer.style.borderColor = 'var(--interactive-accent)';
+        });
+        chipsContainer.addEventListener('dragleave', () => { chipsContainer.style.borderColor = 'transparent'; });
+        chipsContainer.addEventListener('drop', async (e) => {
+          e.preventDefault(); chipsContainer.style.borderColor = 'transparent';
+          if (!this._dragData) return;
+          for (const members of Object.values(snippetGroups)) {
+            const idx = members.indexOf(this._dragData.snippetName);
+            if (idx !== -1) members.splice(idx, 1);
+          }
+          this._dragData = null;
+          await this._saveSnippetGroups();
+          renderContent();
+        });
+
+        ungrouped.forEach(snippetName => {
+          this._createSnippetChip(chipsContainer, snippetName, isEnabled(snippetName), null, renderContent, popup);
+        });
+      }
+
+      const addRow = contentArea.createDiv();
+      addRow.style.cssText = 'display:flex;justify-content:flex-start;margin-top:8px;';
+      const addChip = addRow.createEl('span');
+      addChip.textContent = '+ ' + t('settings.addSnippet');
+      addChip.style.cssText = `
+        display:inline-flex;align-items:center;justify-content:center;
+        padding:4px 12px;border-radius:14px;font-size:12px;font-weight:500;
+        cursor:pointer;user-select:none;transition:all 0.15s ease;
+        border:1px dashed var(--background-modifier-border);
+        background:rgba(var(--mono-rgb-0),0.3);color:var(--text-muted);
+      `;
+      addChip.addEventListener('mouseenter', () => { addChip.style.borderColor = 'var(--interactive-accent)'; addChip.style.color = 'var(--interactive-accent)'; });
+      addChip.addEventListener('mouseleave', () => { addChip.style.borderColor = 'var(--background-modifier-border)'; addChip.style.color = 'var(--text-muted)'; });
+      addChip.addEventListener('click', () => {
+        const existingForm = popup.querySelector('.rch-form');
+        if (existingForm) existingForm.remove();
+        const form = popup.createDiv();
+        form.className = 'rch-form';
+        form.style.cssText = 'margin-top:10px;padding:10px;border:1px solid var(--background-modifier-border);border-radius:6px;background:rgba(var(--mono-rgb-0),0.4);';
+        const titleInput = form.createEl('input', { type: 'text' });
+        titleInput.placeholder = t('settings.snippetTitlePlaceholder');
+        titleInput.style.cssText = 'width:100%;padding:4px 6px;margin-bottom:6px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);';
+        const contentInput = form.createEl('textarea');
+        contentInput.placeholder = t('settings.snippetContentPlaceholder');
+        contentInput.style.cssText = 'width:100%;height:100px;padding:4px 6px;border:1px solid var(--background-modifier-border);border-radius:4px;font-family:monospace;font-size:11px;resize:vertical;background:var(--background-primary);color:var(--text-normal);';
+        const btnRow = form.createDiv();
+        btnRow.style.cssText = 'display:flex;justify-content:flex-end;gap:6px;margin-top:6px;';
+        const cancelBtn = btnRow.createEl('button', { text: t('main.cancel') });
+        cancelBtn.addEventListener('click', () => form.remove());
+        const saveBtn = btnRow.createEl('button', { text: t('main.save') });
+        saveBtn.style.cssText = 'background:var(--interactive-accent);color:#fff;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;';
+        saveBtn.addEventListener('click', async () => {
+          const title = titleInput.value.trim();
+          const css = contentInput.value.trim();
+          if (!title) return;
+          try {
+            await this.app.vault.adapter.write('.obsidian/snippets/' + title + '.css', css || '/* ' + title + ' */\n');
+            const cc = this.app.customCss;
+            if (cc && typeof cc.setCssEnabledStatus === 'function') cc.setCssEnabledStatus(title, true);
+            new Notice(t('settings.snippetAdded'));
+            form.remove();
+            renderContent();
+          } catch (e) { new Notice(t('settings.snippetAddFailed')); }
+        });
+        setTimeout(() => titleInput.focus(), 50);
+      });
+    };
+
+    contentArea.addEventListener('contextmenu', (e) => {
+      if (e.target.closest('.rch-chip') || e.target.closest('.rch-group-header')) return;
+      e.preventDefault();
+      const menu = document.createElement('div');
+      menu.style.cssText = `position:fixed;left:${e.clientX}px;top:${e.clientY}px;background:rgba(var(--mono-rgb-0),0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--background-modifier-border);border-radius:6px;padding:4px 0;z-index:10001;box-shadow:0 4px 16px rgba(0,0,0,0.25);min-width:120px;`;
+      const addGroupItem = document.createElement('div');
+      addGroupItem.textContent = t('settings.snippetAddGroup') || '添加分组';
+      addGroupItem.style.cssText = 'padding:6px 16px;cursor:pointer;font-size:13px;color:var(--text-normal);';
+      addGroupItem.addEventListener('mouseenter', () => { addGroupItem.style.background = 'var(--background-modifier-hover)'; });
+      addGroupItem.addEventListener('mouseleave', () => { addGroupItem.style.background = 'transparent'; });
+      addGroupItem.addEventListener('click', async () => {
+        menu.remove();
+        const groupName = await this._promptInput(t('settings.snippetAddGroup') || '添加分组', '');
+        if (groupName && !snippetGroups[groupName]) {
+          snippetGroups[groupName] = [];
+          snippetGroupOrder.push(groupName);
+          await this._saveSnippetGroups();
+          renderContent();
+        }
+      });
+      menu.appendChild(addGroupItem);
+      document.body.appendChild(menu);
+      const closeMenu = () => { if (document.body.contains(menu)) menu.remove(); document.removeEventListener('click', closeMenu); };
+      setTimeout(() => document.addEventListener('click', closeMenu), 10);
+    });
+
+    renderContent();
+    document.body.appendChild(overlay);
+    document.body.appendChild(popup);
+  }
+
+  _promptInput(label, defaultValue) {
+    return new Promise((resolve) => {
+      const backdrop = document.createElement('div');
+      backdrop.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:10002;';
+      const dialog = document.createElement('div');
+      dialog.style.cssText = `
+        position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+        background:rgba(var(--mono-rgb-0),0.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+        border:1px solid var(--background-modifier-border);border-radius:8px;
+        box-shadow:0 8px 32px rgba(0,0,0,0.3);z-index:10003;
+        padding:16px 20px;min-width:260px;
+      `;
+      const lbl = dialog.createEl('div', { text: label });
+      lbl.style.cssText = 'font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text-normal);';
+      const input = dialog.createEl('input', { type: 'text' });
+      input.value = defaultValue;
+      input.placeholder = t('settings.snippetGroupName') || '分组名称';
+      input.style.cssText = 'width:100%;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);margin-bottom:10px;';
+      const btnRow = dialog.createDiv();
+      btnRow.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;';
+      const cancelBtn = btnRow.createEl('button', { text: t('main.cancel') });
+      cancelBtn.addEventListener('click', () => { backdrop.remove(); dialog.remove(); resolve(null); });
+      const okBtn = btnRow.createEl('button', { text: t('main.save') });
+      okBtn.style.cssText = 'background:var(--interactive-accent);color:#fff;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;';
+      okBtn.addEventListener('click', () => {
+        const val = input.value.trim();
+        backdrop.remove(); dialog.remove();
+        resolve(val || null);
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') okBtn.click();
+        if (e.key === 'Escape') cancelBtn.click();
+      });
+      backdrop.addEventListener('click', () => { backdrop.remove(); dialog.remove(); resolve(null); });
+      document.body.appendChild(backdrop);
+      document.body.appendChild(dialog);
+      setTimeout(() => input.focus(), 50);
+    });
+  }
+
+  async _saveSnippetGroups() {
+    if (!this.settings) this.settings = {};
+    this.settings.snippetGroups = this.settings.snippetGroups || {};
+    this.settings.snippetGroupOrder = this.settings.snippetGroupOrder || [];
+    this.settings.snippetCollapsedGroups = this.settings.snippetCollapsedGroups || {};
+    Object.assign(this.settings.snippetGroups, this.settings.snippetGroups);
+    this.settings.snippetGroupOrder.length = 0;
+    this.settings.snippetGroupOrder.push(...(this.settings.snippetGroupOrder || []));
+    await this.saveData(this.settings);
+  }
+
+  _createSnippetChip(container, snippetName, isEnabled, currentGroup, rerender, popup) {
+    const chip = container.createEl('span');
+    chip.className = 'rch-chip';
+    chip.textContent = snippetName;
+    chip.setAttribute('draggable', 'true');
+    chip.setAttribute('data-snippet', snippetName);
+
+    const applyStyle = (en) => {
+      chip.style.cssText = `
+        display:inline-block;padding:3px 10px;border-radius:14px;font-size:12px;cursor:pointer;
+        user-select:none;transition:all 0.15s ease;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+        border:1px solid ${en ? 'var(--interactive-accent)' : 'var(--background-modifier-border)'};
+        background:${en ? 'var(--interactive-accent)' : 'rgba(var(--mono-rgb-0),0.5)'};
+        color:${en ? '#fff' : 'var(--text-muted)'};
+      `;
+      chip.title = snippetName + (en ? ' (' + t('settings.snippetEnabled') + ')' : ' (' + t('settings.snippetDisabled') + ')');
+    };
+    applyStyle(isEnabled);
+
+    let chipEnabled = isEnabled;
+    chip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const cc = this.app.customCss;
+      if (cc && typeof cc.setCssEnabledStatus === 'function') cc.setCssEnabledStatus(snippetName, !chipEnabled);
+      chipEnabled = !chipEnabled;
+      applyStyle(chipEnabled);
+    });
+
+    chip.addEventListener('contextmenu', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const menu = document.createElement('div');
+      menu.style.cssText = `position:fixed;left:${e.clientX}px;top:${e.clientY}px;background:rgba(var(--mono-rgb-0),0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--background-modifier-border);border-radius:6px;padding:4px 0;z-index:10001;box-shadow:0 4px 16px rgba(0,0,0,0.25);min-width:120px;`;
+      const mkItem = (label, action) => {
+        const item = document.createElement('div');
+        item.textContent = label;
+        item.style.cssText = 'padding:6px 16px;cursor:pointer;font-size:13px;color:var(--text-normal);';
+        item.addEventListener('mouseenter', () => { item.style.background = 'var(--background-modifier-hover)'; });
+        item.addEventListener('mouseleave', () => { item.style.background = 'transparent'; });
+        item.addEventListener('click', async () => { menu.remove(); await action(); });
+        menu.appendChild(item);
+      };
+
+      mkItem(t('context.copy'), async () => {
+        try {
+          let content = '';
+          try { content = await this.app.vault.adapter.read('.obsidian/snippets/' + snippetName + '.css'); } catch(e) {
+            try { content = await this.app.vault.adapter.read('.obsidian/snippets/' + snippetName + '.js'); } catch(e2) {}
+          }
+          await navigator.clipboard.writeText(content);
+          new Notice(t('settings.snippetCopied') || '已复制');
+        } catch(e) { new Notice('Copy failed'); }
+      });
+
+      mkItem(t('context.edit'), async () => {
+        try {
+          let content = '', editPath = '.obsidian/snippets/' + snippetName + '.css';
+          try { content = await this.app.vault.adapter.read(editPath); } catch(e) {
+            editPath = '.obsidian/snippets/' + snippetName + '.js';
+            try { content = await this.app.vault.adapter.read(editPath); } catch(e2) {}
+          }
+          const existingForm = popup.querySelector('.rch-form');
+          if (existingForm) existingForm.remove();
+          const form = popup.createDiv();
+          form.className = 'rch-form';
+          form.style.cssText = 'margin-top:10px;padding:10px;border:1px solid var(--background-modifier-border);border-radius:6px;background:rgba(var(--mono-rgb-0),0.4);';
+          const titleInput = form.createEl('input', { type: 'text' });
+          titleInput.value = snippetName;
+          titleInput.style.cssText = 'width:100%;padding:4px 6px;margin-bottom:6px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);';
+          const contentInput = form.createEl('textarea');
+          contentInput.value = content;
+          contentInput.style.cssText = 'width:100%;height:150px;padding:4px 6px;border:1px solid var(--background-modifier-border);border-radius:4px;font-family:monospace;font-size:11px;resize:vertical;background:var(--background-primary);color:var(--text-normal);';
+          const btnRow = form.createDiv();
+          btnRow.style.cssText = 'display:flex;justify-content:flex-end;gap:6px;margin-top:6px;';
+          const cancelBtn = btnRow.createEl('button', { text: t('main.cancel') });
+          cancelBtn.addEventListener('click', () => form.remove());
+          const saveBtn = btnRow.createEl('button', { text: t('main.save') });
+          saveBtn.style.cssText = 'background:var(--interactive-accent);color:#fff;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;';
+          saveBtn.addEventListener('click', async () => {
+            const newTitle = titleInput.value.trim();
+            const newContent = contentInput.value;
+            if (!newTitle) return;
+            try {
+              if (newTitle !== snippetName) await this.app.vault.adapter.remove(editPath);
+              const newPath = '.obsidian/snippets/' + newTitle + '.css';
+              await this.app.vault.adapter.write(newPath, newContent);
+              form.remove(); rerender();
+            } catch(e) { new Notice('Save failed'); }
+          });
+          setTimeout(() => titleInput.focus(), 50);
+        } catch(e) { new Notice('Read failed'); }
+      });
+
+      mkItem(t('settings.snippetEditExternal') || '编辑(外部程序打开)', async () => {
+        try {
+          const snippetsDir = _nodePath.join(this.app.vault.adapter.basePath, '.obsidian', 'snippets');
+          let filePath = _nodePath.join(snippetsDir, snippetName + '.css');
+          if (!_nodeFs.existsSync(filePath)) filePath = _nodePath.join(snippetsDir, snippetName + '.js');
+          if (_nodeFs.existsSync(filePath)) {
+            const { shell } = require('electron');
+            await shell.openPath(filePath);
+          }
+        } catch(e) { new Notice('Open failed'); }
+      });
+
+      mkItem(t('context.delete'), async () => {
+        if (confirm(t('context.delete') + ' "' + snippetName + '"?')) {
+          const cc = this.app.customCss;
+          if (chipEnabled && cc && typeof cc.setCssEnabledStatus === 'function') cc.setCssEnabledStatus(snippetName, false);
+          let deleted = false;
+          try { await this.app.vault.adapter.remove('.obsidian/snippets/' + snippetName + '.css'); deleted = true; } catch(e) {}
+          if (!deleted) { try { await this.app.vault.adapter.remove('.obsidian/snippets/' + snippetName + '.js'); } catch(e) {} }
+          rerender();
+        }
+      });
+
+      const snippetGroups = this.settings.snippetGroups || {};
+      const snippetGroupOrder = this.settings.snippetGroupOrder || [];
+      const groupNames = snippetGroupOrder.filter(g => g !== currentGroup && snippetGroups[g]);
+      if (groupNames.length > 0) {
+        const moveItem = document.createElement('div');
+        moveItem.textContent = (t('settings.snippetMoveToGroup') || '移入分组') + ' ▸';
+        moveItem.style.cssText = 'padding:6px 16px;cursor:pointer;font-size:13px;color:var(--text-normal);position:relative;';
+        moveItem.addEventListener('mouseenter', () => { moveItem.style.background = 'var(--background-modifier-hover)'; });
+        moveItem.addEventListener('mouseleave', () => { moveItem.style.background = 'transparent'; });
+        const subMenu = document.createElement('div');
+        subMenu.style.cssText = `position:absolute;left:100%;top:0;background:rgba(var(--mono-rgb-0),0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--background-modifier-border);border-radius:6px;padding:4px 0;box-shadow:0 4px 16px rgba(0,0,0,0.25);min-width:100px;display:none;`;
+        groupNames.forEach(gName => {
+          const subItem = document.createElement('div');
+          subItem.textContent = gName;
+          subItem.style.cssText = 'padding:6px 16px;cursor:pointer;font-size:13px;color:var(--text-normal);white-space:nowrap;';
+          subItem.addEventListener('mouseenter', () => { subItem.style.background = 'var(--background-modifier-hover)'; });
+          subItem.addEventListener('mouseleave', () => { subItem.style.background = 'transparent'; });
+          subItem.addEventListener('click', async () => {
+            menu.remove();
+            for (const members of Object.values(snippetGroups)) {
+              const idx = members.indexOf(snippetName);
+              if (idx !== -1) members.splice(idx, 1);
+            }
+            if (!snippetGroups[gName].includes(snippetName)) snippetGroups[gName].push(snippetName);
+            await this._saveSnippetGroups();
+            rerender();
+          });
+          subMenu.appendChild(subItem);
+        });
+        moveItem.addEventListener('mouseenter', () => { subMenu.style.display = 'block'; });
+        moveItem.addEventListener('mouseleave', () => { subMenu.style.display = 'none'; });
+        moveItem.appendChild(subMenu);
+        menu.appendChild(moveItem);
+      }
+
+      if (currentGroup) {
+        mkItem(t('settings.snippetRemoveFromGroup') || '移出分组', async () => {
+          const snippetGroups = this.settings.snippetGroups || {};
+          for (const members of Object.values(snippetGroups)) {
+            const idx = members.indexOf(snippetName);
+            if (idx !== -1) members.splice(idx, 1);
+          }
+          await this._saveSnippetGroups();
+          rerender();
+        });
+      }
+
+      document.body.appendChild(menu);
+      const closeMenu = () => { if (document.body.contains(menu)) menu.remove(); document.removeEventListener('click', closeMenu); };
+      setTimeout(() => document.addEventListener('click', closeMenu), 10);
+    });
+
+    chip.addEventListener('dragstart', (e) => {
+      this._dragData = { snippetName, sourceGroup: currentGroup };
+      chip.style.opacity = '0.4';
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    chip.addEventListener('dragend', () => {
+      chip.style.opacity = '1';
+      this._dragData = null;
+    });
+  }
+
+
   // 创建悬浮球
   createFloatingBall() {
     // 检查是否已经存在悬浮球

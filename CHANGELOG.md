@@ -2,7 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.7.7 (2026-06-19)
+## 🆕 v1.8.1 (2026-06-19)
+
+- **Single-Display Group Fix** — Fixed single-display groups being incorrectly moved to always-display area when highlighting matched styles; single-display groups now stay in their tab area with proper style button highlighting
+- **Single-Display Style Buttons Fix** — Fixed style buttons always appearing collapsed when reopening the main panel with an active single-display group; buttons now correctly display as expanded
+- **Single-Display Tab Arrow** — Changed the active single-display tab indicator from a triangle arrow to a red horizontal line for clearer visual identification
+- **Snippet Manager Disable** — When "Enable Snippet Manager" is unchecked, the snippets list and status bar option are now hidden in settings, fully disabling the feature
+
+## v1.7.7 (2026-06-19)
 
 - **Snippet Manager** — New CSS Snippets management feature with a frosted-glass popup window: toggle snippets on/off via chips, add/edit/delete/copy snippets, edit with external program, drag chips to reorder
 - **Snippet Groups** — Organize snippets into collapsible groups; right-click to add/rename/delete groups; drag chips between groups; "Ungrouped" section for unassigned snippets

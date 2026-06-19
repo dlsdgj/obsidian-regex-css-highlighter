@@ -9755,31 +9755,81 @@ class AddRegexRuleModal extends Modal {
           // 记录分组是否从隐藏状态展开
           const wasHidden = !isContainerVisible;
           
+          // 检查是否为单显分组
+          const currentCategory = categoryContainer.getAttribute('data-category');
+          const isSingleDisplay = this.plugin && this.plugin.collapsedCategories && this.plugin.collapsedCategories[currentCategory];
+          
           // 如果分组处于隐藏状态，自动展开它
           if (wasHidden) {
-            // 展开分组
-            categoryContainer.style.display = 'flex';
-            
-            // 更新分组标题的视觉效果
-            const categoryTitle = categoryContainer.querySelector('h4');
-            if (categoryTitle) {
-              const catName = categoryContainer.getAttribute('data-category');
-              const savedStyle = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[catName];
-              if (!savedStyle) {
-                categoryTitle.style.backgroundColor = 'white';
-                categoryTitle.style.color = 'black';
+            if (isSingleDisplay) {
+              // 单显分组：将容器移到 tabContentContainer 展示，不修改 collapsedCategories
+              // 先折叠之前展开的标签内容
+              if (activeTabCategory && activeTabCategory !== currentCategory) {
+                const prevContainer = tabContentContainer.querySelector(`[data-category="${activeTabCategory}"]`);
+                if (prevContainer) {
+                  const prevTitle = prevContainer.querySelector('h4');
+                  if (prevTitle) prevTitle.style.display = '';
+                  prevContainer.style.display = 'none';
+                  mainContainer.appendChild(prevContainer);
+                }
+                const prevTab = collapsedCategoriesContainer.querySelector(`[data-category="${activeTabCategory}"]`);
+                if (prevTab) {
+                  const prevSavedStyle = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[activeTabCategory];
+                  if (!prevSavedStyle) {
+                    prevTab.style.backgroundColor = 'white';
+                    prevTab.style.color = 'black';
+                  } else {
+                    prevTab.style.backgroundColor = '';
+                    prevTab.style.color = '';
+                  }
+                  prevTab.style.fontWeight = 'bold';
+                  prevTab.style.borderBottom = '';
+                  setTabArrow(prevTab, false);
+                }
               }
-              categoryTitle.title = t('main.dblClickMoveToSingle');
-            }
-            
-            // 更新插件的折叠状态
-            const categoryName = categoryContainer.getAttribute('data-category');
-            if (this.plugin) {
-              this.plugin.settings = this.plugin.settings || {};
-              this.plugin.settings.collapsedCategories = this.plugin.settings.collapsedCategories || {};
-              delete this.plugin.settings.collapsedCategories[categoryName];
-              this.plugin.collapsedCategories = this.plugin.settings.collapsedCategories;
-              this.plugin.saveData(this.plugin.settings);
+              // 展开当前分组到标签内容区
+              categoryContainer.style.display = 'flex';
+              tabContentContainer.appendChild(categoryContainer);
+              tabContentContainer.style.display = 'block';
+              const catTitle = categoryContainer.querySelector('h4');
+              if (catTitle) catTitle.style.display = 'none';
+              // 更新标签视觉效果
+              const matchingTab = collapsedCategoriesContainer.querySelector(`[data-category="${currentCategory}"]`);
+              if (matchingTab) {
+                matchingTab.style.borderBottom = '2px solid currentColor';
+                matchingTab.style.fontWeight = '900';
+                setTabArrow(matchingTab, true);
+              }
+              activeTabCategory = currentCategory;
+              if (this.plugin) {
+                this.plugin.settings.activeTabCategory = currentCategory;
+                this.plugin.saveData(this.plugin.settings);
+              }
+            } else {
+              // 非单显分组：展开到常显区
+              categoryContainer.style.display = 'flex';
+              
+              // 更新分组标题的视觉效果
+              const categoryTitle = categoryContainer.querySelector('h4');
+              if (categoryTitle) {
+                const catName = categoryContainer.getAttribute('data-category');
+                const savedStyle = this.plugin?.floatButtonData?.groupButtonStyleClasses?.[catName];
+                if (!savedStyle) {
+                  categoryTitle.style.backgroundColor = 'white';
+                  categoryTitle.style.color = 'black';
+                }
+                categoryTitle.title = t('main.dblClickMoveToSingle');
+              }
+              
+              // 更新插件的折叠状态
+              const categoryName = categoryContainer.getAttribute('data-category');
+              if (this.plugin) {
+                this.plugin.settings = this.plugin.settings || {};
+                this.plugin.settings.collapsedCategories = this.plugin.settings.collapsedCategories || {};
+                delete this.plugin.settings.collapsedCategories[categoryName];
+                this.plugin.collapsedCategories = this.plugin.settings.collapsedCategories;
+                this.plugin.saveData(this.plugin.settings);
+              }
             }
           }
           
@@ -9787,7 +9837,36 @@ class AddRegexRuleModal extends Modal {
           const isCurrentlyCollapsed = currentToggleBtn && currentToggleBtn.textContent === '>';
           
           // 根据分组的当前状态决定显示方式
-          if (wasHidden) {
+          if (wasHidden && isSingleDisplay) {
+            // 单显分组：显示所有按钮，只对匹配按钮添加高亮
+            groupStyleButtons.forEach(button => {
+              button.style.display = 'flex';
+              if (matchingStyleButtons.includes(button)) {
+                button.style.border = "2px solid #ff6b35";
+                button.style.transform = "scale(1.05)";
+                button.style.boxShadow = "0 0 8px rgba(255, 107, 53, 0.5)";
+                button.style.zIndex = "10";
+                const usageBadge = button.querySelector('.style-usage-count');
+                if (usageBadge) usageBadge.style.backgroundColor = '#ff4444';
+              } else {
+                button.style.border = "0px solid #ddd";
+                button.style.transform = "scale(1)";
+                button.style.boxShadow = "0 1px 2px rgba(0,0,0,0.1)";
+                button.style.zIndex = "1";
+                const usageBadge = button.querySelector('.style-usage-count');
+                if (usageBadge) usageBadge.style.backgroundColor = '#cccccc';
+              }
+            });
+            if (currentToggleBtn) {
+              currentToggleBtn.textContent = '<';
+              currentToggleBtn.title = t('main.collapseGroupStyles');
+            }
+            const catNameForStyle = categoryContainer.getAttribute('data-category');
+            if (this.plugin?.settings?.collapsedGroupStyles) {
+              delete this.plugin.settings.collapsedGroupStyles[catNameForStyle];
+              this.plugin.saveData(this.plugin.settings);
+            }
+          } else if (wasHidden) {
             // 如果分组是从隐藏状态展开的，只显示匹配的按钮
             groupStyleButtons.forEach(button => {
               if (matchingStyleButtons.includes(button)) {
@@ -9829,7 +9908,7 @@ class AddRegexRuleModal extends Modal {
             });
             
             // 如果是从隐藏状态展开的，根据是否有输入值设置切换按钮状态
-            if (wasHidden && currentToggleBtn) {
+            if (wasHidden && currentToggleBtn && !isSingleDisplay) {
               if (inputValue) {
                 // 当有输入值（选中文本）时，分组显示为折叠状态（只显示匹配的按钮）
                 currentToggleBtn.textContent = '>';
@@ -10228,7 +10307,7 @@ class AddRegexRuleModal extends Modal {
         if (!existing) {
           const arrow = tab.createEl('span');
           arrow.className = 'tab-arrow';
-          arrow.style.cssText = 'position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:5px solid #ddd;pointer-events:none;';
+          arrow.style.cssText = 'position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:60%;height:3px;background:#e04040;border-radius:1px;pointer-events:none;';
         }
       } else if (existing) {
         existing.remove();
@@ -12578,32 +12657,11 @@ class AddRegexRuleModal extends Modal {
       // 决定是否折叠分组
       let shouldCollapse = false;
       
-      if (hasInputValue) {
-        if (!wasCollapsed) {
-          shouldCollapse = false;
-        } else {
-          // 分组之前是折叠的，按照匹配规则决定是否折叠
-          const inputValue = inputEl.value.trim();
-          const currentRules = Array.isArray(this.plugin.rules) ? this.plugin.rules : [];
-          const globalRules = Array.isArray(this.plugin.globalRules) ? this.plugin.globalRules : [];
-          
-          const matchingRules = [...currentRules, ...globalRules].filter(rule => {
-            const ruleParts = rule.regex.split('|');
-            return ruleParts.some(part => inputValue.includes(part) || part.includes(inputValue));
-          });
-          
-          if (matchingRules.length > 0) {
-            const matchingCssClasses = new Set(matchingRules.map(rule => rule.cssClass));
-            const styleButtons = Array.from(categoryContainer.querySelectorAll('.style-option'));
-            const hasMatchingStyleInCategory = styleButtons.some(button => {
-              const buttonCssClass = button.getAttribute('data-class');
-              return matchingCssClasses.has(buttonCssClass);
-            });
-            shouldCollapse = !hasMatchingStyleInCategory;
-          } else {
-            shouldCollapse = true;
-          }
-        }
+      if (wasCollapsed) {
+        // 单显分组始终保持折叠状态，不因匹配而移回常显区
+        shouldCollapse = true;
+      } else if (hasInputValue) {
+        shouldCollapse = false;
       } else {
         // 没有输入值，应用保存的折叠状态
         shouldCollapse = wasCollapsed;
@@ -12707,6 +12765,10 @@ class AddRegexRuleModal extends Modal {
           const toggleBtn = categoryContainer.querySelector('.style-toggle-btn');
           if (toggleBtn) toggleBtn.textContent = '<';
           categoryContainer.querySelectorAll('.style-option').forEach(b => b.style.display = 'flex');
+          if (this.plugin?.settings?.collapsedGroupStyles) {
+            delete this.plugin.settings.collapsedGroupStyles[category];
+            this.plugin.saveData(this.plugin.settings);
+          }
         }
       } else {
         // 当分组不应该折叠时，根据输入值控制样式按钮的显示
@@ -12849,10 +12911,15 @@ class AddRegexRuleModal extends Modal {
       const inputBox = this.contentEl.querySelector('input[placeholder="' + t('main.regexPlaceholder') + '"]');
       const isInputEmpty = !inputBox || !inputBox.value.trim();
       
-      // 先隐藏所有样式按钮
-      styleButtons.forEach(button => {
-        button.style.display = 'none';
-      });
+      // 单显分组且已激活时，按钮已在上方设置为 display = 'flex'，跳过重置
+      const isActiveSingleDisplay = shouldCollapse && category === activeTabCategory;
+      
+      if (!isActiveSingleDisplay) {
+        // 先隐藏所有样式按钮
+        styleButtons.forEach(button => {
+          button.style.display = 'none';
+        });
+      }
       
       // 如果有选中文本，找到并显示匹配的样式按钮
       if (!isInputEmpty) {
@@ -16279,12 +16346,19 @@ class AddRegexRuleModal extends Modal {
       await this.plugin.saveData(this.plugin.settings);
       if (!e.target.checked) {
         this.plugin.removeSnippetStatusBarItem();
+        snippetDetailsContainer.style.display = 'none';
       } else if (this.plugin.settings.snippetStatusBar) {
         this.plugin.addSnippetStatusBarItem();
+        snippetDetailsContainer.style.display = '';
       }
     });
 
-    const snippetsChipsContainer = snippetsContent.createDiv();
+    const snippetDetailsContainer = snippetsContent.createDiv();
+    if (this.plugin.settings?.enableSnippetManager === false) {
+      snippetDetailsContainer.style.display = 'none';
+    }
+
+    const snippetsChipsContainer = snippetDetailsContainer.createDiv();
     snippetsChipsContainer.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:28px;';
 
     const loadAndRenderSnippets = async () => {
@@ -16486,7 +16560,7 @@ class AddRegexRuleModal extends Modal {
 
     loadAndRenderSnippets();
 
-    const snippetStatusBarRow = snippetsContent.createDiv();
+    const snippetStatusBarRow = snippetDetailsContainer.createDiv();
     snippetStatusBarRow.style.display = 'flex';
     snippetStatusBarRow.style.alignItems = 'center';
     snippetStatusBarRow.style.marginBottom = '5px';
@@ -39124,4 +39198,6 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
 // 高亮列表弹窗类
 
 /* nosourcemap */
+/* nosourcemap */
+
 /* nosourcemap */

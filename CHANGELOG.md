@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.8.1 (2026-06-19)
+## 🆕 v1.8.2 (2026-06-19)
+
+- **Floating Ball Label** — Changed floating ball text from "rch" to "SG"
+- **Pinyin Submenu Pin Buttons** — Added 📌 pin buttons to all pinyin submenu items (Add Pinyin Local/Global, Edit Pinyin File, Remove Pinyin) for floating display
+- **Font Switch Hover Submenu** — Changed "Font Switch" option from click-to-open to hover-to-open submenu, consistent with other submenu options; added 📌 pin buttons to font switch submenu items
+- **Submenu Pin Button Fix** — Fixed pinned submenu items showing raw option IDs instead of localized labels, and fixed click handlers not working when pinned as floating buttons
+- **Global Rules Scroll Fix** — Removed the independent scrollbar in the global rules section; now uses the main panel scrollbar for unified smooth scrolling
+
+## v1.8.1 (2026-06-19)
 
 - **Single-Display Group Fix** — Fixed single-display groups being incorrectly moved to always-display area when highlighting matched styles; single-display groups now stay in their tab area with proper style button highlighting
 - **Single-Display Style Buttons Fix** — Fixed style buttons always appearing collapsed when reopening the main panel with an active single-display group; buttons now correctly display as expanded

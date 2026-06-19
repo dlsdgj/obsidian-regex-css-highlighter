@@ -16763,9 +16763,9 @@ class AddRegexRuleModal extends Modal {
     // 创建全局规则内容容器
     const globalContent = globalSection.createDiv();
     globalContent.addClass('history-content');
-    globalContent.style.overflow = isGlobalCollapsed ? "hidden" : "auto";
+    globalContent.style.overflow = isGlobalCollapsed ? "hidden" : "visible";
     globalContent.style.transition = "max-height 0.3s ease";
-    globalContent.style.maxHeight = isGlobalCollapsed ? "0" : "calc(100vh - 200px)";
+    globalContent.style.maxHeight = isGlobalCollapsed ? "0" : "none";
     
     // 实现折叠/展开功能
     const toggleGlobalCollapse = async () => {
@@ -16836,18 +16836,18 @@ class AddRegexRuleModal extends Modal {
           }
           
           // 如果有可见按钮，显示内容区域；否则隐藏
-          globalContent.style.maxHeight = hasVisibleButton ? "calc(100vh - 200px)" : "0";
-          globalContent.style.overflow = hasVisibleButton ? "auto" : "hidden";
+          globalContent.style.maxHeight = hasVisibleButton ? "none" : "0";
+          globalContent.style.overflow = hasVisibleButton ? "visible" : "hidden";
         } else {
           globalButtons.forEach(button => {
             button.style.display = 'flex';
           });
-          globalContent.style.maxHeight = "calc(100vh - 200px)";
-          globalContent.style.overflow = "auto";
+          globalContent.style.maxHeight = "none";
+          globalContent.style.overflow = "visible";
         }
       } else {
-        globalContent.style.maxHeight = isGlobalCollapsed ? "0" : "calc(100vh - 200px)";
-        globalContent.style.overflow = isGlobalCollapsed ? "hidden" : "auto";
+        globalContent.style.maxHeight = isGlobalCollapsed ? "0" : "none";
+        globalContent.style.overflow = isGlobalCollapsed ? "hidden" : "visible";
       }
       if (this.plugin.settings?.enableDebugLog) console.timeEnd('[全局规则] toggleGlobalCollapse');
     };
@@ -16950,8 +16950,8 @@ class AddRegexRuleModal extends Modal {
           
           // 如果有可见按钮，显示内容区域
           if (hasVisibleButton) {
-            globalContent.style.maxHeight = "calc(100vh - 200px)";
-            globalContent.style.overflow = "auto";
+            globalContent.style.maxHeight = "none";
+            globalContent.style.overflow = "visible";
           }
         }
       };
@@ -23046,7 +23046,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     `;
     
     // 设置悬浮球图标
-    floatingBall.innerHTML = `<span style="color:white;font-weight:400;font-size:${_isDesktop ? '10px' : '12px'};">rch</span>`;
+    floatingBall.innerHTML = `<span style="color:white;font-weight:400;font-size:${_isDesktop ? '10px' : '12px'};">SG</span>`;
     
     // 加载保存的位置（按平台分开存储），新装插件时默认放在屏幕右侧中间
     const positionKey = _isDesktop ? 'floatingBallPosition' : 'floatingBallPositionMobile';
@@ -23725,25 +23725,65 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         z-index: 10000;
       `;
       
+      const createPinyinSubOptionWithPin = (optionId, label, onClickHandler) => {
+        const container = document.createElement('div');
+        container.style.cssText = `
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 8px 16px;
+          cursor: pointer;
+          font-size: 14px;
+          color: var(--text-normal);
+        `;
+        
+        const textSpan = document.createElement('span');
+        textSpan.textContent = label;
+        textSpan.style.cssText = 'flex: 1; white-space: nowrap;';
+        
+        const isFloating = this.floatButtonData.floatingBallOptions && this.floatButtonData.floatingBallOptions.includes(optionId);
+        const pinBtn = document.createElement('span');
+        pinBtn.textContent = isFloating ? '📍' : '📌';
+        pinBtn.style.marginLeft = '8px';
+        pinBtn.style.cursor = 'pointer';
+        pinBtn.style.fontSize = '0.85em';
+        if (!_isDesktop) pinBtn.style.display = 'none';
+        pinBtn.title = isFloating ? t('floating.cancelFloat') : t('floating.floatDisplay');
+        pinBtn.onclick = async (e) => {
+          e.stopPropagation();
+          if (!this.floatButtonData.floatingBallOptions) {
+            this.floatButtonData.floatingBallOptions = [];
+          }
+          const idx = this.floatButtonData.floatingBallOptions.indexOf(optionId);
+          if (idx >= 0) {
+            this.floatButtonData.floatingBallOptions.splice(idx, 1);
+            pinBtn.textContent = '📌';
+            pinBtn.title = t('floating.floatDisplay');
+          } else {
+            this.floatButtonData.floatingBallOptions.push(optionId);
+            pinBtn.textContent = '📍';
+            pinBtn.title = t('floating.cancelFloat');
+          }
+          await this.saveFloatButtonData();
+          this.renderFloatingOptionButtons();
+          clearTimeout(hoverTimeout);
+        };
+        
+        container.onmouseenter = () => {
+          container.style.background = 'var(--background-modifier-hover)';
+        };
+        container.onmouseleave = () => {
+          container.style.background = 'transparent';
+        };
+        container.onclick = onClickHandler;
+        
+        container.appendChild(textSpan);
+        container.appendChild(pinBtn);
+        return container;
+      };
+
       // 添加注音(局部)选项
-      const addPinyinLocalSubOption = document.createElement('div');
-      addPinyinLocalSubOption.textContent = t('pinyin.addLocal');
-      addPinyinLocalSubOption.style.cssText = `
-        padding: 8px 16px;
-        cursor: pointer;
-        font-size: 14px;
-        color: var(--text-normal);
-      `;
-      
-      addPinyinLocalSubOption.addEventListener('mouseenter', () => {
-        addPinyinLocalSubOption.style.background = 'var(--background-modifier-hover)';
-      });
-      
-      addPinyinLocalSubOption.addEventListener('mouseleave', () => {
-        addPinyinLocalSubOption.style.background = 'transparent';
-      });
-      
-      addPinyinLocalSubOption.addEventListener('click', (e) => {
+      const addPinyinLocalSubOption = createPinyinSubOptionWithPin('pinyinAddLocal', t('pinyin.addLocal'), (e) => {
         e.stopPropagation();
         this.addPinyinToSelection('local');
         if (document.body.contains(menu)) {
@@ -23755,24 +23795,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       pinyinSubmenu.appendChild(addPinyinLocalSubOption);
       
       // 添加注音(全局)选项
-      const addPinyinSubOption = document.createElement('div');
-      addPinyinSubOption.textContent = t('pinyin.addGlobal');
-      addPinyinSubOption.style.cssText = `
-        padding: 8px 16px;
-        cursor: pointer;
-        font-size: 14px;
-        color: var(--text-normal);
-      `;
-      
-      addPinyinSubOption.addEventListener('mouseenter', () => {
-        addPinyinSubOption.style.background = 'var(--background-modifier-hover)';
-      });
-      
-      addPinyinSubOption.addEventListener('mouseleave', () => {
-        addPinyinSubOption.style.background = 'transparent';
-      });
-      
-      addPinyinSubOption.addEventListener('click', (e) => {
+      const addPinyinSubOption = createPinyinSubOptionWithPin('pinyinAddGlobal', t('pinyin.addGlobal'), (e) => {
         e.stopPropagation();
         this.addPinyinToSelection('global');
         if (document.body.contains(menu)) {
@@ -23784,24 +23807,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       pinyinSubmenu.appendChild(addPinyinSubOption);
       
       // 编辑注音文件选项
-      const editPinyinFileOption = document.createElement('div');
-      editPinyinFileOption.textContent = t('pinyin.editFile');
-      editPinyinFileOption.style.cssText = `
-        padding: 8px 16px;
-        cursor: pointer;
-        font-size: 14px;
-        color: var(--text-normal);
-      `;
-      
-      editPinyinFileOption.addEventListener('mouseenter', () => {
-        editPinyinFileOption.style.background = 'var(--background-modifier-hover)';
-      });
-      
-      editPinyinFileOption.addEventListener('mouseleave', () => {
-        editPinyinFileOption.style.background = 'transparent';
-      });
-      
-      editPinyinFileOption.addEventListener('click', (e) => {
+      const editPinyinFileOption = createPinyinSubOptionWithPin('pinyinEditFile', t('pinyin.editFile'), (e) => {
         e.stopPropagation();
         this.openPinyinFileEditor();
         if (document.body.contains(menu)) {
@@ -23813,24 +23819,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       pinyinSubmenu.appendChild(editPinyinFileOption);
 
       // 删除注音选项（同时删除全局和局部）
-      const removePinyinSubOption = document.createElement('div');
-      removePinyinSubOption.textContent = t('pinyin.remove');
-      removePinyinSubOption.style.cssText = `
-        padding: 8px 16px;
-        cursor: pointer;
-        font-size: 14px;
-        color: var(--text-normal);
-      `;
-
-      removePinyinSubOption.addEventListener('mouseenter', () => {
-        removePinyinSubOption.style.background = 'var(--background-modifier-hover)';
-      });
-
-      removePinyinSubOption.addEventListener('mouseleave', () => {
-        removePinyinSubOption.style.background = 'transparent';
-      });
-
-      removePinyinSubOption.addEventListener('click', (e) => {
+      const removePinyinSubOption = createPinyinSubOptionWithPin('pinyinRemove', t('pinyin.remove'), (e) => {
         e.stopPropagation();
         this.removePinyinFromSelection();
         if (document.body.contains(menu)) {
@@ -23900,74 +23889,169 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       if (isOptionVisible('styleShowcase')) menu.appendChild(showcaseOption);
 
-      // 字体切换选项（仅在启用时显示）
+      // 字体切换选项（仅在启用时显示）- 鼠标悬停弹出子菜单
       if (this.settings.enableFontSwitch) {
-        const fontSwitchOption = createMenuOptionWithFloat('fontSwitch', t('floating.fontSwitch'), () => {
-          const fontSubmenu = document.createElement('div');
-          fontSubmenu.style.cssText = `
-            position: fixed;
-            background: var(--background-primary);
-            border: 1px solid var(--background-modifier-border);
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 10002;
-            padding: 4px 0;
-            min-width: 140px;
+        const fontSwitchOption = document.createElement('div');
+        fontSwitchOption.style.cssText = `
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 8px 16px;
+          cursor: pointer;
+          font-size: 14px;
+          color: var(--text-normal);
+          position: relative;
+        `;
+
+        const fontSwitchText = document.createElement('span');
+        fontSwitchText.textContent = t('floating.fontSwitch') + ' ▶';
+        fontSwitchText.style.flex = '1';
+
+        const isFontSwitchFloating = this.floatButtonData.floatingBallOptions && this.floatButtonData.floatingBallOptions.includes('fontSwitch');
+        const fontSwitchPinBtn = document.createElement('span');
+        fontSwitchPinBtn.textContent = isFontSwitchFloating ? '📍' : '📌';
+        fontSwitchPinBtn.style.marginLeft = '8px';
+        fontSwitchPinBtn.style.cursor = 'pointer';
+        fontSwitchPinBtn.style.fontSize = '0.85em';
+        if (!_isDesktop) fontSwitchPinBtn.style.display = 'none';
+        fontSwitchPinBtn.title = isFontSwitchFloating ? t('floating.cancelFloat') : t('floating.floatDisplay');
+        fontSwitchPinBtn.onclick = async (e) => {
+          e.stopPropagation();
+          if (!this.floatButtonData.floatingBallOptions) {
+            this.floatButtonData.floatingBallOptions = [];
+          }
+          const idx = this.floatButtonData.floatingBallOptions.indexOf('fontSwitch');
+          if (idx >= 0) {
+            this.floatButtonData.floatingBallOptions.splice(idx, 1);
+            fontSwitchPinBtn.textContent = '📌';
+            fontSwitchPinBtn.title = t('floating.floatDisplay');
+          } else {
+            this.floatButtonData.floatingBallOptions.push('fontSwitch');
+            fontSwitchPinBtn.textContent = '📍';
+            fontSwitchPinBtn.title = t('floating.cancelFloat');
+          }
+          await this.saveFloatButtonData();
+          this.renderFloatingOptionButtons();
+          clearTimeout(hoverTimeout);
+        };
+
+        fontSwitchOption.appendChild(fontSwitchText);
+        fontSwitchOption.appendChild(fontSwitchPinBtn);
+
+        // 子菜单容器
+        const fontSubmenu = document.createElement('div');
+        fontSubmenu.style.cssText = `
+          position: absolute;
+          left: 100%;
+          top: 0;
+          background: var(--background-primary);
+          border: 1px solid var(--background-modifier-border);
+          border-radius: 6px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          display: none;
+          min-width: 150px;
+          white-space: nowrap;
+          z-index: 10000;
+        `;
+
+        const createFontSubOptionWithPin = (optionId, label, onClickHandler) => {
+          const container = document.createElement('div');
+          container.style.cssText = `
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-normal);
           `;
-          const fontSwitchRect = fontSwitchOption.getBoundingClientRect();
-          fontSubmenu.style.left = `${fontSwitchRect.right + 5}px`;
-          fontSubmenu.style.top = `${fontSwitchRect.top}px`;
 
-          const createSubmenuItem = (label, action) => {
-            const itemEl = document.createElement('div');
-            itemEl.textContent = label;
-            itemEl.style.cssText = `
-              padding: 8px 16px;
-              cursor: pointer;
-              font-size: 14px;
-              color: var(--text-normal);
-            `;
-            itemEl.addEventListener('mouseenter', () => {
-              itemEl.style.background = 'var(--background-modifier-hover)';
-            });
-            itemEl.addEventListener('mouseleave', () => {
-              itemEl.style.background = 'transparent';
-            });
-            itemEl.addEventListener('click', () => {
-              action();
-              if (fontSubmenu.parentNode) fontSubmenu.remove();
-              if (document.body.contains(menu)) {
-                document.body.removeChild(menu);
-              }
-              hoverMenu = null;
-            });
-            return itemEl;
-          };
+          const textSpan = document.createElement('span');
+          textSpan.textContent = label;
+          textSpan.style.cssText = 'flex: 1; white-space: nowrap;';
 
-          fontSubmenu.appendChild(createSubmenuItem(t('floating.fontSwitch'), () => this.showFontSwitchMenu()));
-          fontSubmenu.appendChild(createSubmenuItem(
-            this._fontCustomizationDisabled ? t('floating.enableCustomStyle') : t('floating.disableCustomStyle'),
-            () => { this.toggleFontCustomization(); this.renderFloatingOptionButtons(); }
-          ));
-
-          document.body.appendChild(fontSubmenu);
-
-          const submenuRect = fontSubmenu.getBoundingClientRect();
-          if (submenuRect.right > window.innerWidth - 5) {
-            fontSubmenu.style.left = `${fontSwitchRect.left - submenuRect.width - 5}px`;
-          }
-          if (submenuRect.bottom > window.innerHeight - 5) {
-            fontSubmenu.style.top = `${window.innerHeight - submenuRect.height - 5}px`;
-          }
-
-          const closeSubmenu = (e) => {
-            if (!fontSubmenu.contains(e.target) && e.target !== fontSwitchOption) {
-              fontSubmenu.remove();
-              document.removeEventListener('click', closeSubmenu);
+          const isFloating = this.floatButtonData.floatingBallOptions && this.floatButtonData.floatingBallOptions.includes(optionId);
+          const pinBtn = document.createElement('span');
+          pinBtn.textContent = isFloating ? '📍' : '📌';
+          pinBtn.style.marginLeft = '8px';
+          pinBtn.style.cursor = 'pointer';
+          pinBtn.style.fontSize = '0.85em';
+          if (!_isDesktop) pinBtn.style.display = 'none';
+          pinBtn.title = isFloating ? t('floating.cancelFloat') : t('floating.floatDisplay');
+          pinBtn.onclick = async (e) => {
+            e.stopPropagation();
+            if (!this.floatButtonData.floatingBallOptions) {
+              this.floatButtonData.floatingBallOptions = [];
             }
+            const idx = this.floatButtonData.floatingBallOptions.indexOf(optionId);
+            if (idx >= 0) {
+              this.floatButtonData.floatingBallOptions.splice(idx, 1);
+              pinBtn.textContent = '📌';
+              pinBtn.title = t('floating.floatDisplay');
+            } else {
+              this.floatButtonData.floatingBallOptions.push(optionId);
+              pinBtn.textContent = '📍';
+              pinBtn.title = t('floating.cancelFloat');
+            }
+            await this.saveFloatButtonData();
+            this.renderFloatingOptionButtons();
+            clearTimeout(hoverTimeout);
           };
-          setTimeout(() => document.addEventListener('click', closeSubmenu), 0);
+
+          container.onmouseenter = () => {
+            container.style.background = 'var(--background-modifier-hover)';
+          };
+          container.onmouseleave = () => {
+            container.style.background = 'transparent';
+          };
+          container.onclick = onClickHandler;
+
+          container.appendChild(textSpan);
+          container.appendChild(pinBtn);
+          return container;
+        };
+
+        fontSubmenu.appendChild(createFontSubOptionWithPin('fontSwitchMenu', t('floating.fontSwitch'), (e) => {
+          e.stopPropagation();
+          this.showFontSwitchMenu();
+          if (document.body.contains(menu)) {
+            document.body.removeChild(menu);
+          }
+          hoverMenu = null;
+        }));
+        fontSubmenu.appendChild(createFontSubOptionWithPin('fontSwitchToggle', this._fontCustomizationDisabled ? t('floating.enableCustomStyle') : t('floating.disableCustomStyle'), (e) => {
+          e.stopPropagation();
+          this.toggleFontCustomization();
+          this.renderFloatingOptionButtons();
+          if (document.body.contains(menu)) {
+            document.body.removeChild(menu);
+          }
+          hoverMenu = null;
+        }));
+
+        // 鼠标悬停显示子菜单
+        fontSwitchOption.addEventListener('mouseenter', () => {
+          fontSwitchOption.style.background = 'var(--background-modifier-hover)';
+          fontSubmenu.style.display = 'block';
         });
+
+        fontSwitchOption.addEventListener('mouseleave', (e) => {
+          const rect = fontSubmenu.getBoundingClientRect();
+          const mouseX = e.clientX;
+          const mouseY = e.clientY;
+
+          if (mouseX < rect.left || mouseX > rect.right || mouseY < rect.top || mouseY > rect.bottom) {
+            fontSwitchOption.style.background = 'transparent';
+            fontSubmenu.style.display = 'none';
+          }
+        });
+
+        fontSubmenu.addEventListener('mouseleave', () => {
+          fontSubmenu.style.display = 'none';
+          fontSwitchOption.style.background = 'transparent';
+        });
+
+        fontSwitchOption.appendChild(fontSubmenu);
         if (isOptionVisible('fontSwitch')) menu.appendChild(fontSwitchOption);
       }
 
@@ -25122,6 +25206,25 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       fontSwitch: () => {
         this.showFontSwitchMenu();
       },
+      pinyinAddLocal: () => {
+        this.addPinyinToSelection('local');
+      },
+      pinyinAddGlobal: () => {
+        this.addPinyinToSelection('global');
+      },
+      pinyinEditFile: () => {
+        this.openPinyinFileEditor();
+      },
+      pinyinRemove: () => {
+        this.removePinyinFromSelection();
+      },
+      fontSwitchMenu: () => {
+        this.showFontSwitchMenu();
+      },
+      fontSwitchToggle: () => {
+        this.toggleFontCustomization();
+        this.renderFloatingOptionButtons();
+      },
       removeHighlight: () => {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!activeView) {
@@ -25224,19 +25327,25 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       pinyin: t('floating.pinyin'),
       styleShowcase: t('floating.styleShowcase'),
       removeHighlight: t('floating.removeHighlight'),
-      fontSwitch: t('floating.fontSwitch')
+      fontSwitch: t('floating.fontSwitch'),
+      pinyinAddLocal: t('pinyin.addLocal'),
+      pinyinAddGlobal: t('pinyin.addGlobal'),
+      pinyinEditFile: t('pinyin.editFile'),
+      pinyinRemove: t('pinyin.remove'),
+      fontSwitchMenu: t('floating.fontSwitch'),
+      fontSwitchToggle: this._fontCustomizationDisabled ? t('floating.enableCustomStyle') : t('floating.disableCustomStyle')
     };
 
     const optionSubmenus = {
       pinyin: [
-        { id: 'pinyinLocal', label: t('floating.addPinyinLocal'), action: () => this.addPinyinToSelection('local') },
-        { id: 'pinyinGlobal', label: t('floating.addPinyinGlobal'), action: () => this.addPinyinToSelection('global') },
-        { id: 'editPinyin', label: t('floating.editPinyinFile'), action: () => this.openPinyinFileEditor() },
-        { id: 'removePinyin', label: t('floating.removePinyin'), action: () => this.removePinyinFromSelection() }
+        { id: 'pinyinAddLocal', label: t('pinyin.addLocal'), action: () => this.addPinyinToSelection('local') },
+        { id: 'pinyinAddGlobal', label: t('pinyin.addGlobal'), action: () => this.addPinyinToSelection('global') },
+        { id: 'pinyinEditFile', label: t('pinyin.editFile'), action: () => this.openPinyinFileEditor() },
+        { id: 'pinyinRemove', label: t('pinyin.remove'), action: () => this.removePinyinFromSelection() }
       ],
       fontSwitch: [
         { id: 'fontSwitchMenu', label: t('floating.fontSwitch'), action: () => this.showFontSwitchMenu() },
-        { id: 'toggleFontCustomization', label: this._fontCustomizationDisabled ? t('floating.enableCustomStyle') : t('floating.disableCustomStyle'), action: () => { this.toggleFontCustomization(); this.renderFloatingOptionButtons(); } }
+        { id: 'fontSwitchToggle', label: this._fontCustomizationDisabled ? t('floating.enableCustomStyle') : t('floating.disableCustomStyle'), action: () => { this.toggleFontCustomization(); this.renderFloatingOptionButtons(); } }
       ]
     };
 

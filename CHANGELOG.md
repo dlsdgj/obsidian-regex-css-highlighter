@@ -2,7 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.8.2 (2026-06-19)
+## 🆕 v1.8.3 (2026-06-21)
+
+- **Remark Popup Improvements** — Pinned popup no longer closes on outside click; scroll/resize no longer resets position; custom resize handle replaces CSS resize; "+" button for adding remarks
+- **Keyword Detail Window Unification** — Chip popup window style unified with remark popup; content uses flex layout; entries show bullet+search tag+copy/open buttons; bottom chips with hover preview and color extraction
+- **Chip Color Fix** — Keywords using `color:transparent` + `background-clip:text` now extract gradient color for chip text
+- **Jump Highlight** — Jump-to-document highlights search text (marshmallow style); CM6 Decoration in edit mode, Range.surroundContents in read mode; 1250ms delay for plugin compatibility
+- **Random Highlight Group Filter** — Floating ball settings now have chips selector to limit random styles to specific groups
+- **Interlinear Notes** — New feature: select text → floating input box → `::before` pseudo-element / CM6 Decoration display; independent storage in `interlinear-note-data.json`; 6 presets + alignment setting + custom CSS
+- **Chip Popup Refinements** — Smaller bullets (6px), compressed margins, user-select:text, drag-to-pin close behavior, long-press ✕ closes all, editable search text and rule name, mobile width limit and touch drag
+- **Piped Regex Matching** — Rules with `|` (e.g. "犬儒派|犬儒主义") now correctly matched in chips backlinks via `plainTexts` array
+- **Interlinear Notes Refactor** — `in-note-wrapper` replaces per-character spans; `!important` reset on `::before`; inherits parent gradient styles; alignment setting; simplified to dropdown + CSS textarea
+- **Remark Popup Interaction** — No popup on text selection (`e.buttons>0`); delayed refresh after close when text selected; new "Hide popup on selection" setting
+- **Mobile Fixes** — Short tap closes current / long press closes all; prefer live selection over cache; mousedown excludes INPUT elements
+
+## v1.8.2 (2026-06-19)
 
 - **Floating Ball Label** — Changed floating ball text from "rch" to "SG"
 - **Pinyin Submenu Pin Buttons** — Added 📌 pin buttons to all pinyin submenu items (Add Pinyin Local/Global, Edit Pinyin File, Remove Pinyin) for floating display

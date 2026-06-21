@@ -1,4 +1,19 @@
 const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover, PluginSettingTab } = require("obsidian");
+const { Decoration, EditorView } = require("@codemirror/view");
+const { StateField, StateEffect } = require("@codemirror/state");
+
+const hlMarshmallowEffect = StateEffect.define();
+const hlMarshmallowField = StateField.define({
+  create() { return Decoration.none; },
+  update(decorations, tr) {
+    decorations = decorations.map(tr.changes);
+    for (const e of tr.effects) {
+      if (e.is(hlMarshmallowEffect)) { decorations = e.value; }
+    }
+    return decorations;
+  },
+  provide: field => EditorView.decorations.from(field)
+});
 
 // 直接将CSS规则追加到动态样式元素，确保新样式立即生效（无需重新读取文件）
 function appendCSSToDynamicStyle(cssRule) {
@@ -110,17 +125,6 @@ const crossFS = {
       if (!exists) {
         await vault.adapter.mkdir(relativePath);
       }
-    }
-  },
-
-  mkdirSync(vault, relativePath) {
-    if (_isDesktop) {
-      const absPath = _nodePath.join(vault.adapter.basePath, relativePath);
-      if (!_nodeFs.existsSync(absPath)) {
-        _nodeFs.mkdirSync(absPath, { recursive: true });
-      }
-    } else {
-      throw new Error('mkdirSync is not supported on mobile');
     }
   },
 
@@ -745,6 +749,7 @@ const i18n = {
     'settings.times': '倍',
     'settings.remarkPopupBorderColor': '备注弹窗边框颜色',
     'settings.remarkPopupOnlyOnSelection': '仅在选中文本时弹出',
+    'settings.remarkPopupHideOnSelection': '选中文本时不弹出备注',
     'settings.showRemarkBadge': '在高亮文字右上角显示备注提示符',
     'settings.showRemarkBadgeHint': '悬停高亮文本时显示n(备注)标记',
     'settings.remarkBadgeThreshold': '字数阈值',
@@ -901,6 +906,10 @@ const i18n = {
     'main.linkAdded': '已添加来源链接',
     'main.openLinkNewTab': '在新标签页打开并搜索',
     'main.inputRemarkContent': '请输入备注内容...',
+    'main.relatedKeywords': '关联关键词',
+    'main.keywordMentions': '备注中提及',
+    'main.keywordMentionedBy': '被提及于',
+    'main.keywordNoTitle': '(无标题)',
     'main.deleteGroupWithStyles': '删除分组将同时删除其中的所有样式。确定要删除吗？',
     'main.deleteEmptyGroup': '确定要删除空分组吗？',
     'main.selectTextToHighlight': '请先选中要高亮的文本',
@@ -1743,6 +1752,7 @@ const i18n = {
     'settings.times': 'x',
     'settings.remarkPopupBorderColor': 'Remark Popup Border Color',
     'settings.remarkPopupOnlyOnSelection': 'Only Popup on Selected Text',
+    'settings.remarkPopupHideOnSelection': 'Hide Popup When Text Selected',
     'settings.showRemarkBadge': 'Show remark indicator at top-right of highlighted text',
     'settings.showRemarkBadgeHint': 'Show n(remark) badge when hovering highlighted text',
     'settings.remarkBadgeThreshold': 'Character Threshold',
@@ -1899,6 +1909,10 @@ const i18n = {
     'main.linkAdded': 'Source link added',
     'main.openLinkNewTab': 'Open in new tab and search',
     'main.inputRemarkContent': 'Enter remark content...',
+    'main.relatedKeywords': 'Related Keywords',
+    'main.keywordMentions': 'Mentioned in remark',
+    'main.keywordMentionedBy': 'Mentioned by',
+    'main.keywordNoTitle': '(No title)',
     'main.deleteGroupWithStyles': 'Deleting the group will also delete all styles in it. Are you sure?',
     'main.deleteEmptyGroup': 'Are you sure you want to delete the empty group?',
     'main.selectTextToHighlight': 'Please select text to highlight first',
@@ -9208,7 +9222,7 @@ class AddRegexRuleModal extends Modal {
     
     // 获取选中的文字
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    let selectedText = this._savedSelectedText || this.plugin.getSelectedText();
+    let selectedText = this.plugin.getSelectedText() || this._savedSelectedText;
     
     let regexValue = selectedText;
     
@@ -15108,6 +15122,22 @@ class AddRegexRuleModal extends Modal {
     remarkPopupOnlyOnSelectionLabel.style.fontSize = "14px";
     remarkPopupOnlyOnSelectionLabel.style.cursor = "pointer";
 
+    // 添加"选中文本时不弹出备注"设置
+    const remarkPopupHideOnSelectionRow = popupSettingsContent.createDiv();
+    remarkPopupHideOnSelectionRow.style.display = "flex";
+    remarkPopupHideOnSelectionRow.style.alignItems = "center";
+    remarkPopupHideOnSelectionRow.style.marginBottom = "5px";
+
+    const remarkPopupHideOnSelectionCheckbox = remarkPopupHideOnSelectionRow.createEl("input");
+    remarkPopupHideOnSelectionCheckbox.type = "checkbox";
+    remarkPopupHideOnSelectionCheckbox.checked = this.plugin.settings?.remarkPopupHideOnSelection || false;
+    remarkPopupHideOnSelectionCheckbox.style.marginRight = "8px";
+    remarkPopupHideOnSelectionCheckbox.style.cursor = "pointer";
+
+    const remarkPopupHideOnSelectionLabel = remarkPopupHideOnSelectionRow.createEl("span", { text: t('settings.remarkPopupHideOnSelection') });
+    remarkPopupHideOnSelectionLabel.style.fontSize = "14px";
+    remarkPopupHideOnSelectionLabel.style.cursor = "pointer";
+
     // 备注提示符设置
     const showRemarkBadgeRow = popupSettingsContent.createDiv();
     showRemarkBadgeRow.style.display = "flex";
@@ -15208,6 +15238,7 @@ class AddRegexRuleModal extends Modal {
         this.plugin.settings.popupBorderWidth = parseInt(popupBorderWidthInput.value);
         this.plugin.settings.popupBorderColor = popupBorderColorInput.value;
         this.plugin.settings.remarkPopupOnlyOnSelection = remarkPopupOnlyOnSelectionCheckbox.checked;
+        this.plugin.settings.remarkPopupHideOnSelection = remarkPopupHideOnSelectionCheckbox.checked;
         this.plugin.settings.showRemarkBadge = showRemarkBadgeCheckbox.checked;
         this.plugin.settings.remarkBadgeThreshold = parseInt(remarkBadgeThresholdInput.value) || 0;
         this.plugin.settings.remarkDebugLog = remarkDebugLogCheckbox.checked;
@@ -15302,6 +15333,7 @@ class AddRegexRuleModal extends Modal {
       { id: 'addRemark', label: t('floating.addRemark') },
       { id: 'removeHighlight', label: t('floating.removeHighlight') },
       { id: 'pinyin', label: t('floating.pinyin') },
+      { id: 'interlinearNote', label: '行间注释' },
       { id: 'aiAssistant', label: t('floating.aiAssistant') },
       { id: 'extractEntities', label: t('floating.extractEntities') },
       { id: 'styleShowcase', label: t('floating.styleShowcase') },
@@ -15371,6 +15403,54 @@ class AddRegexRuleModal extends Modal {
         new Notice(t('settings.saveFailed'));
       }
     });
+
+
+    // 随机高亮分组限制
+    const randomGroupTitle = floatingBallSettingsContent.createDiv();
+    randomGroupTitle.style.fontSize = "14px";
+    randomGroupTitle.style.fontWeight = "bold";
+    randomGroupTitle.style.marginTop = "14px";
+    randomGroupTitle.style.marginBottom = "4px";
+    randomGroupTitle.textContent = '随机高亮分组限制';
+
+    const randomGroupDesc = floatingBallSettingsContent.createDiv();
+    randomGroupDesc.style.fontSize = "12px";
+    randomGroupDesc.style.color = "#666";
+    randomGroupDesc.style.marginBottom = "8px";
+    randomGroupDesc.textContent = '点击选择分组，仅从已选分组中随机选择样式；不选则在所有样式中随机';
+
+    const randomGroupChipsContainer = floatingBallSettingsContent.createDiv();
+    randomGroupChipsContainer.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;";
+
+    const categories = this.plugin.config?.styleCategories || {};
+    const selectedGroups = new Set((this.plugin.floatButtonData?.randomHighlightGroups || '').split(/[,，]/).map(g => g.trim()).filter(g => g));
+
+    const renderChips = () => {
+      randomGroupChipsContainer.innerHTML = '';
+      for (const groupName of Object.keys(categories)) {
+        const chip = randomGroupChipsContainer.createEl("span");
+        const isSelected = selectedGroups.has(groupName);
+        chip.textContent = groupName;
+        chip.style.cssText = `display:inline-flex;align-items:center;padding:3px 10px;border-radius:14px;font-size:12px;cursor:pointer;transition:all 0.15s ease;user-select:none;border:1px solid ${isSelected ? 'var(--interactive-accent)' : 'var(--background-modifier-border)'};background:${isSelected ? 'var(--interactive-accent)' : 'var(--background-primary)'};color:${isSelected ? '#fff' : 'var(--text-normal)'};font-weight:${isSelected ? '600' : '400'};`;
+        chip.addEventListener("click", async () => {
+          if (selectedGroups.has(groupName)) {
+            selectedGroups.delete(groupName);
+          } else {
+            selectedGroups.add(groupName);
+          }
+          if (!this.plugin.floatButtonData) this.plugin.floatButtonData = {};
+          this.plugin.floatButtonData.randomHighlightGroups = [...selectedGroups].join(',');
+          await this.plugin.saveFloatButtonData();
+          renderChips();
+        });
+      }
+      if (Object.keys(categories).length === 0) {
+        const emptyHint = randomGroupChipsContainer.createEl("span");
+        emptyHint.textContent = '暂无分组';
+        emptyHint.style.cssText = "font-size:12px;color:var(--text-muted);";
+      }
+    };
+    renderChips();
 
 
     // 添加字体切换设置区域
@@ -16316,6 +16396,52 @@ class AddRegexRuleModal extends Modal {
         new Notice(t('settings.pinyinSaved'));
       } catch (error) {
         console.error("保存拼音样式时出错:", error);
+        new Notice(t('settings.saveFailedDetail'));
+      }
+    });
+
+
+    // 行间注释样式设置
+    const inNoteOutline = createOutlineSection(settingsContent, '行间注释样式', { isCollapsed: true, icon: '📝' });
+    const inNoteSettingsContent = inNoteOutline.content;
+    inNoteSettingsContent.className = "interlinear-note-settings-content";
+
+    const inNoteAlignRow = inNoteSettingsContent.createDiv();
+    inNoteAlignRow.style.cssText = "display:flex;align-items:center;gap:10px;margin-bottom:8px;";
+    const inNoteAlignLabel = inNoteAlignRow.createEl("span");
+    inNoteAlignLabel.textContent = '注释对齐方式：';
+    inNoteAlignLabel.style.fontSize = "14px";
+    const inNoteAlignSelect = inNoteAlignRow.createEl("select");
+    inNoteAlignSelect.style.cssText = "padding:4px 8px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);font-size:13px;";
+    const optCenter = inNoteAlignSelect.createEl("option");
+    optCenter.value = "center"; optCenter.textContent = "居中对齐";
+    const optLeft = inNoteAlignSelect.createEl("option");
+    optLeft.value = "left"; optLeft.textContent = "左对齐";
+    inNoteAlignSelect.value = this.plugin.settings?.inNoteAlign || 'center';
+
+    const inNoteCssTextarea = inNoteSettingsContent.createEl("textarea");
+    inNoteCssTextarea.value = this.plugin.settings?.interlinearNoteCss || this.plugin.getDefaultInterlinearNoteCss();
+    inNoteCssTextarea.style.cssText = "width:100%;height:120px;font-family:monospace;font-size:12px;padding:8px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);resize:vertical;";
+
+    const inNoteBtnRow = inNoteSettingsContent.createDiv();
+    inNoteBtnRow.style.cssText = "display:flex;gap:8px;margin-top:8px;";
+
+    const resetInNoteBtn = inNoteBtnRow.createEl("button", { text: t('main.reset') });
+    resetInNoteBtn.style.cssText = "padding:6px 14px;border:1px solid var(--background-modifier-border);border-radius:4px;cursor:pointer;font-size:13px;background:var(--background-primary);color:var(--text-normal);";
+    resetInNoteBtn.addEventListener("click", () => {
+      inNoteCssTextarea.value = this.plugin.getDefaultInterlinearNoteCss();
+    });
+
+    const saveInNoteBtn = inNoteBtnRow.createEl("button", { text: t('main.save') });
+    saveInNoteBtn.style.cssText = "padding:6px 14px;background:#007bff;color:white;border:none;border-radius:4px;cursor:pointer;font-size:13px;";
+    saveInNoteBtn.addEventListener("click", async () => {
+      try {
+        this.plugin.settings.interlinearNoteCss = inNoteCssTextarea.value;
+        this.plugin.settings.inNoteAlign = inNoteAlignSelect.value;
+        await this.plugin.saveData(this.plugin.settings);
+        this.plugin.updateInterlinearNoteStyles(inNoteCssTextarea.value);
+        new Notice('行间注释样式已保存');
+      } catch (error) {
         new Notice(t('settings.saveFailedDetail'));
       }
     });
@@ -21309,6 +21435,8 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       popupWidth: 600,
       popupOpacity: 1,
       remarkPopupOnlyOnSelection: false,
+      remarkPopupHideOnSelection: false,
+      inNoteAlign: 'center',
       popupLineHeight: 1.5,
       popupBorderWidth: 2,
       popupBorderColor: "#ffffff",
@@ -21376,6 +21504,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
         addRemark: true,
         removeHighlight: true,
         pinyin: false,
+        interlinearNote: false,
         aiAssistant: false,
         extractEntities: false,
         styleShowcase: true,
@@ -21384,7 +21513,8 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
         hideFloatingBtns: false,
         hideTextStyles: false
       },
-      hiddenFloatingStyleWindows: []
+      hiddenFloatingStyleWindows: [],
+      randomHighlightGroups: ''
     };
     let floatNeedSave = migrated;
     for (const [key, defaultVal] of Object.entries(_floatDefaults)) {
@@ -21426,6 +21556,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     
     this.rulesUpdateEmitter = new EventTarget();
     this.pinyinUpdateEmitter = new EventTarget();
+    this.interlinearNoteUpdateEmitter = new EventTarget();
     this._skipRefreshForPopup = false;
     this.rulesVersion = 0;
     
@@ -21441,7 +21572,8 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     await Promise.all([
       this.loadStyleCategories(),
       this.loadGlobalRules(),
-      this._preloadPinyinData()
+      this._preloadPinyinData(),
+      this._preloadInterlinearNoteData()
     ]);
     
     await this.syncStylesToCategories();
@@ -21512,6 +21644,21 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
                 if (blockText.includes(entry.text)) {
                   this.highlightTextWithPinyinAtPosition(el, entry.text, entry.pinyin, entry.start, entry.end);
                 }
+              }
+            }
+          }
+        }
+
+        // 行间注释处理
+        if (this._interlinearNoteCacheResolved && Object.keys(this._interlinearNoteCacheResolved).length > 0) {
+          if (el.querySelector('.in-note-wrapper')) continue;
+          const blockText2 = el.textContent || '';
+          const hasNote = Object.entries(this._interlinearNoteCacheResolved).some(([t]) => blockText2.includes(t));
+          if (hasNote) {
+            this.injectInterlinearNoteStyles();
+            for (const [text, note] of Object.entries(this._interlinearNoteCacheResolved)) {
+              if (blockText2.includes(text)) {
+                this.highlightTextWithInterlinearNote(el, text, note);
               }
             }
           }
@@ -21598,7 +21745,8 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
         }
       })
     );
-    
+
+
     // 监听文件重命名和移动事件
     this.registerEvent(
       this.app.metadataCache.on('changed', async (file, data, cache) => {
@@ -23857,6 +24005,17 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       pinyinOption.appendChild(pinyinSubmenu);
       if (isOptionVisible('pinyin')) menu.appendChild(pinyinOption);
       
+      // 行间注释选项
+      const interlinearNoteOption = createMenuOptionWithFloat('interlinearNote', '行间注释', () => {
+        this.showInterlinearNoteInput();
+        if (document.body.contains(menu)) {
+          document.body.removeChild(menu);
+        }
+        hoverMenu = null;
+      });
+      
+      if (isOptionVisible('interlinearNote')) menu.appendChild(interlinearNoteOption);
+      
       const aiOption = createMenuOptionWithFloat('aiAssistant', t('floating.aiAssistant'), () => {
         this.aiAssistant();
         if (document.body.contains(menu)) {
@@ -25218,6 +25377,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       pinyinRemove: () => {
         this.removePinyinFromSelection();
       },
+      interlinearNote: () => {
+        this.showInterlinearNoteInput();
+      },
       fontSwitchMenu: () => {
         this.showFontSwitchMenu();
       },
@@ -25261,6 +25423,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           if (ruleParts.length > 1 && ruleParts.some(p => textMatchesRegex(selectedText, p))) {
             // 多部分规则，只移除匹配的部分
             const newParts = ruleParts.filter(p => !textMatchesRegex(selectedText, p));
+
             if (newParts.length > 0) {
               this.globalRules[globalRuleIndex].regex = newParts.join('|');
             } else {
@@ -28653,6 +28816,284 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
     // 触发拼音更新以重新渲染
     this.pinyinUpdateEmitter.dispatchEvent(new Event('update'));
+  }
+
+  // ===== 行间注释功能 =====
+  async loadInterlinearNoteData() {
+    try {
+      const content = await crossFS.read(this.app.vault, '.obsidian/plugins/Regex-Css-Highlighter/interlinear-note-data.json');
+      return JSON.parse(content);
+    } catch (e) {
+      return {};
+    }
+  }
+
+  async saveInterlinearNoteData(data) {
+    await crossFS.write(this.app.vault, '.obsidian/plugins/Regex-Css-Highlighter/interlinear-note-data.json', JSON.stringify(data, null, 2));
+    this._interlinearNoteCacheResolved = null;
+    this._preloadInterlinearNoteData();
+    this.interlinearNoteUpdateEmitter.dispatchEvent(new Event('update'));
+    this.refreshCurrentView();
+  }
+
+  async _preloadInterlinearNoteData() {
+    this._interlinearNoteCacheResolved = await this.loadInterlinearNoteData();
+  }
+
+  getDefaultInterlinearNoteCss() {
+    return `.in-note-wrapper {
+  display: inline;
+  position: relative;
+  color: inherit;
+  -webkit-text-fill-color: inherit;
+  background: inherit;
+  -webkit-background-clip: inherit;
+  background-clip: inherit;
+}
+.in-note-wrapper::before {
+  content: attr(data-note);
+  position: absolute;
+  top: -1.0em;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.5em;
+  color: #888;
+  white-space: nowrap;
+  font-family: "FZShuSong", sans-serif;
+  line-height: 1;
+  opacity: 0.75;
+  font-weight: 400 !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  -webkit-text-fill-color: #888 !important;
+  text-shadow: none !important;
+  letter-spacing: normal !important;
+  animation: none !important;
+}
+.in-note-wrapper[data-align="left"]::before {
+  left: 0;
+  transform: none;
+}`;
+  }
+
+  injectInterlinearNoteStyles() {
+    const existingEl = document.getElementById('interlinear-note-styles');
+    const css = this.getDefaultInterlinearNoteCss();
+    if (existingEl) {
+      existingEl.textContent = css;
+    } else {
+      const style = document.createElement('style');
+      style.id = 'interlinear-note-styles';
+      style.textContent = css;
+      document.head.appendChild(style);
+    }
+  }
+
+  updateInterlinearNoteStyles(css) {
+    const styleEl = document.getElementById('interlinear-note-styles');
+    if (styleEl) {
+      styleEl.textContent = css;
+    } else {
+      const style = document.createElement('style');
+      style.id = 'interlinear-note-styles';
+      style.textContent = css;
+      document.head.appendChild(style);
+    }
+    this.refreshCurrentView();
+  }
+
+  async showInterlinearNoteInput() {
+    const { Notice } = require('obsidian');
+    const selectedText = this.getSelectedText();
+    if (!selectedText || !selectedText.trim()) {
+      new Notice('请先选中文本');
+      return;
+    }
+
+    const existing = document.querySelector('.interlinear-note-input-window');
+    if (existing) existing.remove();
+
+    const existingData = await this.loadInterlinearNoteData();
+    const existingNote = existingData[selectedText.trim()] || '';
+
+    const win = document.createElement('div');
+    win.className = 'interlinear-note-input-window';
+    win.style.cssText = `
+      position:fixed;z-index:10000;
+      background:var(--background-primary);
+      border:1px solid var(--background-modifier-border);
+      border-radius:8px;
+      box-shadow:0 8px 32px rgba(0,0,0,0.3);
+      padding:0;display:flex;flex-direction:column;
+      min-width:300px;max-width:500px;
+      overflow:hidden;
+    `;
+
+    const titleBar = document.createElement('div');
+    titleBar.style.cssText = `
+      display:flex;align-items:center;justify-content:space-between;
+      padding:6px 12px;cursor:move;user-select:none;
+      border-bottom:1px solid var(--background-modifier-border);
+      background:var(--background-secondary);border-radius:8px 8px 0 0;
+      flex-shrink:0;min-height:24px;
+    `;
+    const titleText = document.createElement('span');
+    titleText.textContent = '行间注释: ' + (selectedText.length > 15 ? selectedText.substring(0, 15) + '...' : selectedText);
+    titleText.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
+    const closeBtn = document.createElement('span');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = 'cursor:pointer;font-size:13px;color:var(--text-faint);padding:1px 5px;border-radius:3px;transition:all 0.15s ease;flex-shrink:0;';
+    closeBtn.addEventListener('mouseenter', () => { closeBtn.style.background = 'var(--background-modifier-hover)'; closeBtn.style.color = 'var(--text-normal)'; });
+    closeBtn.addEventListener('mouseleave', () => { closeBtn.style.background = 'transparent'; closeBtn.style.color = 'var(--text-faint)'; });
+    closeBtn.addEventListener('click', () => win.remove());
+    titleBar.appendChild(titleText);
+    titleBar.appendChild(closeBtn);
+    win.appendChild(titleBar);
+
+    const inputRow = document.createElement('div');
+    inputRow.style.cssText = 'display:flex;align-items:center;gap:6px;padding:8px 12px;';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = existingNote;
+    input.placeholder = existingNote ? '编辑注释内容...' : '输入注释内容...';
+    input.style.cssText = 'flex:1;padding:6px 10px;border:1px solid var(--background-modifier-border);border-radius:4px;font-size:13px;background:var(--background-primary);color:var(--text-normal);outline:none;';
+
+    const addBtn = document.createElement('button');
+    addBtn.textContent = existingNote ? '更新' : '添加';
+    addBtn.style.cssText = 'padding:6px 14px;background:var(--interactive-accent);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;white-space:nowrap;';
+
+    addBtn.addEventListener('click', async () => {
+      const noteText = input.value.trim();
+      const data = await this.loadInterlinearNoteData();
+      const key = selectedText.trim();
+      if (!noteText) {
+        delete data[key];
+        await this.saveInterlinearNoteData(data);
+        win.remove();
+        new Notice('行间注释已删除');
+        return;
+      }
+      data[key] = noteText;
+      await this.saveInterlinearNoteData(data);
+      win.remove();
+      new Note('行间注释已添加');
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addBtn.click();
+      if (e.key === 'Escape') win.remove();
+    });
+
+    inputRow.appendChild(input);
+    inputRow.appendChild(addBtn);
+    win.appendChild(inputRow);
+
+    document.body.appendChild(win);
+
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const rect = sel.getRangeAt(0).getBoundingClientRect();
+      win.style.left = Math.max(10, Math.min(rect.left, window.innerWidth - 320)) + 'px';
+      win.style.top = Math.max(10, rect.bottom + 8) + 'px';
+    } else {
+      win.style.left = '100px';
+      win.style.top = '100px';
+    }
+
+    input.focus();
+
+    let isDragging = false, dragStartX, dragStartY, winStartX, winStartY;
+    titleBar.addEventListener('mousedown', (e) => {
+      if (e.target === closeBtn) return;
+      isDragging = true;
+      dragStartX = e.clientX; dragStartY = e.clientY;
+      const r = win.getBoundingClientRect();
+      winStartX = Math.round(r.left); winStartY = Math.round(r.top);
+      e.preventDefault();
+    });
+    const onDragMove = (e) => {
+      if (!isDragging) return;
+      win.style.left = Math.round(winStartX + e.clientX - dragStartX) + 'px';
+      win.style.top = Math.round(winStartY + e.clientY - dragStartY) + 'px';
+    };
+    const onDragUp = () => { isDragging = false; };
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('mouseup', onDragUp);
+  }
+
+  clearInterlinearNotes(container) {
+    if (!container) return;
+    const wrappers = container.querySelectorAll('.in-note-wrapper');
+    for (const w of wrappers) {
+      const parent = w.parentNode;
+      if (!parent) continue;
+      const textNode = document.createTextNode(w.textContent);
+      parent.replaceChild(textNode, w);
+    }
+    const charSpans = container.querySelectorAll('.in-note-char');
+    for (const s of charSpans) {
+      const parent = s.parentNode;
+      if (!parent) continue;
+      const textNode = document.createTextNode(s.textContent);
+      parent.replaceChild(textNode, s);
+    }
+    container.normalize();
+  }
+
+  highlightTextWithInterlinearNote(container, text, note) {
+    if (!text || !note) return;
+    const align = this.settings?.inNoteAlign || 'center';
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+    for (const node of textNodes) {
+      let currentNode = node;
+      while (currentNode && currentNode.nodeType === Node.TEXT_NODE) {
+        const content = currentNode.textContent;
+        const index = content.indexOf(text);
+        if (index === -1) break;
+
+        const before = content.substring(0, index);
+        const after = content.substring(index + text.length);
+        const parent = currentNode.parentNode;
+        if (!parent) break;
+
+        const wrapper = document.createElement('span');
+        wrapper.className = 'in-note-wrapper';
+        wrapper.setAttribute('data-note', note);
+        if (align !== 'center') wrapper.setAttribute('data-align', align);
+        wrapper.textContent = text;
+
+        if (before) parent.insertBefore(document.createTextNode(before), currentNode);
+        parent.insertBefore(wrapper, currentNode);
+        if (after) parent.insertBefore(document.createTextNode(after), currentNode);
+        parent.removeChild(currentNode);
+
+        currentNode = wrapper.nextSibling;
+        if (currentNode && currentNode.nodeType === Node.TEXT_NODE && !currentNode.textContent.includes(text)) break;
+      }
+    }
+  }
+
+  async removeInterlinearNoteFromSelection() {
+    const { Notice } = require('obsidian');
+    const selectedText = this.getSelectedText();
+    if (!selectedText || !selectedText.trim()) {
+      new Notice('请先选中文本');
+      return;
+    }
+    const data = await this.loadInterlinearNoteData();
+    const key = selectedText.trim();
+    if (data[key]) {
+      delete data[key];
+      await this.saveInterlinearNoteData(data);
+      new Notice('行间注释已删除');
+    } else {
+      new Notice('未找到该文本的行间注释');
+    }
   }
   
   // 卸载插件时清理资源
@@ -34145,6 +34586,22 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           unusedStyles.push(className);
         }
       }
+
+      const groupFilter = this.floatButtonData?.randomHighlightGroups?.trim();
+      if (groupFilter) {
+        const groupNames = groupFilter.split(/[,，]/).map(g => g.trim()).filter(g => g);
+        const categories = this.config?.styleCategories || {};
+        const allowedStyles = new Set();
+        for (const gn of groupNames) {
+          const styles = categories[gn];
+          if (styles) {
+            for (const s of styles) allowedStyles.add(s);
+          }
+        }
+        if (allowedStyles.size > 0) {
+          return unusedStyles.filter(s => allowedStyles.has(s));
+        }
+      }
       
       return unusedStyles;
     } catch (error) {
@@ -34477,6 +34934,18 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         // 应用拼音显示
         await this.applyPinyinInReadingMode(contentEl);
+
+        // 应用行间注释
+        if (this._interlinearNoteCacheResolved && Object.keys(this._interlinearNoteCacheResolved).length > 0) {
+
+          this.injectInterlinearNoteStyles();
+          for (const [text, note] of Object.entries(this._interlinearNoteCacheResolved)) {
+            const blockText = contentEl.textContent || '';
+            if (blockText.includes(text)) {
+              this.highlightTextWithInterlinearNote(contentEl, text, note);
+            }
+          }
+        }
       }
     }
     // 处理编辑模式 - 实时预览模式
@@ -35820,9 +36289,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             this.loadPinyinDataAndRefresh();
           };
           
+          this.onInterlinearNoteUpdate = () => {
+            this.loadInterlinearNoteDataAndRefresh();
+          };
+          
           
           plugin.rulesUpdateEmitter.addEventListener('update', this.onRulesUpdate);
           plugin.pinyinUpdateEmitter.addEventListener('update', this.onPinyinUpdate);
+          plugin.interlinearNoteUpdateEmitter.addEventListener('update', this.onInterlinearNoteUpdate);
           
           this.loadPinyinDataAndRefresh();
         }
@@ -35840,9 +36314,23 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           }
         }
         
+        async loadInterlinearNoteDataAndRefresh() {
+          try {
+            plugin._interlinearNoteCacheResolved = await plugin.loadInterlinearNoteData();
+            this.needsDecoratorUpdate = true;
+            plugin.injectInterlinearNoteStyles();
+            if (this.view) {
+              this.view.dispatch({});
+            }
+          } catch (e) {
+            console.error('加载行间注释数据失败:', e);
+          }
+        }
+        
         destroy() {
           plugin.rulesUpdateEmitter.removeEventListener('update', this.onRulesUpdate);
           plugin.pinyinUpdateEmitter.removeEventListener('update', this.onPinyinUpdate);
+          plugin.interlinearNoteUpdateEmitter.removeEventListener('update', this.onInterlinearNoteUpdate);
           if (this._calloutHighlightTimer) {
             clearTimeout(this._calloutHighlightTimer);
             this._calloutHighlightTimer = null;
@@ -36082,6 +36570,27 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                       searchIndex = matchIndex + 1;
                     }
                   }
+                }
+              }
+            }
+          }
+
+          // 行间注释装饰（实时预览模式）
+          if (plugin._interlinearNoteCacheResolved && Object.keys(plugin._interlinearNoteCacheResolved).length > 0) {
+            plugin.injectInterlinearNoteStyles();
+            for (const [text, note] of Object.entries(plugin._interlinearNoteCacheResolved)) {
+              if (!note) continue;
+              for (let {from, to} of view.visibleRanges) {
+                let docText = view.state.doc.sliceString(from, to);
+                let searchIndex = 0;
+                let matchIndex;
+                while ((matchIndex = docText.indexOf(text, searchIndex)) !== -1) {
+                  const startPos = from + matchIndex;
+                  ranges.push(cmView.Decoration.mark({
+                    class: 'in-note-wrapper',
+                    attributes: { 'data-note': note }
+                  }).range(startPos, startPos + text.length));
+                  searchIndex = matchIndex + 1;
                 }
               }
             }
@@ -36338,6 +36847,688 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     }
   }
 
+  // 构建关键词索引：仅包含有备注的关键词（用于反向链接扫描）
+  // 返回 Map<string, {regex, cssClass, isSimpleKeyword}>
+  // isSimpleKeyword: regex 不含正则元字符，可安全做文本扫描
+  buildKeywordIndex() {
+    const index = new Map();
+    const allRules = [...this.globalRules, ...(this.rules || [])];
+    for (const rule of allRules) {
+      if (rule.disabled) continue;
+      if (!rule.links || rule.links.length === 0) continue;
+      const hasRemark = rule.links.some(l => l.remark && l.remark.trim());
+      if (!hasRemark) continue;
+      const regex = rule.regex;
+      const hasMetaChar = /[.*+?^${}()|[\]\\]/.test(regex);
+      const plainText = hasMetaChar ? '' : regex.replace(/\\./g, m => m.slice(1));
+      if (!hasMetaChar && plainText.length < 2) continue;
+      let plainTexts = [];
+      if (!hasMetaChar) {
+        plainTexts = [plainText];
+      } else {
+        const parts = regex.split('|');
+        const allSimple = parts.every(p => !/[.*+?^${}()[\]\\]/.test(p) && p.length >= 2);
+        if (allSimple) plainTexts = parts;
+      }
+      if (plainTexts.length === 0) continue;
+      if (!index.has(regex)) {
+        index.set(regex, {
+          regex,
+          cssClass: rule.cssClass || '',
+          isSimpleKeyword: !hasMetaChar,
+          plainText: hasMetaChar ? '' : plainText,
+          plainTexts
+        });
+      }
+    }
+    return index;
+  }
+
+  // 构建反向链接索引：扫描所有备注文本，找出提到了哪些其他关键词
+  // 返回 Map<被提及的关键词regex, Array<{sourceRegex, linkIndex, matchedText, remark}>>
+  // 注意：仅扫描全局规则 + 当前文件规则，不扫描其他文件规则（性能考虑）
+  buildBacklinkIndex(keywordIndex) {
+    const backlinks = new Map();
+    if (!keywordIndex || keywordIndex.size === 0) return backlinks;
+
+    const sortedKeywords = [...keywordIndex.values()]
+      .filter(k => k.plainTexts && k.plainTexts.length > 0)
+      .sort((a, b) => Math.max(...b.plainTexts.map(p => p.length)) - Math.max(...a.plainTexts.map(p => p.length)));
+
+    const allRules = [...this.globalRules, ...(this.rules || [])];
+    for (const rule of allRules) {
+      if (!rule.links) continue;
+      for (let i = 0; i < rule.links.length; i++) {
+        const link = rule.links[i];
+        const remarkText = link.remark || '';
+        if (!remarkText.trim()) continue;
+
+        const matched = new Set();
+        for (const kw of sortedKeywords) {
+          if (kw.regex === rule.regex) continue;
+          if (matched.has(kw.regex)) continue;
+          const hitText = kw.plainTexts.find(p => remarkText.includes(p));
+          if (hitText) {
+            matched.add(kw.regex);
+            if (!backlinks.has(kw.regex)) {
+              backlinks.set(kw.regex, []);
+            }
+            backlinks.get(kw.regex).push({
+              sourceRegex: rule.regex,
+              linkIndex: i,
+              matchedText: hitText,
+              remark: remarkText
+            });
+          }
+        }
+      }
+    }
+    return backlinks;
+  }
+
+  // 打开关键词独立窗口（可拖动，可打开多个）
+  openKeywordWindow(keywordRegex) {
+    const plugin = this;
+    // 查找规则
+    const isGlobal = plugin.globalRules.some(r => r.regex === keywordRegex);
+    const rule = isGlobal
+      ? plugin.globalRules.find(r => r.regex === keywordRegex)
+      : plugin.rules.find(r => r.regex === keywordRegex);
+    if (!rule || !rule.links || rule.links.length === 0) return;
+
+    const popupBorderWidth = plugin.settings.popupBorderWidth !== undefined ? plugin.settings.popupBorderWidth : 1;
+    const popupBorderColor = plugin.settings.popupBorderColor || 'var(--text-accent)';
+    const popupSpacing = plugin.settings.popupSpacing !== undefined ? plugin.settings.popupSpacing : 10;
+    const popupFontSize = plugin.settings.popupFontSize !== undefined ? plugin.settings.popupFontSize : 14;
+    const popupMaxWidth = plugin.settings.popupWidth !== undefined ? plugin.settings.popupWidth : 600;
+    const savedOpacity = plugin.settings.popupOpacity !== undefined ? plugin.settings.popupOpacity : 1;
+
+    const actualMaxWidth = _isDesktop ? popupMaxWidth : Math.min(popupMaxWidth, window.innerWidth - 20);
+    const win = document.createElement('div');
+    win.className = 'keyword-detail-window';
+    win.dataset.keyword = keywordRegex;
+    win.style.cssText = `
+      position:fixed;z-index:1100;min-width:${_isDesktop ? '300px' : '0'};width:${actualMaxWidth}px;
+      background:var(--background-primary);
+      border:${popupBorderWidth}px solid ${popupBorderColor};border-radius:8px;
+      box-shadow:0 4px 16px rgba(0,0,0,0.35);
+      overflow:hidden;display:flex;flex-direction:column;
+      padding:${popupSpacing}px;opacity:${savedOpacity};
+    `;
+
+    // 随机偏移，避免多个窗口重叠
+    const existingWins = document.querySelectorAll('.keyword-detail-window');
+    const offset = existingWins.length * 30;
+    win.style.left = (100 + offset) + 'px';
+    win.style.top = (100 + offset) + 'px';
+
+    // 标题栏（可拖动）
+    const titleBar = document.createElement('div');
+    titleBar.style.cssText = `
+      display:flex;align-items:center;justify-content:space-between;
+      padding:4px 8px;cursor:move;user-select:none;-webkit-user-select:none;
+      border-bottom:1px solid var(--background-modifier-border);
+      background:var(--background-secondary);border-radius:8px 8px 0 0;
+      flex-shrink:0;min-height:24px;margin:-${popupSpacing}px -${popupSpacing}px ${popupSpacing}px -${popupSpacing}px;
+    `;
+
+    // 左侧：关键词名 + 来源数
+    const titleLeft = document.createElement('div');
+    titleLeft.style.cssText = 'display:flex;align-items:center;gap:8px;flex:1;min-width:0;';
+
+    const titleText = document.createElement('span');
+    titleText.textContent = keywordRegex;
+    titleText.dataset.editField = 'ruleRegex';
+    titleText.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%;cursor:text;border-bottom:1px dashed transparent;transition:border-bottom-color 0.15s ease;';
+    titleText.addEventListener('mouseenter', () => { titleText.style.borderBottomColor = 'var(--text-muted)'; });
+    titleText.addEventListener('mouseleave', () => { titleText.style.borderBottomColor = 'transparent'; });
+    titleLeft.appendChild(titleText);
+
+    // 来源数量 badge
+    const remarkCount = rule.links.filter(l => l.remark && l.remark.trim()).length;
+    const countBadge = document.createElement('span');
+    countBadge.textContent = remarkCount;
+    countBadge.style.cssText = `
+      display:inline-flex;align-items:center;justify-content:center;
+      min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+      font-size:10px;font-weight:700;
+      background:var(--interactive-accent);color:#fff;
+      box-shadow:0 1px 4px rgba(var(--interactive-accent-rgb),0.3);
+    `;
+    titleLeft.appendChild(countBadge);
+    titleBar.appendChild(titleLeft);
+
+    const closeBtn = document.createElement('span');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = `
+      cursor:pointer;font-size:13px;color:var(--text-faint);
+      padding:1px 5px;border-radius:3px;
+      transition:all 0.15s ease;flex-shrink:0;opacity:0;pointer-events:none;
+    `;
+    closeBtn.addEventListener('mouseenter', () => {
+      closeBtn.style.background = 'var(--background-modifier-hover)';
+      closeBtn.style.color = 'var(--text-normal)';
+    });
+    closeBtn.addEventListener('mouseleave', () => {
+      closeBtn.style.background = 'transparent';
+      closeBtn.style.color = 'var(--text-faint)';
+    });
+    let closeBtnLongPress = null;
+    let kwLongPressTriggered = false;
+    const startKwLongPress = () => {
+      kwLongPressTriggered = false;
+      closeBtnLongPress = setTimeout(() => {
+        kwLongPressTriggered = true;
+        document.querySelectorAll('.keyword-detail-window, .remark-custom-popup').forEach(w => w.remove());
+      }, 600);
+    };
+    const cancelKwLongPress = () => { if (closeBtnLongPress) clearTimeout(closeBtnLongPress); };
+    closeBtn.addEventListener('click', () => { if (!kwLongPressTriggered) win.remove(); });
+    closeBtn.addEventListener('mousedown', startKwLongPress);
+    closeBtn.addEventListener('mouseup', cancelKwLongPress);
+    closeBtn.addEventListener('mouseleave', cancelKwLongPress);
+    closeBtn.addEventListener('touchstart', startKwLongPress);
+    closeBtn.addEventListener('touchend', (e) => {
+      cancelKwLongPress();
+      if (!kwLongPressTriggered) { e.preventDefault(); win.remove(); }
+    });
+    closeBtn.addEventListener('touchcancel', cancelKwLongPress);
+    titleBar.appendChild(closeBtn);
+    win.appendChild(titleBar);
+
+    // 点击外部关闭（拖动后由x按钮关闭）
+    const onDocClick = (e) => {
+      if (!win.contains(e.target)) {
+        win.remove();
+        document.removeEventListener('mousedown', onDocClick);
+      }
+    };
+    setTimeout(() => document.addEventListener('mousedown', onDocClick), 0);
+
+    // 内容区
+    const content = document.createElement('div');
+    content.style.cssText = `padding:${popupSpacing}px;overflow-y:auto;flex:1;font-size:${popupFontSize}px;line-height:${plugin.settings.popupLineHeight !== undefined ? plugin.settings.popupLineHeight : 1.5};border:1px solid var(--border-color);border-radius:4px;background-color:var(--background-secondary);user-select:text;-webkit-user-select:text;`;
+
+    const kwWinStyle = document.createElement('style');
+    kwWinStyle.textContent = '.keyword-detail-window .remark-popup-content p{margin:0;}.keyword-detail-window .remark-popup-content ul,.keyword-detail-window .remark-popup-content ol{margin:0;padding-left:20px;}.keyword-detail-window .remark-popup-content li{margin:0;}.keyword-detail-window .remark-popup-content h1,.keyword-detail-window .remark-popup-content h2,.keyword-detail-window .remark-popup-content h3,.keyword-detail-window .remark-popup-content h4,.keyword-detail-window .remark-popup-content h5,.keyword-detail-window .remark-popup-content h6{margin:0;}.keyword-detail-window .remark-popup-content blockquote{margin:0;}';
+    content.appendChild(kwWinStyle);
+
+    // 渲染备注内容
+    const linksByFile = new Map();
+    for (const link of rule.links) {
+      const key = link.filePath || '';
+      if (!linksByFile.has(key)) linksByFile.set(key, []);
+      linksByFile.get(key).push(link);
+    }
+
+    const fileHues = [210, 30, 150, 340, 270, 60, 180, 90];
+    let fileIndex = 0;
+    for (const [filePath, fileLinks] of linksByFile) {
+      const fileName = filePath.split('/').pop().replace(/\.md$/, '');
+      const fileHue = fileHues[fileIndex % fileHues.length];
+
+      const groupEl = document.createElement('div');
+      groupEl.style.cssText = fileIndex > 0 ? 'margin-top:10px;padding-top:10px;border-top:1px solid var(--background-modifier-border);' : '';
+
+      const headerEl = document.createElement('div');
+      headerEl.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:2px;';
+      const fileNameSpan = document.createElement('span');
+      fileNameSpan.textContent = fileName || t('main.keywordNoTitle');
+      fileNameSpan.style.cssText = `
+        font-size:11px;font-weight:600;
+        color:hsl(${fileHue},50%,35%);background:hsl(${fileHue},50%,90%);
+        padding:2px 10px;border-radius:10px;
+      `;
+      headerEl.appendChild(fileNameSpan);
+      groupEl.appendChild(headerEl);
+
+      for (const link of fileLinks) {
+        const remarkContent = link.remark || '';
+        if (!remarkContent.trim()) continue;
+
+        const remarkWrapper = document.createElement('div');
+        remarkWrapper.style.cssText = 'display:flex;align-items:baseline;gap:6px;';
+        const dot = document.createElement('span');
+        dot.style.cssText = `width:6px;height:6px;border-radius:50%;background:hsl(${fileHue},50%,50%);flex-shrink:0;`;
+        remarkWrapper.appendChild(dot);
+        const remarkBox = document.createElement('div');
+        remarkBox.style.cssText = 'flex:1;min-width:0;overflow:hidden;';
+        const remarkEl = document.createElement('div');
+        remarkEl.className = 'remark-popup-content';
+        remarkEl.style.cssText = 'font-size:12px;overflow:hidden;';
+        try {
+          const { MarkdownRenderer: MR, Component } = require('obsidian');
+          const component = new Component();
+          component.load();
+          MR.renderMarkdown(remarkContent, remarkEl, plugin.currentFilePath || '', component);
+        } catch {
+          remarkEl.textContent = remarkContent;
+        }
+        remarkBox.appendChild(remarkEl);
+
+        const toolBar = document.createElement('div');
+        toolBar.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:0;';
+
+        const searchTag = document.createElement('span');
+        searchTag.textContent = link.searchText ? link.searchText.substring(0, 20) + (link.searchText.length > 20 ? '...' : '') : '(' + t('main.noSearchText') + ')';
+        searchTag.dataset.editField = 'searchText';
+        searchTag.dataset.filePath = filePath;
+        searchTag.dataset.linkIndex = String(fileLinks.indexOf(link));
+        searchTag.style.cssText = 'font-size:10px;color:var(--text-muted);background:var(--background-modifier-hover);padding:1px 6px;border-radius:8px;cursor:text;border-bottom:1px dashed transparent;';
+        if (!link.searchText) searchTag.style.fontStyle = 'italic';
+        searchTag.addEventListener('mouseenter', () => { searchTag.style.borderBottomColor = 'var(--text-muted)'; });
+        searchTag.addEventListener('mouseleave', () => { searchTag.style.borderBottomColor = 'transparent'; });
+        searchTag.addEventListener('dragover', (de) => {
+          if (de.dataTransfer?.types?.includes('text/plain') || de.dataTransfer?.types?.includes('text/unicode')) {
+            de.preventDefault();
+            searchTag.style.borderBottomColor = 'var(--text-accent)';
+            searchTag.style.background = 'var(--text-accent)';
+            searchTag.style.color = 'var(--text-on-accent)';
+          }
+        });
+        searchTag.addEventListener('dragleave', () => {
+          searchTag.style.borderBottomColor = 'transparent';
+          searchTag.style.background = 'var(--background-modifier-hover)';
+          searchTag.style.color = 'var(--text-muted)';
+        });
+        searchTag.addEventListener('drop', async (de) => {
+          de.preventDefault();
+          de.stopPropagation();
+          const droppedText = de.dataTransfer?.getData('text/plain')?.trim();
+          searchTag.style.borderBottomColor = 'transparent';
+          searchTag.style.background = 'var(--background-modifier-hover)';
+          searchTag.style.color = 'var(--text-muted)';
+          if (!droppedText) return;
+          link.searchText = droppedText;
+          searchTag.textContent = droppedText.substring(0, 20) + (droppedText.length > 20 ? '...' : '');
+          searchTag.style.fontStyle = 'normal';
+          const isGlobal = plugin.globalRules.some(r => r.regex === keywordRegex);
+          if (isGlobal) {
+            await plugin.saveGlobalRules(plugin.globalRules, true);
+          } else {
+            await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+          }
+        });
+        toolBar.appendChild(searchTag);
+
+        const copyBtn = document.createElement('button');
+        copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+        copyBtn.title = t('main.copyRemark');
+        copyBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;';
+        copyBtn.addEventListener('click', (ce) => {
+          ce.preventDefault();
+          ce.stopPropagation();
+          navigator.clipboard.writeText(remarkContent).then(() => {
+            copyBtn.style.color = 'var(--text-normal)';
+            setTimeout(() => { copyBtn.style.color = 'var(--text-muted)'; }, 800);
+          });
+        });
+        toolBar.appendChild(copyBtn);
+
+        const openBtn = document.createElement('button');
+        openBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="16.5" cy="16.5" r="2.5"/><path d="M18.5 18.5L21 21"/></svg>';
+        openBtn.title = t('main.openDocument');
+        openBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;';
+        openBtn.addEventListener('click', async (ce) => {
+          ce.preventDefault();
+          ce.stopPropagation();
+          if (link) await plugin.openLinkAndSearch(link.filePath, link.searchText);
+        });
+        toolBar.appendChild(openBtn);
+
+        remarkBox.appendChild(toolBar);
+        remarkWrapper.appendChild(remarkBox);
+        groupEl.appendChild(remarkWrapper);
+      }
+
+      content.appendChild(groupEl);
+      fileIndex++;
+    }
+
+    win.appendChild(content);
+
+    // 双击搜索词编辑
+    content.addEventListener('dblclick', (e) => {
+      const searchTagEl = e.target.closest('[data-edit-field="searchText"]');
+      if (!searchTagEl) return;
+      e.stopPropagation();
+      const fp = searchTagEl.dataset.filePath;
+      const li = parseInt(searchTagEl.dataset.linkIndex);
+      const fileLs = linksByFile.get(fp);
+      if (!fileLs || !fileLs[li]) return;
+      const linkRef = fileLs[li];
+      const oldSearchText = linkRef.searchText || '';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = oldSearchText;
+      const origW = searchTagEl.offsetWidth;
+      input.style.cssText = `font-size:10px;padding:1px 6px;border:none;border-radius:8px;background:var(--background-modifier-hover);color:var(--text-muted);width:${origW}px;outline:none;box-sizing:border-box;margin:0;height:auto;line-height:normal;`;
+      searchTagEl.replaceWith(input);
+      input.focus();
+      input.select();
+
+      let saved = false;
+      const save = async () => {
+        if (saved) return;
+        saved = true;
+        const val = input.value.trim();
+        linkRef.searchText = val;
+        searchTagEl.textContent = val ? val.substring(0, 20) + (val.length > 20 ? '...' : '') : '(' + t('main.noSearchText') + ')';
+        searchTagEl.style.fontStyle = val ? 'normal' : 'italic';
+        input.replaceWith(searchTagEl);
+        const isGlobal = plugin.globalRules.some(r => r.regex === keywordRegex);
+        if (isGlobal) {
+          await plugin.saveGlobalRules(plugin.globalRules, true);
+        } else {
+          await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+        }
+      };
+      input.addEventListener('blur', save);
+      input.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter') input.blur();
+        if (ev.key === 'Escape') { saved = true; input.replaceWith(searchTagEl); }
+      });
+    });
+
+    // ===== 关键词反向链接 chips 区 =====
+    const keywordIndex = plugin.buildKeywordIndex();
+    const backlinkIndex = plugin.buildBacklinkIndex(keywordIndex);
+
+    const mentionedKeywords = [];
+    const sortedKws = [...keywordIndex.values()]
+      .filter(k => k.plainTexts && k.plainTexts.length > 0 && k.regex !== keywordRegex)
+      .sort((a, b) => Math.max(...b.plainTexts.map(p => p.length)) - Math.max(...a.plainTexts.map(p => p.length)));
+    for (const link of rule.links) {
+      const remarkText = link.remark || '';
+      if (!remarkText.trim()) continue;
+      for (const kw of sortedKws) {
+        if (mentionedKeywords.some(m => m.regex === kw.regex)) continue;
+        if (kw.plainTexts.some(p => remarkText.includes(p))) {
+          mentionedKeywords.push(kw);
+        }
+      }
+    }
+
+    const mentionedBy = backlinkIndex.get(keywordRegex) || [];
+
+    const allRelatedKeywords = new Map();
+    for (const kw of mentionedKeywords) {
+      allRelatedKeywords.set(kw.regex, { regex: kw.regex, cssClass: kw.cssClass, relation: 'mention' });
+    }
+    for (const bl of mentionedBy) {
+      if (!allRelatedKeywords.has(bl.sourceRegex)) {
+        const sourceRule = plugin.globalRules.find(r => r.regex === bl.sourceRegex) || plugin.rules.find(r => r.regex === bl.sourceRegex);
+        allRelatedKeywords.set(bl.sourceRegex, { regex: bl.sourceRegex, cssClass: sourceRule?.cssClass || '', relation: 'mentionedBy' });
+      }
+    }
+
+    if (allRelatedKeywords.size > 0) {
+      const chipsBar = document.createElement('div');
+      chipsBar.className = 'keyword-chips-bar';
+      chipsBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;background:var(--background-secondary);border-top:1px solid var(--background-modifier-border);border-radius:0 0 7px 7px;flex-shrink:0;margin:0 -' + popupSpacing + 'px -' + popupSpacing + 'px -' + popupSpacing + 'px;';
+
+      const label = document.createElement('span');
+      label.textContent = '🔗';
+      label.style.cssText = 'font-size:11px;color:var(--text-muted);margin-right:2px;align-self:center;';
+      chipsBar.appendChild(label);
+
+      for (const [kwRegex, info] of allRelatedKeywords) {
+        const chip = document.createElement('span');
+        chip.className = 'keyword-chip';
+        chip.title = (info.relation === 'mention' ? t('main.keywordMentions') : t('main.keywordMentionedBy')) + ' ' + kwRegex;
+        chip.style.cssText = 'display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid var(--background-modifier-border);background:var(--background-primary);transition:all 0.15s ease;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+
+        const chipLabel = document.createElement('span');
+        chipLabel.textContent = (info.relation === 'mention' ? '→ ' : '← ') + kwRegex;
+        if (info.cssClass) {
+          chipLabel.className = info.cssClass + ' highlight-regex-text';
+          chip.style.borderColor = 'transparent';
+        } else {
+          chipLabel.style.cssText = 'font-weight:500;color:var(--text-normal);';
+        }
+        chip.appendChild(chipLabel);
+
+        let hoverTimeout = null;
+        let previewEl = null;
+        let previewHideTimeout = null;
+
+        const closePreview = () => {
+          if (previewEl) { previewEl.remove(); previewEl = null; }
+          if (previewHideTimeout) { clearTimeout(previewHideTimeout); previewHideTimeout = null; }
+        };
+
+        chip.addEventListener('mouseenter', () => {
+          if (!_isDesktop) return;
+          chip.style.transform = 'scale(1.05)';
+          chip.style.filter = 'brightness(1.15)';
+          if (previewHideTimeout) { clearTimeout(previewHideTimeout); previewHideTimeout = null; }
+          if (previewEl) return;
+          hoverTimeout = setTimeout(() => {
+            const kwRule = plugin.globalRules.find(r => r.regex === kwRegex) || plugin.rules.find(r => r.regex === kwRegex);
+            if (!kwRule || !kwRule.links) return;
+            const remarks = kwRule.links.filter(l => l.remark && l.remark.trim()).map(l => l.remark.trim());
+            if (remarks.length === 0) return;
+
+            previewEl = document.createElement('div');
+            previewEl.className = 'keyword-chip-preview';
+            previewEl.style.cssText = `position:fixed;z-index:1200;max-width:350px;max-height:300px;overflow-y:auto;padding:${popupSpacing}px;background:var(--background-primary);border:${popupBorderWidth}px solid ${popupBorderColor};border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.35);font-size:12px;line-height:1.4;`;
+
+            const titleDiv = document.createElement('div');
+            titleDiv.textContent = kwRegex;
+            titleDiv.style.cssText = 'font-weight:600;margin-bottom:4px;color:var(--text-accent);';
+            previewEl.appendChild(titleDiv);
+
+            for (const r of remarks) {
+              const rDiv = document.createElement('div');
+              rDiv.textContent = r;
+              rDiv.style.cssText = 'color:var(--text-muted);margin-top:2px;border-left:2px solid var(--background-modifier-border);padding-left:6px;';
+              previewEl.appendChild(rDiv);
+            }
+
+            previewEl.addEventListener('mouseenter', () => {
+              if (previewHideTimeout) { clearTimeout(previewHideTimeout); previewHideTimeout = null; }
+            });
+            previewEl.addEventListener('mouseleave', () => {
+              previewHideTimeout = setTimeout(() => {
+                closePreview();
+                chip.style.transform = 'scale(1)';
+                chip.style.filter = '';
+              }, 200);
+            });
+
+            document.body.appendChild(previewEl);
+
+            const chipRect = chip.getBoundingClientRect();
+            const previewHeight = previewEl.offsetHeight;
+            let top = chipRect.top - previewHeight - 4;
+            if (top < 4) top = chipRect.bottom + 4;
+            let left = chipRect.left;
+            if (left + 350 > window.innerWidth) left = window.innerWidth - 360;
+            previewEl.style.top = top + 'px';
+            previewEl.style.left = left + 'px';
+          }, 400);
+        });
+        chip.addEventListener('mouseleave', () => {
+          if (hoverTimeout) clearTimeout(hoverTimeout);
+          previewHideTimeout = setTimeout(() => {
+            closePreview();
+            chip.style.transform = 'scale(1)';
+            chip.style.filter = '';
+          }, 200);
+        });
+
+        chip.addEventListener('click', (ce) => {
+          ce.preventDefault();
+          ce.stopPropagation();
+          closePreview();
+          chip.style.transform = 'scale(1)';
+          chip.style.filter = '';
+          const existingWin = document.querySelector(`.keyword-detail-window[data-keyword="${CSS.escape(kwRegex)}"]`);
+          if (existingWin) {
+            existingWin.remove();
+          } else {
+            plugin.openKeywordWindow(kwRegex);
+          }
+        });
+
+        chipsBar.appendChild(chip);
+      }
+
+      win.appendChild(chipsBar);
+    }
+
+    // 右下角 resize 手柄
+    const resizeHandle = document.createElement('div');
+    resizeHandle.style.cssText = `
+      position:absolute;right:0;bottom:0;width:14px;height:14px;
+      cursor:nwse-resize;z-index:10;
+      background:linear-gradient(135deg, transparent 50%, var(--text-muted) 50%);
+      border-radius:0 0 8px 0;opacity:0.4;
+    `;
+    resizeHandle.addEventListener('mouseenter', () => { resizeHandle.style.opacity = '0.7'; });
+    resizeHandle.addEventListener('mouseleave', () => { resizeHandle.style.opacity = '0.4'; });
+    win.appendChild(resizeHandle);
+
+    document.body.appendChild(win);
+
+    // 拖动逻辑
+    let isDragging = false;
+    let isResizing = false;
+    let dragStartX, dragStartY, winStartX, winStartY;
+    let resizeStartX, resizeStartY, resizeStartW, resizeStartH;
+    const showCloseBtn = () => {
+      closeBtn.style.opacity = '1';
+      closeBtn.style.pointerEvents = 'auto';
+      document.removeEventListener('mousedown', onDocClick);
+    };
+    const onMouseMove = (e) => {
+      if (isDragging) {
+        const dx = e.clientX - dragStartX;
+        const dy = e.clientY - dragStartY;
+        win.style.left = Math.round(winStartX + dx) + 'px';
+        win.style.top = Math.round(winStartY + dy) + 'px';
+        showCloseBtn();
+      } else if (isResizing) {
+        const newW = Math.max(300, resizeStartW + (e.clientX - resizeStartX));
+        const newH = Math.max(150, resizeStartH + (e.clientY - resizeStartY));
+        win.style.width = newW + 'px';
+        win.style.height = newH + 'px';
+      }
+    };
+    const onMouseUp = () => {
+      isDragging = false;
+      isResizing = false;
+    };
+    titleBar.addEventListener('mousedown', (e) => {
+      if (e.target === closeBtn) return;
+      if (e.target.tagName === 'INPUT') return;
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      const rect = win.getBoundingClientRect();
+      winStartX = Math.round(rect.left);
+      winStartY = Math.round(rect.top);
+      e.preventDefault();
+    });
+    // 手机版 touch 拖动
+    titleBar.addEventListener('touchstart', (e) => {
+      if (e.target === closeBtn) return;
+      if (e.target.tagName === 'INPUT') return;
+      const touch = e.touches[0];
+      isDragging = true;
+      dragStartX = touch.clientX;
+      dragStartY = touch.clientY;
+      const rect = win.getBoundingClientRect();
+      winStartX = Math.round(rect.left);
+      winStartY = Math.round(rect.top);
+    }, { passive: true });
+    const onTouchMove = (e) => {
+      if (!isDragging) return;
+      const touch = e.touches[0];
+      const dx = touch.clientX - dragStartX;
+      const dy = touch.clientY - dragStartY;
+      win.style.left = Math.round(winStartX + dx) + 'px';
+      win.style.top = Math.round(winStartY + dy) + 'px';
+      showCloseBtn();
+    };
+    const onTouchEnd = () => { isDragging = false; };
+    document.addEventListener('touchmove', onTouchMove, { passive: true });
+    document.addEventListener('touchend', onTouchEnd);
+    // 双击标题栏规则名进入编辑
+    titleText.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      const oldRegex = keywordRegex;
+      const isGlobal = plugin.globalRules.some(r => r.regex === oldRegex);
+      const rulesList = isGlobal ? plugin.globalRules : plugin.rules;
+      const ruleRef = rulesList.find(r => r.regex === oldRegex);
+      if (!ruleRef) return;
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = oldRegex;
+      const origWidth = titleText.offsetWidth;
+      input.style.cssText = `font-size:11px;font-weight:600;color:var(--text-muted);padding:1px 8px;border:none;border-radius:10px;background:var(--background-modifier-hover);width:${origWidth}px;outline:none;box-sizing:border-box;margin:0;height:auto;line-height:normal;`;
+      titleText.replaceWith(input);
+      input.focus();
+      input.select();
+
+      let regexSaved = false;
+      const saveRegex = async () => {
+        if (regexSaved) return;
+        regexSaved = true;
+        const newRegex = input.value.trim();
+        if (!newRegex || newRegex === oldRegex) {
+          input.replaceWith(titleText);
+          titleText.textContent = oldRegex;
+          return;
+        }
+        if (rulesList.some(r => r.regex === newRegex)) {
+          input.replaceWith(titleText);
+          titleText.textContent = oldRegex;
+          return;
+        }
+        ruleRef.regex = newRegex;
+        win.dataset.keyword = newRegex;
+        keywordRegex = newRegex;
+        titleText.textContent = newRegex;
+        input.replaceWith(titleText);
+        if (isGlobal) {
+          await plugin.saveGlobalRules(plugin.globalRules, true);
+        } else {
+          await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+        }
+      };
+      input.addEventListener('blur', saveRegex);
+      input.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter') input.blur();
+        if (ev.key === 'Escape') { regexSaved = true; input.replaceWith(titleText); titleText.textContent = oldRegex; }
+      });
+    });
+    resizeHandle.addEventListener('mousedown', (e) => {
+      isResizing = true;
+      resizeStartX = e.clientX;
+      resizeStartY = e.clientY;
+      resizeStartW = win.offsetWidth;
+      resizeStartH = win.offsetHeight;
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    // 关闭时清理事件监听
+    const originalRemove = win.remove.bind(win);
+    win.remove = () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+      document.removeEventListener('mousedown', onDocClick);
+      originalRemove();
+    };
+  }
+
   // 初始化备注 HoverPopover 功能
   initRemarkHoverPopover(app) {
     // 存储当前显示的 HoverPopover 实例
@@ -36349,10 +37540,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const plugin = this;
     
     this.registerDomEvent(document, 'mouseover', async (e) => {
-      // 如果弹窗正在关闭中，不处理
       if (isClosing) return;
-      
-      // 确保 target 是 Element 类型
+      if (e.buttons > 0) return;
       if (!(e.target instanceof Element)) return;
       
       const target = e.target;
@@ -36362,6 +37551,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       // 检查是否在弹窗内（包括弹窗的祖先元素）
       if (target.closest('.remark-custom-popup')) return;
+      if (target.closest('.keyword-detail-window')) return;
       
       // 检查是否是带有备注的高亮元素（使用closest向上查找，兼容CodeMirror嵌套结构）
       const highlightEl = target.closest('.highlight-tooltip-text, .highlight-regex-text');
@@ -36395,6 +37585,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         const selection = window.getSelection();
         const selectedText = selection?.toString().trim();
         if (!selectedText) {
+          return;
+        }
+      }
+      
+      // 检查是否启用了"选中文本时不弹出备注"设置
+      if (plugin.settings?.remarkPopupHideOnSelection) {
+        const selection = window.getSelection();
+        const selectedText = selection?.toString().trim();
+        if (selectedText) {
           return;
         }
       }
@@ -36458,6 +37657,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           popup.style.maxHeight = 'none'; // 由动态计算控制
           popup.style.backgroundColor = 'var(--background-primary)';
           popup.style.boxSizing = 'border-box'; // 确保边框宽度包含在元素尺寸内
+          popup.style.display = 'flex';
+          popup.style.flexDirection = 'column';
           // 应用保存的透明度
           const savedOpacity = plugin.settings.popupOpacity !== undefined ? plugin.settings.popupOpacity : 1;
           popup.style.opacity = savedOpacity;
@@ -36468,6 +37669,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           popup.style.boxShadow = '0 4px 16px rgba(0,0,0,0.35)'; // 增加阴影不透明度，在深色模式下更明显
           popup.style.userSelect = 'text';
           popup.style.webkitUserSelect = 'text';
+          popup.style.resize = 'both';
+          popup.style.overflow = 'hidden';
 
           // 添加内联样式，移除Markdown元素的默认margin
           const style = document.createElement('style');
@@ -36542,7 +37745,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 计算位置
           const rect = targetEl.getBoundingClientRect();
-          const arrowSize = 8;
+          const arrowSize = 0; // 不使用箭头
           
           // 初始使用预估高度
           let estimatedPopupHeight = 160;
@@ -36557,10 +37760,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           }
           
           // 判断在上方还是下方显示
-          let top, arrowPos, showArrowAtBottom;
+          let top, showArrowAtBottom;
           const spaceAbove = rect.top;
           const spaceBelow = window.innerHeight - rect.bottom;
-          const requiredHeight = estimatedPopupHeight + arrowSize + 20;
+          const requiredHeight = estimatedPopupHeight + 20;
           
           // 检查上下空间是否足够
           const canShowAbove = spaceAbove >= requiredHeight;
@@ -36569,34 +37772,28 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           if (canShowAbove && canShowBelow) {
             // 两边都够，选择空间更大的
             if (spaceAbove >= spaceBelow) {
-              top = rect.top - estimatedPopupHeight - arrowSize;
+              top = rect.top - estimatedPopupHeight;
               showArrowAtBottom = true;
             } else {
-              top = rect.bottom + arrowSize;
+              top = rect.bottom;
               showArrowAtBottom = false;
             }
           } else if (canShowAbove) {
             // 只有上方够
-            top = rect.top - estimatedPopupHeight - arrowSize;
+            top = rect.top - estimatedPopupHeight;
             showArrowAtBottom = true;
           } else if (canShowBelow) {
             // 只有下方够
-            top = rect.bottom + arrowSize;
+            top = rect.bottom;
             showArrowAtBottom = false;
           } else {
             // 都不够，尝试放下方（优先）
-            top = rect.bottom + arrowSize;
+            top = rect.bottom;
             showArrowAtBottom = false;
           }
           
-          // 计算目标元素的中心位置
-          const targetCenter = rect.left + rect.width / 2;
-          // 计算箭头尖端在弹窗内的位置
-          const arrowTipInPopup = targetCenter - left;
-          // 箭头SVG的宽度是 arrowSize * 2 + 4，所以需要减去一半的宽度来居中
-          arrowPos = arrowTipInPopup - (arrowSize + 2);
-          
           popup.style.left = left + 'px';
+          if (!_isDesktop && top < 100) top = 100;
           popup.style.top = top + 'px';
           
           // 动态计算弹窗最大高度：基于关键词到视口边缘的可用空间
@@ -36604,10 +37801,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           let dynamicMaxHeight;
           if (showArrowAtBottom) {
             // 弹窗在关键词上方
-            dynamicMaxHeight = rect.top - arrowSize - margin;
+            dynamicMaxHeight = rect.top - margin;
           } else {
             // 弹窗在关键词下方
-            dynamicMaxHeight = window.innerHeight - rect.bottom - arrowSize - margin;
+            dynamicMaxHeight = window.innerHeight - rect.bottom - margin;
           }
           dynamicMaxHeight = Math.max(dynamicMaxHeight, 80); // 最小高度80px
           popup.style.maxHeight = dynamicMaxHeight + 'px';
@@ -36617,120 +37814,176 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           let initialTop = top;
           let initialShowArrowAtBottom = showArrowAtBottom;
           
-          // 创建更精致的SVG箭头
-          const createArrow = (direction) => {
-            const svgNS = 'http://www.w3.org/2000/svg';
-            const svg = document.createElementNS(svgNS, 'svg');
-            
-            // 计算箭头尺寸
-            const strokeWidth = Math.max(popupBorderWidth, 1);
-            const arrowWidth = arrowSize * 2 + 4;
-            const arrowHeight = arrowSize + 2;
-            
-            svg.style.position = 'absolute';
-            svg.style.width = arrowWidth + 'px';
-            svg.style.height = arrowHeight + 'px';
-            svg.style.pointerEvents = 'none';
-            svg.style.zIndex = '1001';
-            
-            // 添加阴影滤镜
-            const defs = document.createElementNS(svgNS, 'defs');
-            const filter = document.createElementNS(svgNS, 'filter');
-            filter.setAttribute('id', 'arrow-shadow');
-            filter.setAttribute('x', '-20%');
-            filter.setAttribute('y', '-20%');
-            filter.setAttribute('width', '140%');
-            filter.setAttribute('height', '140%');
-            
-            const feDropShadow = document.createElementNS(svgNS, 'feDropShadow');
-            feDropShadow.setAttribute('dx', '0');
-            feDropShadow.setAttribute('dy', '2');
-            feDropShadow.setAttribute('stdDeviation', '2');
-            feDropShadow.setAttribute('flood-color', 'rgba(0, 0, 0, 0.15)');
-            
-            filter.appendChild(feDropShadow);
-            defs.appendChild(filter);
-            svg.appendChild(defs);
-            
-            const centerX = arrowWidth / 2;
-            // 箭头的填充色与弹窗背景一致
-            const fillColor = 'var(--background-primary)';
-            
-            // 创建填充路径（不带描边）
-            const fillPath = document.createElementNS(svgNS, 'path');
-            if (direction === 'down') {
-              // 向下箭头 - 指向文本
-              fillPath.setAttribute('d', `
-                M0,0 
-                L${arrowWidth},0 
-                L${centerX},${arrowHeight} 
-                Z
-              `);
-            } else {
-              // 向上箭头 - 指向文本
-              fillPath.setAttribute('d', `
-                M0,${arrowHeight} 
-                L${arrowWidth},${arrowHeight} 
-                L${centerX},0 
-                Z
-              `);
-            }
-            fillPath.setAttribute('fill', fillColor);
-            fillPath.setAttribute('filter', 'url(#arrow-shadow)');
-            svg.appendChild(fillPath);
-            
-            // 创建描边路径（只描斜边）
-            const strokePath = document.createElementNS(svgNS, 'path');
-            if (direction === 'down') {
-              // 向下箭头 - 只描左右斜边
-              strokePath.setAttribute('d', `
-                M0,0 
-                L${centerX},${arrowHeight} 
-                L${arrowWidth},0
-              `);
-            } else {
-              // 向上箭头 - 只描左右斜边
-              strokePath.setAttribute('d', `
-                M0,${arrowHeight} 
-                L${centerX},0 
-                L${arrowWidth},${arrowHeight}
-              `);
-            }
-            strokePath.setAttribute('fill', 'none');
-            strokePath.setAttribute('stroke', popupBorderColor);
-            strokePath.setAttribute('stroke-width', strokeWidth);
-            strokePath.setAttribute('stroke-linecap', 'square');
-            strokePath.setAttribute('filter', 'url(#arrow-shadow)');
-            svg.appendChild(strokePath);
-            
-            return svg;
+          // ===== 标题栏（可拖动，含关闭按钮） =====
+          const popupTitleBar = document.createElement('div');
+          popupTitleBar.style.cssText = `
+            display:flex;align-items:center;justify-content:space-between;
+            padding:4px 8px;cursor:move;user-select:none;-webkit-user-select:none;
+            border-bottom:1px solid var(--background-modifier-border);
+            background:var(--background-secondary);border-radius:8px 8px 0 0;
+            flex-shrink:0;min-height:24px;
+          `;
+          // 左侧：关键词名
+          const popupTitleText = document.createElement('span');
+          popupTitleText.textContent = targetEl.dataset.ruleRegex || '';
+          popupTitleText.dataset.editField = 'ruleRegex';
+          popupTitleText.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;border-bottom:1px dashed transparent;transition:border-bottom-color 0.15s ease;max-width:70%;';
+          popupTitleText.addEventListener('mouseenter', () => { popupTitleText.style.borderBottomColor = 'var(--text-muted)'; });
+          popupTitleText.addEventListener('mouseleave', () => { popupTitleText.style.borderBottomColor = 'transparent'; });
+          popupTitleBar.appendChild(popupTitleText);
+          // 右侧：关闭按钮
+          const popupCloseBtn = document.createElement('span');
+          popupCloseBtn.textContent = '✕';
+          popupCloseBtn.style.cssText = `
+            cursor:pointer;font-size:13px;color:var(--text-faint);
+            padding:1px 5px;border-radius:3px;
+            transition:all 0.15s ease;flex-shrink:0;
+          `;
+          popupCloseBtn.addEventListener('mouseenter', () => {
+            popupCloseBtn.style.background = 'var(--background-modifier-hover)';
+            popupCloseBtn.style.color = 'var(--text-normal)';
+          });
+          popupCloseBtn.addEventListener('mouseleave', () => {
+            popupCloseBtn.style.background = 'transparent';
+            popupCloseBtn.style.color = 'var(--text-faint)';
+          });
+
+          let popupCloseLongPress = null;
+          let popupLongPressTriggered = false;
+          const startLongPress = () => {
+            popupLongPressTriggered = false;
+            popupCloseLongPress = setTimeout(() => {
+              popupLongPressTriggered = true;
+              document.querySelectorAll('.keyword-detail-window, .remark-custom-popup').forEach(w => w.remove());
+            }, 600);
           };
+          const cancelLongPress = () => { if (popupCloseLongPress) clearTimeout(popupCloseLongPress); };
+          popupCloseBtn.addEventListener('click', (ce) => {
+            ce.stopPropagation();
+            if (!popupLongPressTriggered) hidePopup(true, true);
+          });
+          popupCloseBtn.addEventListener('mousedown', startLongPress);
+          popupCloseBtn.addEventListener('mouseup', cancelLongPress);
+          popupCloseBtn.addEventListener('mouseleave', cancelLongPress);
+          popupCloseBtn.addEventListener('touchstart', startLongPress);
+          popupCloseBtn.addEventListener('touchend', (e) => {
+            cancelLongPress();
+            if (!popupLongPressTriggered) { e.preventDefault(); hidePopup(true, true); }
+          });
+          popupCloseBtn.addEventListener('touchcancel', cancelLongPress);
+          popupTitleBar.appendChild(popupCloseBtn);
+          popup.appendChild(popupTitleBar);
           
-          // 计算箭头SVG的实际宽度
-          const arrowSvgWidth = arrowSize * 2 + 4;
+          // 拖动弹窗逻辑
+          let isDraggingPopup = false;
+          let popupDragStartX, popupDragStartY, popupWinStartX, popupWinStartY;
+          popupTitleBar.addEventListener('mousedown', (e) => {
+            if (e.target === popupCloseBtn) return;
+            if (e.target.tagName === 'INPUT') return;
+            isDraggingPopup = true;
+            popupDragStartX = e.clientX;
+            popupDragStartY = e.clientY;
+            const rect = popup.getBoundingClientRect();
+            popupWinStartX = Math.round(rect.left);
+            popupWinStartY = Math.round(rect.top);
+            e.preventDefault();
+          });
+          // 手机版 touch 拖动
+          popupTitleBar.addEventListener('touchstart', (e) => {
+            if (e.target === popupCloseBtn) return;
+            if (e.target.tagName === 'INPUT') return;
+            const touch = e.touches[0];
+            isDraggingPopup = true;
+            popupDragStartX = touch.clientX;
+            popupDragStartY = touch.clientY;
+            const rect = popup.getBoundingClientRect();
+            popupWinStartX = Math.round(rect.left);
+            popupWinStartY = Math.round(rect.top);
+          }, { passive: true });
+          const onPopupTouchMove = (e) => {
+            if (!isDraggingPopup) return;
+            const touch = e.touches[0];
+            const dx = touch.clientX - popupDragStartX;
+            const dy = touch.clientY - popupDragStartY;
+            popup.style.left = Math.round(popupWinStartX + dx) + 'px';
+            popup.style.top = Math.round(popupWinStartY + dy) + 'px';
+            isPinned = true;
+            keepOpen = true;
+          };
+          const onPopupTouchEnd = () => { isDraggingPopup = false; };
+          document.addEventListener('touchmove', onPopupTouchMove, { passive: true });
+          document.addEventListener('touchend', onPopupTouchEnd);
+          const onPopupMouseMove = (e) => {
+            if (!isDraggingPopup) return;
+            const dx = e.clientX - popupDragStartX;
+            const dy = e.clientY - popupDragStartY;
+            popup.style.left = Math.round(popupWinStartX + dx) + 'px';
+            popup.style.top = Math.round(popupWinStartY + dy) + 'px';
+            // 拖动后固定弹窗，只能通过关闭按钮关闭
+            isPinned = true;
+            keepOpen = true;
+          };
+          const onPopupMouseUp = () => {
+            isDraggingPopup = false;
+          };
+          document.addEventListener('mousemove', onPopupMouseMove);
+          document.addEventListener('mouseup', onPopupMouseUp);
           
-          // 确保箭头不超出弹窗边界
-          if (arrowPos < 0) arrowPos = 0;
-          if (arrowPos > popupMaxWidth - arrowSvgWidth) arrowPos = popupMaxWidth - arrowSvgWidth;
+          // 双击标题栏规则名进入编辑
+          popupTitleText.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            keepOpen = true;
+            const oldRegex = targetEl.dataset.ruleRegex || '';
+            const isGlobal = plugin.globalRules.some(r => r.regex === oldRegex);
+            const rulesList = isGlobal ? plugin.globalRules : plugin.rules;
+            const rule = rulesList.find(r => r.regex === oldRegex);
+            if (!rule) return;
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = oldRegex;
+            const origWidth = popupTitleText.offsetWidth;
+            input.style.cssText = `font-size:11px;font-weight:600;color:var(--text-muted);padding:1px 8px;border:none;border-radius:10px;background:var(--background-modifier-hover);width:${origWidth}px;outline:none;box-sizing:border-box;margin:0;height:auto;line-height:normal;`;
+            popupTitleText.replaceWith(input);
+            input.focus();
+            input.select();
+            
+            let regexSaved = false;
+            const saveRegex = async () => {
+              if (regexSaved) return;
+              regexSaved = true;
+              const newRegex = input.value.trim();
+              if (!newRegex || newRegex === oldRegex) {
+                input.replaceWith(popupTitleText);
+                popupTitleText.textContent = oldRegex;
+                return;
+              }
+              if (rulesList.some(r => r.regex === newRegex)) {
+                input.replaceWith(popupTitleText);
+                popupTitleText.textContent = oldRegex;
+                return;
+              }
+              rule.regex = newRegex;
+              targetEl.dataset.ruleRegex = newRegex;
+              popupTitleText.textContent = newRegex;
+              input.replaceWith(popupTitleText);
+              isDirty = true;
+              if (isGlobal) {
+                await plugin.saveGlobalRules(plugin.globalRules, true);
+              } else {
+                await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+              }
+            };
+            input.addEventListener('blur', saveRegex);
+            input.addEventListener('keydown', (ev) => {
+              if (ev.key === 'Enter') input.blur();
+              if (ev.key === 'Escape') { regexSaved = true; input.replaceWith(popupTitleText); popupTitleText.textContent = oldRegex; }
+            });
+          });
           
-          // 创建箭头
-          const arrow = createArrow(showArrowAtBottom ? 'down' : 'up');
-          
-          if (showArrowAtBottom) {
-            // 箭头在底部，指向下方（指向文本）
-            arrow.style.top = '100%';
-            arrow.style.marginTop = '0px';
-          } else {
-            // 箭头在顶部，指向上方（指向文本）
-            arrow.style.top = '0px';
-            arrow.style.transform = 'translateY(-100%)';
-          }
-          
-          arrow.style.left = arrowPos + 'px';
-          popup.appendChild(arrow);
-          
-          // 保存箭头引用用于滚动时更新
-          let arrowRef = arrow;
+          // 保存箭头引用（不再使用，但保留变量避免引用错误）
+          let arrowRef = null;
           let topRef = top;
           
           // 统一容器（预览和编辑共用）
@@ -36749,6 +38002,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           contentContainer.style.fontFamily = 'var(--font-family)';
           contentContainer.style.lineHeight = `${plugin.settings.popupLineHeight !== undefined ? plugin.settings.popupLineHeight : 1.5}`;
           contentContainer.style.overflowX = 'auto'; // 支持表格水平滚动
+          contentContainer.style.flex = '1';
+          contentContainer.style.minHeight = '0';
           
           // 添加表格样式支持（只作用于备注弹窗内的表格）
           const styleElement = document.createElement('style');
@@ -36885,7 +38140,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                   remarkWrapper.style.cssText = 'display:flex;align-items:flex-start;gap:6px;';
                   // 同色圆点
                   const dot = document.createElement('span');
-                  dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fileHue},50%,50%);flex-shrink:0;margin-top:5px;`;
+dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fileHue},50%,50%);flex-shrink:0;margin-top:5px;`;
                   remarkWrapper.appendChild(dot);
                   const remarkBox = document.createElement('div');
                   remarkBox.style.cssText = 'flex:1;min-width:0;overflow:hidden;';
@@ -36923,7 +38178,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                   
                   // 底部工具栏：搜索词 + 打开按钮
                   const toolBar = document.createElement('div');
-                  toolBar.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:2px;';
+        toolBar.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:0;';
                   
                   // 搜索词标签（可双击编辑）
                   const searchTag = document.createElement('span');
@@ -37149,6 +38404,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 重新定位弹窗（内容变化后调用）
           const repositionPopup = () => {
+            if (isPinned) return;
             requestAnimationFrame(() => {
               // 检查 targetEl 是否仍在 DOM 中，如果不在则尝试重新查找
               let activeTargetEl = targetEl;
@@ -37181,7 +38437,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               // 重新计算垂直位置
               const spaceAbove = r.top;
               const spaceBelow = window.innerHeight - r.bottom;
-              const requiredHeight = newHeight + arrowSize + 20;
+              const requiredHeight = newHeight + 20;
               const canShowAbove = spaceAbove >= requiredHeight;
               const canShowBelow = spaceBelow >= requiredHeight;
               
@@ -37189,25 +38445,25 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               let newShowArrowAtBottom;
               if (canShowAbove && canShowBelow) {
                 if (spaceAbove >= spaceBelow) {
-                  nt = r.top - newHeight - arrowSize;
+                  nt = r.top - newHeight;
                   newShowArrowAtBottom = true;
                 } else {
-                  nt = r.bottom + arrowSize;
+                  nt = r.bottom;
                   newShowArrowAtBottom = false;
                 }
               } else if (canShowAbove) {
-                nt = r.top - newHeight - arrowSize;
+                nt = r.top - newHeight;
                 newShowArrowAtBottom = true;
               } else if (canShowBelow) {
-                nt = r.bottom + arrowSize;
+                nt = r.bottom;
                 newShowArrowAtBottom = false;
               } else {
                 // 空间不够，放空间大的一侧
                 if (spaceAbove > spaceBelow) {
-                  nt = Math.max(10, r.top - newHeight - arrowSize);
+                  nt = Math.max(10, r.top - newHeight);
                   newShowArrowAtBottom = true;
                 } else {
-                  nt = r.bottom + arrowSize;
+                  nt = r.bottom;
                   newShowArrowAtBottom = false;
                 }
               }
@@ -37217,35 +38473,16 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               // 动态更新最大高度
               let newDynamicMaxHeight;
               if (newShowArrowAtBottom) {
-                newDynamicMaxHeight = r.top - arrowSize - 10;
+                newDynamicMaxHeight = r.top - 10;
               } else {
-                newDynamicMaxHeight = window.innerHeight - r.bottom - arrowSize - 10;
+                newDynamicMaxHeight = window.innerHeight - r.bottom - 10;
               }
               newDynamicMaxHeight = Math.max(newDynamicMaxHeight, 80);
               popup.style.maxHeight = newDynamicMaxHeight + 'px';
-              contentContainer.style.maxHeight = `calc(${newDynamicMaxHeight}px - ${popupSpacing * 2 + 26}px)`;
-              
-              // 更新箭头
-              const targetCenter = r.left + r.width / 2;
-              const arrowTipInPopup = targetCenter - nl;
-              let newArrowPos = arrowTipInPopup - (arrowSize + 2);
-              const arrowSvgWidth = arrowSize * 2 + 4;
-              if (newArrowPos < 0) newArrowPos = 0;
-              if (newArrowPos > newWidth - arrowSvgWidth) newArrowPos = newWidth - arrowSvgWidth;
-              
-              if (arrowRef && arrowRef.parentNode) {
-                arrowRef.parentNode.removeChild(arrowRef);
-              }
-              arrowRef = createArrow(newShowArrowAtBottom ? 'down' : 'up');
-              arrowRef.style.left = newArrowPos + 'px';
-              if (newShowArrowAtBottom) {
-                arrowRef.style.top = '100%';
-                arrowRef.style.marginTop = '0px';
-              } else {
-                arrowRef.style.top = '0px';
-                arrowRef.style.transform = 'translateY(-100%)';
-              }
-              popup.appendChild(arrowRef);
+              // 如果有关键词 chips 栏，减去其高度
+              const chipsBar = popup.querySelector('.keyword-chips-bar');
+              const chipsHeight = chipsBar ? chipsBar.offsetHeight : 0;
+              contentContainer.style.maxHeight = `calc(${newDynamicMaxHeight}px - ${popupSpacing * 2 + 26 + chipsHeight}px)`;
             });
           };
           
@@ -37276,54 +38513,30 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               lastPopupHeight = actualHeight;
               const spaceAbove = rect.top;
               const spaceBelow = window.innerHeight - rect.bottom;
-              const requiredHeight = actualHeight + arrowSize + 20;
+              const requiredHeight = actualHeight + 20;
               const canShowAbove = spaceAbove >= requiredHeight;
               const canShowBelow = spaceBelow >= requiredHeight;
               
               let newTop;
               if (canShowAbove && canShowBelow) {
                 if (spaceAbove >= spaceBelow) {
-                  newTop = rect.top - actualHeight - arrowSize;
+                  newTop = rect.top - actualHeight;
                   showArrowAtBottom = true;
                 } else {
-                  newTop = rect.bottom + arrowSize;
+                  newTop = rect.bottom;
                   showArrowAtBottom = false;
                 }
               } else if (canShowAbove) {
-                newTop = rect.top - actualHeight - arrowSize;
+                newTop = rect.top - actualHeight;
                 showArrowAtBottom = true;
               } else if (canShowBelow) {
-                newTop = rect.bottom + arrowSize;
+                newTop = rect.bottom;
                 showArrowAtBottom = false;
               } else {
-                newTop = rect.bottom + arrowSize;
+                newTop = rect.bottom;
                 showArrowAtBottom = false;
               }
               popup.style.top = newTop + 'px';
-              
-              // 重新计算箭头位置
-              const actualPopupWidth = popup.offsetWidth;
-              const targetCenter = rect.left + rect.width / 2;
-              const arrowTipInPopup = targetCenter - newLeft;
-              let newArrowPos = arrowTipInPopup - (arrowSize + 2);
-              const arrowSvgWidth = arrowSize * 2 + 4;
-              if (newArrowPos < 0) newArrowPos = 0;
-              if (newArrowPos > actualPopupWidth - arrowSvgWidth) newArrowPos = actualPopupWidth - arrowSvgWidth;
-              
-              // 更新箭头方向和位置
-              if (arrowRef && arrowRef.parentNode) {
-                arrowRef.parentNode.removeChild(arrowRef);
-              }
-              arrowRef = createArrow(showArrowAtBottom ? 'down' : 'up');
-              arrowRef.style.left = newArrowPos + 'px';
-              if (showArrowAtBottom) {
-                arrowRef.style.top = '100%';
-                arrowRef.style.marginTop = '0px';
-              } else {
-                arrowRef.style.top = '0px';
-                arrowRef.style.transform = 'translateY(-100%)';
-              }
-              popup.appendChild(arrowRef);
               
               updateBounds();
             }
@@ -37691,11 +38904,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 关闭弹窗（带延迟，确保鼠标有足够时间移到匹配文字上）
           let isHiding = false;
           let keepOpen = false; // 点击添加按钮后保持弹窗不自动隐藏
+          let isPinned = false; // 拖动后固定弹窗，只能通过关闭按钮关闭
           let isDirty = false; // 标记弹窗期间是否有修改
-          const hidePopup = (immediate = false) => {
+          const hidePopup = (immediate = false, force = false) => {
             if (isHiding) return;
             if (!popup.parentNode) return; // 弹窗已移除，不再处理
-            if (keepOpen) return;
+            if (keepOpen && !force) return;
+            if (isPinned && !force) return; // 固定状态下只能强制关闭
             isHiding = true;
             isClosing = true; // 标记正在关闭，阻止创建新弹窗
             // 清除显示定时器，防止在关闭期间创建新弹窗
@@ -37778,6 +38993,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 document.removeEventListener('mousemove', mouseMoveHandler);
                 mouseMoveHandler = null;
               }
+              // 移除弹窗拖动监听
+              document.removeEventListener('mousemove', onPopupMouseMove);
+              document.removeEventListener('mouseup', onPopupMouseUp);
               // 移除点击外部监听
               if (clickOutsideHandler) {
                 document.removeEventListener('click', clickOutsideHandler, true);
@@ -37788,6 +39006,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 clearTimeout(closeDelayTimer);
                 closeDelayTimer = null;
               }
+              // 清除残留的关键词预览弹窗
+              document.querySelectorAll('.keyword-chip-preview').forEach(el => el.remove());
               if (popup.parentNode) {
                 popup.parentNode.removeChild(popup);
               }
@@ -37797,12 +39017,24 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 scrollHandler = null;
               }
               currentPopover = null;
-              currentTargetEl = null; // 清除当前目标
+              currentTargetEl = null;
               isHiding = false;
-              isClosing = false; // 关闭完成
-              // 弹窗关闭后恢复视图刷新，并刷新视图让高亮元素的 dataset.links 与数据同步
+              isClosing = false;
               plugin._skipRefreshForPopup = false;
-              plugin.refreshCurrentView();
+              const sel = window.getSelection();
+              if (sel && !sel.isCollapsed && sel.toString().trim()) {
+                const checkRefresh = () => {
+                  const s = window.getSelection();
+                  if (!s || s.isCollapsed || !s.toString().trim()) {
+                    plugin.refreshCurrentView();
+                  } else {
+                    setTimeout(checkRefresh, 300);
+                  }
+                };
+                setTimeout(checkRefresh, 300);
+              } else {
+                plugin.refreshCurrentView();
+              }
             };
             
             if (immediate) {
@@ -37817,6 +39049,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           let scrollHandler = null;
           const updatePopupPosition = (e) => {
             if (!popup.parentNode) return;
+            if (isPinned) return;
 
             // 忽略弹窗内部容器的滚动事件，避免内部滚动触发重新定位
             if (e && e.target && popup.contains(e.target)) return;
@@ -37854,7 +39087,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             // 重新判断上下位置
             const spaceAbove = newRect.top;
             const spaceBelow = window.innerHeight - newRect.bottom;
-            const requiredHeight = lastPopupHeight + arrowSize + 20;
+            const requiredHeight = lastPopupHeight + 20;
             
             let newTop;
             let newShowArrowAtBottom;
@@ -37864,37 +39097,22 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             
             if (canShowAbove && canShowBelow) {
               if (spaceAbove >= spaceBelow) {
-                newTop = newRect.top - lastPopupHeight - arrowSize;
+                newTop = newRect.top - lastPopupHeight;
                 newShowArrowAtBottom = true;
               } else {
-                newTop = newRect.bottom + arrowSize;
+                newTop = newRect.bottom;
                 newShowArrowAtBottom = false;
               }
             } else if (canShowAbove) {
-              newTop = newRect.top - lastPopupHeight - arrowSize;
+              newTop = newRect.top - lastPopupHeight;
               newShowArrowAtBottom = true;
             } else if (canShowBelow) {
-              newTop = newRect.bottom + arrowSize;
+              newTop = newRect.bottom;
               newShowArrowAtBottom = false;
             } else {
-              newTop = newRect.bottom + arrowSize;
+              newTop = newRect.bottom;
               newShowArrowAtBottom = false;
             }
-            
-            // 更新箭头位置
-            const actualPopupWidth = popup.offsetWidth;
-            // 计算目标元素的中心位置
-            const targetCenter = newRect.left + newRect.width / 2;
-            // 计算箭头尖端在弹窗内的位置
-            const arrowTipInPopup = targetCenter - left;
-            // 箭头SVG的宽度是 arrowSize * 2 + 4，所以需要减去一半的宽度来居中
-            let newArrowPos = arrowTipInPopup - (arrowSize + 2);
-            // 计算箭头SVG的实际宽度
-            const arrowSvgWidth = arrowSize * 2 + 4;
-            
-            // 边界检查：确保整个箭头SVG都在弹窗内
-            if (newArrowPos < 0) newArrowPos = 0;
-            if (newArrowPos > actualPopupWidth - arrowSvgWidth) newArrowPos = actualPopupWidth - arrowSvgWidth;
             
             popup.style.left = left + 'px';
             popup.style.top = newTop + 'px';
@@ -37902,45 +39120,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             // 动态更新弹窗最大高度
             let newDynamicMaxHeight;
             if (newShowArrowAtBottom) {
-              newDynamicMaxHeight = newRect.top - arrowSize - 10;
+              newDynamicMaxHeight = newRect.top - 10;
             } else {
-              newDynamicMaxHeight = window.innerHeight - newRect.bottom - arrowSize - 10;
+              newDynamicMaxHeight = window.innerHeight - newRect.bottom - 10;
             }
             newDynamicMaxHeight = Math.max(newDynamicMaxHeight, 80);
             popup.style.maxHeight = newDynamicMaxHeight + 'px';
-            contentContainer.style.maxHeight = `calc(${newDynamicMaxHeight}px - ${popupSpacing * 2 + 26}px)`;
-            
-            // 更新箭头
-            if (arrowRef) {
-              arrowRef.style.left = newArrowPos + 'px';
-              if (newShowArrowAtBottom) {
-                arrowRef.style.top = '100%';
-                arrowRef.style.marginTop = '-1px';
-                // 移除旧箭头，创建新的向下箭头
-                const parent = arrowRef.parentNode;
-                if (parent) {
-                  parent.removeChild(arrowRef);
-                  arrowRef = createArrow('down');
-                  arrowRef.style.left = newArrowPos + 'px';
-                  arrowRef.style.top = '100%';
-                  arrowRef.style.marginTop = '0px';
-                  parent.appendChild(arrowRef);
-                }
-              } else {
-                arrowRef.style.top = '0px';
-                arrowRef.style.transform = 'translateY(-100%)';
-                // 移除旧箭头，创建新的向上箭头
-                const parent = arrowRef.parentNode;
-                if (parent) {
-                  parent.removeChild(arrowRef);
-                  arrowRef = createArrow('up');
-                  arrowRef.style.left = newArrowPos + 'px';
-                  arrowRef.style.top = '0px';
-                  arrowRef.style.transform = 'translateY(-100%)';
-                  parent.appendChild(arrowRef);
-                }
-              }
-            }
+            const chipsBar2 = popup.querySelector('.keyword-chips-bar');
+            const chipsHeight2 = chipsBar2 ? chipsBar2.offsetHeight : 0;
+            contentContainer.style.maxHeight = `calc(${newDynamicMaxHeight}px - ${popupSpacing * 2 + 26 + chipsHeight2}px)`;
             
             // 更新包围盒
             updateBounds();
@@ -37956,22 +39144,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             ruleBadge.textContent = badgeLabel;
             if (!plugin.settings?.hideTooltip) ruleBadge.title = popupRuleSource === 'global' ? t('main.globalRuleClickToLocal') : t('main.localRuleClickToGlobal');
             ruleBadge.style.cssText = `
-              position: absolute;
-              top: 4px;
-              right: 4px;
-              font-size: 10px;
-              font-weight: bold;
-              color: var(--text-muted);
-              opacity: 0.6;
+              font-size: 10px;font-weight: bold;
+              color: var(--text-muted);opacity: 0.6;
               background: var(--background-secondary);
               border: 1px solid var(--background-modifier-border);
-              border-radius: 3px;
-              padding: 1px 5px;
-              line-height: 1.3;
-              cursor: pointer;
-              z-index: 1002;
-              pointer-events: auto;
-              user-select: none;
+              border-radius: 3px;padding: 1px 5px;
+              line-height: 1.3;cursor: pointer;
+              user-select: none;flex-shrink: 0;
               transition: opacity 0.15s, color 0.15s, background 0.15s;
             `;
             ruleBadge.addEventListener('mouseenter', () => {
@@ -38089,17 +39268,186 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               plugin.refreshCurrentView();
               new Notice(t('main.ruleRemoved'));
             });
-            popup.appendChild(ruleBadge);
+            popupTitleBar.insertBefore(ruleBadge, popupTitleText);
+            // 添加间距
+            ruleBadge.style.marginRight = '6px';
           }
 
           popup.appendChild(contentContainer);
 
-          // 左下角版本标签（固定在弹窗底部，不随内容滚动）
-          const versionLabel = document.createElement('div');
-          const pluginVersion = plugin && plugin.manifest ? plugin.manifest.version : '';
-          versionLabel.textContent = 'SwiftGloss' + (pluginVersion ? ' v' + pluginVersion : '');
-          versionLabel.style.cssText = 'position:absolute;bottom:2px;left:6px;font-size:8px;color:var(--text-faint);opacity:0.3;user-select:none;-webkit-user-select:none;line-height:1;pointer-events:none;';
-          popup.appendChild(versionLabel);
+          // ===== 关键词反向链接 chips 区（固定在弹窗底部边缘） =====
+          const currentRegex = targetEl.dataset.ruleRegex;
+          if (currentRegex) {
+            const keywordIndex = plugin.buildKeywordIndex();
+            const backlinkIndex = plugin.buildBacklinkIndex(keywordIndex);
+
+            // 收集当前关键词备注中提到的其他关键词（正向：当前关键词的备注里提到了谁）
+            const mentionedKeywords = [];
+            const currentRule = plugin.globalRules.find(r => r.regex === currentRegex) || plugin.rules.find(r => r.regex === currentRegex);
+            if (currentRule && currentRule.links) {
+              const sortedKws = [...keywordIndex.values()]
+                .filter(k => k.plainTexts && k.plainTexts.length > 0 && k.regex !== currentRegex)
+                .sort((a, b) => Math.max(...b.plainTexts.map(p => p.length)) - Math.max(...a.plainTexts.map(p => p.length)));
+              for (const link of currentRule.links) {
+                const remarkText = link.remark || '';
+                if (!remarkText.trim()) continue;
+                for (const kw of sortedKws) {
+                  if (mentionedKeywords.some(m => m.regex === kw.regex)) continue;
+                  if (kw.plainTexts.some(p => remarkText.includes(p))) {
+                    mentionedKeywords.push(kw);
+                  }
+                }
+              }
+            }
+
+            // 反向：谁提到了当前关键词
+            const mentionedBy = backlinkIndex.get(currentRegex) || [];
+
+            // 合并去重
+            const allRelatedKeywords = new Map();
+            for (const kw of mentionedKeywords) {
+              allRelatedKeywords.set(kw.regex, { regex: kw.regex, cssClass: kw.cssClass, relation: 'mention' });
+            }
+            for (const bl of mentionedBy) {
+              if (!allRelatedKeywords.has(bl.sourceRegex)) {
+                // 查找来源规则的 cssClass
+                const sourceRule = plugin.globalRules.find(r => r.regex === bl.sourceRegex) || plugin.rules.find(r => r.regex === bl.sourceRegex);
+                allRelatedKeywords.set(bl.sourceRegex, { regex: bl.sourceRegex, cssClass: sourceRule?.cssClass || '', relation: 'mentionedBy' });
+              }
+            }
+
+            if (allRelatedKeywords.size > 0) {
+              const chipsBar = document.createElement('div');
+              chipsBar.className = 'keyword-chips-bar';
+              chipsBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;background:var(--background-secondary);border-top:1px solid var(--background-modifier-border);border-radius:0 0 7px 7px;flex-shrink:0;margin:0 -' + popupSpacing + 'px -' + popupSpacing + 'px -' + popupSpacing + 'px;';
+
+              // 标签
+              const label = document.createElement('span');
+              label.textContent = '🔗';
+              label.style.cssText = 'font-size:11px;color:var(--text-muted);margin-right:2px;align-self:center;';
+              chipsBar.appendChild(label);
+
+              for (const [kwRegex, info] of allRelatedKeywords) {
+                const chip = document.createElement('span');
+                chip.className = 'keyword-chip';
+                chip.title = (info.relation === 'mention' ? t('main.keywordMentions') : t('main.keywordMentionedBy')) + ' ' + kwRegex;
+                chip.style.cssText = 'display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid var(--background-modifier-border);background:var(--background-primary);transition:all 0.15s ease;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+
+                const chipLabel = document.createElement('span');
+                chipLabel.textContent = (info.relation === 'mention' ? '→ ' : '← ') + kwRegex;
+                if (info.cssClass) {
+                  chipLabel.className = info.cssClass + ' highlight-regex-text';
+                  chip.style.borderColor = 'transparent';
+                } else {
+                  chipLabel.style.cssText = 'font-weight:500;color:var(--text-normal);';
+                }
+                chip.appendChild(chipLabel);
+
+                // 悬浮预览
+                let hoverTimeout = null;
+                let previewEl = null;
+                let previewHideTimeout = null;
+
+                const closePreview = () => {
+                  if (previewEl) { previewEl.remove(); previewEl = null; }
+                  if (previewHideTimeout) { clearTimeout(previewHideTimeout); previewHideTimeout = null; }
+                };
+
+                chip.addEventListener('mouseenter', () => {
+                  if (!_isDesktop) return;
+                  chip.style.transform = 'scale(1.05)';
+                  chip.style.filter = 'brightness(1.15)';
+                  if (previewHideTimeout) { clearTimeout(previewHideTimeout); previewHideTimeout = null; }
+                  if (previewEl) return;
+                  hoverTimeout = setTimeout(() => {
+                    const kwRule = plugin.globalRules.find(r => r.regex === kwRegex) || plugin.rules.find(r => r.regex === kwRegex);
+                    if (!kwRule || !kwRule.links) return;
+                    const remarks = kwRule.links.filter(l => l.remark && l.remark.trim()).map(l => l.remark.trim());
+                    if (remarks.length === 0) return;
+
+                    previewEl = document.createElement('div');
+                    previewEl.className = 'keyword-chip-preview';
+                    previewEl.style.cssText = `position:fixed;z-index:1200;max-width:350px;max-height:300px;overflow-y:auto;padding:${popupSpacing}px;background:var(--background-primary);border:${popupBorderWidth}px solid ${popupBorderColor};border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.35);font-size:12px;line-height:1.4;`;
+
+                    const titleDiv = document.createElement('div');
+                    titleDiv.textContent = kwRegex;
+                    titleDiv.style.cssText = 'font-weight:600;margin-bottom:4px;color:var(--text-accent);';
+                    previewEl.appendChild(titleDiv);
+
+                    for (const r of remarks) {
+                      const rDiv = document.createElement('div');
+                      rDiv.textContent = r;
+                      rDiv.style.cssText = 'color:var(--text-muted);margin-top:2px;border-left:2px solid var(--background-modifier-border);padding-left:6px;';
+                      previewEl.appendChild(rDiv);
+                    }
+
+                    previewEl.addEventListener('mouseenter', () => {
+                      if (previewHideTimeout) { clearTimeout(previewHideTimeout); previewHideTimeout = null; }
+                    });
+                    previewEl.addEventListener('mouseleave', () => {
+                      previewHideTimeout = setTimeout(() => {
+                        closePreview();
+                        chip.style.transform = 'scale(1)';
+                        chip.style.filter = '';
+                      }, 200);
+                    });
+
+                    document.body.appendChild(previewEl);
+
+                    const chipRect = chip.getBoundingClientRect();
+                    const previewHeight = previewEl.offsetHeight;
+                    let top = chipRect.top - previewHeight - 4;
+                    if (top < 4) top = chipRect.bottom + 4;
+                    let left = chipRect.left;
+                    if (left + 350 > window.innerWidth) left = window.innerWidth - 360;
+                    previewEl.style.top = top + 'px';
+                    previewEl.style.left = left + 'px';
+                  }, 400);
+                });
+                chip.addEventListener('mouseleave', () => {
+                  if (hoverTimeout) clearTimeout(hoverTimeout);
+                  previewHideTimeout = setTimeout(() => {
+                    closePreview();
+                    chip.style.transform = 'scale(1)';
+                    chip.style.filter = '';
+                  }, 200);
+                });
+
+                chip.addEventListener('click', (ce) => {
+                  ce.preventDefault();
+                  ce.stopPropagation();
+                  closePreview();
+                  chip.style.transform = 'scale(1)';
+                  chip.style.filter = '';
+                  // 检查是否已有该关键词的窗口
+                  const existingWin = document.querySelector(`.keyword-detail-window[data-keyword="${CSS.escape(kwRegex)}"]`);
+                  if (existingWin) {
+                    existingWin.remove();
+                  } else {
+                    plugin.openKeywordWindow(kwRegex);
+                  }
+                });
+
+                chipsBar.appendChild(chip);
+              }
+
+              popup.appendChild(chipsBar);
+
+              // 版本标签放入 chipsBar 内部（避免重叠）
+              const versionLabel = document.createElement('span');
+              const pluginVersion = plugin && plugin.manifest ? plugin.manifest.version : '';
+              versionLabel.textContent = 'SwiftGloss' + (pluginVersion ? ' v' + pluginVersion : '');
+              versionLabel.style.cssText = 'font-size:8px;color:var(--text-faint);opacity:0.3;user-select:none;-webkit-user-select:none;line-height:1;margin-left:auto;align-self:center;';
+              chipsBar.appendChild(versionLabel);
+            } else {
+              // 无 chips 时，版本标签固定在弹窗底部
+              const versionLabel = document.createElement('div');
+              const pluginVersion = plugin && plugin.manifest ? plugin.manifest.version : '';
+              versionLabel.textContent = 'SwiftGloss' + (pluginVersion ? ' v' + pluginVersion : '');
+              versionLabel.style.cssText = 'position:absolute;bottom:2px;left:6px;font-size:8px;color:var(--text-faint);opacity:0.3;user-select:none;-webkit-user-select:none;line-height:1;pointer-events:none;';
+              popup.appendChild(versionLabel);
+            }
+          }
           
           // 添加到页面
           document.body.appendChild(popup);
@@ -38293,9 +39641,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           let clickOutsideHandler = null;
           clickOutsideHandler = (e) => {
             if (e.target.closest('.remark-badge')) return;
+            if (e.target.closest('.keyword-detail-window')) return;
+            if (e.target.closest('.keyword-chip-preview')) return;
+            if (isPinned) return;
             if (!popup.contains(e.target) && !targetEl.contains(e.target)) {
               keepOpen = false;
-              hidePopup();
+              hidePopup(false, true);
               document.removeEventListener('click', clickOutsideHandler, true);
             }
           };
@@ -39157,39 +40508,140 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         return;
       }
       
-      // 在新标签页打开文件
       const newLeaf = this.app.workspace.getLeaf(true);
       await newLeaf.openFile(targetFile);
       
-      const targetView = this.app.workspace.getActiveViewOfType(MarkdownView);
-      if (!targetView || !targetView.editor) {
-        new Notice(t('main.cannotOpenEditor'));
-        return;
-      }
-      
-      // 延迟等待文件加载完成
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      if (searchText) {
-        const editor = targetView.editor;
-        const content = editor.getValue();
-        const lines = content.split('\n');
-        
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-          const pos = line.indexOf(searchText);
-          if (pos !== -1) {
-            const from = { line: i, ch: pos };
-            const to = { line: i, ch: pos + searchText.length };
-            editor.setCursor(from);
-            editor.scrollIntoView({ from, to }, true);
-            editor.setSelection(from, to);
-            new Notice(t('main.jumpedTo') + ': ' + searchText);
-            return;
+      if (!searchText) return;
+
+      // 延迟等待文件加载和视图切换完成（避免与其他插件冲突）
+      setTimeout(() => {
+        this.app.workspace.setActiveLeaf(newLeaf, { focus: true });
+
+        const targetView = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (!targetView || !targetView.editor) return;
+
+        // 判断阅读模式
+        const leaf = this.app.workspace.activeLeaf;
+        const viewState = leaf ? leaf.getViewState() : null;
+        const isReading = viewState && viewState.state && viewState.state.mode === 'preview';
+
+        if (isReading) {
+          const containerEl = leaf.view.containerEl;
+          const readingEl = containerEl
+            ? (containerEl.querySelector('.markdown-reading-view') || containerEl.querySelector('.markdown-preview-view'))
+            : null;
+          if (!readingEl) return;
+
+          const searchLower = searchText.toLowerCase();
+          const walker = document.createTreeWalker(readingEl, NodeFilter.SHOW_TEXT, null, false);
+          while (walker.nextNode()) {
+            const node = walker.currentNode;
+            const idx = node.textContent.toLowerCase().indexOf(searchLower);
+            if (idx !== -1) {
+              const range = document.createRange();
+              range.setStart(node, idx);
+              range.setEnd(node, idx + searchText.length);
+              range.scrollIntoView({ behavior: 'auto', block: 'center' });
+              const parent = node.parentNode;
+              if (parent && !parent.closest('.hl-marshmallow')) {
+                const hlRange = document.createRange();
+                hlRange.setStart(node, idx);
+                hlRange.setEnd(node, idx + searchText.length);
+                const span = document.createElement('span');
+                span.className = 'hl-marshmallow';
+                span.style.cssText = 'background:#fff !important;color:#cc2e7a !important;border:2px solid #ff6eb4 !important;border-radius:10px !important;padding:0.1em 0.6em !important;box-shadow:2px 2px 0 #ffaad9 !important;-webkit-box-decoration-break:clone;box-decoration-break:clone;';
+                hlRange.surroundContents(span);
+                setTimeout(() => {
+                  const p = span.parentNode;
+                  if (p) p.replaceChild(document.createTextNode(span.textContent), span);
+                }, 3000);
+              }
+              new Notice(t('main.jumpedTo') + ': ' + searchText);
+              return;
+            }
           }
+          new Notice(t('main.notFoundInDoc') + ': ' + searchText);
+          return;
         }
+
+        // 编辑模式
+        const editor = targetView.editor;
+        const cm = editor.cm;
+        if (!cm) {
+          const content = editor.getValue();
+          const lines = content.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            const pos = lines[i].toLowerCase().indexOf(searchText.toLowerCase());
+            if (pos !== -1) {
+              const from = { line: i, ch: pos };
+              const to = { line: i, ch: pos + searchText.length };
+              editor.setCursor(from);
+              editor.scrollIntoView({ from, to }, true);
+              editor.setSelection(from, to);
+              new Notice(t('main.jumpedTo') + ': ' + searchText);
+              return;
+            }
+          }
+          new Notice(t('main.notFoundInDoc') + ': ' + searchText);
+          return;
+        }
+
+        const content = editor.getValue();
+        const searchLower = searchText.toLowerCase();
+        const fullIdx = content.toLowerCase().indexOf(searchLower);
+
+        if (fullIdx !== -1) {
+          const from = fullIdx;
+          const to = fullIdx + searchText.length;
+
+          const existingField = cm.state.field(hlMarshmallowField, false);
+          if (existingField === undefined) {
+            cm.dispatch({ effects: StateEffect.appendConfig.of([hlMarshmallowField]) });
+          }
+
+          cm.dispatch({
+            selection: { anchor: from },
+            scrollIntoView: { range: { from, to } }
+          });
+
+          setTimeout(() => {
+            const coords = cm.coordsAtPos(from);
+            const scrollEl = cm.scrollDOM;
+            if (coords && scrollEl) {
+              const visibleHeight = scrollEl.clientHeight;
+              const targetY = coords.top - scrollEl.getBoundingClientRect().top + scrollEl.scrollTop - visibleHeight * 0.35;
+              scrollEl.scrollTop = targetY;
+            }
+          }, 50);
+
+          const marshmallowDeco = Decoration.mark({
+            class: 'hl-marshmallow',
+            attributes: {
+              'style': 'background:#fff !important;color:#cc2e7a !important;border:2px solid #ff6eb4 !important;border-radius:10px !important;padding:0.1em 0.6em !important;box-shadow:2px 2px 0 #ffaad9 !important;margin:0 -0.2em;-webkit-box-decoration-break:clone;box-decoration-break:clone;'
+            }
+          });
+          const current = cm.state.field(hlMarshmallowField, false) || Decoration.none;
+          const newSet = current.update({ add: [{ from, to, value: marshmallowDeco }] });
+          cm.dispatch({ effects: hlMarshmallowEffect.of(newSet) });
+
+          const dismissHandler = () => {
+            const cur = cm.state.field(hlMarshmallowField, false);
+            if (cur) {
+              const filtered = cur.update({
+                filter: (f, t, v) => !(v.spec && v.spec.class && v.spec.class.includes('hl-marshmallow'))
+              });
+              cm.dispatch({ effects: hlMarshmallowEffect.of(filtered) });
+            }
+            cm.dom.removeEventListener('mousedown', dismissHandler);
+          };
+          cm.dom.addEventListener('mousedown', dismissHandler);
+
+          new Notice(t('main.jumpedTo') + ': ' + searchText);
+          return;
+        }
+
         new Notice(t('main.notFoundInDoc') + ': ' + searchText);
-      }
+      }, 1250);
     } catch (e) {
       console.error('Error opening link and searching:', e);
       new Notice(t('main.cannotOpenFile'));
@@ -39309,4 +40761,5 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
 /* nosourcemap */
 /* nosourcemap */
 
+/* nosourcemap */
 /* nosourcemap */

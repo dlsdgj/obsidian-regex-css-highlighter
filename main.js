@@ -10421,6 +10421,7 @@ class AddRegexRuleModal extends Modal {
           border-radius: 50%;
           padding: 1px;
           z-index: 101;
+          ${!_isDesktop ? 'display:none;' : ''}
         `;
         groupFloatBtn.title = t('floating.floatThisGroup');
 
@@ -10629,6 +10630,7 @@ class AddRegexRuleModal extends Modal {
               padding: 0px 1px;
               z-index: 101;
               line-height: 1;
+              ${!_isDesktop ? 'display:none;' : ''}
             `;
             tabFloatBtn.title = t('floating.floatThisGroup');
             tabFloatBtn.addEventListener('click', (e) => {
@@ -11107,6 +11109,7 @@ class AddRegexRuleModal extends Modal {
             border-radius: 50%;
             padding: 1px;
             z-index: 101;
+            ${!_isDesktop ? 'display:none;' : ''}
           `;
           floatPinBtn.title = t('floating.floatThisStyle');
           
@@ -12725,6 +12728,7 @@ class AddRegexRuleModal extends Modal {
             border-radius: 50%;
             padding: 1px;
             z-index: 101;
+            ${!_isDesktop ? 'display:none;' : ''}
           `;
           tabFloatBtn.title = t('floating.floatThisGroup');
           tabFloatBtn.addEventListener('click', (e) => {
@@ -16711,6 +16715,15 @@ class AddRegexRuleModal extends Modal {
         this.plugin.removeSnippetStatusBarItem();
       }
     });
+
+    const snippetHint = snippetsContent.createDiv();
+    snippetHint.style.cssText = 'font-size:12px;color:var(--text-faint);margin-top:8px;line-height:1.5;';
+    const hintPrefix = snippetHint.createSpan({ text: '仅支持桌面端, 启用后需重启, 建议使用' });
+    const hintLink = snippetHint.createEl('a');
+    hintLink.textContent = 'SwiftSwitch';
+    hintLink.href = 'obsidian://show-plugin?id=swift-snippets';
+    hintLink.style.cssText = 'color:var(--text-accent);text-decoration:underline;cursor:pointer;';
+    const hintSuffix = snippetHint.createSpan({ text: ', 功能更全面' });
 
 
 
@@ -21622,7 +21635,23 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       for (const { el, filePath } of batch) {
         if (!el.isConnected) continue; // 元素已被移除
         
-        // 正则高亮
+        // 先应用行间注释（创建 in-note-wrapper 包裹文本节点）
+        if (this._interlinearNoteCacheResolved && Object.keys(this._interlinearNoteCacheResolved).length > 0) {
+          if (!el.querySelector('.in-note-wrapper')) {
+            const blockText2 = el.textContent || '';
+            const hasNote = Object.entries(this._interlinearNoteCacheResolved).some(([t]) => blockText2.includes(t));
+            if (hasNote) {
+              this.injectInterlinearNoteStyles();
+              for (const [text, note] of Object.entries(this._interlinearNoteCacheResolved)) {
+                if (blockText2.includes(text)) {
+                  this.highlightTextWithInterlinearNote(el, text, note);
+                }
+              }
+            }
+          }
+        }
+
+        // 再应用正则高亮（能匹配 in-note-wrapper 内的文本节点）
         this.highlightRegexText(el, { clearExisting: false });
         
         // 拼音处理（带预过滤）
@@ -21644,21 +21673,6 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
                 if (blockText.includes(entry.text)) {
                   this.highlightTextWithPinyinAtPosition(el, entry.text, entry.pinyin, entry.start, entry.end);
                 }
-              }
-            }
-          }
-        }
-
-        // 行间注释处理
-        if (this._interlinearNoteCacheResolved && Object.keys(this._interlinearNoteCacheResolved).length > 0) {
-          if (el.querySelector('.in-note-wrapper')) continue;
-          const blockText2 = el.textContent || '';
-          const hasNote = Object.entries(this._interlinearNoteCacheResolved).some(([t]) => blockText2.includes(t));
-          if (hasNote) {
-            this.injectInterlinearNoteStyles();
-            for (const [text, note] of Object.entries(this._interlinearNoteCacheResolved)) {
-              if (blockText2.includes(text)) {
-                this.highlightTextWithInterlinearNote(el, text, note);
               }
             }
           }
@@ -29065,7 +29079,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         wrapper.className = 'in-note-wrapper';
         wrapper.setAttribute('data-note', note);
         if (align !== 'center') wrapper.setAttribute('data-align', align);
-        wrapper.textContent = text;
+        wrapper.appendChild(document.createTextNode(text));
 
         if (before) parent.insertBefore(document.createTextNode(before), currentNode);
         parent.insertBefore(wrapper, currentNode);
@@ -34926,18 +34940,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
       
       if (contentEl) {
-        this.highlightRegexText(contentEl, { 
-          clearExisting: true, 
-          forceApply: true,
-          retryCount: 3
-        });
-        
-        // 应用拼音显示
-        await this.applyPinyinInReadingMode(contentEl);
-
-        // 应用行间注释
+        // 先应用行间注释（创建 in-note-wrapper 包裹文本节点）
+        this.clearInterlinearNotes(contentEl);
         if (this._interlinearNoteCacheResolved && Object.keys(this._interlinearNoteCacheResolved).length > 0) {
-
           this.injectInterlinearNoteStyles();
           for (const [text, note] of Object.entries(this._interlinearNoteCacheResolved)) {
             const blockText = contentEl.textContent || '';
@@ -34946,6 +34951,16 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             }
           }
         }
+
+        // 再应用样式高亮（能匹配 in-note-wrapper 内的文本节点）
+        this.highlightRegexText(contentEl, { 
+          clearExisting: true, 
+          forceApply: true,
+          retryCount: 3
+        });
+        
+        // 应用拼音显示
+        await this.applyPinyinInReadingMode(contentEl);
       }
     }
     // 处理编辑模式 - 实时预览模式
@@ -34972,6 +34987,17 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     
     for (const span of allSpans) {
       const parent = span.parentNode;
+      if (parent && parent.classList.contains('in-note-wrapper')) {
+        const noteWrapper = parent;
+        const noteParent = noteWrapper.parentNode;
+        if (noteParent) {
+          const innerNodes = [];
+          while (span.firstChild) innerNodes.push(span.firstChild);
+          for (const child of innerNodes) noteWrapper.insertBefore(child, span);
+          noteWrapper.removeChild(span);
+          continue;
+        }
+      }
       if (parent) {
         const fragment = document.createDocumentFragment();
         while (span.firstChild) {
@@ -37469,7 +37495,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       input.type = 'text';
       input.value = oldRegex;
       const origWidth = titleText.offsetWidth;
-      input.style.cssText = `font-size:11px;font-weight:600;color:var(--text-muted);padding:1px 8px;border:none;border-radius:10px;background:var(--background-modifier-hover);width:${origWidth}px;outline:none;box-sizing:border-box;margin:0;height:auto;line-height:normal;`;
+      input.style.cssText = `font-size:11px;font-weight:600;color:var(--text-muted);padding:1px 8px;border:none;border-radius:10px;background:var(--background-modifier-hover);width:${Math.max(origWidth, 80)}px;outline:none;box-sizing:border-box;margin:0;height:auto;line-height:normal;`;
       titleText.replaceWith(input);
       input.focus();
       input.select();
@@ -37944,7 +37970,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             input.type = 'text';
             input.value = oldRegex;
             const origWidth = popupTitleText.offsetWidth;
-            input.style.cssText = `font-size:11px;font-weight:600;color:var(--text-muted);padding:1px 8px;border:none;border-radius:10px;background:var(--background-modifier-hover);width:${origWidth}px;outline:none;box-sizing:border-box;margin:0;height:auto;line-height:normal;`;
+            input.style.cssText = `font-size:11px;font-weight:600;color:var(--text-muted);padding:1px 8px;border:none;border-radius:10px;background:var(--background-modifier-hover);width:${Math.max(origWidth, 80)}px;outline:none;box-sizing:border-box;margin:0;height:auto;line-height:normal;`;
             popupTitleText.replaceWith(input);
             input.focus();
             input.select();

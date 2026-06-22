@@ -2,7 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.8.3 (2026-06-21)
+## 🆕 v1.8.4 (2026-06-22)
+
+- **Interlinear Note + Style Coexistence Fix** — Reading mode now applies interlinear notes first, then style highlights; `clearHighlights` preserves `in-note-wrapper` structure instead of destroying it; notes with styles now display correctly without scrolling
+- **Mobile Pin Button Removal** — Removed 📌 float buttons from group/style buttons in main panel on mobile to prevent accidental taps
+- **SwiftSwitch Hint** — Added hint in CSS Snippets settings: "Desktop only, restart required, recommend SwiftSwitch" with `obsidian://show-plugin?id=swift-snippets` link
+- **Rule Edit Input Width** — Double-click to edit rule name now enforces minimum 80px width so short rules remain readable
+
+## v1.8.3 (2026-06-21)
 
 - **Remark Popup Improvements** — Pinned popup no longer closes on outside click; scroll/resize no longer resets position; custom resize handle replaces CSS resize; "+" button for adding remarks
 - **Keyword Detail Window Unification** — Chip popup window style unified with remark popup; content uses flex layout; entries show bullet+search tag+copy/open buttons; bottom chips with hover preview and color extraction

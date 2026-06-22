@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.8.4 (2026-06-22)
+## 🆕 v1.8.5 (2026-06-22)
+
+- **Random Highlight Group Filter i18n** — Fixed hardcoded Chinese strings in "Random Highlight Group Filter" settings (title, description, empty hint) not translating in English mode; added missing i18n keys and English translations; updated description to include usage hint about selecting text and clicking the floating ball
+- **Style Usage Count Badge Default Off** — Changed default value of "Style Usage Count Badge" from enabled to disabled for new installations; added warning hint that enabling this feature generates many count files in the data folder
+- **Panel Title Rename** — Changed main panel title from "regex css highlighter" to "SwiftGloss"
+
+## v1.8.4 (2026-06-22)
 
 - **Interlinear Note + Style Coexistence Fix** — Reading mode now applies interlinear notes first, then style highlights; `clearHighlights` preserves `in-note-wrapper` structure instead of destroying it; notes with styles now display correctly without scrolling
 - **Mobile Pin Button Removal** — Removed 📌 float buttons from group/style buttons in main panel on mobile to prevent accidental taps

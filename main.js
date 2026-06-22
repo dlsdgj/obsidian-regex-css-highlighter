@@ -163,7 +163,7 @@ let _currentLang = 'zh';
 
 const i18n = {
   zh: {
-    'main.title': 'regex css highlighter',
+    'main.title': 'SwiftGloss',
     'main.openPluginLocation': '打开插件位置',
     'main.opacity': '透明度',
     'main.tab.styles': '样式',
@@ -434,6 +434,22 @@ const i18n = {
     'settings.pinyinSettings': '拼音设置',
     'settings.pinyinStyle': '拼音样式',
     'settings.pinyinSaved': '拼音样式已保存',
+    'settings.inNoteStyle': '行间注释样式',
+    'settings.inNoteAlign': '注释对齐方式：',
+    'settings.inNoteAlignCenter': '居中对齐',
+    'settings.inNoteAlignLeft': '左对齐',
+    'settings.inNoteReset': '恢复默认',
+    'settings.inNoteSaved': '行间注释样式已保存',
+    'settings.snippetDesktopHint': '仅支持桌面端, 启用后需重启, 建议使用',
+    'settings.snippetDesktopHintSuffix': ', 功能更全面',
+    'inNote.title': '行间注释: ',
+    'inNote.editPlaceholder': '编辑注释内容...',
+    'inNote.addPlaceholder': '输入注释内容...',
+    'inNote.update': '更新',
+    'inNote.add': '添加',
+    'inNote.deleted': '行间注释已删除',
+    'inNote.added': '行间注释已添加',
+    'inNote.notFound': '未找到该文本的行间注释',
     'settings.aiSettings': 'AI设置',
     'settings.aiName': 'AI名称',
     'settings.aiApiUrl': 'API地址',
@@ -457,6 +473,7 @@ const i18n = {
     'settings.showRecentRulesDesc': '（高亮规则标题折叠时，在标题下方显示最近添加/修改的规则）',
     'settings.hideOpenFileLink': '不显示标题后面的打开文件链接',
     'settings.styleUsageCount': '样式使用次数角标',
+    'settings.styleUsageCountHint': '（启用后会在data中产生大量计数文件）',
     'settings.hideAllStyles': '隐藏所有文本样式',
     'settings.groupReordered': '分组已重新排序',
     'settings.groupSortFailed': '分组排序时出错',
@@ -1103,6 +1120,7 @@ const i18n = {
     'floating.addRemark': '添加备注',
     'floating.removeHighlight': '移除高亮',
     'floating.pinyin': '注音',
+    'floating.interlinearNote': '行间注释',
     'floating.aiAssistant': 'AI回复',
     'floating.extractEntities': '实体提取',
     'floating.styleShowcase': '高亮列表',
@@ -1164,9 +1182,12 @@ const i18n = {
     'settings.snippetMoveToGroup': '移入分组',
     'settings.snippetRemoveFromGroup': '移出分组',
     'settings.snippetCopied': '已复制',
+    'settings.randomGroupLimit': '随机高亮分组限制',
+    'settings.randomGroupLimitDesc': '选中文本后，点击悬浮球会随机应用高亮，在这里可以限制随机范围。点击选择分组，仅从已选分组中随机选择样式；不选则在所有样式中随机',
+    'settings.noGroups': '暂无分组',
   },
   en: {
-    'main.title': 'regex css highlighter',
+    'main.title': 'SwiftGloss',
     'main.openPluginLocation': 'Open Plugin Location',
     'main.opacity': 'Opacity',
     'main.tab.styles': 'Styles',
@@ -1437,6 +1458,22 @@ const i18n = {
     'settings.pinyinSettings': 'Pinyin Settings',
     'settings.pinyinStyle': 'Pinyin Style',
     'settings.pinyinSaved': 'Pinyin style saved',
+    'settings.inNoteStyle': 'Interlinear Note Style',
+    'settings.inNoteAlign': 'Note alignment:',
+    'settings.inNoteAlignCenter': 'Center',
+    'settings.inNoteAlignLeft': 'Left',
+    'settings.inNoteReset': 'Reset Default',
+    'settings.inNoteSaved': 'Interlinear note style saved',
+    'settings.snippetDesktopHint': 'Desktop only, restart required after enabling, recommend',
+    'settings.snippetDesktopHintSuffix': ' for more features',
+    'inNote.title': 'Interlinear Note: ',
+    'inNote.editPlaceholder': 'Edit note...',
+    'inNote.addPlaceholder': 'Enter note...',
+    'inNote.update': 'Update',
+    'inNote.add': 'Add',
+    'inNote.deleted': 'Interlinear note deleted',
+    'inNote.added': 'Interlinear note added',
+    'inNote.notFound': 'No interlinear note found for this text',
     'settings.aiSettings': 'AI Settings',
     'settings.aiName': 'AI Name',
     'settings.aiApiUrl': 'API URL',
@@ -1460,6 +1497,7 @@ const i18n = {
     'settings.showRecentRulesDesc': '(Show recently added/modified rules below the title when panel is collapsed)',
     'settings.hideOpenFileLink': 'Hide Open File Link After Title',
     'settings.styleUsageCount': 'Style Usage Count Badge',
+    'settings.styleUsageCountHint': '(Enabling this will generate many count files in data)',
     'settings.hideAllStyles': 'Hide All Text Styles',
     'settings.groupReordered': 'Group reordered',
     'settings.groupSortFailed': 'Group sort failed',
@@ -2106,6 +2144,7 @@ const i18n = {
     'floating.addRemark': 'Add Remark',
     'floating.removeHighlight': 'Remove Highlight',
     'floating.pinyin': 'Pinyin',
+    'floating.interlinearNote': 'Interlinear Note',
     'floating.aiAssistant': 'AI Assistant',
     'floating.extractEntities': 'Extract Entities',
     'floating.styleShowcase': 'Highlight List',
@@ -2167,6 +2206,9 @@ const i18n = {
     'settings.snippetMoveToGroup': 'Move to Group',
     'settings.snippetRemoveFromGroup': 'Remove from Group',
     'settings.snippetCopied': 'Copied',
+    'settings.randomGroupLimit': 'Random Highlight Group Filter',
+    'settings.randomGroupLimitDesc': 'After selecting text, clicking the floating ball applies a random highlight. You can limit the random range here. Click to select groups; only styles from selected groups will be used. If none selected, all styles are used',
+    'settings.noGroups': 'No groups',
   }
 };
 
@@ -9058,7 +9100,7 @@ class AddRegexRuleModal extends Modal {
     
     // 创建标题并设置为inline显示
     const pluginVersion = this.plugin && this.plugin.manifest ? this.plugin.manifest.version : '';
-    const titleText = pluginVersion ? `regex css highlighter v${pluginVersion}` : "regex css highlighter";
+    const titleText = pluginVersion ? `SwiftGloss v${pluginVersion}` : "regex css highlighter";
     const titleEl = mainTitleContainer.createEl("h2", { text: titleText });
     titleEl.style.margin = "0";
     titleEl.style.fontSize = "14px";
@@ -14105,7 +14147,11 @@ class AddRegexRuleModal extends Modal {
     const showCountInput = showCountSettingRow.createEl("input");
     showCountInput.type = "checkbox";
     
-
+    const showCountHint = showCountSettingRow.createEl("span");
+    showCountHint.textContent = t('settings.styleUsageCountHint');
+    showCountHint.style.fontSize = "12px";
+    showCountHint.style.color = "var(--text-muted)";
+    showCountHint.style.marginLeft = "8px";
     
     // 4. 创建更新计数按钮
     const updateCountBtn = showCountSettingRow.createEl("button");
@@ -15337,7 +15383,7 @@ class AddRegexRuleModal extends Modal {
       { id: 'addRemark', label: t('floating.addRemark') },
       { id: 'removeHighlight', label: t('floating.removeHighlight') },
       { id: 'pinyin', label: t('floating.pinyin') },
-      { id: 'interlinearNote', label: '行间注释' },
+      { id: 'interlinearNote', label: t('floating.interlinearNote') },
       { id: 'aiAssistant', label: t('floating.aiAssistant') },
       { id: 'extractEntities', label: t('floating.extractEntities') },
       { id: 'styleShowcase', label: t('floating.styleShowcase') },
@@ -15415,13 +15461,13 @@ class AddRegexRuleModal extends Modal {
     randomGroupTitle.style.fontWeight = "bold";
     randomGroupTitle.style.marginTop = "14px";
     randomGroupTitle.style.marginBottom = "4px";
-    randomGroupTitle.textContent = '随机高亮分组限制';
+    randomGroupTitle.textContent = t('settings.randomGroupLimit');
 
     const randomGroupDesc = floatingBallSettingsContent.createDiv();
     randomGroupDesc.style.fontSize = "12px";
     randomGroupDesc.style.color = "#666";
     randomGroupDesc.style.marginBottom = "8px";
-    randomGroupDesc.textContent = '点击选择分组，仅从已选分组中随机选择样式；不选则在所有样式中随机';
+    randomGroupDesc.textContent = t('settings.randomGroupLimitDesc');
 
     const randomGroupChipsContainer = floatingBallSettingsContent.createDiv();
     randomGroupChipsContainer.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;";
@@ -15450,7 +15496,7 @@ class AddRegexRuleModal extends Modal {
       }
       if (Object.keys(categories).length === 0) {
         const emptyHint = randomGroupChipsContainer.createEl("span");
-        emptyHint.textContent = '暂无分组';
+        emptyHint.textContent = t('settings.noGroups');
         emptyHint.style.cssText = "font-size:12px;color:var(--text-muted);";
       }
     };
@@ -16406,21 +16452,21 @@ class AddRegexRuleModal extends Modal {
 
 
     // 行间注释样式设置
-    const inNoteOutline = createOutlineSection(settingsContent, '行间注释样式', { isCollapsed: true, icon: '📝' });
+    const inNoteOutline = createOutlineSection(settingsContent, t('settings.inNoteStyle'), { isCollapsed: true, icon: '📝' });
     const inNoteSettingsContent = inNoteOutline.content;
     inNoteSettingsContent.className = "interlinear-note-settings-content";
 
     const inNoteAlignRow = inNoteSettingsContent.createDiv();
     inNoteAlignRow.style.cssText = "display:flex;align-items:center;gap:10px;margin-bottom:8px;";
     const inNoteAlignLabel = inNoteAlignRow.createEl("span");
-    inNoteAlignLabel.textContent = '注释对齐方式：';
+    inNoteAlignLabel.textContent = t('settings.inNoteAlign');
     inNoteAlignLabel.style.fontSize = "14px";
     const inNoteAlignSelect = inNoteAlignRow.createEl("select");
     inNoteAlignSelect.style.cssText = "padding:4px 8px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);font-size:13px;";
     const optCenter = inNoteAlignSelect.createEl("option");
-    optCenter.value = "center"; optCenter.textContent = "居中对齐";
+    optCenter.value = "center"; optCenter.textContent = t('settings.inNoteAlignCenter');
     const optLeft = inNoteAlignSelect.createEl("option");
-    optLeft.value = "left"; optLeft.textContent = "左对齐";
+    optLeft.value = "left"; optLeft.textContent = t('settings.inNoteAlignLeft');
     inNoteAlignSelect.value = this.plugin.settings?.inNoteAlign || 'center';
 
     const inNoteCssTextarea = inNoteSettingsContent.createEl("textarea");
@@ -16430,7 +16476,7 @@ class AddRegexRuleModal extends Modal {
     const inNoteBtnRow = inNoteSettingsContent.createDiv();
     inNoteBtnRow.style.cssText = "display:flex;gap:8px;margin-top:8px;";
 
-    const resetInNoteBtn = inNoteBtnRow.createEl("button", { text: t('main.reset') });
+    const resetInNoteBtn = inNoteBtnRow.createEl("button", { text: t('settings.inNoteReset') });
     resetInNoteBtn.style.cssText = "padding:6px 14px;border:1px solid var(--background-modifier-border);border-radius:4px;cursor:pointer;font-size:13px;background:var(--background-primary);color:var(--text-normal);";
     resetInNoteBtn.addEventListener("click", () => {
       inNoteCssTextarea.value = this.plugin.getDefaultInterlinearNoteCss();
@@ -16444,7 +16490,7 @@ class AddRegexRuleModal extends Modal {
         this.plugin.settings.inNoteAlign = inNoteAlignSelect.value;
         await this.plugin.saveData(this.plugin.settings);
         this.plugin.updateInterlinearNoteStyles(inNoteCssTextarea.value);
-        new Notice('行间注释样式已保存');
+        new Notice(t('settings.inNoteSaved'));
       } catch (error) {
         new Notice(t('settings.saveFailedDetail'));
       }
@@ -16718,12 +16764,12 @@ class AddRegexRuleModal extends Modal {
 
     const snippetHint = snippetsContent.createDiv();
     snippetHint.style.cssText = 'font-size:12px;color:var(--text-faint);margin-top:8px;line-height:1.5;';
-    const hintPrefix = snippetHint.createSpan({ text: '仅支持桌面端, 启用后需重启, 建议使用' });
+    const hintPrefix = snippetHint.createSpan({ text: t('settings.snippetDesktopHint') });
     const hintLink = snippetHint.createEl('a');
     hintLink.textContent = 'SwiftSwitch';
     hintLink.href = 'obsidian://show-plugin?id=swift-snippets';
     hintLink.style.cssText = 'color:var(--text-accent);text-decoration:underline;cursor:pointer;';
-    const hintSuffix = snippetHint.createSpan({ text: ', 功能更全面' });
+    const hintSuffix = snippetHint.createSpan({ text: t('settings.snippetDesktopHintSuffix') });
 
 
 
@@ -21429,7 +21475,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
 
     const _settingsDefaults = {
       language: 'en',
-      showStyleUsageCount: true,
+      showStyleUsageCount: false,
       searchClassName: '',
       showHeadingLevelLabel: true,
       disableHeadingStyle: false,
@@ -24020,7 +24066,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (isOptionVisible('pinyin')) menu.appendChild(pinyinOption);
       
       // 行间注释选项
-      const interlinearNoteOption = createMenuOptionWithFloat('interlinearNote', '行间注释', () => {
+      const interlinearNoteOption = createMenuOptionWithFloat('interlinearNote', t('floating.interlinearNote'), () => {
         this.showInterlinearNoteInput();
         if (document.body.contains(menu)) {
           document.body.removeChild(menu);
@@ -28921,7 +28967,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const { Notice } = require('obsidian');
     const selectedText = this.getSelectedText();
     if (!selectedText || !selectedText.trim()) {
-      new Notice('请先选中文本');
+      new Notice(t('main.selectText'));
       return;
     }
 
@@ -28953,7 +28999,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       flex-shrink:0;min-height:24px;
     `;
     const titleText = document.createElement('span');
-    titleText.textContent = '行间注释: ' + (selectedText.length > 15 ? selectedText.substring(0, 15) + '...' : selectedText);
+    titleText.textContent = t('inNote.title') + (selectedText.length > 15 ? selectedText.substring(0, 15) + '...' : selectedText);
     titleText.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
     const closeBtn = document.createElement('span');
     closeBtn.textContent = '✕';
@@ -28971,11 +29017,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const input = document.createElement('input');
     input.type = 'text';
     input.value = existingNote;
-    input.placeholder = existingNote ? '编辑注释内容...' : '输入注释内容...';
+    input.placeholder = existingNote ? t('inNote.editPlaceholder') : t('inNote.addPlaceholder');
     input.style.cssText = 'flex:1;padding:6px 10px;border:1px solid var(--background-modifier-border);border-radius:4px;font-size:13px;background:var(--background-primary);color:var(--text-normal);outline:none;';
 
     const addBtn = document.createElement('button');
-    addBtn.textContent = existingNote ? '更新' : '添加';
+    addBtn.textContent = existingNote ? t('inNote.update') : t('inNote.add');
     addBtn.style.cssText = 'padding:6px 14px;background:var(--interactive-accent);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;white-space:nowrap;';
 
     addBtn.addEventListener('click', async () => {
@@ -28986,13 +29032,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         delete data[key];
         await this.saveInterlinearNoteData(data);
         win.remove();
-        new Notice('行间注释已删除');
+        new Notice(t('inNote.deleted'));
         return;
       }
       data[key] = noteText;
       await this.saveInterlinearNoteData(data);
       win.remove();
-      new Note('行间注释已添加');
+      new Notice(t('inNote.added'));
     });
 
     input.addEventListener('keydown', (e) => {
@@ -29104,9 +29150,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     if (data[key]) {
       delete data[key];
       await this.saveInterlinearNoteData(data);
-      new Notice('行间注释已删除');
+      new Notice(t('inNote.deleted'));
     } else {
-      new Notice('未找到该文本的行间注释');
+      new Notice(t('inNote.notFound'));
     }
   }
   

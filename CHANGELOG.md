@@ -2,7 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.8.5 (2026-06-22)
+## 🆕 v1.8.8 (2026-06-24)
+
+- **Remark Popup Save Button** — Added "s" button in popup title bar for saving remark as file; removed right-click context menu "Save as File" option / 备注弹窗标题栏新增"s"保存文件按钮；移除右键菜单的"保存为文件"选项
+- **Remark Popup Interlinear Note Field** — Replaced "i" button with always-visible text field in title bar for interlinear note; supports double-click to edit and drag-drop text to set note; shows existing note content / 备注弹窗标题栏新增常显行间注释文本框，替代原"i"按钮；支持双击编辑和拖放文本设置行间注释；显示已有注释内容
+- **Remark Popup Title Bar Layout** — Buttons (g/l, s, inNote) now grouped tightly on the left side of title bar; keyword name stays centered with original width / 标题栏按钮（g/l、s、行间注释）左侧紧凑排列；关键词名居中保持原宽度
+- **Remark Popup Resize Handle** — Added resize handle at bottom-right corner of remark popup; supports both mouse drag and mobile touch to adjust height / 备注弹窗右下角新增resize手柄，支持鼠标和手机触摸调整高度
+- **Chip Window Touch Resize** — Added touchstart event to chip window resize handle; onTouchMove now handles both drag and resize; fixed onTouchEnd not resetting isResizing state / Chip弹窗resize手柄支持触摸事件；修复touchEnd未重置isResizing导致调整后点击弹窗会移动右下角
+- **Chips Bar Touch Drag** — Bottom chips area in both remark popup and chip window now supports touch drag to move the popup/window / 备注弹窗和chip弹窗底部chips区域支持触摸拖动移动弹窗位置
+
+## v1.8.7 (2026-06-23)
+
+- **Chip Window Max Height** — Added max-height limit to keyword-detail-window; long remarks scroll inside content area instead of expanding the window infinitely, preventing mobile freeze and bottom buttons being pushed off-screen
+- **Chip Window "+" and "?" Buttons** — Added floating "add remark" and "AI question" buttons at bottom of chip window, matching remark popup style with gradient text and animations
+- **Chip Window Double-click Edit** — Double-clicking remark content in chip window now enters edit mode with textarea; blur saves and replaces in-place without rebuilding the window
+- **Chip Window AI Question Buttons** — Added "?" (break down question) and "delete" buttons to askedbyAi entries in chip window, matching remark popup behavior
+- **Chip Window Empty Remark Hint** — Empty remark entries now show "(双击编辑备注)" placeholder text in both regular and AI question entries
+- **Chip Window Resize Beyond Default** — Drag-resizing chip window now syncs max-height, allowing users to expand height beyond the default limit
+- **Chip Window Size Preservation** — After editing or adding remarks via AI/"+" buttons, chip window preserves user-adjusted size and position instead of resetting to defaults
+- **Remark Popup Width Fix** — Fixed remark popup width unable to shrink after exiting edit mode; renderAllRemarks now resets minWidth lock
+
+## v1.8.6 (2026-06-23)
+
+- **AI Question Feature** — Added "?" button next to "+" in remark popup; AI generates targeted questions based on keyword and related keyword remarks to help deepen understanding
+- **AI Conversation Thread** — Each AI question supports multi-turn dialog: "?" button asks AI to break down the question, "↗" button sends user's answer back to AI for feedback; thread persisted in `_aiThread` array
+- **AI Question Text Wrapping** — Fixed long AI question text not wrapping in title bar; replaced `white-space:nowrap` with `overflow-wrap:break-word`
+- **AI Question Persistence** — Fixed AI question entries being deleted on popup close when user hasn't answered; `doHide` cleanup now preserves links with `_aiQuestion`
+- **DeepSeek Model Validation** — Removed outdated hardcoded model whitelist that caused false warnings during API test; API test success itself validates the model
+- **Preview Language Switch Fix** — Fixed English mode reverting "Preview" to Chinese "示例" after canceling style edit; replaced hardcoded Chinese with `t('entity.preview')`
+- **Floating Group Arrow Duplication Fix** — Fixed default-style floating group buttons appending duplicate arrows on each drag; now uses reusable `<span>` element instead of `innerHTML` concatenation
+
+## v1.8.5 (2026-06-22)
 
 - **Random Highlight Group Filter i18n** — Fixed hardcoded Chinese strings in "Random Highlight Group Filter" settings (title, description, empty hint) not translating in English mode; added missing i18n keys and English translations; updated description to include usage hint about selecting text and clicking the floating ball
 - **Style Usage Count Badge Default Off** — Changed default value of "Style Usage Count Badge" from enabled to disabled for new installations; added warning hint that enabling this feature generates many count files in the data folder

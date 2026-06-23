@@ -2549,8 +2549,8 @@ class AddRemarkModal extends Modal {
     const savedOpacity = pluginSettings.popupOpacity !== undefined ? pluginSettings.popupOpacity : 1;
     
     // 与备注弹窗风格一致的模态窗口样式
-    this.modalEl.style.width = `auto`;
-    this.modalEl.style.maxWidth = `${Math.max(popupWidth, 500)}px`;
+    this.modalEl.style.width = `${Math.max(popupWidth, 300)}px`;
+    this.modalEl.style.maxWidth = `none`;
     this.modalEl.style.borderRadius = '8px';
     this.modalEl.style.overflow = 'hidden';
     this.modalEl.style.backgroundColor = 'var(--background-primary)';
@@ -2832,10 +2832,9 @@ class AddRemarkModal extends Modal {
     const savedHeight = this.plugin?.settings?.addRemarkModalHeight;
     if (savedWidth) {
       this.modalEl.style.width = `${savedWidth}px`;
-      this.modalEl.style.maxWidth = `${savedWidth}px`;
-      const contentWidth = savedWidth - 30;
-      contentEl.style.maxWidth = `${contentWidth}px`;
-      contentEl.style.width = `${contentWidth}px`;
+      this.modalEl.style.maxWidth = 'none';
+      contentEl.style.maxWidth = 'none';
+      contentEl.style.width = '100%';
     }
     if (savedHeight) {
       this.modalEl.style.height = `${savedHeight}px`;
@@ -2902,14 +2901,13 @@ class AddRemarkModal extends Modal {
     
     const onResizeMouseMove = (e) => {
       if (!isResizing) return;
-      const newWidth = Math.max(400, resizeStartWidth + (e.clientX - resizeStartX));
-      const newHeight = Math.max(300, resizeStartHeight + (e.clientY - resizeStartY));
+      const newWidth = Math.max(300, resizeStartWidth + (e.clientX - resizeStartX));
+      const newHeight = Math.max(200, resizeStartHeight + (e.clientY - resizeStartY));
       modalEl.style.width = `${newWidth}px`;
-      modalEl.style.maxWidth = `${newWidth}px`;
+      modalEl.style.maxWidth = 'none';
       modalEl.style.height = `${newHeight}px`;
-      const contentWidth = newWidth - 30;
-      contentEl.style.maxWidth = `${contentWidth}px`;
-      contentEl.style.width = `${contentWidth}px`;
+      contentEl.style.maxWidth = 'none';
+      contentEl.style.width = '100%';
       updatePosition();
     };
     
@@ -15835,14 +15833,6 @@ class AddRegexRuleModal extends Modal {
         return;
       }
       
-      // 验证模型名称
-      if (apiUrl.includes("deepseek.com")) {
-        // DeepSeek API模型名称建议
-        const validDeepSeekModels = ["deepseek-chat", "deepseek-coder-v2", "deepseek-reasoner-v1"];
-        if (!validDeepSeekModels.includes(model.toLowerCase())) {
-          new Notice(t('settings.deepSeekModelHint') + ': ' + validDeepSeekModels.join(', '));
-        }
-      }
 
       try {
         testApiButton.disabled = true;
@@ -20631,7 +20621,7 @@ class AddRegexRuleModal extends Modal {
       
       const displayText = newRegexValue.length >= previewLength ? 
         newRegexValue.substring(0, previewLength) : 
-        (newRegexValue || "示例");
+        (newRegexValue || t('entity.preview'));
       
       styleExample.textContent = displayText;
     });
@@ -25725,11 +25715,22 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             }
           }
         } else if (hasSubmenu) {
+          let defaultArrow = btn.querySelector('.floating-option-default-arrow');
           const labelText = btn.textContent.replace(/\s*[◀▶]\s*$/, '').trim();
+          if (!defaultArrow) {
+            defaultArrow = document.createElement('span');
+            defaultArrow.className = 'floating-option-default-arrow';
+            btn.textContent = labelText;
+            btn.appendChild(defaultArrow);
+          }
           if (isOnRight) {
-            btn.innerHTML = `<span style="margin-right:4px;">◀</span>${labelText}`;
+            defaultArrow.textContent = '◀';
+            defaultArrow.style.cssText = 'margin-right:4px;margin-left:0;';
+            if (btn.firstChild !== defaultArrow) btn.insertBefore(defaultArrow, btn.firstChild);
           } else {
-            btn.innerHTML = `${labelText} <span style="margin-left:4px;">▶</span>`;
+            defaultArrow.textContent = '▶';
+            defaultArrow.style.cssText = 'margin-left:4px;margin-right:0;';
+            if (btn.lastChild !== defaultArrow) btn.appendChild(defaultArrow);
           }
         }
       };
@@ -36999,7 +37000,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   }
 
   // 打开关键词独立窗口（可拖动，可打开多个）
-  openKeywordWindow(keywordRegex) {
+  openKeywordWindow(keywordRegex, preservedRect) {
     const plugin = this;
     // 查找规则
     const isGlobal = plugin.globalRules.some(r => r.regex === keywordRegex);
@@ -37019,8 +37020,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const win = document.createElement('div');
     win.className = 'keyword-detail-window';
     win.dataset.keyword = keywordRegex;
+    const maxWinHeight = _isDesktop ? Math.min(window.innerHeight * 0.75, 600) : Math.min(window.innerHeight * 0.6, 500);
     win.style.cssText = `
       position:fixed;z-index:1100;min-width:${_isDesktop ? '300px' : '0'};width:${actualMaxWidth}px;
+      max-height:${maxWinHeight}px;
       background:var(--background-primary);
       border:${popupBorderWidth}px solid ${popupBorderColor};border-radius:8px;
       box-shadow:0 4px 16px rgba(0,0,0,0.35);
@@ -37156,25 +37159,156 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       for (const link of fileLinks) {
         const remarkContent = link.remark || '';
-        if (!remarkContent.trim()) continue;
+        const isAiQuestion = !!link._aiQuestion;
+        if (!remarkContent.trim() && !isAiQuestion) continue;
 
         const remarkWrapper = document.createElement('div');
         remarkWrapper.style.cssText = 'display:flex;align-items:baseline;gap:6px;';
         const dot = document.createElement('span');
-        dot.style.cssText = `width:6px;height:6px;border-radius:50%;background:hsl(${fileHue},50%,50%);flex-shrink:0;`;
+        dot.style.cssText = `width:6px;height:6px;border-radius:50%;background:${isAiQuestion ? 'hsl(35,70%,50%)' : `hsl(${fileHue},50%,50%)`};flex-shrink:0;`;
         remarkWrapper.appendChild(dot);
         const remarkBox = document.createElement('div');
         remarkBox.style.cssText = 'flex:1;min-width:0;overflow:hidden;';
+
+        if (isAiQuestion) {
+          const aiTitleBar = document.createElement('div');
+          aiTitleBar.style.cssText = 'display:flex;align-items:flex-start;gap:4px;margin-bottom:4px;';
+          const aiTitleText = document.createElement('span');
+          aiTitleText.textContent = 'askedbyAi: ' + link._aiQuestion;
+          aiTitleText.style.cssText = 'font-size:11px;font-weight:600;color:hsl(35,70%,45%);flex:1;min-width:0;overflow-wrap:break-word;word-break:break-word;';
+          aiTitleBar.appendChild(aiTitleText);
+          const aiHelpBtn = document.createElement('button');
+          aiHelpBtn.textContent = '?';
+          aiHelpBtn.title = '请AI拆解此问题';
+          aiHelpBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;font-size:11px;font-weight:700;flex-shrink:0;';
+          aiHelpBtn.addEventListener('click', async (ce) => {
+            ce.preventDefault();
+            ce.stopPropagation();
+            if (!link._aiThread) link._aiThread = [];
+            const thread = link._aiThread;
+            const threadContext = thread.map(t => (t.role === 'ai' ? 'AI: ' : '用户: ') + t.content).join('\n');
+            const helpPrompt = `你之前向用户提出了一个问题："${link._aiQuestion}"\n\n以下是后续对话：\n${threadContext || '（尚无后续对话）'}\n\n用户表示对这个问题无从下手，不知道怎么回答。请帮用户初步分析拆解这个问题，给出思考方向和步骤提示，但不要直接给出答案。只输出拆解分析，不要任何前缀。`;
+            aiHelpBtn.textContent = '...';
+            aiHelpBtn.style.pointerEvents = 'none';
+            try {
+              const aiReply = await plugin.callAI(helpPrompt);
+              if (aiReply && aiReply.trim()) {
+                thread.push({ role: 'ai', content: aiReply.trim() });
+                if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
+                else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                const r = win.getBoundingClientRect();
+                win.remove();
+                plugin.openKeywordWindow(keywordRegex, { width: r.width, height: r.height, left: r.left, top: r.top });
+              }
+            } catch (err) {
+              new Notice('AI 拆解失败: ' + (err.message || '未知错误'));
+            } finally {
+              aiHelpBtn.textContent = '?';
+              aiHelpBtn.style.pointerEvents = '';
+            }
+          });
+          aiTitleBar.appendChild(aiHelpBtn);
+          const aiDeleteBtn = document.createElement('button');
+          aiDeleteBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+          aiDeleteBtn.title = t('main.deleteRemark');
+          aiDeleteBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;flex-shrink:0;';
+          aiDeleteBtn.addEventListener('click', async (ce) => {
+            ce.preventDefault();
+            ce.stopPropagation();
+            const fileLinks = linksByFile.get(filePath);
+            if (fileLinks) {
+              const idx = fileLinks.indexOf(link);
+              if (idx !== -1) fileLinks.splice(idx, 1);
+              if (fileLinks.length === 0) linksByFile.delete(filePath);
+            }
+            const rulesList = isGlobal ? plugin.globalRules : plugin.rules;
+            const ruleIdx = rulesList.findIndex(r => r.regex === keywordRegex);
+            if (ruleIdx !== -1) {
+              const r = rulesList[ruleIdx];
+              if (r && r.links) {
+                const linkIdx = link.timestamp
+                  ? r.links.findIndex(l => l.filePath === link.filePath && l.timestamp === link.timestamp)
+                  : r.links.findIndex(l => l.filePath === link.filePath && l.searchText === link.searchText);
+                if (linkIdx !== -1) r.links.splice(linkIdx, 1);
+              }
+              if ((!r.links || r.links.length === 0) && (!r.cssClass || r.cssClass.trim() === '')) {
+                rulesList.splice(ruleIdx, 1);
+              }
+            }
+            if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
+            else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+            const r = win.getBoundingClientRect();
+            win.remove();
+            plugin.openKeywordWindow(keywordRegex, { width: r.width, height: r.height, left: r.left, top: r.top });
+          });
+          aiTitleBar.appendChild(aiDeleteBtn);
+          remarkBox.appendChild(aiTitleBar);
+          const thread = link._aiThread || [];
+          for (const entry of thread) {
+            const entryEl = document.createElement('div');
+            entryEl.style.cssText = 'margin-top:4px;padding-left:8px;border-left:2px solid ' + (entry.role === 'ai' ? 'hsl(35,70%,60%)' : 'hsl(200,50%,60%)') + ';';
+            const entryLabel = document.createElement('div');
+            entryLabel.style.cssText = 'font-size:10px;font-weight:600;color:var(--text-muted);margin-bottom:2px;';
+            entryLabel.textContent = entry.role === 'ai' ? '🤖 AI' : '👤 你';
+            entryEl.appendChild(entryLabel);
+            const entryContent = document.createElement('div');
+            entryContent.style.cssText = 'font-size:12px;overflow-wrap:break-word;word-break:break-word;';
+            try {
+              const { MarkdownRenderer: MR, Component } = require('obsidian');
+              const component = new Component();
+              component.load();
+              MR.renderMarkdown(entry.content, entryContent, plugin.currentFilePath || '', component);
+            } catch {
+              entryContent.textContent = entry.content;
+            }
+            entryEl.appendChild(entryContent);
+            remarkBox.appendChild(entryEl);
+          }
+          if (remarkContent.trim()) {
+            const remarkEl = document.createElement('div');
+            remarkEl.className = 'remark-popup-content';
+            remarkEl.dataset.remarkSource = 'link';
+            remarkEl.dataset.filePath = filePath;
+            remarkEl.dataset.linkIndex = String(fileLinks.indexOf(link));
+            remarkEl.style.cssText = 'font-size:12px;overflow:hidden;margin-top:4px;cursor:text;';
+            try {
+              const { MarkdownRenderer: MR, Component } = require('obsidian');
+              const component = new Component();
+              component.load();
+              MR.renderMarkdown(remarkContent, remarkEl, plugin.currentFilePath || '', component);
+            } catch {
+              remarkEl.textContent = remarkContent;
+            }
+            remarkBox.appendChild(remarkEl);
+          } else {
+            const emptyRemarkEl = document.createElement('div');
+            emptyRemarkEl.className = 'remark-popup-content';
+            emptyRemarkEl.dataset.remarkSource = 'link';
+            emptyRemarkEl.dataset.filePath = filePath;
+            emptyRemarkEl.dataset.linkIndex = String(fileLinks.indexOf(link));
+            emptyRemarkEl.style.cssText = 'font-size:12px;overflow:hidden;margin-top:4px;cursor:text;color:var(--text-muted);font-style:italic;';
+            emptyRemarkEl.textContent = '(' + t('main.doubleClickToEditRemark') + ')';
+            remarkBox.appendChild(emptyRemarkEl);
+          }
+        } else {
         const remarkEl = document.createElement('div');
         remarkEl.className = 'remark-popup-content';
-        remarkEl.style.cssText = 'font-size:12px;overflow:hidden;';
-        try {
-          const { MarkdownRenderer: MR, Component } = require('obsidian');
-          const component = new Component();
-          component.load();
-          MR.renderMarkdown(remarkContent, remarkEl, plugin.currentFilePath || '', component);
-        } catch {
-          remarkEl.textContent = remarkContent;
+        remarkEl.dataset.remarkSource = 'link';
+        remarkEl.dataset.filePath = filePath;
+        remarkEl.dataset.linkIndex = String(fileLinks.indexOf(link));
+        remarkEl.style.cssText = 'font-size:12px;overflow:hidden;cursor:text;';
+        if (remarkContent) {
+          try {
+            const { MarkdownRenderer: MR, Component } = require('obsidian');
+            const component = new Component();
+            component.load();
+            MR.renderMarkdown(remarkContent, remarkEl, plugin.currentFilePath || '', component);
+          } catch {
+            remarkEl.textContent = remarkContent;
+          }
+        } else {
+          remarkEl.textContent = '(' + t('main.doubleClickToEditRemark') + ')';
+          remarkEl.style.cssText += 'color:var(--text-muted);font-style:italic;';
         }
         remarkBox.appendChild(remarkEl);
 
@@ -37249,6 +37383,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         toolBar.appendChild(openBtn);
 
         remarkBox.appendChild(toolBar);
+        }
         remarkWrapper.appendChild(remarkBox);
         groupEl.appendChild(remarkWrapper);
       }
@@ -37259,47 +37394,246 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
     win.appendChild(content);
 
-    // 双击搜索词编辑
+    // 底部悬浮按钮："+" 添加备注 / "?" AI提问（照抄 remark-custom-popup 的样式）
+    const aiBtnContainer = document.createElement('div');
+    aiBtnContainer.style.cssText = `position:sticky;bottom:0;${_isDesktop ? 'float:right;' : 'display:flex;justify-content:center;gap:6px;'}margin-top:6px;`;
+
+    const aiAskBtn = document.createElement('button');
+    aiAskBtn.className = 'remark-ai-ask-btn';
+    aiAskBtn.textContent = '?';
+    aiAskBtn.title = 'AI 提问';
+    aiAskBtn.style.cssText = `font-weight:800;font-size:14px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #e0a01c, #460000, #e0a01c, #cb6a11);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(224, 160, 28, 0.8));background-color:rgba(224, 160, 28, 0.05);box-shadow:inset 0 0 0 1px rgba(224, 160, 28, 0.3), 0 0 15px rgba(70, 0, 0, 0.2);animation:hp-amber-shift 4s ease infinite;line-height:1;${!_isDesktop ? 'width:36px;height:36px;aspect-ratio:1/1;' : ''}`;
+    const aiBtnStyle = document.createElement('style');
+    aiBtnStyle.textContent = '@keyframes hp-amber-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }';
+    content.appendChild(aiBtnStyle);
+    let aiHasContent = rule.links && rule.links.some(l => l.remark && l.remark.trim());
+    if (!aiHasContent) {
+      aiAskBtn.style.opacity = '0.35';
+      aiAskBtn.style.cursor = 'not-allowed';
+      aiAskBtn.title = '暂无足够内容供 AI 分析';
+    }
+    aiAskBtn.addEventListener('click', async (ce) => {
+      ce.preventDefault();
+      ce.stopPropagation();
+      if (!aiHasContent) { new Notice('暂无足够内容供 AI 分析'); return; }
+      aiAskBtn.textContent = '...';
+      aiAskBtn.style.pointerEvents = 'none';
+      try {
+        const kwIndex = plugin.buildKeywordIndex();
+        const blIndex = plugin.buildBacklinkIndex(kwIndex);
+        let contextParts = [];
+        const currentRemarks = rule.links.filter(l => l.remark && l.remark.trim()).map(l => l.remark.trim());
+        if (currentRemarks.length > 0) {
+          contextParts.push(`【关键词: ${keywordRegex}】\n${currentRemarks.join('\n')}`);
+        }
+        const sortedKws = [...kwIndex.values()].filter(k => k.plainTexts && k.plainTexts.length > 0 && k.regex !== keywordRegex);
+        for (const link of rule.links) {
+          const rt = link.remark || '';
+          if (!rt.trim()) continue;
+          for (const kw of sortedKws) {
+            if (kw.plainTexts.some(p => rt.includes(p))) {
+              const kwRule = plugin.globalRules.find(r => r.regex === kw.regex) || plugin.rules.find(r => r.regex === kw.regex);
+              if (kwRule && kwRule.links) {
+                const kwRemarks = kwRule.links.filter(l => l.remark && l.remark.trim()).map(l => l.remark.trim());
+                if (kwRemarks.length > 0) contextParts.push(`【关联关键词→提及: ${kw.regex}】\n${kwRemarks.join('\n')}`);
+              }
+              break;
+            }
+          }
+        }
+        const mentionedBy = blIndex.get(keywordRegex) || [];
+        for (const bl of mentionedBy) {
+          const blRule = plugin.globalRules.find(r => r.regex === bl.sourceRegex) || plugin.rules.find(r => r.regex === bl.sourceRegex);
+          if (blRule && blRule.links) {
+            const blRemarks = blRule.links.filter(l => l.remark && l.remark.trim()).map(l => l.remark.trim());
+            if (blRemarks.length > 0) contextParts.push(`【关联关键词←被提及: ${bl.sourceRegex}】\n${blRemarks.join('\n')}`);
+          }
+        }
+        const fullContext = contextParts.join('\n\n');
+        if (!fullContext.trim()) { new Notice('暂无足够内容供 AI 分析'); return; }
+        const prompt = `你是一个学习助手。你的任务是根据以下关键词备注内容，向用户提出一个具体、有针对性的问题，帮助用户更好理解该关键词。\n\n提问原则（按重要性由AI自行判断使用哪一种，而非固定顺序）：\n1. 隐含联系：备注之间、或该关键词与关联词备注之间，是否存在尚未被显式写出的联系、呼应或矛盾\n2. 理解薄弱处：是否有某条备注内容浅显（如直接摘抄原文、缺乏个人理解的迹象），可以追问"用你自己的话说，这是什么意思"\n3. 应用/检验：是否可以让用户尝试用该关键词解释一个具体场景，检验理解程度\n\n要求：\n- 每次只问一个问题，不要列多个问题\n- 问题应具体、针对当前关键词和备注内容，不能是泛用模板\n- 根据备注内容的语言自动判断输出语言\n- 只输出问题本身，不要任何前缀、解释或多余文字\n\n以下是备注内容：\n\n${fullContext}`;
+        const aiQuestion = await plugin.callAI(prompt);
+        if (!aiQuestion || !aiQuestion.trim()) { new Notice('AI 未返回有效问题'); return; }
+        const newAiLink = { filePath: '', searchText: '', remark: '', timestamp: Date.now(), _aiQuestion: aiQuestion.trim(), _aiThread: [] };
+        if (!rule.links) rule.links = [];
+        rule.links.push(newAiLink);
+        if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
+        else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+        const r = win.getBoundingClientRect();
+        win.remove();
+        plugin.openKeywordWindow(keywordRegex, { width: r.width, height: r.height, left: r.left, top: r.top });
+      } catch (err) {
+        new Notice('AI 提问失败: ' + (err.message || '未知错误'));
+      } finally {
+        aiAskBtn.textContent = '?';
+        aiAskBtn.style.pointerEvents = '';
+      }
+    });
+    aiBtnContainer.appendChild(aiAskBtn);
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'remark-add-btn';
+    addBtn.textContent = '+';
+    addBtn.title = '添加备注';
+    addBtn.style.cssText = `font-weight:800;font-size:14px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1CB5E0, #000046, #1CB5E0, #6a11cb);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 181, 224, 0.8));background-color:rgba(28, 181, 224, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 181, 224, 0.3), 0 0 15px rgba(0, 0, 70, 0.2);animation:hp-blue-shift 4s ease infinite;line-height:1;${!_isDesktop ? 'width:36px;height:36px;aspect-ratio:1/1;' : ''}`;
+    const addBtnStyle = document.createElement('style');
+    addBtnStyle.textContent = '@keyframes hp-blue-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }';
+    content.appendChild(addBtnStyle);
+    addBtn.addEventListener('click', async (ce) => {
+      ce.preventDefault();
+      ce.stopPropagation();
+      const newLink = { filePath: plugin.currentFilePath || '', searchText: '', remark: '', timestamp: Date.now() };
+      if (!rule.links) rule.links = [];
+      rule.links.push(newLink);
+      if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
+      else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+      const r = win.getBoundingClientRect();
+      win.remove();
+      plugin.openKeywordWindow(keywordRegex, { width: r.width, height: r.height, left: r.left, top: r.top });
+    });
+    aiBtnContainer.appendChild(addBtn);
+    content.appendChild(aiBtnContainer);
+
+    // 双击编辑
     content.addEventListener('dblclick', (e) => {
+      // 编辑搜索词
       const searchTagEl = e.target.closest('[data-edit-field="searchText"]');
-      if (!searchTagEl) return;
+      if (searchTagEl) {
+        e.stopPropagation();
+        const fp = searchTagEl.dataset.filePath;
+        const li = parseInt(searchTagEl.dataset.linkIndex);
+        const fileLs = linksByFile.get(fp);
+        if (!fileLs || !fileLs[li]) return;
+        const linkRef = fileLs[li];
+        const oldSearchText = linkRef.searchText || '';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = oldSearchText;
+        const origW = searchTagEl.offsetWidth;
+        input.style.cssText = `font-size:10px;padding:1px 6px;border:none;border-radius:8px;background:var(--background-modifier-hover);color:var(--text-muted);width:${origW}px;outline:none;box-sizing:border-box;margin:0;height:auto;line-height:normal;`;
+        searchTagEl.replaceWith(input);
+        input.focus();
+        input.select();
+
+        let saved = false;
+        const save = async () => {
+          if (saved) return;
+          saved = true;
+          const val = input.value.trim();
+          linkRef.searchText = val;
+          searchTagEl.textContent = val ? val.substring(0, 20) + (val.length > 20 ? '...' : '') : '(' + t('main.noSearchText') + ')';
+          searchTagEl.style.fontStyle = val ? 'normal' : 'italic';
+          input.replaceWith(searchTagEl);
+          const isGlobal = plugin.globalRules.some(r => r.regex === keywordRegex);
+          if (isGlobal) {
+            await plugin.saveGlobalRules(plugin.globalRules, true);
+          } else {
+            await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+          }
+        };
+        input.addEventListener('blur', save);
+        input.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter') input.blur();
+          if (ev.key === 'Escape') { saved = true; input.replaceWith(searchTagEl); }
+        });
+        return;
+      }
+
+      // 编辑备注内容
+      const remarkEl = e.target.closest('[data-remark-source]');
+      if (!remarkEl) return;
       e.stopPropagation();
-      const fp = searchTagEl.dataset.filePath;
-      const li = parseInt(searchTagEl.dataset.linkIndex);
+
+      const source = remarkEl.dataset.remarkSource;
+      if (source !== 'link') return;
+
+      const fp = remarkEl.dataset.filePath;
+      const li = parseInt(remarkEl.dataset.linkIndex);
       const fileLs = linksByFile.get(fp);
       if (!fileLs || !fileLs[li]) return;
       const linkRef = fileLs[li];
-      const oldSearchText = linkRef.searchText || '';
+      const editValue = linkRef.remark || '';
+      const linkTimestamp = linkRef.timestamp || 0;
 
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.value = oldSearchText;
-      const origW = searchTagEl.offsetWidth;
-      input.style.cssText = `font-size:10px;padding:1px 6px;border:none;border-radius:8px;background:var(--background-modifier-hover);color:var(--text-muted);width:${origW}px;outline:none;box-sizing:border-box;margin:0;height:auto;line-height:normal;`;
-      searchTagEl.replaceWith(input);
-      input.focus();
-      input.select();
+      const origHeight = remarkEl.offsetHeight;
+      const textarea = document.createElement('textarea');
+      textarea.value = editValue;
+      textarea.style.cssText = `width:100%;min-height:${Math.max(origHeight, 60)}px;padding:4px;border:1px solid var(--border-color);border-radius:4px;background:var(--background-secondary);color:var(--text-normal);font-size:12px;font-family:var(--font-family);resize:vertical;box-sizing:border-box;outline:none;line-height:1.5;`;
 
-      let saved = false;
-      const save = async () => {
-        if (saved) return;
-        saved = true;
-        const val = input.value.trim();
-        linkRef.searchText = val;
-        searchTagEl.textContent = val ? val.substring(0, 20) + (val.length > 20 ? '...' : '') : '(' + t('main.noSearchText') + ')';
-        searchTagEl.style.fontStyle = val ? 'normal' : 'italic';
-        input.replaceWith(searchTagEl);
+      const parent = remarkEl.parentNode;
+      parent.replaceChild(textarea, remarkEl);
+      textarea.focus();
+
+      textarea.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Escape') {
+          textarea.removeEventListener('keydown', arguments.callee);
+          const restoredEl = document.createElement('div');
+          restoredEl.className = 'remark-popup-content';
+          restoredEl.dataset.remarkSource = 'link';
+          restoredEl.dataset.filePath = fp;
+          restoredEl.dataset.linkIndex = String(li);
+          restoredEl.style.cssText = 'font-size:12px;overflow:hidden;cursor:text;';
+          try {
+            const { MarkdownRenderer: MR, Component } = require('obsidian');
+            const component = new Component();
+            component.load();
+            MR.renderMarkdown(editValue, restoredEl, plugin.currentFilePath || '', component);
+          } catch {
+            restoredEl.textContent = editValue;
+          }
+          parent.replaceChild(restoredEl, textarea);
+        }
+      });
+
+      let blurSaved = false;
+      textarea.addEventListener('blur', async () => {
+        if (blurSaved) return;
+        blurSaved = true;
+        const newValue = textarea.value.trim();
+        linkRef.remark = newValue;
         const isGlobal = plugin.globalRules.some(r => r.regex === keywordRegex);
+        const rulesList = isGlobal ? plugin.globalRules : plugin.rules;
+        const rule = rulesList.find(r => r.regex === keywordRegex);
+        if (rule && rule.links) {
+          let actualLink = null;
+          if (linkTimestamp) {
+            actualLink = rule.links.find(l => l.filePath === fp && l.timestamp === linkTimestamp);
+          }
+          if (!actualLink && li >= 0 && li < rule.links.length) {
+            const candidate = rule.links[li];
+            if (candidate.filePath === fp) actualLink = candidate;
+          }
+          if (actualLink) {
+            actualLink.remark = newValue;
+          }
+        }
         if (isGlobal) {
           await plugin.saveGlobalRules(plugin.globalRules, true);
         } else {
           await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
         }
-      };
-      input.addEventListener('blur', save);
-      input.addEventListener('keydown', (ev) => {
-        if (ev.key === 'Enter') input.blur();
-        if (ev.key === 'Escape') { saved = true; input.replaceWith(searchTagEl); }
+        // 就地替换为渲染后的内容，保持窗口大小
+        const restoredEl = document.createElement('div');
+        restoredEl.className = 'remark-popup-content';
+        restoredEl.dataset.remarkSource = 'link';
+        restoredEl.dataset.filePath = fp;
+        restoredEl.dataset.linkIndex = String(li);
+        restoredEl.style.cssText = 'font-size:12px;overflow:hidden;cursor:text;';
+        if (newValue) {
+          try {
+            const { MarkdownRenderer: MR, Component } = require('obsidian');
+            const component = new Component();
+            component.load();
+            MR.renderMarkdown(newValue, restoredEl, plugin.currentFilePath || '', component);
+          } catch {
+            restoredEl.textContent = newValue;
+          }
+        } else {
+          restoredEl.textContent = '(' + t('main.doubleClickToEditRemark') + ')';
+          restoredEl.style.cssText += 'color:var(--text-muted);font-style:italic;';
+        }
+        if (textarea.parentNode) parent.replaceChild(restoredEl, textarea);
       });
     });
 
@@ -37447,6 +37781,18 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         chipsBar.appendChild(chip);
       }
 
+      // 手机版 chips 底部拖动移动窗口
+      chipsBar.addEventListener('touchstart', (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        const touch = e.touches[0];
+        isDragging = true;
+        dragStartX = touch.clientX;
+        dragStartY = touch.clientY;
+        const rect = win.getBoundingClientRect();
+        winStartX = Math.round(rect.left);
+        winStartY = Math.round(rect.top);
+      }, { passive: true });
+
       win.appendChild(chipsBar);
     }
 
@@ -37463,6 +37809,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     win.appendChild(resizeHandle);
 
     document.body.appendChild(win);
+
+    // 恢复用户手动调整的窗口尺寸和位置
+    if (preservedRect) {
+      win.style.width = preservedRect.width + 'px';
+      win.style.height = preservedRect.height + 'px';
+      win.style.maxHeight = preservedRect.height + 'px';
+      win.style.left = preservedRect.left + 'px';
+      win.style.top = preservedRect.top + 'px';
+    }
 
     // 拖动逻辑
     let isDragging = false;
@@ -37486,6 +37841,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         const newH = Math.max(150, resizeStartH + (e.clientY - resizeStartY));
         win.style.width = newW + 'px';
         win.style.height = newH + 'px';
+        win.style.maxHeight = newH + 'px';
       }
     };
     const onMouseUp = () => {
@@ -37516,15 +37872,22 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       winStartY = Math.round(rect.top);
     }, { passive: true });
     const onTouchMove = (e) => {
-      if (!isDragging) return;
       const touch = e.touches[0];
-      const dx = touch.clientX - dragStartX;
-      const dy = touch.clientY - dragStartY;
-      win.style.left = Math.round(winStartX + dx) + 'px';
-      win.style.top = Math.round(winStartY + dy) + 'px';
-      showCloseBtn();
+      if (isResizing) {
+        const newW = Math.max(300, resizeStartW + (touch.clientX - resizeStartX));
+        const newH = Math.max(150, resizeStartH + (touch.clientY - resizeStartY));
+        win.style.width = newW + 'px';
+        win.style.height = newH + 'px';
+        win.style.maxHeight = newH + 'px';
+      } else if (isDragging) {
+        const dx = touch.clientX - dragStartX;
+        const dy = touch.clientY - dragStartY;
+        win.style.left = Math.round(winStartX + dx) + 'px';
+        win.style.top = Math.round(winStartY + dy) + 'px';
+        showCloseBtn();
+      }
     };
-    const onTouchEnd = () => { isDragging = false; };
+    const onTouchEnd = () => { isDragging = false; isResizing = false; };
     document.addEventListener('touchmove', onTouchMove, { passive: true });
     document.addEventListener('touchend', onTouchEnd);
     // 双击标题栏规则名进入编辑
@@ -37587,6 +37950,16 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       e.preventDefault();
       e.stopPropagation();
     });
+    resizeHandle.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      isResizing = true;
+      resizeStartX = touch.clientX;
+      resizeStartY = touch.clientY;
+      resizeStartW = win.offsetWidth;
+      resizeStartH = win.offsetHeight;
+      e.preventDefault();
+      e.stopPropagation();
+    }, { passive: false });
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
     // 关闭时清理事件监听
@@ -37724,7 +38097,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           popup.style.padding = `${popupSpacing}px`;
           popup.style.width = `${popupMaxWidth}px`;
-          popup.style.maxWidth = _isDesktop ? `${popupMaxWidth}px` : `${Math.min(popupMaxWidth, window.innerWidth - 20)}px`;
+          popup.style.maxWidth = _isDesktop ? 'none' : `${Math.min(popupMaxWidth, window.innerWidth - 20)}px`;
           popup.style.minWidth = '15px';
           popup.style.maxHeight = 'none'; // 由动态计算控制
           popup.style.backgroundColor = 'var(--background-primary)';
@@ -37895,6 +38268,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             background:var(--background-secondary);border-radius:8px 8px 0 0;
             flex-shrink:0;min-height:24px;
           `;
+          // 左侧按钮组容器
+          const popupLeftBtns = document.createElement('span');
+          popupLeftBtns.style.cssText = 'display:inline-flex;align-items:center;gap:2px;flex-shrink:0;';
           // 左侧：关键词名
           const popupTitleText = document.createElement('span');
           popupTitleText.textContent = targetEl.dataset.ruleRegex || '';
@@ -37902,6 +38278,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           popupTitleText.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;border-bottom:1px dashed transparent;transition:border-bottom-color 0.15s ease;max-width:70%;';
           popupTitleText.addEventListener('mouseenter', () => { popupTitleText.style.borderBottomColor = 'var(--text-muted)'; });
           popupTitleText.addEventListener('mouseleave', () => { popupTitleText.style.borderBottomColor = 'transparent'; });
+          popupTitleBar.appendChild(popupLeftBtns);
           popupTitleBar.appendChild(popupTitleText);
           // 右侧：关闭按钮
           const popupCloseBtn = document.createElement('span');
@@ -37979,19 +38356,28 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             const dy = touch.clientY - popupDragStartY;
             popup.style.left = Math.round(popupWinStartX + dx) + 'px';
             popup.style.top = Math.round(popupWinStartY + dy) + 'px';
+            if (!isPinned) {
+              popup.style.height = popup.offsetHeight + 'px';
+              popup.style.maxHeight = 'none';
+              if (contentContainer) contentContainer.style.maxHeight = 'none';
+            }
             isPinned = true;
             keepOpen = true;
           };
           const onPopupTouchEnd = () => { isDraggingPopup = false; };
           document.addEventListener('touchmove', onPopupTouchMove, { passive: true });
           document.addEventListener('touchend', onPopupTouchEnd);
-          const onPopupMouseMove = (e) => {
+          let onPopupMouseMove = (e) => {
             if (!isDraggingPopup) return;
             const dx = e.clientX - popupDragStartX;
             const dy = e.clientY - popupDragStartY;
             popup.style.left = Math.round(popupWinStartX + dx) + 'px';
             popup.style.top = Math.round(popupWinStartY + dy) + 'px';
-            // 拖动后固定弹窗，只能通过关闭按钮关闭
+            if (!isPinned) {
+              popup.style.height = popup.offsetHeight + 'px';
+              popup.style.maxHeight = 'none';
+              if (contentContainer) contentContainer.style.maxHeight = 'none';
+            }
             isPinned = true;
             keepOpen = true;
           };
@@ -38151,6 +38537,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // ===== 渲染所有备注内容（预览模式） =====
           const renderAllRemarks = () => {
+            popup.style.minWidth = '';
             contentContainer.innerHTML = '';
             
             // 按文档分组渲染
@@ -38208,14 +38595,277 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                   
                   // 备注内容（使用链接自带的备注）
                   const remarkContent = link.remark || '';
+                  const isAiQuestion = !!link._aiQuestion;
                   const remarkWrapper = document.createElement('div');
                   remarkWrapper.style.cssText = 'display:flex;align-items:flex-start;gap:6px;';
                   // 同色圆点
                   const dot = document.createElement('span');
-dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fileHue},50%,50%);flex-shrink:0;margin-top:5px;`;
+dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:${isAiQuestion ? 'hsl(35,70%,50%)' : `hsl(${fileHue},50%,50%)`};flex-shrink:0;margin-top:5px;`;
                   remarkWrapper.appendChild(dot);
                   const remarkBox = document.createElement('div');
                   remarkBox.style.cssText = 'flex:1;min-width:0;overflow:hidden;';
+
+                  if (isAiQuestion) {
+                    // AI提问条目：对话线程式渲染
+                    const aiTitleBar = document.createElement('div');
+                    aiTitleBar.style.cssText = 'display:flex;align-items:flex-start;gap:4px;margin-bottom:4px;';
+                    const aiTitleText = document.createElement('span');
+                    aiTitleText.textContent = 'askedbyAi: ' + link._aiQuestion;
+                    aiTitleText.style.cssText = 'font-size:11px;font-weight:600;color:hsl(35,70%,45%);flex:1;min-width:0;overflow-wrap:break-word;word-break:break-word;';
+                    aiTitleBar.appendChild(aiTitleText);
+                    // "?" 按钮：请AI拆解问题
+                    const aiHelpBtn = document.createElement('button');
+                    aiHelpBtn.textContent = '?';
+                    aiHelpBtn.title = '请AI拆解此问题';
+                    aiHelpBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;font-size:11px;font-weight:700;flex-shrink:0;';
+                    aiHelpBtn.addEventListener('click', async (ce) => {
+                      ce.preventDefault();
+                      ce.stopPropagation();
+                      keepOpen = true;
+                      if (!link._aiThread) link._aiThread = [];
+                      const thread = link._aiThread;
+                      const threadContext = thread.map(t => (t.role === 'ai' ? 'AI: ' : '用户: ') + t.content).join('\n');
+                      const helpPrompt = `你之前向用户提出了一个问题："${link._aiQuestion}"
+
+以下是后续对话：
+${threadContext || '（尚无后续对话）'}
+
+用户表示对这个问题无从下手，不知道怎么回答。请帮用户初步分析拆解这个问题，给出思考方向和步骤提示，但不要直接给出答案。只输出拆解分析，不要任何前缀。`;
+
+                      aiHelpBtn.textContent = '...';
+                      aiHelpBtn.style.pointerEvents = 'none';
+                      try {
+                        const aiReply = await plugin.callAI(helpPrompt);
+                        if (aiReply && aiReply.trim()) {
+                          thread.push({ role: 'ai', content: aiReply.trim() });
+                          const ruleRegex = targetEl.dataset.ruleRegex;
+                          if (ruleRegex) {
+                            const isGlobal = plugin.globalRules.some(r => r.regex === ruleRegex);
+                            const rule = isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
+                            if (rule && rule.links) {
+                              const actualLink = link.timestamp ? rule.links.find(l => l.filePath === link.filePath && l.timestamp === link.timestamp) : null;
+                              if (actualLink) actualLink._aiThread = thread;
+                              targetEl.dataset.links = JSON.stringify(rule.links);
+                              isDirty = true;
+                              if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
+                              else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                            }
+                          }
+                          renderAllRemarks();
+                          repositionPopup();
+                        }
+                      } catch (err) {
+                        console.error('[SwiftGloss] AI拆解失败:', err);
+                        new Notice('AI 拆解失败: ' + (err.message || '未知错误'));
+                      } finally {
+                        aiHelpBtn.textContent = '?';
+                        aiHelpBtn.style.pointerEvents = '';
+                      }
+                    });
+                    aiTitleBar.appendChild(aiHelpBtn);
+                    // 删除按钮
+                    const aiDeleteBtn = document.createElement('button');
+                    aiDeleteBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+                    aiDeleteBtn.title = t('main.deleteRemark');
+                    aiDeleteBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;flex-shrink:0;';
+                    aiDeleteBtn.addEventListener('click', async (ce) => {
+                      ce.preventDefault();
+                      ce.stopPropagation();
+                      const fileLinks = linksByFile.get(filePath);
+                      if (fileLinks) {
+                        const idx = fileLinks.indexOf(link);
+                        if (idx !== -1) fileLinks.splice(idx, 1);
+                        if (fileLinks.length === 0) linksByFile.delete(filePath);
+                      }
+                      const ruleRegex = targetEl.dataset.ruleRegex;
+                      if (ruleRegex) {
+                        const isGlobal = plugin.globalRules.some(r => r.regex === ruleRegex);
+                        let rulesList = isGlobal ? plugin.globalRules : plugin.rules;
+                        const ruleIndex = rulesList.findIndex(r => r.regex === ruleRegex);
+                        if (ruleIndex !== -1) {
+                          const rule = rulesList[ruleIndex];
+                          if (rule && rule.links) {
+                            const linkIdx = link.timestamp
+                              ? rule.links.findIndex(l => l.filePath === link.filePath && l.timestamp === link.timestamp)
+                              : rule.links.findIndex(l => l.filePath === link.filePath && l.searchText === link.searchText);
+                            if (linkIdx !== -1) rule.links.splice(linkIdx, 1);
+                          }
+                          if ((!rule.links || rule.links.length === 0) && (!rule.cssClass || rule.cssClass.trim() === '')) {
+                            rulesList.splice(ruleIndex, 1);
+                            delete targetEl.dataset.links;
+                          } else {
+                            if (rule.links && rule.links.length === 0) delete rule.links;
+                            targetEl.dataset.links = JSON.stringify(rule.links || []);
+                          }
+                          isDirty = true;
+                          if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
+                          else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                        }
+                      }
+                      renderAllRemarks();
+                      repositionPopup();
+                    });
+                    aiTitleBar.appendChild(aiDeleteBtn);
+                    remarkBox.appendChild(aiTitleBar);
+
+                    // 渲染对话线程
+                    const thread = link._aiThread || [];
+                    for (const entry of thread) {
+                      const entryEl = document.createElement('div');
+                      entryEl.style.cssText = 'margin-top:4px;padding-left:8px;border-left:2px solid ' + (entry.role === 'ai' ? 'hsl(35,70%,60%)' : 'hsl(200,50%,60%)') + ';';
+                      const entryLabel = document.createElement('div');
+                      entryLabel.style.cssText = 'font-size:10px;font-weight:600;color:var(--text-muted);margin-bottom:2px;';
+                      entryLabel.textContent = entry.role === 'ai' ? '🤖 AI' : '👤 你';
+                      entryEl.appendChild(entryLabel);
+                      const entryContent = document.createElement('div');
+                      entryContent.style.cssText = 'font-size:12px;overflow-wrap:break-word;word-break:break-word;';
+                      try {
+                        const { MarkdownRenderer: MR, Component } = require('obsidian');
+                        if (MR && plugin.app) {
+                          const component = new Component();
+                          component.load();
+                          MR.renderMarkdown(entry.content, entryContent, plugin.currentFilePath || '', component);
+                          entryContent._component = component;
+                        } else {
+                          entryContent.textContent = entry.content;
+                        }
+                      } catch {
+                        entryContent.textContent = entry.content;
+                      }
+                      entryEl.appendChild(entryContent);
+                      // AI回复后面加"?"按钮
+                      if (entry.role === 'ai') {
+                        const entryHelpBtn = document.createElement('button');
+                        entryHelpBtn.textContent = '?';
+                        entryHelpBtn.title = '继续追问AI';
+                        entryHelpBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:16px;line-height:0;font-size:10px;font-weight:700;margin-top:2px;';
+                        entryHelpBtn.addEventListener('click', async (ce2) => {
+                          ce2.preventDefault();
+                          ce2.stopPropagation();
+                          keepOpen = true;
+                          const t2 = link._aiThread || [];
+                          const t2Ctx = t2.map(t => (t.role === 'ai' ? 'AI: ' : '用户: ') + t.content).join('\n');
+                          const followPrompt = `你之前向用户提出了一个问题："${link._aiQuestion}"
+
+以下是后续对话：
+${t2Ctx}
+
+用户对AI上一条回复仍有疑问，请进一步分析拆解，给出更具体的思考方向，但不要直接给出答案。只输出分析，不要任何前缀。`;
+                          entryHelpBtn.textContent = '...';
+                          entryHelpBtn.style.pointerEvents = 'none';
+                          try {
+                            const reply = await plugin.callAI(followPrompt);
+                            if (reply && reply.trim()) {
+                              t2.push({ role: 'ai', content: reply.trim() });
+                              const rr = targetEl.dataset.ruleRegex;
+                              if (rr) {
+                                const ig = plugin.globalRules.some(r => r.regex === rr);
+                                const rl = ig ? plugin.globalRules.find(r => r.regex === rr) : plugin.rules.find(r => r.regex === rr);
+                                if (rl && rl.links) {
+                                  const al = link.timestamp ? rl.links.find(l => l.filePath === link.filePath && l.timestamp === link.timestamp) : null;
+                                  if (al) al._aiThread = t2;
+                                  targetEl.dataset.links = JSON.stringify(rl.links);
+                                  isDirty = true;
+                                  if (ig) await plugin.saveGlobalRules(plugin.globalRules, true);
+                                  else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                                }
+                              }
+                              renderAllRemarks();
+                              repositionPopup();
+                            }
+                          } catch (err) {
+                            console.error('[SwiftGloss] AI追问失败:', err);
+                            new Notice('AI 追问失败: ' + (err.message || '未知错误'));
+                          } finally {
+                            entryHelpBtn.textContent = '?';
+                            entryHelpBtn.style.pointerEvents = '';
+                          }
+                        });
+                        entryEl.appendChild(entryHelpBtn);
+                      }
+                      remarkBox.appendChild(entryEl);
+                    }
+
+                    // 用户回答区（可双击编辑）
+                    const remarkEl = document.createElement('div');
+                    remarkEl.className = 'remark-popup-content';
+                    remarkEl.dataset.remarkSource = 'link';
+                    remarkEl.dataset.linkIndex = String(i);
+                    remarkEl.dataset.filePath = filePath;
+                    remarkEl.style.cssText = 'font-size:12px;overflow:hidden;margin-top:4px;';
+                    if (remarkContent) {
+                      try {
+                        const { MarkdownRenderer: MR, Component } = require('obsidian');
+                        if (MR && plugin.app) {
+                          const component = new Component();
+                          component.load();
+                          const sourcePath = plugin.currentFilePath || '';
+                          MR.renderMarkdown(remarkContent, remarkEl, sourcePath, component);
+                          remarkEl._component = component;
+                          plugin.renderImagesManually(remarkContent, remarkEl, plugin);
+                        } else {
+                          remarkEl.textContent = remarkContent;
+                        }
+                      } catch {
+                        remarkEl.textContent = remarkContent;
+                      }
+                      // 用户回答后"反馈给AI"按钮
+                      const feedbackBtn = document.createElement('button');
+                      feedbackBtn.textContent = '↗';
+                      feedbackBtn.title = '将回答反馈给AI';
+                      feedbackBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:16px;line-height:0;font-size:11px;font-weight:700;margin-top:2px;';
+                      feedbackBtn.addEventListener('click', async (ce3) => {
+                        ce3.preventDefault();
+                        ce3.stopPropagation();
+                        keepOpen = true;
+                        if (!link._aiThread) link._aiThread = [];
+                        const t3 = link._aiThread;
+                        t3.push({ role: 'user', content: remarkContent });
+                        const t3Ctx = t3.map(t => (t.role === 'ai' ? 'AI: ' : '用户: ') + t.content).join('\n');
+                        const fbPrompt = `你之前向用户提出了一个问题："${link._aiQuestion}"
+
+以下是后续对话：
+${t3Ctx}
+
+用户给出了回答。请针对用户的回答给出反馈：指出回答中正确和不足之处，或进一步追问，帮助用户深化理解。只输出反馈，不要任何前缀。`;
+                        feedbackBtn.textContent = '...';
+                        feedbackBtn.style.pointerEvents = 'none';
+                        try {
+                          const reply = await plugin.callAI(fbPrompt);
+                          if (reply && reply.trim()) {
+                            t3.push({ role: 'ai', content: reply.trim() });
+                            const rr = targetEl.dataset.ruleRegex;
+                            if (rr) {
+                              const ig = plugin.globalRules.some(r => r.regex === rr);
+                              const rl = ig ? plugin.globalRules.find(r => r.regex === rr) : plugin.rules.find(r => r.regex === rr);
+                              if (rl && rl.links) {
+                                const al = link.timestamp ? rl.links.find(l => l.filePath === link.filePath && l.timestamp === link.timestamp) : null;
+                                if (al) al._aiThread = t3;
+                                targetEl.dataset.links = JSON.stringify(rl.links);
+                                isDirty = true;
+                                if (ig) await plugin.saveGlobalRules(plugin.globalRules, true);
+                                else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                              }
+                            }
+                            renderAllRemarks();
+                            repositionPopup();
+                          }
+                        } catch (err) {
+                          console.error('[SwiftGloss] AI反馈失败:', err);
+                          new Notice('AI 反馈失败: ' + (err.message || '未知错误'));
+                        } finally {
+                          feedbackBtn.textContent = '↗';
+                          feedbackBtn.style.pointerEvents = '';
+                        }
+                      });
+                      remarkBox.appendChild(remarkEl);
+                      remarkBox.appendChild(feedbackBtn);
+                    } else {
+                      remarkEl.textContent = '(' + t('main.doubleClickToEditRemark') + ')';
+                      remarkEl.style.cssText += 'color:var(--text-muted);font-style:italic;cursor:text;';
+                      remarkBox.appendChild(remarkEl);
+                    }
+                  } else {
                   const remarkEl = document.createElement('div');
                   remarkEl.className = 'remark-popup-content';
                   remarkEl.dataset.remarkSource = 'link';
@@ -38388,6 +39038,7 @@ dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fil
                   });
                   toolBar.appendChild(deleteBtn);
                   remarkBox.appendChild(toolBar);
+                  }
                   remarkWrapper.appendChild(remarkBox);
                   bodyEl.appendChild(remarkWrapper);
                 }
@@ -38404,16 +39055,201 @@ dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fil
               contentContainer.innerHTML = '<span style="color: var(--text-muted)">无备注内容</span>';
             }
             
+            // AI提问按钮容器
+            const aiBtnContainer = document.createElement('div');
+            aiBtnContainer.style.cssText = `position:sticky;bottom:0;${_isDesktop ? 'float:right;' : 'display:flex;justify-content:center;gap:6px;'}margin-top:6px;`;
+
+            // AI提问"❓"按钮
+            const aiAskBtn = document.createElement('button');
+            aiAskBtn.className = 'remark-ai-ask-btn';
+            aiAskBtn.textContent = '?';
+            aiAskBtn.title = 'AI 提问';
+            aiAskBtn.style.cssText = `font-weight:800;font-size:14px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #e0a01c, #460000, #e0a01c, #cb6a11);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(224, 160, 28, 0.8));background-color:rgba(224, 160, 28, 0.05);box-shadow:inset 0 0 0 1px rgba(224, 160, 28, 0.3), 0 0 15px rgba(70, 0, 0, 0.2);animation:hp-amber-shift 4s ease infinite;line-height:1;${!_isDesktop ? 'width:36px;height:36px;aspect-ratio:1/1;' : ''}`;
+            const aiBtnStyle = document.createElement('style');
+            aiBtnStyle.textContent = '@keyframes hp-amber-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }';
+            contentContainer.appendChild(aiBtnStyle);
+
+            // 检查是否有足够备注内容供AI分析
+            const aiRuleRegex = targetEl.dataset.ruleRegex;
+            let aiHasContent = false;
+            if (aiRuleRegex) {
+              const aiCurrentRule = plugin.globalRules.find(r => r.regex === aiRuleRegex) || plugin.rules.find(r => r.regex === aiRuleRegex);
+              if (aiCurrentRule && aiCurrentRule.links) {
+                aiHasContent = aiCurrentRule.links.some(l => l.remark && l.remark.trim());
+              }
+              if (!aiHasContent) {
+                const aiKwIndex = plugin.buildKeywordIndex();
+                const aiBlIndex = plugin.buildBacklinkIndex(aiKwIndex);
+                const aiMentionedBy = aiBlIndex.get(aiRuleRegex) || [];
+                for (const bl of aiMentionedBy) {
+                  if (bl.remark && bl.remark.trim()) { aiHasContent = true; break; }
+                }
+                if (!aiHasContent) {
+                  const aiSortedKws = [...aiKwIndex.values()].filter(k => k.plainTexts && k.plainTexts.length > 0 && k.regex !== aiRuleRegex);
+                  for (const link of (aiCurrentRule?.links || [])) {
+                    const rt = link.remark || '';
+                    if (!rt.trim()) continue;
+                    for (const kw of aiSortedKws) {
+                      if (kw.plainTexts.some(p => rt.includes(p))) {
+                        const kwRule = plugin.globalRules.find(r => r.regex === kw.regex) || plugin.rules.find(r => r.regex === kw.regex);
+                        if (kwRule && kwRule.links && kwRule.links.some(l => l.remark && l.remark.trim())) { aiHasContent = true; break; }
+                      }
+                    }
+                    if (aiHasContent) break;
+                  }
+                }
+              }
+            }
+            if (!aiHasContent) {
+              aiAskBtn.style.opacity = '0.35';
+              aiAskBtn.style.cursor = 'not-allowed';
+              aiAskBtn.title = '暂无足够内容供 AI 分析';
+            }
+
+            aiAskBtn.addEventListener('click', async (ce) => {
+              ce.preventDefault();
+              ce.stopPropagation();
+              keepOpen = true;
+              if (!aiHasContent) {
+                new Notice('暂无足够内容供 AI 分析');
+                return;
+              }
+              const ruleRegex = targetEl.dataset.ruleRegex;
+              if (!ruleRegex) return;
+
+              // 组装上下文
+              const currentRule = plugin.globalRules.find(r => r.regex === ruleRegex) || plugin.rules.find(r => r.regex === ruleRegex);
+              let contextParts = [];
+              if (currentRule && currentRule.links) {
+                const currentRemarks = currentRule.links.filter(l => l.remark && l.remark.trim()).map(l => l.remark.trim());
+                if (currentRemarks.length > 0) {
+                  contextParts.push(`【关键词: ${ruleRegex}】\n${currentRemarks.join('\n')}`);
+                }
+              }
+              const kwIndex = plugin.buildKeywordIndex();
+              const blIndex = plugin.buildBacklinkIndex(kwIndex);
+              const relatedKwMap = new Map();
+              if (currentRule && currentRule.links) {
+                const sortedKws = [...kwIndex.values()].filter(k => k.plainTexts && k.plainTexts.length > 0 && k.regex !== ruleRegex);
+                for (const link of currentRule.links) {
+                  const rt = link.remark || '';
+                  if (!rt.trim()) continue;
+                  for (const kw of sortedKws) {
+                    if (relatedKwMap.has(kw.regex)) continue;
+                    if (kw.plainTexts.some(p => rt.includes(p))) {
+                      relatedKwMap.set(kw.regex, { regex: kw.regex, relation: 'mention' });
+                    }
+                  }
+                }
+              }
+              const mentionedBy = blIndex.get(ruleRegex) || [];
+              for (const bl of mentionedBy) {
+                if (!relatedKwMap.has(bl.sourceRegex)) {
+                  relatedKwMap.set(bl.sourceRegex, { regex: bl.sourceRegex, relation: 'mentionedBy' });
+                }
+              }
+              for (const [kwRegex] of relatedKwMap) {
+                const kwRule = plugin.globalRules.find(r => r.regex === kwRegex) || plugin.rules.find(r => r.regex === kwRegex);
+                if (kwRule && kwRule.links) {
+                  const kwRemarks = kwRule.links.filter(l => l.remark && l.remark.trim()).map(l => l.remark.trim());
+                  if (kwRemarks.length > 0) {
+                    const relInfo = relatedKwMap.get(kwRegex);
+                    const relLabel = relInfo.relation === 'mention' ? '→ 提及' : '← 被提及';
+                    contextParts.push(`【关联关键词${relLabel}: ${kwRegex}】\n${kwRemarks.join('\n')}`);
+                  }
+                }
+              }
+              const fullContext = contextParts.join('\n\n');
+              if (!fullContext.trim()) {
+                new Notice('暂无足够内容供 AI 分析');
+                return;
+              }
+
+              // 显示加载状态
+              aiAskBtn.style.opacity = '0.5';
+              aiAskBtn.textContent = '...';
+              aiAskBtn.style.pointerEvents = 'none';
+
+              try {
+                const prompt = `你是一个学习助手。你的任务是根据以下关键词备注内容，向用户提出一个具体、有针对性的问题，帮助用户更好理解该关键词。
+
+提问原则（按重要性由AI自行判断使用哪一种，而非固定顺序）：
+1. 隐含联系：备注之间、或该关键词与关联词备注之间，是否存在尚未被显式写出的联系、呼应或矛盾
+2. 理解薄弱处：是否有某条备注内容浅显（如直接摘抄原文、缺乏个人理解的迹象），可以追问"用你自己的话说，这是什么意思"
+3. 应用/检验：是否可以让用户尝试用该关键词解释一个具体场景，检验理解程度
+
+要求：
+- 每次只问一个问题，不要列多个问题
+- 问题应具体、针对当前关键词和备注内容，不能是泛用模板（如"你怎么理解这个词"这种放在任何关键词上都成立的问题，应避免）
+- 根据备注内容的语言自动判断输出语言（中文备注用中文提问，英文备注用英文提问）
+- 只输出问题本身，不要任何前缀、解释或多余文字
+
+以下是备注内容：
+
+${fullContext}`;
+
+                const aiQuestion = await plugin.callAI(prompt);
+                if (!aiQuestion || !aiQuestion.trim()) {
+                  new Notice('AI 未返回有效问题');
+                  return;
+                }
+
+                // 创建AI提问备注条目
+                const newAiLink = {
+                  filePath: '',
+                  searchText: '',
+                  remark: '',
+                  timestamp: Date.now(),
+                  _aiQuestion: aiQuestion.trim(),
+                  _aiThread: []
+                };
+
+                const isGlobal = plugin.globalRules.some(r => r.regex === ruleRegex);
+                let rule;
+                if (isGlobal) {
+                  rule = plugin.globalRules.find(r => r.regex === ruleRegex);
+                } else {
+                  rule = plugin.rules.find(r => r.regex === ruleRegex);
+                }
+                if (rule) {
+                  if (!rule.links) rule.links = [];
+                  rule.links.push(newAiLink);
+                  const key = newAiLink.filePath;
+                  if (!linksByFile.has(key)) linksByFile.set(key, []);
+                  linksByFile.get(key).push(newAiLink);
+                  targetEl.dataset.links = JSON.stringify(rule.links);
+                  isDirty = true;
+                  if (isGlobal) {
+                    await plugin.saveGlobalRules(plugin.globalRules, true);
+                  } else {
+                    await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                  }
+                }
+                renderAllRemarks();
+                repositionPopup();
+              } catch (err) {
+                console.error('[SwiftGloss] AI提问失败:', err);
+                new Notice('AI 提问失败: ' + (err.message || '未知错误'));
+              } finally {
+                aiAskBtn.style.opacity = aiHasContent ? '1' : '0.35';
+                aiAskBtn.textContent = '?';
+                aiAskBtn.style.pointerEvents = '';
+              }
+            });
+            aiBtnContainer.appendChild(aiAskBtn);
+
             // 右下角"+"按钮：添加新备注
             const addBtn = document.createElement('button');
             addBtn.className = 'remark-add-btn';
             addBtn.textContent = '+';
             addBtn.title = '添加备注';
-            addBtn.style.cssText = `position:sticky;bottom:0;${_isDesktop ? 'float:right;' : 'display:block;margin:6px auto 0;'}font-weight:800;font-size:14px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1CB5E0, #000046, #1CB5E0, #6a11cb);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 181, 224, 0.8));background-color:rgba(28, 181, 224, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 181, 224, 0.3), 0 0 15px rgba(0, 0, 70, 0.2);animation:hp-blue-shift 4s ease infinite;margin-top:6px;line-height:1;${!_isDesktop ? 'width:36px;height:36px;aspect-ratio:1/1;' : ''}`;
+            addBtn.style.cssText = `font-weight:800;font-size:14px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1CB5E0, #000046, #1CB5E0, #6a11cb);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 181, 224, 0.8));background-color:rgba(28, 181, 224, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 181, 224, 0.3), 0 0 15px rgba(0, 0, 70, 0.2);animation:hp-blue-shift 4s ease infinite;line-height:1;${!_isDesktop ? 'width:36px;height:36px;aspect-ratio:1/1;' : ''}`;
             // 添加动画 keyframes
             const addBtnStyle = document.createElement('style');
             addBtnStyle.textContent = '@keyframes hp-blue-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }';
             contentContainer.appendChild(addBtnStyle);
+            aiBtnContainer.appendChild(addBtn);
+            contentContainer.appendChild(aiBtnContainer);
             addBtn.addEventListener('click', async (ce) => {
               ce.preventDefault();
               ce.stopPropagation();
@@ -38471,7 +39307,7 @@ dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fil
               renderAllRemarks();
               repositionPopup();
             });
-            contentContainer.appendChild(addBtn);
+
           };
           
           // 重新定位弹窗（内容变化后调用）
@@ -39032,7 +39868,7 @@ dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fil
                     const rule = rulesList[ruleIndex];
                     if (rule && rule.links) {
                       const beforeLen = rule.links.length;
-                      rule.links = rule.links.filter(l => (l.remark && l.remark.trim()) || (l.searchText && l.searchText.trim()));
+                      rule.links = rule.links.filter(l => (l.remark && l.remark.trim()) || (l.searchText && l.searchText.trim()) || l._aiQuestion);
                       if (rule.links.length !== beforeLen) {
                         plugin.remarkLog('[RegexCssHL] doHide: 清理空条目', { beforeLen, afterLen: rule.links.length });
                         if (rule.links.length === 0) delete rule.links;
@@ -39068,6 +39904,8 @@ dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fil
               // 移除弹窗拖动监听
               document.removeEventListener('mousemove', onPopupMouseMove);
               document.removeEventListener('mouseup', onPopupMouseUp);
+              document.removeEventListener('touchmove', onPopupResizeTouchMove);
+              document.removeEventListener('touchend', onPopupResizeTouchEnd);
               // 移除点击外部监听
               if (clickOutsideHandler) {
                 document.removeEventListener('click', clickOutsideHandler, true);
@@ -39340,10 +40178,184 @@ dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fil
               plugin.refreshCurrentView();
               new Notice(t('main.ruleRemoved'));
             });
-            popupTitleBar.insertBefore(ruleBadge, popupTitleText);
-            // 添加间距
-            ruleBadge.style.marginRight = '6px';
+            popupLeftBtns.appendChild(ruleBadge);
           }
+
+          // "s" 保存文件按钮
+          const saveFileBtn = document.createElement('span');
+          saveFileBtn.textContent = 's';
+          saveFileBtn.title = t('main.saveAsFile');
+          saveFileBtn.style.cssText = `
+            font-size: 10px;font-weight: bold;
+            color: var(--text-muted);opacity: 0.6;
+            background: var(--background-secondary);
+            border: 1px solid var(--background-modifier-border);
+            border-radius: 3px;padding: 1px 5px;
+            line-height: 1.3;cursor: pointer;
+            user-select: none;flex-shrink: 0;
+            transition: opacity 0.15s, color 0.15s, background 0.15s;
+          `;
+          saveFileBtn.addEventListener('mouseenter', () => {
+            saveFileBtn.style.opacity = '1';
+            saveFileBtn.style.color = 'var(--text-accent)';
+            saveFileBtn.style.background = 'var(--background-modifier-hover)';
+          });
+          saveFileBtn.addEventListener('mouseleave', () => {
+            saveFileBtn.style.opacity = '0.6';
+            saveFileBtn.style.color = 'var(--text-muted)';
+            saveFileBtn.style.background = 'var(--background-secondary)';
+          });
+          saveFileBtn.addEventListener('click', async (ce) => {
+            ce.stopPropagation();
+            ce.preventDefault();
+            try {
+              const matchedText = targetEl.textContent || targetEl.innerText || '';
+              if (!matchedText.trim()) {
+                new Notice(t('main.cannotGetMatchText'));
+                return;
+              }
+              let mdContent = `# ${matchedText.trim()}\n\n`;
+              if (linksByFile.size > 0) {
+                for (const [filePath, fileLinks] of linksByFile) {
+                  const fileName = filePath.split('/').pop().replace(/\.md$/, '');
+                  mdContent += `## [[${fileName}|${fileName}]]\n\n`;
+                  for (const link of fileLinks) {
+                    if (link.remark?.trim()) {
+                      mdContent += `- ${link.remark.trim()}\n`;
+                    }
+                  }
+                  mdContent += '\n';
+                }
+              }
+              const fileName = matchedText.trim();
+              const filePath = `${fileName}.md`;
+              const existingFile = plugin.app.vault.getAbstractFileByPath(filePath);
+              if (existingFile) {
+                const choiceModal = new Modal(plugin.app);
+                choiceModal.titleEl.setText(t('main.fileExistsTitle'));
+                const messageEl = choiceModal.contentEl.createEl('p');
+                messageEl.textContent = t('main.fileExistsDesc');
+                messageEl.style.marginBottom = '16px';
+                const buttonContainer = choiceModal.contentEl.createEl('div');
+                buttonContainer.style.display = 'flex';
+                buttonContainer.style.justifyContent = 'flex-end';
+                buttonContainer.style.gap = '8px';
+                buttonContainer.style.flexWrap = 'wrap';
+                const cancelBtn = buttonContainer.createEl('button');
+                cancelBtn.textContent = t('main.cancel');
+                cancelBtn.addEventListener('click', () => choiceModal.close());
+                const mergeBtn = buttonContainer.createEl('button');
+                mergeBtn.textContent = t('main.mergeContent');
+                mergeBtn.style.backgroundColor = 'var(--interactive-accent)';
+                mergeBtn.style.color = 'white';
+                mergeBtn.style.border = 'none';
+                mergeBtn.style.borderRadius = '4px';
+                mergeBtn.addEventListener('click', async () => {
+                  try {
+                    const existingContent = await plugin.app.vault.read(existingFile);
+                    const newContent = existingContent + '\n\n---\n\n' + mdContent;
+                    await plugin.app.vault.modify(existingFile, newContent);
+                    new Notice(t('main.mergedToFile'));
+                    choiceModal.close();
+                  } catch (err) {
+                    new Notice(t('main.mergeFailed') + ': ' + err.message);
+                  }
+                });
+                choiceModal.open();
+                return;
+              }
+              await plugin.app.vault.create(filePath, mdContent);
+              new Notice(t('main.savedToFile'));
+            } catch (error) {
+              console.error('保存文件时出错:', error);
+              new Notice(t('main.saveFailed') + ': ' + error.message);
+            }
+          });
+          popupLeftBtns.appendChild(saveFileBtn);
+
+          // 行间注释文本框（常显，双击编辑，支持拖放文本）
+          const currentKeyword = targetEl.dataset.ruleRegex || '';
+          const inNoteTag = document.createElement('span');
+          inNoteTag.dataset.editField = 'inNote';
+          inNoteTag.dataset.keyword = currentKeyword;
+          inNoteTag.style.cssText = 'font-size:10px;color:var(--text-muted);background:var(--background-secondary);padding:1px 6px;border-radius:8px;cursor:text;border-bottom:1px dashed transparent;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;user-select:none;-webkit-user-select:none;';
+          inNoteTag.addEventListener('mouseenter', () => { inNoteTag.style.borderBottomColor = 'var(--text-muted)'; });
+          inNoteTag.addEventListener('mouseleave', () => { inNoteTag.style.borderBottomColor = 'transparent'; });
+          // 拖放文本到行间注释
+          inNoteTag.addEventListener('dragover', (de) => {
+            if (de.dataTransfer?.types?.includes('text/plain') || de.dataTransfer?.types?.includes('text/unicode')) {
+              de.preventDefault();
+              inNoteTag.style.borderBottomColor = 'var(--text-accent)';
+              inNoteTag.style.background = 'var(--text-accent)';
+              inNoteTag.style.color = 'var(--text-on-accent)';
+            }
+          });
+          inNoteTag.addEventListener('dragleave', () => {
+            inNoteTag.style.borderBottomColor = 'transparent';
+            inNoteTag.style.background = 'var(--background-modifier-hover)';
+            inNoteTag.style.color = 'var(--text-muted)';
+          });
+          inNoteTag.addEventListener('drop', async (de) => {
+            de.preventDefault();
+            de.stopPropagation();
+            const droppedText = de.dataTransfer?.getData('text/plain')?.trim();
+            inNoteTag.style.borderBottomColor = 'transparent';
+            inNoteTag.style.background = 'var(--background-modifier-hover)';
+            inNoteTag.style.color = 'var(--text-muted)';
+            if (!droppedText || !currentKeyword) return;
+            const data = await plugin.loadInterlinearNoteData();
+            const existingNote = data[currentKeyword] || '';
+            if (existingNote && !existingNote.includes(droppedText)) {
+              data[currentKeyword] = existingNote + '\n' + droppedText;
+            } else if (!existingNote) {
+              data[currentKeyword] = droppedText;
+            }
+            await plugin.saveInterlinearNoteData(data);
+            inNoteTag.textContent = data[currentKeyword].substring(0, 20) + (data[currentKeyword].length > 20 ? '...' : '');
+            new Notice(t('inNote.added'));
+          });
+          // 双击编辑行间注释
+          inNoteTag.addEventListener('dblclick', async (de) => {
+            de.stopPropagation();
+            de.preventDefault();
+            keepOpen = true;
+            const kw = inNoteTag.dataset.keyword || '';
+            if (!kw) return;
+            const data = await plugin.loadInterlinearNoteData();
+            const oldNote = data[kw] || '';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = oldNote;
+            const origWidth = inNoteTag.offsetWidth;
+            input.style.cssText = `font-size:10px;padding:1px 6px;border:none;border-radius:8px;background:var(--background-modifier-hover);color:var(--text-muted);width:${Math.max(origWidth, 60)}px;outline:none;box-sizing:border-box;margin:0;height:auto;line-height:normal;`;
+            inNoteTag.replaceWith(input);
+            input.focus();
+            input.select();
+            let noteSaved = false;
+            const saveNote = async () => {
+              if (noteSaved) return;
+              noteSaved = true;
+              const newValue = input.value.trim();
+              const newData = await plugin.loadInterlinearNoteData();
+              if (!newValue) {
+                delete newData[kw];
+              } else {
+                newData[kw] = newValue;
+              }
+              await plugin.saveInterlinearNoteData(newData);
+              inNoteTag.textContent = newValue ? newValue.substring(0, 20) + (newValue.length > 20 ? '...' : '') : '行间注释';
+              input.replaceWith(inNoteTag);
+            };
+            input.addEventListener('blur', saveNote);
+            input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { noteSaved = true; input.replaceWith(inNoteTag); } });
+          });
+          // 加载已有行间注释
+          (async () => {
+            const data = await plugin.loadInterlinearNoteData();
+            const note = data[currentKeyword] || '';
+            inNoteTag.textContent = note ? note.substring(0, 20) + (note.length > 20 ? '...' : '') : '行间注释';
+          })();
+          popupLeftBtns.appendChild(inNoteTag);
 
           popup.appendChild(contentContainer);
 
@@ -39503,6 +40515,18 @@ dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fil
                 chipsBar.appendChild(chip);
               }
 
+              // 手机版 chips 底部拖动移动弹窗
+              chipsBar.addEventListener('touchstart', (e) => {
+                if (e.target.tagName === 'INPUT') return;
+                const touch = e.touches[0];
+                isDraggingPopup = true;
+                popupDragStartX = touch.clientX;
+                popupDragStartY = touch.clientY;
+                const rect = popup.getBoundingClientRect();
+                popupWinStartX = Math.round(rect.left);
+                popupWinStartY = Math.round(rect.top);
+              }, { passive: true });
+
               popup.appendChild(chipsBar);
 
               // 版本标签放入 chipsBar 内部（避免重叠）
@@ -39521,6 +40545,79 @@ dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fil
             }
           }
           
+          // 右下角 resize 手柄
+          const popupResizeHandle = document.createElement('div');
+          popupResizeHandle.style.cssText = `
+            position:absolute;right:0;bottom:0;width:14px;height:14px;
+            cursor:nwse-resize;z-index:10;
+            background:linear-gradient(135deg, transparent 50%, var(--text-muted) 50%);
+            border-radius:0 0 8px 0;opacity:0.4;
+          `;
+          popupResizeHandle.addEventListener('mouseenter', () => { popupResizeHandle.style.opacity = '0.7'; });
+          popupResizeHandle.addEventListener('mouseleave', () => { popupResizeHandle.style.opacity = '0.4'; });
+          popup.appendChild(popupResizeHandle);
+
+          let isPopupResizing = false;
+          let popupResizeStartX, popupResizeStartY, popupResizeStartW, popupResizeStartH;
+          popupResizeHandle.addEventListener('mousedown', (e) => {
+            isPopupResizing = true;
+            popupResizeStartX = e.clientX;
+            popupResizeStartY = e.clientY;
+            popupResizeStartW = popup.offsetWidth;
+            popupResizeStartH = popup.offsetHeight;
+            e.preventDefault();
+            e.stopPropagation();
+          });
+          popupResizeHandle.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            isPopupResizing = true;
+            popupResizeStartX = touch.clientX;
+            popupResizeStartY = touch.clientY;
+            popupResizeStartW = popup.offsetWidth;
+            popupResizeStartH = popup.offsetHeight;
+            e.preventDefault();
+            e.stopPropagation();
+          }, { passive: false });
+          const onPopupResizeTouchMove = (e) => {
+            if (!isPopupResizing) return;
+            const touch = e.touches[0];
+            const newH = Math.max(80, popupResizeStartH + (touch.clientY - popupResizeStartY));
+            popup.style.height = newH + 'px';
+            popup.style.maxHeight = newH + 'px';
+            if (contentContainer) {
+              const chipsBar3 = popup.querySelector('.keyword-chips-bar');
+              const chipsH3 = chipsBar3 ? chipsBar3.offsetHeight : 0;
+              contentContainer.style.maxHeight = `calc(${newH}px - ${popupSpacing * 2 + 26 + chipsH3}px)`;
+            }
+            isPinned = true;
+            keepOpen = true;
+          };
+          const onPopupResizeTouchEnd = () => { isPopupResizing = false; };
+          document.addEventListener('touchmove', onPopupResizeTouchMove, { passive: true });
+          document.addEventListener('touchend', onPopupResizeTouchEnd);
+          // 鼠标 resize 也整合到已有的 onPopupMouseMove
+          const origOnPopupMouseMove = onPopupMouseMove;
+          onPopupMouseMove = (e) => {
+            if (isPopupResizing) {
+              const newW = Math.max(100, popupResizeStartW + (e.clientX - popupResizeStartX));
+              const newH = Math.max(80, popupResizeStartH + (e.clientY - popupResizeStartY));
+              popup.style.width = newW + 'px';
+              popup.style.height = newH + 'px';
+              popup.style.maxHeight = newH + 'px';
+              if (contentContainer) {
+                const chipsBar3 = popup.querySelector('.keyword-chips-bar');
+                const chipsH3 = chipsBar3 ? chipsBar3.offsetHeight : 0;
+                contentContainer.style.maxHeight = `calc(${newH}px - ${popupSpacing * 2 + 26 + chipsH3}px)`;
+              }
+              isPinned = true;
+              keepOpen = true;
+            } else {
+              origOnPopupMouseMove(e);
+            }
+          };
+          document.removeEventListener('mousemove', origOnPopupMouseMove);
+          document.addEventListener('mousemove', onPopupMouseMove);
+
           // 添加到页面
           document.body.appendChild(popup);
           
@@ -39533,7 +40630,7 @@ dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fil
               const currentWidth = popup.offsetWidth;
               const newWidth = Math.max(100, Math.min(window.innerWidth - 20, currentWidth + delta));
               popup.style.width = newWidth + 'px';
-              popup.style.maxWidth = newWidth + 'px';
+              popup.style.maxWidth = 'none';
               plugin.settings.popupWidth = newWidth;
               plugin.saveData(plugin.settings);
               repositionPopup();
@@ -39547,105 +40644,7 @@ dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fil
             }
           }, { passive: false });
           
-          // 添加右键菜单 - 保存为文件
-          popup.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const menu = new Menu();
-            
-            menu.addItem((item) => {
-              item
-                .setTitle(t('main.saveAsFile'))
-                .setIcon("file-plus")
-                .onClick(async () => {
-                  try {
-                    const matchedText = targetEl.textContent || targetEl.innerText || '';
-                    
-                    if (!matchedText.trim()) {
-                      new Notice(t('main.cannotGetMatchText'));
-                      return;
-                    }
-                    
-                    // 构建所有备注内容
-                    let mdContent = `# ${matchedText.trim()}\n\n`;
-                    
-                    if (linksByFile.size > 0) {
-                      for (const [filePath, fileLinks] of linksByFile) {
-                        const fileName = filePath.split('/').pop().replace(/\.md$/, '');
-                        // 标题添加链接
-                        mdContent += `## [[${fileName}|${fileName}]]\n\n`;
-                        
-                        for (const link of fileLinks) {
-                          if (link.remark?.trim()) {
-                            mdContent += `- ${link.remark.trim()}\n`;
-                          }
-                        }
-                        mdContent += '\n';
-                      }
-                    }
-                    
-                    const fileName = matchedText.trim();
-                    const filePath = `${fileName}.md`;
-                    
-                    const existingFile = plugin.app.vault.getAbstractFileByPath(filePath);
-                    
-                    if (existingFile) {
-                      const choiceModal = new Modal(plugin.app);
-                      choiceModal.titleEl.setText(t('main.fileExistsTitle'));
-                      
-                      const messageEl = choiceModal.contentEl.createEl('p');
-                      messageEl.textContent = t('main.fileExistsDesc');
-                      messageEl.style.marginBottom = '16px';
-                      
-                      const buttonContainer = choiceModal.contentEl.createEl('div');
-                      buttonContainer.style.display = 'flex';
-                      buttonContainer.style.justifyContent = 'flex-end';
-                      buttonContainer.style.gap = '8px';
-                      buttonContainer.style.flexWrap = 'wrap';
-                      
-                      const cancelBtn = buttonContainer.createEl('button');
-                      cancelBtn.textContent = t('main.cancel');
-                      cancelBtn.addEventListener('click', () => choiceModal.close());
-                      
-                      const mergeBtn = buttonContainer.createEl('button');
-                      mergeBtn.textContent = t('main.mergeContent');
-                      mergeBtn.style.backgroundColor = 'var(--interactive-accent)';
-                      mergeBtn.style.color = 'white';
-                      mergeBtn.style.border = 'none';
-                      mergeBtn.style.borderRadius = '4px';
-                      mergeBtn.addEventListener('click', async () => {
-                        try {
-                          const existingContent = await plugin.app.vault.read(existingFile);
-                          const newContent = existingContent + '\n\n---\n\n' + mdContent;
-                          await plugin.app.vault.modify(existingFile, newContent);
-                          new Notice(t('main.mergedToFile'));
-                          choiceModal.close();
-                        } catch (err) {
-                          new Notice(t('main.mergeFailed') + ': ' + err.message);
-                        }
-                      });
-                      
-                      choiceModal.open();
-                      return;
-                    }
-                    
-                    await plugin.app.vault.create(filePath, mdContent);
-                    new Notice(t('main.savedToFile'));
-                  } catch (error) {
-                    console.error('保存文件时出错:', error);
-                    new Notice(t('main.saveFailed') + ': ' + error.message);
-                  }
-                });
-            });
-            
-            menu.showAtMouseEvent(e);
-            const menuEls4 = document.querySelectorAll('.menu');
-            if (menuEls4.length > 0) {
-              menuEls4[menuEls4.length - 1].style.zIndex = '10000';
-            }
-          });
-          
+
           // 必须在添加到 DOM 后获取 rect
           let popupRect = popup.getBoundingClientRect();
           let targetRect = targetEl.getBoundingClientRect();
@@ -40580,19 +41579,17 @@ dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fil
         return;
       }
       
-      const newLeaf = this.app.workspace.getLeaf(true);
+      const newLeaf = this.app.workspace.getLeaf(!_isDesktop);
       await newLeaf.openFile(targetFile);
       
       if (!searchText) return;
 
-      // 延迟等待文件加载和视图切换完成（避免与其他插件冲突）
-      setTimeout(() => {
+      const doSearch = () => {
         this.app.workspace.setActiveLeaf(newLeaf, { focus: true });
 
         const targetView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!targetView || !targetView.editor) return;
 
-        // 判断阅读模式
         const leaf = this.app.workspace.activeLeaf;
         const viewState = leaf ? leaf.getViewState() : null;
         const isReading = viewState && viewState.state && viewState.state.mode === 'preview';
@@ -40636,7 +41633,6 @@ dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fil
           return;
         }
 
-        // 编辑模式
         const editor = targetView.editor;
         const cm = editor.cm;
         if (!cm) {
@@ -40713,7 +41709,21 @@ dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fil
         }
 
         new Notice(t('main.notFoundInDoc') + ': ' + searchText);
-      }, 1250);
+      };
+
+      if (_isDesktop) {
+        setTimeout(doSearch, 1250);
+      } else {
+        const trySearch = (attempt) => {
+          const targetView = this.app.workspace.getActiveViewOfType(MarkdownView);
+          if (targetView && targetView.editor) {
+            doSearch();
+          } else if (attempt < 20) {
+            setTimeout(() => trySearch(attempt + 1), 200);
+          }
+        };
+        setTimeout(() => trySearch(0), 300);
+      }
     } catch (e) {
       console.error('Error opening link and searching:', e);
       new Notice(t('main.cannotOpenFile'));

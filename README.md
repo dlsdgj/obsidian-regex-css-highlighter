@@ -1,3 +1,4 @@
+SwiftGloss-demo(zh): https://github.com/dlsdgj/Obsidian-SwiftGloss-demo
 # SwiftGloss / 正则CSS高亮器
 
 An Obsidian plugin that matches text via regular expressions and applies custom CSS styles for highlighting. (formerly Regex CSS Highlighter)

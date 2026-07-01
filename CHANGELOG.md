@@ -2,7 +2,58 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.8.8 (2026-06-24)
+## 🆕 v1.8.9 (2026-07-01)
+
+- **悬浮分组随机模式** — 悬浮样式分组右键菜单新增"随机模式"，开启后点击分组直接随机应用组内样式到选中文本，移除箭头、鼠标悬浮不展开子菜单 / Added "Random Mode" to floating style group right-click menu; when enabled, clicking the group directly applies a random style from the group to selected text, arrow removed, hover does not expand submenu
+- **移除打开文件链接设置** — 移除主面板设置-显示中的"不显示标题后面的打开文件链接"选项及⚙️后的"打开data.json"链接 / Removed "Hide open file link after title" setting option and "Open data.json" link next to ⚙️ in main panel
+- **移除折叠时显示最近规则设置** — 移除主面板设置-显示中的"折叠时显示最近规则"选项 / Removed "Show recent rules when collapsed" setting option from main panel display settings
+- **默认不启用标题样式** — 新装插件默认禁用标题样式和标题层级标签显示 / New installations now default to disabling heading styles and heading level labels
+- **默认分组显示在切换标签区域** — 自动生成的"新分组"默认显示在切换标签区域（"+"按钮前），而非常显区域 / Auto-generated "New Group" now defaults to switchable tab area (before "+" button) instead of always-visible area
+- **英文预览文本改为gloss** — 默认英文预览文本从"Preview"改为"gloss" / Default English preview text changed from "Preview" to "gloss"
+
+## v1.8.8.5 (2026-07-01)
+
+- **移除样式使用次数(count)功能** — 完全移除 `_count.json` 计数文件生成机制及相关代码，包括 `updateStyleCountFile`、`loadStyleCountFile`、`loadAngle0Styles` 等函数，以及所有 16 处调用点和 6 条 i18n 条目 / Completely removed `_count.json` count file generation mechanism and related code, including `updateStyleCountFile`, `loadStyleCountFile`, `loadAngle0Styles` functions, all 16 call sites and 6 i18n entries
+- **随机高亮改为内存计算** — `getUnusedStyles` 不再依赖 count 文件，改为从内存中的 `fileRules` 和 `globalRules` 实时统计未使用样式 / `getUnusedStyles` no longer depends on count files; now computes unused styles from in-memory `fileRules` and `globalRules` in real-time
+- **文件规则合并为单JSON** — 所有文件高亮规则从 `data/{编码文件名}.json` 合并到 `data/file-rules.json`，key 使用原始文件路径，消除路径编码歧义 / Merged all file highlight rules from individual `data/{encoded_name}.json` files into single `data/file-rules.json`, using original file paths as keys to eliminate path encoding ambiguity
+- **内存缓存+Debounce写入** — `saveFileRules` 先写入内存缓存 `_fileRulesData`，500ms debounce 后批量写磁盘，`loadFileRules` 从内存读取零IO / `saveFileRules` writes to in-memory cache `_fileRulesData` first, flushes to disk with 500ms debounce; `loadFileRules` reads from memory with zero IO
+- **自动迁移旧数据** — 首次启动时自动将零散规则文件迁移到 `file-rules.json`，同时清理所有 `_count.json` 文件，迁移完成后设置标志位不再重复执行 / Auto-migrates scattered rule files to `file-rules.json` on first launch, cleans up all `_count.json` files, sets flag to avoid re-running
+- **文件重命名简化** — 重命名/移动文件时直接操作内存缓存 key，不再涉及文件系统级 rename / File rename/move now operates on in-memory cache keys directly, no more filesystem-level rename operations
+
+## v1.8.8.4 (2026-06-30)
+
+- **禁用规则移至右键菜单** — 移除Shift+右键禁用规则操作，将禁用/启用规则选项添加到规则右键菜单中 / Moved disable/enable rule from Shift+right-click to right-click context menu
+- **修复禁用规则不生效** — 修复因浅拷贝导致修改副本而非原始规则对象，禁用规则提示成功但实际未生效的bug / Fixed rule disable not working due to shallow copy modifying clone instead of original rule object
+- **备注弹窗按文件分组显示** — 悬浮备注弹窗优先显示links中的备注（按文件分组、带文件名标签和色点），无link备注时回退显示外部remark / Remark hover popup now groups remarks by source file with filename labels and color dots; falls back to external remark
+- **设置栏底部固定改造** — 移除折叠式设置面板，改为⚙️图标+chip常驻面板底部，hover显示chips，点击chip弹出悬浮窗口 / Replaced collapsible settings panel with fixed bottom bar (⚙️ icon + chips); hover to show chips, click to open floating popup
+- **设置chip悬浮窗口** — 点击chip弹出悬浮设置窗口，chip间划过自动切换内容，鼠标离开延迟关闭 / Settings chip opens floating popup; auto-switch on hover between chips; delayed close on mouse leave
+- **设置栏固定在面板底部** — 设置栏从contentEl移至modalEl，始终固定在面板底部不随内容滚动 / Settings bar moved from contentEl to modalEl, always fixed at panel bottom
+- **修复点击设置弹窗退出主面板** — 在outsideClickHandler排除列表中添加设置弹窗，避免点击弹窗关闭主面板 / Fixed clicking settings popup closing main panel by adding popup to outsideClickHandler exclusion list
+- **设置弹窗自适应高度** — 移除max-height滚动限制，弹窗自适应内容高度，内容展开时MutationObserver自动重新定位 / Removed max-height scroll limit; popup auto-sizes to content; MutationObserver repositions on content changes
+- **拼音/行间注释弹窗加宽** — 拼音样式和行间注释样式的设置弹窗使用更宽尺寸（460~700px）以容纳textarea / Wider popup (460~700px) for Pinyin and Interlinear Note settings to accommodate textareas
+
+## v1.8.8.3 (2026-06-30)
+
+- **移除Ctrl+Enter更新规则** — 移除无效的Ctrl+Enter快捷键（Obsidian全局快捷键拦截），改用输入框右侧"更新规则"chip按钮 / Removed non-functional Ctrl+Enter shortcut (intercepted by Obsidian global hotkeys); replaced with "Update Rule" chip button next to input field
+- **更新规则Chip按钮** — 输入框右侧新增"更新规则"chip按钮，点击规则按钮后高亮可用，无选中规则时灰色禁用 / Added "Update Rule" chip button next to input; highlighted when a rule is selected, grayed out when no rule is selected
+- **showErrorMessage调用修复** — 修复`showErrorMessage`单参数调用导致styleOption.appendChild抛出TypeError的问题 / Fixed TypeError from calling showErrorMessage with wrong number of arguments
+- **editRule/editGlobalRule返回布尔值** — 规则编辑失败时返回false，`updateCurrentRule`检查返回值避免误报成功 / editRule/editGlobalRule now return boolean; updateCurrentRule checks return value to avoid false success messages
+- **规则按钮高亮边框修复** — 清除高亮时同时清除全局规则按钮边框；移除蓝色/橙色固定边框改为透明 / Fixed highlight border not clearing on global rule buttons; removed blue/orange fixed borders in favor of transparent
+- **匹配高亮统一为主题色粗边框** — 规则按钮和样式按钮的匹配高亮统一为`2px solid var(--interactive-accent)`，移除scale/发光效果 / Unified matching highlight to `2px solid var(--interactive-accent)` for both rule and style buttons; removed scale/glow effects
+- **规则按钮hover备注弹窗** — 全局规则按钮和history按钮添加备注hover弹窗，复用编辑区备注弹窗样式 / Added remark hover popup to global rule and history buttons, reusing editor remark popup styles
+- **选中文本自动展开规则分组** — 匹配规则按钮时自动展开其所在规则分组chip，确保高亮可见 / Auto-expand rule group chip when matching rule button is found, ensuring highlight is visible
+- **样式按钮缺少data-class属性** — 修复样式按钮未设置`data-class`属性导致样式chip不自动激活、样式按钮不高亮的根本问题 / Fixed style buttons missing `data-class` attribute, which was the root cause of style chips not auto-activating and style buttons not being highlighted
+
+## v1.8.8.2 (2026-06-29)
+
+- **Chip激活后规则按钮不显示** — 修复高亮规则区域点击分组chip后规则按钮消失的问题；激活分组时清除maxHeight限制并恢复按钮display / Fixed rule buttons disappearing after clicking group chip in highlight rules section; clear maxHeight restriction and restore button display on activation
+- **删除规则index错误** — 修复右键/中键删除规则时使用allRules索引而非globalRules索引导致删除失败或删错规则的问题 / Fixed wrong index used when deleting rules via right-click/middle-click; use globalRules index instead of allRules index
+- **全局规则移到当前文件后原规则未删除** — 修复移动全局规则到当前文件时原全局规则仍保留的问题（复制而非移动） / Fixed global rule not removed after moving to current file (was copying instead of moving)
+- **删除文件规则提示"全局规则已删除"** — 修复删除文件规则时显示全局规则删除提示的问题，现在区分文件/全局规则显示不同提示 / Fixed file rule deletion showing "global rule deleted" message; now shows correct message based on rule type
+- **deleteRuleById调用错误** — 修复`this.plugin.deleteRuleById`应为`this.deleteRuleById`导致的TypeError / Fixed TypeError from calling deleteRuleById on plugin instead of modal instance
+- **文件规则移到分组后刷新又出现** — 修复文件规则移到分组后刷新页面规则重新出现的问题；移到分组时先转为全局规则再从文件规则中删除 / Fixed file rule reappearing after moving to group; convert to global rule and remove from file rules before assigning to group
+
+## v1.8.8 (2026-06-24)
 
 - **Remark Popup Save Button** — Added "s" button in popup title bar for saving remark as file; removed right-click context menu "Save as File" option / 备注弹窗标题栏新增"s"保存文件按钮；移除右键菜单的"保存为文件"选项
 - **Remark Popup Interlinear Note Field** — Replaced "i" button with always-visible text field in title bar for interlinear note; supports double-click to edit and drag-drop text to set note; shows existing note content / 备注弹窗标题栏新增常显行间注释文本框，替代原"i"按钮；支持双击编辑和拖放文本设置行间注释；显示已有注释内容

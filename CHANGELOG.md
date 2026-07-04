@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.9.0 (2026-07-05)
+## 🆕 v1.9.1 (2026-07-05)
+
+- **Count Styles Hardcoded / 计数样式硬编码** — Hardcoded count badge CSS styles into main.js, fixing count badges not displaying on fresh installations where styles.css lacked the counter rules / 将计数标记CSS样式硬编码到main.js中，修复新装插件时styles.css缺少计数样式导致计数标记不显示的问题
+
+## v1.9.0 (2026-07-05)
 
 - **Masonry Layout Mode / 瀑布流模式** — New masonry/waterfall layout for remark popups: all remark entries mixed as cards with file name tags, color bar at top replacing dots, hover-to-show toolbar, search keyword placeholder + drag-drop support, dynamic column count via ResizeObserver
 - **Remark Popup Code Reuse / 备注弹窗代码复用** — Extracted `renderRemarkContent` shared function, both `remark-custom-popup` and `keyword-detail-window` now share content rendering logic, reducing ~774 lines of duplicate code

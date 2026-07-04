@@ -31,6 +31,10 @@ const _langSwitchStyle = document.createElement('style');
 _langSwitchStyle.textContent = `.lang-zh{display:inline-block;padding:1px 8px;border-radius:3px;font-size:12px;font-weight:500;background:#D85A30;color:#fff;letter-spacing:.1em}.lang-en{display:inline-block;padding:1px 8px;border-radius:3px;font-size:12px;font-weight:500;background:#185FA5;color:#fff;letter-spacing:.08em}`;
 document.head.appendChild(_langSwitchStyle);
 
+const _counterStyle = document.createElement('style');
+_counterStyle.textContent = `span.regex-counter-glass[data-match]::after{content:attr(data-match);position:absolute;top:-10px;left:0;font-size:9px;line-height:1;padding:0 2px;border-radius:4px;white-space:nowrap;z-index:10000;pointer-events:none;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.25);box-shadow:0 2px 8px rgba(0,0,0,0.12),inset 0 1px 0 rgba(255,255,255,0.2);text-shadow:0 1px 2px rgba(0,0,0,0.3);color:var(--regex-counter-color,#aba6a6);}.theme-dark span.regex-counter-glass[data-match]::after{color:var(--regex-counter-color,#e0dcdc);}.in-note-wrapper.has-counter::before{top:auto;bottom:-1.2em;}`;
+document.head.appendChild(_counterStyle);
+
 // 跨平台文件操作工具：桌面端用 Node.js fs 模块（快速），手机端用 Obsidian Vault Adapter（兼容）
 const _isDesktop = typeof process !== 'undefined' && process.versions && !!process.versions.electron;
 let _remarkMasonryMode = false;

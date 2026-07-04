@@ -2,7 +2,61 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.8.9 (2026-07-01)
+## 🆕 v1.9.0 (2026-07-05)
+
+- **Masonry Layout Mode / 瀑布流模式** — New masonry/waterfall layout for remark popups: all remark entries mixed as cards with file name tags, color bar at top replacing dots, hover-to-show toolbar, search keyword placeholder + drag-drop support, dynamic column count via ResizeObserver
+- **Remark Popup Code Reuse / 备注弹窗代码复用** — Extracted `renderRemarkContent` shared function, both `remark-custom-popup` and `keyword-detail-window` now share content rendering logic, reducing ~774 lines of duplicate code
+- **Remark Link Fix After File Rename / 文件改名后备注链接修复** — Fixed remark links not updating after file rename: moved links update logic outside the conditional guard, replaced `fileRules` Map iteration with `_fileRulesData` traversal
+
+## v1.8.9.7 (2026-07-05)
+
+- **文件改名后备注链接修复** — 修复文件改名后备注弹窗中引用的文件路径未更新的bug：将 links 更新逻辑移出条件守卫，改用 `_fileRulesData` 遍历替代 `fileRules` Map 遍历，确保无论被重命名文件是否有自身规则、其他文件规则是否已加载，所有 links.filePath 都能正确更新 / Fixed remark links not updating after file rename — moved links update logic outside the conditional guard, replaced `fileRules` Map iteration with `_fileRulesData` traversal, ensuring all links.filePath are correctly updated regardless of whether the renamed file has its own rules or other file rules are loaded
+
+## v1.8.9.6 (2026-07-04)
+
+- **移除手机版阅读模式行、边距设置** — 移除"手机版阅读模式行、边距"设置项及 applyMobilePreviewMargins 方法，已改用其他插件实现 / Removed "Mobile Reading Mode Line & Margin" setting and applyMobilePreviewMargins method — now handled by another plugin
+- **悬浮球隐藏/显示功能** — 点击"隐藏悬浮按钮"时同步隐藏悬浮球，添加左侧功能区按钮打开主面板，主面板设置-悬浮球选项顶部添加"显示/隐藏悬浮球"chip / Floating ball now hides when "Hide Floating Buttons" is clicked; added left ribbon icon to open main panel; added "Show/Hide Floating Ball" chip at top of floating ball settings
+- **移除手机版注音📌按钮** — 手机端悬浮球菜单中"注音"选项后的📌按钮已隐藏 / Hidden the 📌 pin button after the "Pinyin" option in mobile floating ball menu
+- **悬浮球显示修复** — 修复悬浮球重新显示时"SG"文本未居中的问题，恢复 display 为 flex / Fixed "SG" text not centered when floating ball is re-shown — restored display to flex
+
+## v1.8.9.5 (2026-07-04)
+
+- **手机端主面板交互修复** — 修复手机端长按样式/规则按钮后浏览器进入选择模式导致面板无法关闭的严重bug，通过在交互元素 touchstart 上 preventDefault 阻止浏览器长按检测，并手动处理 tap 触发 click / Fixed critical mobile bug where long-pressing style/rule buttons caused browser selection mode, making the panel impossible to close — resolved by calling preventDefault on touchstart for interactive elements and manually handling tap-to-click
+- **手机端关闭按钮修复** — 关闭按钮添加 rch-close-btn 类名，contextmenu 事件作为长按后的备用关闭通道 / Close button now has rch-close-btn class, contextmenu event serves as fallback close channel after long-press
+- **手机端外部点击关闭** — document 级别 contextmenu 监听作为面板外部点击的备用关闭通道 / Document-level contextmenu listener as fallback outside-click close channel on mobile
+- **拖拽监听器泄漏修复** — 将匿名 mousemove/mouseup 监听器改为具名引用，在 onClose/onOpen 中正确清理，防止 refreshModalContent 调用时累积 / Fixed anonymous mousemove/mouseup listener leak — converted to named references, properly cleaned up in onClose/onOpen to prevent accumulation during refreshModalContent
+- **_activeContextMenuCleanup 清理** — onClose 中清理残留的右键菜单 document 事件监听器 / Clean up residual context menu document event listeners in onClose
+- **close() 死锁修复** — 移除 close() 中的 _locked 检查，手机端 outsideClickHandler 忽略 _locked 状态 / Removed _locked check in close(), mobile outsideClickHandler ignores _locked state
+- **i18n key 补全** — 添加 main.localRule、main.globalRule、main.clickToEdit、main.clickToApply、main.clickToGlobal、main.empty、main.preview、main.status、main.globalRuleDeleted、main.ruleDeleted、main.ruleToggled、main.movedToLocalRule 到中英文字典 / Added missing i18n keys for main panel UI elements
+- **手机端长按菜单屏蔽** — 样式按钮和规则按钮的 contextmenu 注册用 _isDesktop 包裹，手机端仅 preventDefault / Desktop-only contextmenu registration for style/rule buttons, mobile only prevents default
+- **手机端备注选项隐藏** — 规则按钮右键菜单的"编辑备注"和备注悬浮在手机端隐藏 / Hide "Edit Remark" option and remark hover on mobile
+- **菜单项顺序调整** — "移动到分组"移到菜单顶部，"移动到当前文件规则"放入其子菜单 / "Move to Group" moved to top of menu, "Move to Local Rule" placed in its submenu
+- **二级菜单溢出修复** — 桌面端子菜单添加底部溢出检查，手机端子菜单改为向下展开+maxHeight / Desktop submenu bottom overflow check, mobile submenu expands downward with maxHeight
+
+## v1.8.9.4 (2026-07-03)
+
+- **文件规则路径前缀斜杠修复** — 启动时自动检测并移除库根文件夹下文件规则 key 的前缀 `/`（如 `/犬儒主义.md` → `犬儒主义.md`），修复根目录文件规则无法加载的问题，一次性迁移 / Auto-detects and removes leading `/` from file rule keys on startup (e.g. `/犬儒主义.md` → `犬儒主义.md`), fixing root-level file rules not loading — one-time migration
+
+## v1.8.9.3 (2026-07-03)
+
+- **旧版备注自动迁移** — 启动时自动将旧版 `rule.remark` 迁移为 `link` 条目（`filePath: ""`），迁移后清空旧字段并持久化，无需用户手动操作 / Automatically migrates legacy `rule.remark` to `link` entries (`filePath: ""`) on startup, clears the old field and persists changes — no manual user action required
+- **全局规则弹窗显示文件规则备注** — 全局规则备注弹窗中追加显示同 regex 的所有文件规则备注，文件名后标注"l"标记以区分来源 / Global rule remark popup now also shows file rule remarks for the same regex from all files, with an "l" badge after the file name to distinguish the source
+- **文件规则引用备注只读保护** — 来自文件规则的引用备注不显示编辑/删除工具栏，避免误操作 / File rule reference remarks are read-only in the global popup — no edit/delete toolbar shown to prevent accidental modifications
+
+## v1.8.9.2 (2026-07-02)
+
+- **行间注释字体大小持久化修复** — 修复 `injectInterlinearNoteStyles` 始终使用默认CSS而非用户自定义CSS，导致重启后行间注释字体大小等样式恢复默认的bug / Fixed `injectInterlinearNoteStyles` always using default CSS instead of user-customized CSS, causing interlinear note font size and other styles to revert to defaults after restart
+- **行间注释与计数共存** — 当关键词同时有行间注释和计数时，行间注释自动移至关键词下方、计数保持在上方，创建时即添加 `has-counter` 类避免时序问题 / When a keyword has both interlinear note and count, the note automatically moves below the keyword while count stays above; `has-counter` class added at creation time to avoid timing issues
+
+## v1.8.9.1 (2026-07-02)
+
+- **计数功能** — 备注弹窗标题栏添加"c"按钮，悬浮球菜单添加"添加计数"选项，点击后为匹配文本添加毛玻璃计数标记（显示"位置/总数"），再次点击移除计数 / Added "c" count button to remark popup title bar and "Add Count" option to floating ball menu; clicking adds frosted-glass count badges (showing "position/total") to matched text, clicking again removes count
+- **计数持久化** — 计数状态保存到settings，重启Obsidian后自动恢复 / Count state persisted to settings, automatically restored after Obsidian restart
+- **阅读模式计数修复** — 阅读模式总数从文件内容计算（非DOM），用段落文本定位确定全局序号，解决懒渲染下计数不准和滚动变化问题 / Fixed reading mode count: total computed from file content (not DOM), global index determined by paragraph text positioning, resolving inaccurate counts and scroll-dependent changes under lazy rendering
+- **翻译补全** — 补全 `floating.openMainPanel`、`floating.addRemark`、`floating.removeHighlight`、`floating.pinyin`、`floating.formatReplace`、`settings.heading`、`settings.popup` 等缺失的中英文翻译 / Completed missing Chinese/English translations for `floating.openMainPanel`, `floating.addRemark`, `floating.removeHighlight`, `floating.pinyin`, `floating.formatReplace`, `settings.heading`, `settings.popup`
+- **随机模式样式叠加修复** — 修复悬浮分组随机模式第二次点击时新增规则而非替换旧规则，导致同一文本叠加两种样式的bug / Fixed floating group random mode adding new rule instead of replacing old one on second click, which caused two styles stacking on the same text
+
+## v1.8.9 (2026-07-01)
 
 - **悬浮分组随机模式** — 悬浮样式分组右键菜单新增"随机模式"，开启后点击分组直接随机应用组内样式到选中文本，移除箭头、鼠标悬浮不展开子菜单 / Added "Random Mode" to floating style group right-click menu; when enabled, clicking the group directly applies a random style from the group to selected text, arrow removed, hover does not expand submenu
 - **移除打开文件链接设置** — 移除主面板设置-显示中的"不显示标题后面的打开文件链接"选项及⚙️后的"打开data.json"链接 / Removed "Hide open file link after title" setting option and "Open data.json" link next to ⚙️ in main panel

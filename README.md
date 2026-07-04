@@ -4,9 +4,7 @@
 An Obsidian plugin that matches text via regular expressions and applies custom CSS styles for highlighting. (formerly Regex CSS Highlighter)
 一个 Obsidian 插件，通过正则表达式匹配文本并应用自定义 CSS 样式高亮显示。（原名 Regex CSS Highlighter）
 
-![Random Highlight / 随机切换高亮样式](./assets/随机切换高亮样式.gif)
-
-![Basic Usage / 基础用法](./assets/basic-usage.gif)
+![SwiftGloss Demo / SwiftGloss演示](./assets/PixPin_2026-07-05_04-56-33_compressed.gif)
 
 ## Add Style / 添加样式
 
@@ -101,7 +99,6 @@ An Obsidian plugin that matches text via regular expressions and applies custom 
 
 ## Share Your CSS Styles / 分享你的 CSS 样式
 
-![Share Your CSS Styles / 分享你的 CSS 样式](./assets/Share%20Your%20CSS%20Styles.gif)
 
 Created a cool style? Share it with the community in [Discussions](https://github.com/dlsdgj/obsidian-regex-css-highlighter/discussions/1) — see how others use regex and CSS to highlight their notes!
 创建了好看的样式？在 [Discussions](https://github.com/dlsdgj/obsidian-regex-css-highlighter/discussions/1) 中与社区分享——看看其他人如何用正则和 CSS 高亮他们的笔记！

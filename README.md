@@ -10,9 +10,6 @@ An Obsidian plugin that matches text via regular expressions and applies custom 
 
 ## Add Style / 添加样式
 
-![Add Style / 添加样式](./assets/添加样式(中英文版).gif)
-
-![AI Create Style / AI创建样式](./assets/ai创建样式(英文版).gif)
 
 ## Features / 功能特性
 
@@ -31,9 +28,6 @@ An Obsidian plugin that matches text via regular expressions and applies custom 
 
 ### 📝 Rule Management / 规则管理
 
-![RuleSwitching / 局部与全局规则切换](./assets/rule-switching.gif)
-
-![Highlight List / 高亮列表操作示例](./assets/高亮列表操作示例.gif)
 
 <details>
 <summary>Rule Management / 规则管理</summary>
@@ -47,7 +41,6 @@ An Obsidian plugin that matches text via regular expressions and applies custom 
 
 ### 🔮 Floating Ball / Button / 悬浮球
 
-![Floating Groups and Styles / 悬浮显示分组和样式](./assets/悬浮显示分组和样式.gif)
 
 <details>
 <summary>Floating Ball / Button / 悬浮球</summary>
@@ -85,9 +78,7 @@ An Obsidian plugin that matches text via regular expressions and applies custom 
 
 ### 📌 Notes / 备注功能
 
-![Add Remark / 添加备注](./assets/PixPin_2026-06-10_05-02-10.gif)
-
-![Remark Feature / 备注功能](./assets/PixPin_2026-06-18_11-31-20.png)
+![Remark Feature / 备注功能](./assets/PixPin_2026-07-05_04-15-14.gif)
 
 <details>
 <summary>Notes / 备注功能</summary>

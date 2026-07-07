@@ -37479,7 +37479,18 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         chipsBar.appendChild(chip);
       }
 
-      // 手机版 chips 底部拖动移动窗口
+      // chips 底部拖动移动窗口
+      chipsBar.style.cursor = 'move';
+      chipsBar.addEventListener('mousedown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('.keyword-chip')) return;
+        isDragging = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        const rect = win.getBoundingClientRect();
+        winStartX = Math.round(rect.left);
+        winStartY = Math.round(rect.top);
+        e.preventDefault();
+      });
       chipsBar.addEventListener('touchstart', (e) => {
         if (e.target.tagName === 'INPUT') return;
         const touch = e.touches[0];
@@ -37979,17 +37990,22 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const popupCloseBtn = document.createElement('span');
           popupCloseBtn.textContent = '✕';
           popupCloseBtn.style.cssText = `
-            cursor:pointer;font-size:13px;color:var(--text-faint);
+            cursor:pointer;font-size:13px;color:#e74c3c;
             padding:1px 5px;border-radius:3px;
             transition:all 0.15s ease;flex-shrink:0;
+            opacity:0;pointer-events:none;
           `;
+          const showPopupCloseBtn = () => {
+            popupCloseBtn.style.opacity = '1';
+            popupCloseBtn.style.pointerEvents = 'auto';
+          };
           popupCloseBtn.addEventListener('mouseenter', () => {
-            popupCloseBtn.style.background = 'var(--background-modifier-hover)';
-            popupCloseBtn.style.color = 'var(--text-normal)';
+            popupCloseBtn.style.background = 'rgba(231,76,60,0.15)';
+            popupCloseBtn.style.color = '#e74c3c';
           });
           popupCloseBtn.addEventListener('mouseleave', () => {
             popupCloseBtn.style.background = 'transparent';
-            popupCloseBtn.style.color = 'var(--text-faint)';
+            popupCloseBtn.style.color = '#e74c3c';
           });
 
           let popupCloseLongPress = null;
@@ -38075,6 +38091,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             }
             isPinned = true;
             keepOpen = true;
+            showPopupCloseBtn();
           };
           const onPopupTouchEnd = () => { isDraggingPopup = false; };
           document.addEventListener('touchmove', onPopupTouchMove, { passive: true });
@@ -38092,6 +38109,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             }
             isPinned = true;
             keepOpen = true;
+            showPopupCloseBtn();
           };
           const onPopupMouseUp = () => {
             isDraggingPopup = false;
@@ -39355,10 +39373,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           popupLeftBtns.appendChild(countBtn);
 
           // 行间注释文本框（常显，双击编辑，支持拖放文本）
-          const currentKeyword = targetEl.dataset.ruleRegex || '';
+          const inNoteKey = (targetEl.textContent || '').trim();
           const inNoteTag = document.createElement('span');
           inNoteTag.dataset.editField = 'inNote';
-          inNoteTag.dataset.keyword = currentKeyword;
+          inNoteTag.dataset.inNoteKey = inNoteKey;
           inNoteTag.style.cssText = 'font-size:10px;color:var(--text-muted);background:var(--background-secondary);padding:1px 6px;border-radius:8px;cursor:text;border-bottom:1px dashed transparent;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;user-select:none;-webkit-user-select:none;';
           inNoteTag.addEventListener('mouseenter', () => { inNoteTag.style.borderBottomColor = 'var(--text-muted)'; });
           inNoteTag.addEventListener('mouseleave', () => { inNoteTag.style.borderBottomColor = 'transparent'; });
@@ -39383,16 +39401,16 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             inNoteTag.style.borderBottomColor = 'transparent';
             inNoteTag.style.background = 'var(--background-modifier-hover)';
             inNoteTag.style.color = 'var(--text-muted)';
-            if (!droppedText || !currentKeyword) return;
+            if (!droppedText || !inNoteKey) return;
             const data = await plugin.loadInterlinearNoteData();
-            const existingNote = data[currentKeyword] || '';
+            const existingNote = data[inNoteKey] || '';
             if (existingNote && !existingNote.includes(droppedText)) {
-              data[currentKeyword] = existingNote + '\n' + droppedText;
+              data[inNoteKey] = existingNote + '\n' + droppedText;
             } else if (!existingNote) {
-              data[currentKeyword] = droppedText;
+              data[inNoteKey] = droppedText;
             }
             await plugin.saveInterlinearNoteData(data);
-            inNoteTag.textContent = data[currentKeyword].substring(0, 20) + (data[currentKeyword].length > 20 ? '...' : '');
+            inNoteTag.textContent = data[inNoteKey].substring(0, 20) + (data[inNoteKey].length > 20 ? '...' : '');
             new Notice(t('inNote.added'));
           });
           // 双击编辑行间注释
@@ -39400,10 +39418,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             de.stopPropagation();
             de.preventDefault();
             keepOpen = true;
-            const kw = inNoteTag.dataset.keyword || '';
-            if (!kw) return;
+            const key = inNoteTag.dataset.inNoteKey || '';
+            if (!key) return;
             const data = await plugin.loadInterlinearNoteData();
-            const oldNote = data[kw] || '';
+            const oldNote = data[key] || '';
             const input = document.createElement('input');
             input.type = 'text';
             input.value = oldNote;
@@ -39419,9 +39437,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               const newValue = input.value.trim();
               const newData = await plugin.loadInterlinearNoteData();
               if (!newValue) {
-                delete newData[kw];
+                delete newData[key];
               } else {
-                newData[kw] = newValue;
+                newData[key] = newValue;
               }
               await plugin.saveInterlinearNoteData(newData);
               inNoteTag.textContent = newValue ? newValue.substring(0, 20) + (newValue.length > 20 ? '...' : '') : t('inNote.placeholder');
@@ -39433,7 +39451,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 加载已有行间注释
           (async () => {
             const data = await plugin.loadInterlinearNoteData();
-            const note = data[currentKeyword] || '';
+            const note = data[inNoteKey] || '';
             inNoteTag.textContent = note ? note.substring(0, 20) + (note.length > 20 ? '...' : '') : t('inNote.placeholder');
           })();
           popupLeftBtns.appendChild(inNoteTag);
@@ -39596,7 +39614,18 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 chipsBar.appendChild(chip);
               }
 
-              // 手机版 chips 底部拖动移动弹窗
+              // chips 底部拖动移动弹窗
+              chipsBar.style.cursor = 'move';
+              chipsBar.addEventListener('mousedown', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('.keyword-chip')) return;
+                isDraggingPopup = true;
+                popupDragStartX = e.clientX;
+                popupDragStartY = e.clientY;
+                const rect = popup.getBoundingClientRect();
+                popupWinStartX = Math.round(rect.left);
+                popupWinStartY = Math.round(rect.top);
+                e.preventDefault();
+              });
               chipsBar.addEventListener('touchstart', (e) => {
                 if (e.target.tagName === 'INPUT') return;
                 const touch = e.touches[0];
@@ -40572,7 +40601,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const positionRemarkBadge = (badge, target) => {
       const rect = target.getBoundingClientRect();
       badge.style.left = (rect.right - 8) + 'px';
-      badge.style.top = (rect.top - 2) + 'px';
+      badge.style.top = (rect.top - 10) + 'px';
     };
 
     // 手机版：备注按钮已在initRuleSourceBadge中统一处理，此处跳过

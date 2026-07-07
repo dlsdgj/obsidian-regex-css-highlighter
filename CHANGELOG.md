@@ -2,7 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.9.2 (2026-07-07)
+## 🆕 v1.9.3 (2026-07-07)
+
+- **Desktop Chips Drag / 桌面端chips区拖动窗口** — Click empty area in bottom chips bar to drag remark popup and keyword detail window on desktop (previously mobile-only) / 桌面端点击备注弹窗和关键词窗口底部chips区空白处可拖动窗口位置（此前仅手机端支持）
+- **n Badge Position / n按钮位置上移** — Moved "n" remark badge upward to align with g/l badge when hovering highlighted text / 鼠标悬浮高亮文本时"n"按钮上移至与g/l按钮平行位置
+- **Interlinear Note Key Fix / 行间注释key修复** — Fixed remark popup interlinear note using ruleRegex as key instead of plain text, causing data mismatch and duplicate notes with floating ball's interlinear note feature / 修复备注弹窗行间注释使用ruleRegex而非纯文本作为key，导致与悬浮球行间注释功能数据不一致、出现重复注释
+- **Popup Close Button / 弹窗关闭按钮优化** — Close button hidden initially, shown after dragging popup; color changed to red for visibility / 关闭按钮初始隐藏，拖动弹窗后显示；颜色改为红色
+
+## v1.9.2 (2026-07-07)
 
 - **Desktop c/i Button Style / 桌面端c/i按钮样式优化** — Enlarged c/i buttons (28×28px, 14px font, 2px border), hover keeps visible, auto-hide timer pauses on hover / 增大c/i按钮尺寸（28×28px, 14px字号, 2px边框），鼠标悬浮时保持显示，自动隐藏计时器暂停
 - **Desktop c/i Button Right-click Edit / 桌面端c/i按钮右键编辑** — Right-click c/i buttons to edit display text, CSS class name, or inline CSS; style persists across restarts / 右键c/i按钮可编辑显示文字、CSS类名、内联CSS，样式重启后保留

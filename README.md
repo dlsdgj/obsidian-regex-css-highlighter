@@ -42,7 +42,7 @@ Highlight text with regex and custom CSS. Add interlinear notes above keywords, 
 
 ### 📌 Notes / 备注功能
 
-![Remark Feature / 备注功能](./assets/PixPin_2026-07-05_04-15-14.gif)
+![Remark Feature / 备注功能](./assets/PixPin_2026-07-07_21-15-42.gif)
 
 <details>
 <summary>Notes / 备注功能</summary>

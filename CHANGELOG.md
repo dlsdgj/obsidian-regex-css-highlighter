@@ -2,7 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.9.1 (2026-07-05)
+## 🆕 v1.9.2 (2026-07-07)
+
+- **Desktop c/i Button Style / 桌面端c/i按钮样式优化** — Enlarged c/i buttons (28×28px, 14px font, 2px border), hover keeps visible, auto-hide timer pauses on hover / 增大c/i按钮尺寸（28×28px, 14px字号, 2px边框），鼠标悬浮时保持显示，自动隐藏计时器暂停
+- **Desktop c/i Button Right-click Edit / 桌面端c/i按钮右键编辑** — Right-click c/i buttons to edit display text, CSS class name, or inline CSS; style persists across restarts / 右键c/i按钮可编辑显示文字、CSS类名、内联CSS，样式重启后保留
+- **Masonry Remark Edit & Paste / 瀑布流备注编辑与粘贴** — Double-click remark content in masonry mode to edit (previously only toolbar dblclick worked); added clipboard image paste support in masonry edit textarea / 瀑布流模式下双击备注内容即可编辑（此前仅工具栏双击有效）；编辑框支持Ctrl+V粘贴剪贴板图片
+- **Keyword Detail Image Render / 关键词详情图片渲染** — Fixed images not displaying in keyword detail window opened from bottom chips, only filenames shown / 修复从底部chip打开的关键词详情窗口中图片不显示、只显示文件名的问题
+
+## v1.9.1.4 (2026-07-06)
+
+- **Mobile c/i Buttons / 手机端c/i按钮** — Added "c" (add/remove count) and "i" (add/edit interlinear note) buttons to mobile highlight action buttons alongside existing l/g and n buttons / 手机端点击高亮关键词时，在l/g和n按钮旁新增"c"（添加/移除计数）和"i"（添加/编辑行间注释）按钮
+- **Desktop Rule Action Buttons / 桌面端规则操作按钮** — Desktop: selecting rule text now auto-shows c/i buttons next to floating ball in both always and followSelection modes / 桌面端选中文本为规则文本时，自动在悬浮球旁显示c、i按钮（常显和跟随选中模式均支持）
+- **Per-Platform Floating Ball Visibility / 悬浮球可见性按平台独立** — Split floatingBallHidden into floatingBallHiddenDesktop/floatingBallHiddenMobile so hiding on mobile doesn't affect desktop after sync, with auto-migration from old setting / 悬浮球隐藏设置按平台独立存储，手机端隐藏不影响桌面端，自动迁移旧数据
+
+## v1.9.1.3 (2026-07-06)
+
+- **Fix AI Question Remark Lost / 修复AI问题备注丢失** — Fixed bug where edited AI question remarks disappeared after closing and reopening the popup: `doHide` pre-save condition treated empty `filePath` as falsy, now uses `!== undefined` check / 修复备注弹窗中编辑AI问题后退出再双击编辑时内容消失的bug：`doHide`预保存条件将空`filePath`当作falsy跳过，改为`!== undefined`检查
+
+## v1.9.1.2 (2026-07-06)
+
+- **Fix Add/AI Button in Remark Popup / 修复备注弹窗添加/AI按钮** — Fixed "+" and "?" buttons not working in hover remark popup: rule was null, now auto-finds from rule list; links array was stale closure, now re-reads from DOM / 修复鼠标悬浮备注弹窗中"+"和"?"按钮无效：rule为null时自动从规则列表查找；links闭包数据过期改为从DOM重新读取
+- **Masonry Toolbar Fix / 瀑布流工具栏修复** — Restored hover-to-show toolbar with pointer-events control; added dblclick on toolbar to enter edit mode, dblclick on search chip to edit search text / 恢复悬浮显示工具栏并控制pointer-events；双击toolbar进入编辑，双击搜索词chip编辑搜索词
+- **Button Order Swap / 按钮顺序对调** — Swapped "Open Document" and "Copy" button positions in remark toolbars / 备注工具栏中"打开文档"和"复制"按钮位置对调
+- **Masonry Mode Persistence / 瀑布流模式持久化** — Masonry mode state now saved to settings and persists across restarts / 瀑布流模式状态保存到设置中，重启后不丢失
+
+## v1.9.1.1 (2026-07-05)
+
+- **Frosted Glass Popups / 毛玻璃弹窗** — All popups (remark, keyword-detail, chip preview, main panel) now use frosted glass effect with `backdrop-filter:blur(16px) saturate(180%)` + semi-transparent background, replacing solid backgrounds / 所有弹窗（备注、关键词详情、chip预览、主面板）统一使用毛玻璃效果，替换原有的实心背景
+- **Remove Popup Borders / 移除弹窗边框** — Removed all popup borders and border width/color settings, unified border-radius to 12px / 移除所有弹窗边框及边框宽度/颜色设置项，统一圆角为12px
+- **Transparent Inner Elements / 内部元素透明化** — Title bars, content containers, chips bars, masonry cards, dividers all use transparent/semi-transparent backgrounds to show blur effect / 标题栏、内容容器、chips区域、瀑布流卡片、分隔线全部改为透明/半透明背景以透出模糊效果
+- **Ribbon Icon Rename / 侧边栏按钮更名** — Changed sidebar ribbon icon tooltip from "Regex-Css-Highlighter" to "SwiftGloss" / 侧边栏功能区按钮提示文字从"Regex-Css-Highlighter"改为"SwiftGloss"
+
+## v1.9.1 (2026-07-05)
 
 - **Count Styles Hardcoded / 计数样式硬编码** — Hardcoded count badge CSS styles into main.js, fixing count badges not displaying on fresh installations where styles.css lacked the counter rules / 将计数标记CSS样式硬编码到main.js中，修复新装插件时styles.css缺少计数样式导致计数标记不显示的问题
 

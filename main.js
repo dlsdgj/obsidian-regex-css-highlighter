@@ -37,7 +37,7 @@ document.head.appendChild(_counterStyle);
 
 // 跨平台文件操作工具：桌面端用 Node.js fs 模块（快速），手机端用 Obsidian Vault Adapter（兼容）
 const _isDesktop = typeof process !== 'undefined' && process.versions && !!process.versions.electron;
-let _remarkMasonryMode = false;
+let _remarkMasonryMode = false; // will be synced from settings on load
 const _nodeFs = _isDesktop ? require('fs') : null;
 const _nodePath = _isDesktop ? require('path') : null;
 const _CSS_REL_PATH = '.obsidian/plugins/Regex-Css-Highlighter/styles.css';
@@ -271,6 +271,7 @@ const i18n = {
     'main.floatEnabled': '悬浮显示已启用，按住拖动位置，左键点击应用样式到选中文本',
     'main.floatNameUpdated': '悬浮按钮名称已更新',
     'main.floatOptionUpdated': '悬浮选项已更新',
+    'main.resetToDefault': '重置为默认',
     'main.groupStyleUpdated': '分组按钮样式已更新',
     'main.groupStyleEditTitle': '编辑分组按钮样式',
     'main.floatGroupCancelled': '已取消分组的悬浮显示',
@@ -1115,6 +1116,7 @@ const i18n = {
     'main.floatEnabled': 'Float display enabled, drag to move, left-click to apply style',
     'main.floatNameUpdated': 'Floating button name updated',
     'main.floatOptionUpdated': 'Floating option updated',
+    'main.resetToDefault': 'Reset to Default',
     'main.groupStyleUpdated': 'Group button style updated',
     'main.groupStyleEditTitle': 'Edit Group Button Style',
     'main.floatGroupCancelled': 'Float display cancelled for group',
@@ -2190,30 +2192,21 @@ class AddRemarkModal extends Modal {
     const popupFontSize = pluginSettings.popupFontSize !== undefined ? pluginSettings.popupFontSize : 14;
     const popupSpacing = pluginSettings.popupSpacing !== undefined ? pluginSettings.popupSpacing : 10;
     const popupWidth = pluginSettings.popupWidth !== undefined ? pluginSettings.popupWidth : 600;
-    const popupBorderWidth = pluginSettings.popupBorderWidth !== undefined ? pluginSettings.popupBorderWidth : 1;
-    const popupBorderColor = pluginSettings.popupBorderColor || 'var(--text-accent)';
     const savedOpacity = pluginSettings.popupOpacity !== undefined ? pluginSettings.popupOpacity : 1;
     
-    // 与备注弹窗风格一致的模态窗口样式
     this.modalEl.style.width = `${Math.max(popupWidth, 300)}px`;
     this.modalEl.style.maxWidth = `none`;
-    this.modalEl.style.borderRadius = '8px';
+    this.modalEl.style.borderRadius = '12px';
     this.modalEl.style.overflow = 'hidden';
-    this.modalEl.style.backgroundColor = 'var(--background-primary)';
+    this.modalEl.style.background = 'rgba(var(--mono-rgb-0),0.75)';
+    this.modalEl.style.backdropFilter = 'blur(16px) saturate(180%)';
+    this.modalEl.style.webkitBackdropFilter = 'blur(16px) saturate(180%)';
     this.modalEl.style.opacity = savedOpacity;
+    this.modalEl.style.border = 'none';
+    this.modalEl.style.boxShadow = '0 12px 40px rgba(0,0,0,0.35)';
     
-    if (popupBorderWidth === 0) {
-      this.modalEl.style.border = 'none';
-      this.modalEl.style.boxShadow = '0 4px 16px rgba(0,0,0,0.35)';
-    } else {
-      this.modalEl.style.border = `${popupBorderWidth}px solid ${popupBorderColor}`;
-      this.modalEl.style.boxShadow = '0 4px 16px rgba(0,0,0,0.35)';
-    }
-    
-    // 深色模式增强
     if (document.body.classList.contains('theme-dark')) {
-      this.modalEl.style.boxShadow = '0 4px 16px rgba(0,0,0,0.5)';
-      this.modalEl.style.outline = '1px solid rgba(255, 255, 255, 0.1)';
+      this.modalEl.style.boxShadow = '0 12px 40px rgba(0,0,0,0.5)';
     }
     
     // 添加与备注弹窗一致的 Markdown 样式
@@ -13611,49 +13604,7 @@ class AddRegexRuleModal {
     popupShortcutHint.style.cssText = 'margin-bottom:8px;padding:8px 12px;border-radius:6px;background:var(--background-secondary);border:1px solid var(--border-color);font-size:12px;color:var(--text-muted);line-height:1.6;';
     popupShortcutHint.innerHTML = '💡 ' + t('settings.popupAltWheel') + '<br>💡 ' + t('settings.popupCtrlWheel');
 
-    // 添加备注弹窗边框宽度设置
-    const popupBorderWidthSettingRow = popupSettingsContent.createDiv();
-    popupBorderWidthSettingRow.style.display = "flex";
-    popupBorderWidthSettingRow.style.alignItems = "center";
-    popupBorderWidthSettingRow.style.marginBottom = "5px";
 
-    const popupBorderWidthLabel = popupBorderWidthSettingRow.createEl("span", { text: t('settings.remarkPopupBorderWidth') + ": " });
-    popupBorderWidthLabel.style.marginRight = "10px";
-    popupBorderWidthLabel.style.fontSize = "14px";
-
-    const popupBorderWidthInput = popupBorderWidthSettingRow.createEl("input");
-    popupBorderWidthInput.type = "number";
-    popupBorderWidthInput.value = this.plugin.settings?.popupBorderWidth !== undefined ? this.plugin.settings.popupBorderWidth : 1;
-    popupBorderWidthInput.min = "0";
-    popupBorderWidthInput.max = "10";
-    popupBorderWidthInput.step = "1";
-    popupBorderWidthInput.style.width = "80px";
-    popupBorderWidthInput.style.padding = "4px";
-    popupBorderWidthInput.style.border = "1px solid var(--background-modifier-border)";
-    popupBorderWidthInput.style.borderRadius = "4px";
-
-    const popupBorderWidthUnit = popupBorderWidthSettingRow.createEl("span", { text: "px" });
-    popupBorderWidthUnit.style.marginLeft = "5px";
-    popupBorderWidthUnit.style.fontSize = "14px";
-
-    // 添加备注弹窗边框颜色设置
-    const popupBorderColorSettingRow = popupSettingsContent.createDiv();
-    popupBorderColorSettingRow.style.display = "flex";
-    popupBorderColorSettingRow.style.alignItems = "center";
-    popupBorderColorSettingRow.style.marginBottom = "5px";
-
-    const popupBorderColorLabel = popupBorderColorSettingRow.createEl("span", { text: t('settings.remarkPopupBorderColor') + ': ' });
-    popupBorderColorLabel.style.marginRight = "10px";
-    popupBorderColorLabel.style.fontSize = "14px";
-
-    const popupBorderColorInput = popupBorderColorSettingRow.createEl("input");
-    popupBorderColorInput.type = "color";
-    popupBorderColorInput.value = this.plugin.settings?.popupBorderColor || "#4caf50";
-    popupBorderColorInput.style.width = "80px";
-    popupBorderColorInput.style.height = "30px";
-    popupBorderColorInput.style.border = "1px solid var(--background-modifier-border)";
-    popupBorderColorInput.style.borderRadius = "4px";
-    popupBorderColorInput.style.cursor = "pointer";
 
     // 添加"仅在选中文本时弹出"设置
     const remarkPopupOnlyOnSelectionRow = popupSettingsContent.createDiv();
@@ -13784,8 +13735,7 @@ class AddRegexRuleModal {
         this.plugin.settings.popupSpacing = parseInt(spacingInput.value);
         this.plugin.settings.popupLineHeight = parseFloat(lineHeightInput.value);
         this.plugin.settings.popupWidth = parseInt(popupWidthInput.value) || 600;
-        this.plugin.settings.popupBorderWidth = parseInt(popupBorderWidthInput.value);
-        this.plugin.settings.popupBorderColor = popupBorderColorInput.value;
+
         this.plugin.settings.remarkPopupOnlyOnSelection = remarkPopupOnlyOnSelectionCheckbox.checked;
         this.plugin.settings.remarkPopupHideOnSelection = remarkPopupHideOnSelectionCheckbox.checked;
         this.plugin.settings.showRemarkBadge = showRemarkBadgeCheckbox.checked;
@@ -13811,13 +13761,14 @@ class AddRegexRuleModal {
     const floatingBallToggleRow = floatingBallSettingsContent.createDiv();
     floatingBallToggleRow.style.cssText = 'display:flex;align-items:center;margin-bottom:10px;';
     const floatingBallToggleChip = floatingBallToggleRow.createEl('span');
-    const isFloatingBallHidden = this.plugin.floatButtonData?.floatingBallHidden || false;
+    const _hiddenKey = _isDesktop ? 'floatingBallHiddenDesktop' : 'floatingBallHiddenMobile';
+    const isFloatingBallHidden = this.plugin.floatButtonData?.[_hiddenKey] || false;
     floatingBallToggleChip.textContent = t('floating.toggleFloatingBall');
     floatingBallToggleChip.className = 'rch-group-chip';
     floatingBallToggleChip.style.cssText = `display:inline-flex;align-items:center;padding:3px 10px;border-radius:14px;font-size:12px;cursor:pointer;transition:all 0.15s ease;user-select:none;border:1px solid ${isFloatingBallHidden ? 'var(--background-modifier-border)' : 'var(--interactive-accent)'};background:${isFloatingBallHidden ? 'var(--background-primary)' : 'var(--interactive-accent)'};color:${isFloatingBallHidden ? 'var(--text-normal)' : '#fff'};font-weight:${isFloatingBallHidden ? '400' : '600'};`;
     floatingBallToggleChip.addEventListener('click', async () => {
-      const hidden = !this.plugin.floatButtonData.floatingBallHidden;
-      this.plugin.floatButtonData.floatingBallHidden = hidden;
+      const hidden = !this.plugin.floatButtonData[_hiddenKey];
+      this.plugin.floatButtonData[_hiddenKey] = hidden;
       const floatingBall = document.getElementById('regex-highlighter-floating-ball');
       if (floatingBall) floatingBall.style.display = hidden ? 'none' : 'flex';
       floatingBallToggleChip.style.border = `1px solid ${hidden ? 'var(--background-modifier-border)' : 'var(--interactive-accent)'}`;
@@ -16726,23 +16677,22 @@ class AddRegexRuleModal {
       const popupFontSize = plugin?.settings?.popupFontSize !== undefined ? plugin.settings.popupFontSize : 14;
       const popupSpacing = plugin?.settings?.popupSpacing !== undefined ? plugin.settings.popupSpacing : 10;
       const popupMaxWidth = plugin?.settings?.popupWidth !== undefined ? plugin.settings.popupWidth : 400;
-      const popupBorderWidth = plugin?.settings?.popupBorderWidth !== undefined ? plugin.settings.popupBorderWidth : 1;
-      const popupBorderColor = plugin?.settings?.popupBorderColor || 'var(--text-accent)';
       popup.style.padding = `${popupSpacing}px`;
       popup.style.maxWidth = `${popupMaxWidth}px`;
       popup.style.minWidth = '80px';
-      popup.style.backgroundColor = 'var(--background-primary)';
-      popup.style.border = `${popupBorderWidth}px solid ${popupBorderColor}`;
-      popup.style.borderRadius = '8px';
-      popup.style.boxShadow = '0 4px 16px rgba(0,0,0,0.35)';
+      popup.style.background = 'rgba(var(--mono-rgb-0),0.75)';
+      popup.style.backdropFilter = 'blur(16px) saturate(180%)';
+      popup.style.webkitBackdropFilter = 'blur(16px) saturate(180%)';
+      popup.style.border = 'none';
+      popup.style.borderRadius = '12px';
+      popup.style.boxShadow = '0 12px 40px rgba(0,0,0,0.35)';
       popup.style.fontSize = `${popupFontSize}px`;
       popup.style.lineHeight = `${plugin?.settings?.popupLineHeight !== undefined ? plugin.settings.popupLineHeight : 1.5}`;
       popup.style.color = 'var(--text-normal)';
       popup.style.userSelect = 'text';
       popup.style.webkitUserSelect = 'text';
       if (document.body.classList.contains('theme-dark')) {
-        popup.style.boxShadow = '0 4px 16px rgba(0,0,0,0.5)';
-        popup.style.outline = '1px solid rgba(255, 255, 255, 0.1)';
+        popup.style.boxShadow = '0 12px 40px rgba(0,0,0,0.5)';
       }
       const style = document.createElement('style');
       style.textContent = `
@@ -16839,7 +16789,7 @@ class AddRegexRuleModal {
             if (!remarkContent.trim()) continue;
             if (i > 0 || bodyEl.childNodes.length > 0) {
               const innerDivider = document.createElement('div');
-              innerDivider.style.cssText = 'border-top:1px solid var(--background-modifier-border);margin:4px 0;';
+              innerDivider.style.cssText = 'border-top:1px solid rgba(255,255,255,0.08);margin:4px 0;';
               bodyEl.appendChild(innerDivider);
             }
             const remarkWrapper = document.createElement('div');
@@ -19918,9 +19868,9 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       remarkPopupHideOnSelection: false,
       inNoteAlign: 'center',
       popupLineHeight: 1.5,
-      popupBorderWidth: 2,
-      popupBorderColor: "#ffffff",
+
       showRemarkBadge: true,
+      remarkMasonryMode: false,
       remarkBadgeThreshold: 2,
       defaultPreviewTextCN: '',
       defaultPreviewTextEN: '',
@@ -19982,7 +19932,8 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       floatingBallOptionStyleClasses: {},
       groupButtonStyleClasses: {},
       hideFloatingOptionButtons: false,
-      floatingBallHidden: false,
+      floatingBallHiddenDesktop: false,
+      floatingBallHiddenMobile: false,
       floatingBallVisibleOptions: {
         openMainPanel: true,
         formatReplace: false,
@@ -20017,6 +19968,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     }
 
     _currentLang = this.settings.language || 'en';
+    _remarkMasonryMode = this.settings.remarkMasonryMode || false;
     
     this.hoverStylesCache = new Map();
     
@@ -20423,7 +20375,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     this.createFloatingBall();
     
     // 左侧功能区按钮：打开主面板（悬浮球隐藏后可通过此按钮打开）
-    this.addRibbonIcon('highlighter', 'Regex-Css-Highlighter', () => {
+    this.addRibbonIcon('highlighter', 'SwiftGloss', () => {
       new AddRegexRuleModal(this.app, this).open();
     });
     
@@ -21703,8 +21655,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       floatingBall.style.display = 'none';
     }
     
-    // 如果悬浮球被隐藏（通过"隐藏悬浮按钮"功能），则隐藏
-    if (this.floatButtonData.floatingBallHidden) {
+    // 如果悬浮球被隐藏（通过"隐藏悬浮按钮"功能），则隐藏（按平台独立存储）
+    const _hiddenKey = _isDesktop ? 'floatingBallHiddenDesktop' : 'floatingBallHiddenMobile';
+    if (this.floatButtonData[_hiddenKey]) {
       floatingBall.style.display = 'none';
     }
     
@@ -22700,12 +22653,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       hideFloatingBtnsOption.addEventListener('click', async () => {
         this.floatButtonData[hideKey] = !this.floatButtonData[hideKey];
+        const _hiddenKey = _isDesktop ? 'floatingBallHiddenDesktop' : 'floatingBallHiddenMobile';
         if (this.floatButtonData[hideKey]) {
-          this.floatButtonData.floatingBallHidden = true;
+          this.floatButtonData[_hiddenKey] = true;
           const floatingBall = document.getElementById('regex-highlighter-floating-ball');
           if (floatingBall) floatingBall.style.display = 'none';
         } else {
-          this.floatButtonData.floatingBallHidden = false;
+          this.floatButtonData[_hiddenKey] = false;
           const floatingBall = document.getElementById('regex-highlighter-floating-ball');
           if (floatingBall) floatingBall.style.display = 'flex';
         }
@@ -23307,6 +23261,39 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     if (floatingBallMode === 'followSelection') {
       this.setupFollowSelectionMode(floatingBall);
     }
+    
+    // 桌面端 always 模式：选中文本为规则文本时，在悬浮球旁显示 c、i 按钮
+    if (_isDesktop && floatingBallMode === 'always') {
+      this._setupAlwaysModeRuleActions(floatingBall);
+    }
+  }
+  
+  _setupAlwaysModeRuleActions(floatingBall) {
+    const { MarkdownView } = require('obsidian');
+    
+    const handleSelectionChange = () => {
+      const activeLeaf = this.app.workspace.getActiveViewOfType(MarkdownView);
+      if (!activeLeaf) {
+        this._removeRuleActionButtons();
+        return;
+      }
+      const selectedText = this.getSelectedText().trim();
+      if (!selectedText) {
+        this._removeRuleActionButtons();
+        return;
+      }
+      const globalRule = this.globalRules.find(rule => textMatchesRegex(selectedText, rule.regex));
+      const fileRule = this.rules ? this.rules.find(rule => textMatchesRegex(selectedText, rule.regex)) : null;
+      const matchedRule = globalRule || fileRule;
+      if (!matchedRule) {
+        this._removeRuleActionButtons();
+        return;
+      }
+      this._showRuleActionButtons(floatingBall);
+    };
+    
+    document.addEventListener('selectionchange', handleSelectionChange);
+    this._alwaysModeRuleActionsListener = handleSelectionChange;
   }
   
   // 设置跟随选中模式的事件监听器
@@ -23377,6 +23364,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           }, 200);
         } else {
           floatingBall.style.display = 'none';
+          this._removeRuleActionButtons();
         }
       }
     };
@@ -23469,6 +23457,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           }
         } else {
           floatingBall.style.display = 'none';
+          this._removeRuleActionButtons();
         }
       }
     };
@@ -23487,6 +23476,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         const selectedText = this.getSelectedText();
         if (!selectedText || !selectedText.trim()) {
           floatingBall.style.display = 'none';
+          this._removeRuleActionButtons();
         }
       }
     };
@@ -23505,6 +23495,357 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     floatingBall.style.left = `${x + randomOffsetX}px`;
     floatingBall.style.top = `${y}px`;
     floatingBall.style.display = 'flex';
+    
+    // 桌面端：选中文本为规则文本时，在悬浮球旁显示 c、i 按钮
+    if (_isDesktop) {
+      this._showRuleActionButtons(floatingBall);
+    }
+  }
+  
+  _removeRuleActionButtons() {
+    const existing = document.getElementById('rule-action-buttons');
+    if (existing) existing.remove();
+    if (this._ruleActionButtonsTimeout) {
+      clearTimeout(this._ruleActionButtonsTimeout);
+      this._ruleActionButtonsTimeout = null;
+    }
+  }
+  
+  _showRuleActionButtons(floatingBall) {
+    this._removeRuleActionButtons();
+    
+    const selectedText = this.getSelectedText().trim();
+    if (!selectedText) return;
+    
+    const globalRule = this.globalRules.find(rule => textMatchesRegex(selectedText, rule.regex));
+    const fileRule = this.rules ? this.rules.find(rule => textMatchesRegex(selectedText, rule.regex)) : null;
+    const matchedRule = globalRule || fileRule;
+    if (!matchedRule) return;
+    
+    const ruleRegex = matchedRule.regex;
+    const isCounted = this.countedRegexes.has(ruleRegex);
+    
+    const container = document.createElement('div');
+    container.id = 'rule-action-buttons';
+    container.style.cssText = `
+      position: fixed;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 9998;
+    `;
+    
+    const ballRect = floatingBall.getBoundingClientRect();
+    const isRightSide = ballRect.left > window.innerWidth / 2;
+    if (isRightSide) {
+      container.style.right = `${window.innerWidth - ballRect.left + 8}px`;
+      container.style.left = 'auto';
+    } else {
+      container.style.left = `${ballRect.right + 8}px`;
+    }
+    container.style.top = `${ballRect.top}px`;
+    
+    const btnFuncStyle = `cursor:pointer;user-select:none;transition:all 0.15s ease;`;
+    const btnBaseStyle = `
+      width:28px;height:28px;border-radius:6px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:14px;font-weight:bold;
+    ` + btnFuncStyle;
+    
+    const applyBtnCustomStyle = (btn, btnId, defaultText, defaultStyle) => {
+      const custom = this.floatButtonData?.ruleActionBtnStyles?.[btnId];
+      if (custom) {
+        if (custom.label) btn.textContent = custom.label;
+        if (custom.styleClass) {
+          btn.classList.add(`rule-action-style-${custom.styleClass}`);
+          this.applyRuleActionBtnStyleRules(custom.styleClass);
+          btn.style.cssText = btnFuncStyle;
+        }
+        if (custom.cssText) btn.style.cssText = btnBaseStyle + custom.cssText;
+      }
+    };
+    
+    const showBtnContextMenu = (e, btn, btnId, defaultText, defaultStyle) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (this._ruleActionButtonsTimeout) {
+        clearTimeout(this._ruleActionButtonsTimeout);
+        this._ruleActionButtonsTimeout = null;
+      }
+      
+      const existingMenu = document.querySelector('.rule-action-context-menu');
+      if (existingMenu) existingMenu.remove();
+      
+      const menu = document.createElement('div');
+      menu.className = 'rule-action-context-menu';
+      menu.style.cssText = `
+        position:fixed;top:${e.clientY}px;left:${e.clientX}px;
+        background:var(--background-primary);
+        border:2px solid var(--background-modifier-border);
+        border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,0.2);
+        z-index:10001;padding:4px 0;min-width:120px;
+      `;
+      
+      const createItem = (text, onClick) => {
+        const item = document.createElement('div');
+        item.textContent = text;
+        item.style.cssText = `
+          padding:8px 16px;cursor:pointer;font-size:13px;
+          color:var(--text-normal);transition:background 0.1s;
+        `;
+        item.addEventListener('mouseenter', () => { item.style.background = 'var(--background-modifier-hover)'; });
+        item.addEventListener('mouseleave', () => { item.style.background = 'transparent'; });
+        item.addEventListener('click', () => { onClick(); menu.remove(); });
+        return item;
+      };
+      
+      menu.appendChild(createItem(t('main.edit'), () => {
+        const { Modal } = require('obsidian');
+        const modal = new Modal(this.app);
+        modal.titleEl.textContent = t('floating.editTitle');
+        modal.contentEl.addClass('input-modal');
+        
+        const custom = this.floatButtonData?.ruleActionBtnStyles?.[btnId] || {};
+        
+        const labelDiv = modal.contentEl.createDiv();
+        labelDiv.style.marginBottom = '12px';
+        const labelName = labelDiv.createEl('label');
+        labelName.textContent = t('floating.displayTextLabel') + ': ';
+        labelName.style.cssText = 'display:block;margin-bottom:4px;font-weight:bold;';
+        const labelInput = labelDiv.createEl('input');
+        labelInput.type = 'text';
+        labelInput.placeholder = defaultText;
+        labelInput.value = custom.label || '';
+        labelInput.style.cssText = 'width:100%;padding:8px;border:1px solid var(--background-modifier-border);border-radius:4px;';
+        
+        const styleDiv = modal.contentEl.createDiv();
+        styleDiv.style.marginBottom = '12px';
+        const styleName = styleDiv.createEl('label');
+        styleName.textContent = t('floating.styleClassNameLabel') + ': ';
+        styleName.style.cssText = 'display:block;margin-bottom:4px;font-weight:bold;';
+        const styleHint = styleDiv.createEl('span');
+        styleHint.textContent = t('floating.styleClassHint');
+        styleHint.style.cssText = 'font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;';
+        const styleInput = styleDiv.createEl('input');
+        styleInput.type = 'text';
+        styleInput.placeholder = t('floating.inputCssClass');
+        styleInput.value = custom.styleClass || '';
+        styleInput.style.cssText = 'width:100%;padding:8px;border:1px solid var(--background-modifier-border);border-radius:4px;';
+        
+        const cssDiv = modal.contentEl.createDiv();
+        cssDiv.style.marginBottom = '16px';
+        const cssName = cssDiv.createEl('label');
+        cssName.textContent = 'CSS: ';
+        cssName.style.cssText = 'display:block;margin-bottom:4px;font-weight:bold;';
+        const cssHint = cssDiv.createEl('span');
+        cssHint.textContent = 'e.g. color:red;width:36px;height:36px;';
+        cssHint.style.cssText = 'font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;';
+        const cssInput = cssDiv.createEl('input');
+        cssInput.type = 'text';
+        cssInput.value = custom.cssText || '';
+        cssInput.style.cssText = 'width:100%;padding:8px;border:1px solid var(--background-modifier-border);border-radius:4px;font-size:12px;';
+        
+        const btnContainer = modal.contentEl.createEl('div');
+        btnContainer.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;';
+        const cancelBtn = btnContainer.createEl('button');
+        cancelBtn.textContent = t('main.cancel');
+        cancelBtn.style.padding = '6px 16px';
+        cancelBtn.addEventListener('click', () => modal.close());
+        const confirmBtn = btnContainer.createEl('button');
+        confirmBtn.textContent = t('main.confirm');
+        confirmBtn.style.cssText = 'padding:6px 16px;background:var(--interactive-accent);color:#fff;border:none;border-radius:4px;cursor:pointer;';
+        
+        confirmBtn.addEventListener('click', async () => {
+          if (!this.floatButtonData.ruleActionBtnStyles) {
+            this.floatButtonData.ruleActionBtnStyles = {};
+          }
+          const newCustom = {
+            label: labelInput.value.trim(),
+            styleClass: styleInput.value.trim(),
+            cssText: cssInput.value.trim()
+          };
+          if (!newCustom.label && !newCustom.styleClass && !newCustom.cssText) {
+            delete this.floatButtonData.ruleActionBtnStyles[btnId];
+          } else {
+            this.floatButtonData.ruleActionBtnStyles[btnId] = newCustom;
+          }
+          await this.saveFloatButtonData();
+          this._removeRuleActionButtons();
+          new Notice(t('main.floatOptionUpdated'));
+          modal.close();
+        });
+        
+        setTimeout(() => labelInput.focus(), 100);
+        modal.open();
+      }));
+      
+      menu.appendChild(createItem(t('main.resetToDefault'), async () => {
+        if (this.floatButtonData?.ruleActionBtnStyles?.[btnId]) {
+          delete this.floatButtonData.ruleActionBtnStyles[btnId];
+          await this.saveFloatButtonData();
+          this._removeRuleActionButtons();
+          new Notice(t('main.floatOptionUpdated'));
+        }
+      }));
+      
+      document.body.appendChild(menu);
+      
+      const menuRect = menu.getBoundingClientRect();
+      if (e.clientX + menuRect.width > window.innerWidth) {
+        menu.style.left = `${window.innerWidth - menuRect.width - 8}px`;
+      }
+      if (e.clientY + menuRect.height > window.innerHeight) {
+        menu.style.top = `${window.innerHeight - menuRect.height - 8}px`;
+      }
+      
+      const closeMenu = (ce) => {
+        if (!menu.contains(ce.target)) {
+          menu.remove();
+          document.removeEventListener('click', closeMenu);
+          this._scheduleRuleActionButtonsTimeout();
+        }
+      };
+      setTimeout(() => document.addEventListener('click', closeMenu), 0);
+    };
+    
+    // c 按钮
+    const cBtn = document.createElement('div');
+    cBtn.textContent = 'c';
+    cBtn.title = isCounted ? t('main.removeCount') : t('main.addCount');
+    const cDefaultStyle = btnBaseStyle + (isCounted
+      ? `color:var(--text-accent);background:var(--background-modifier-hover);border:2px solid var(--text-accent);`
+      : `color:var(--text-normal);background:var(--background-secondary);border:2px solid var(--background-modifier-border);`);
+    cBtn.style.cssText = cDefaultStyle;
+    applyBtnCustomStyle(cBtn, 'c', 'c', cDefaultStyle);
+    
+    cBtn.addEventListener('mouseenter', () => {
+      cBtn.style.color = 'var(--text-accent)';
+      cBtn.style.background = 'var(--background-modifier-hover)';
+      cBtn.style.borderColor = 'var(--text-accent)';
+      if (this._ruleActionButtonsTimeout) {
+        clearTimeout(this._ruleActionButtonsTimeout);
+        this._ruleActionButtonsTimeout = null;
+      }
+    });
+    cBtn.addEventListener('mouseleave', () => {
+      const custom = this.floatButtonData?.ruleActionBtnStyles?.['c'];
+      if (custom?.styleClass || custom?.cssText) {
+        if (custom?.styleClass) cBtn.style.cssText = btnFuncStyle;
+        if (custom?.cssText) cBtn.style.cssText = btnBaseStyle + custom.cssText;
+      } else {
+        if (this.countedRegexes.has(ruleRegex)) {
+          cBtn.style.color = 'var(--text-accent)';
+          cBtn.style.background = 'var(--background-modifier-hover)';
+          cBtn.style.borderColor = 'var(--text-accent)';
+        } else {
+          cBtn.style.color = 'var(--text-normal)';
+          cBtn.style.background = 'var(--background-secondary)';
+          cBtn.style.borderColor = 'var(--background-modifier-border)';
+        }
+      }
+      this._scheduleRuleActionButtonsTimeout();
+    });
+    
+    cBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (this.countedRegexes.has(ruleRegex)) {
+        this.countedRegexes.delete(ruleRegex);
+        new Notice(t('main.countRemoved'));
+      } else {
+        this.countedRegexes.add(ruleRegex);
+        new Notice(t('main.countAdded'));
+      }
+      this.rulesVersion++;
+      this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+      this.refreshCurrentView();
+      this.saveCountedRegexes();
+      this._removeRuleActionButtons();
+    });
+    
+    cBtn.oncontextmenu = (e) => showBtnContextMenu(e, cBtn, 'c', 'c', cDefaultStyle);
+    
+    container.appendChild(cBtn);
+    
+    // i 按钮
+    const iBtn = document.createElement('div');
+    iBtn.textContent = 'i';
+    iBtn.title = t('floating.interlinearNote');
+    const iDefaultStyle = btnBaseStyle + `
+      color:var(--text-normal);background:var(--background-secondary);border:2px solid var(--background-modifier-border);
+    `;
+    iBtn.style.cssText = iDefaultStyle;
+    applyBtnCustomStyle(iBtn, 'i', 'i', iDefaultStyle);
+    
+    iBtn.addEventListener('mouseenter', () => {
+      iBtn.style.color = 'var(--text-accent)';
+      iBtn.style.background = 'var(--background-modifier-hover)';
+      iBtn.style.borderColor = 'var(--text-accent)';
+      if (this._ruleActionButtonsTimeout) {
+        clearTimeout(this._ruleActionButtonsTimeout);
+        this._ruleActionButtonsTimeout = null;
+      }
+    });
+    iBtn.addEventListener('mouseleave', () => {
+      const custom = this.floatButtonData?.ruleActionBtnStyles?.['i'];
+      if (custom?.styleClass || custom?.cssText) {
+        if (custom?.styleClass) iBtn.style.cssText = btnFuncStyle;
+        if (custom?.cssText) iBtn.style.cssText = btnBaseStyle + custom.cssText;
+      } else {
+        iBtn.style.color = 'var(--text-normal)';
+        iBtn.style.background = 'var(--background-secondary)';
+        iBtn.style.borderColor = 'var(--background-modifier-border)';
+      }
+      this._scheduleRuleActionButtonsTimeout();
+    });
+    
+    iBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      this._removeRuleActionButtons();
+      this.showInterlinearNoteInput();
+    });
+    
+    iBtn.oncontextmenu = (e) => showBtnContextMenu(e, iBtn, 'i', 'i', iDefaultStyle);
+    
+    container.appendChild(iBtn);
+    document.body.appendChild(container);
+    
+    this._scheduleRuleActionButtonsTimeout();
+  }
+  
+  applyRuleActionBtnStyleRules(className) {
+    const styleId = `rule-action-style-${className}`;
+    if (document.getElementById(styleId)) return;
+    
+    let fullCssRules = '';
+    try {
+      const cssContent = require('fs').readFileSync(require('path').join(this.app.vault.adapter.basePath, '.obsidian/plugins/Regex-Css-Highlighter/styles.css'), 'utf8');
+      const escapedClassName = className.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const ruleRegex = new RegExp(`\\.${escapedClassName}(?:::[a-zA-Z-]+(?:\\([^)]*\\))?)*\\s*\\{(?:[^{}]|\\{[^{}]*\\})*\\}`, 'gs');
+      const matches = cssContent.match(ruleRegex);
+      if (matches && matches.length > 0) {
+        fullCssRules = matches.map(rule =>
+          rule.replace(new RegExp(`\\.${escapedClassName}`, 'g'), `.rule-action-style-${className}`)
+        ).join('\n');
+      }
+    } catch (error) {}
+    
+    if (fullCssRules) {
+      const styleElement = document.createElement('style');
+      styleElement.id = styleId;
+      styleElement.textContent = fullCssRules;
+      document.head.appendChild(styleElement);
+    }
+  }
+  
+  _scheduleRuleActionButtonsTimeout() {
+    if (this._ruleActionButtonsTimeout) {
+      clearTimeout(this._ruleActionButtonsTimeout);
+    }
+    this._ruleActionButtonsTimeout = setTimeout(() => {
+      this._removeRuleActionButtons();
+    }, 5000);
   }
 
   // 为悬浮选项按钮注入完整CSS规则（包括伪元素）
@@ -25820,6 +26161,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (exists) {
         rawContent = await crossFS.read(this.app.vault, filePath);
         this.floatButtonData = JSON.parse(rawContent);
+        // 迁移旧版 floatingBallHidden 到按平台独立存储
+        if (this.floatButtonData.floatingBallHidden !== undefined && this.floatButtonData.floatingBallHiddenDesktop === undefined) {
+          this.floatButtonData.floatingBallHiddenDesktop = this.floatButtonData.floatingBallHidden;
+          this.floatButtonData.floatingBallHiddenMobile = this.floatButtonData.floatingBallHidden;
+          delete this.floatButtonData.floatingBallHidden;
+          await this.saveFloatButtonData();
+        }
       } else {
         this.floatButtonData = {};
       }
@@ -34334,7 +34682,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       // 获取插件设置中的边框宽度
       const pluginSettings = this.settings || {};
-      const popupBorderWidth = pluginSettings.popupBorderWidth || 1;
+
       
       // 创建备注窗口元素
       const noteWindow = document.createElement('div');
@@ -34503,10 +34851,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       // 设置备注窗口样式
       const popupStyle = `
         position: absolute;
-        background-color: var(--background-primary);
+        background:rgba(var(--mono-rgb-0),0.75);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
         color: var(--text-normal);
         padding: 8px;
-        border-radius: 4px;
+        border-radius: 12px;
         font-family: var(--font-ui);
         width: auto !important;
         max-width: 300px !important;
@@ -34520,8 +34868,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         transform: translateX(0) translateY(-8px);
         transition: all 0.15s ease-out;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-        border: ${popupBorderWidth}px solid var(--background-modifier-border);
-        border-top: ${Math.max(popupBorderWidth, 3)}px solid var(--text-accent);
+        border: none;
         white-space: normal !important; /* 确保文字能正常换行 */
         box-sizing: border-box;
       `;
@@ -35653,8 +36000,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       popupSpacing,
       popupFontSize,
       popupLineHeight,
-      popupBorderWidth,
-      popupBorderColor,
+
       onRefresh,
       onDirty,
       keepOpenRef,
@@ -35674,7 +36020,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
     if (masonry) {
       const masonryStyle = document.createElement('style');
-      masonryStyle.textContent = `.${cssScope} .masonry-grid{column-gap:8px;}.${cssScope} .masonry-card{break-inside:avoid;margin-bottom:8px;border-radius:6px;border:1px solid var(--background-modifier-border);background:var(--background-primary);overflow:hidden;position:relative;}.${cssScope} .masonry-card:hover .masonry-toolbar{opacity:1;}.${cssScope} .masonry-color-bar{height:3px;border-radius:6px 6px 0 0;}.${cssScope} .masonry-card-body{padding:6px 8px;}.${cssScope} .masonry-file-tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:8px;display:inline-block;margin-bottom:4px;}.${cssScope} .masonry-toolbar{opacity:0;transition:opacity 0.15s ease;position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:flex-end;gap:3px;padding:4px 6px;background:linear-gradient(transparent,rgba(var(--background-primary-rgb,255,255,255),0.9) 40%);border-radius:0 0 6px 6px;}`;
+      masonryStyle.textContent = `.${cssScope} .masonry-grid{column-gap:8px;}.${cssScope} .masonry-card{break-inside:avoid;margin-bottom:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(var(--mono-rgb-0),0.3);overflow:hidden;position:relative;}.${cssScope} .masonry-card:hover .masonry-toolbar{opacity:1;}.${cssScope} .masonry-color-bar{height:3px;border-radius:6px 6px 0 0;}.${cssScope} .masonry-card-body{padding:6px 8px;}.${cssScope} .masonry-file-tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:8px;display:inline-block;margin-bottom:4px;}.${cssScope} .masonry-toolbar{opacity:0;transition:opacity 0.15s ease;position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:flex-end;gap:3px;padding:4px 6px;background:linear-gradient(transparent,rgba(var(--mono-rgb-0),0.6) 40%);border-radius:0 0 6px 6px;pointer-events:none;}.${cssScope} .masonry-card:hover .masonry-toolbar{pointer-events:auto;}`;
       container.appendChild(masonryStyle);
     }
 
@@ -35785,6 +36131,57 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }
         cardBody.appendChild(remarkEl);
 
+        const switchToTextarea = () => {
+          if (keepOpenRef) keepOpenRef.val = true;
+          const origHeight = remarkEl.offsetHeight;
+          const textarea = document.createElement('textarea');
+          textarea.value = remarkContent;
+          textarea.dataset.source = 'link';
+          textarea.dataset.linkFilePath = fp;
+          textarea.dataset.linkTimestamp = String(lk.timestamp || 0);
+          textarea.style.cssText = `width:100%;min-height:${Math.max(origHeight, 60)}px;padding:4px;border:1px solid var(--border-color);border-radius:4px;background:var(--background-secondary);color:var(--text-normal);font-size:12px;font-family:var(--font-family);resize:vertical;box-sizing:border-box;outline:none;line-height:1.5;`;
+          const parent = remarkEl.parentNode;
+          parent.replaceChild(textarea, remarkEl);
+          textarea.focus();
+          textarea.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { ev.preventDefault(); textarea.blur(); } });
+          textarea.addEventListener('paste', async (pe) => {
+            const items = pe.clipboardData?.items;
+            if (!items) return;
+            let imageItem = null;
+            for (let i = 0; i < items.length; i++) {
+              if (items[i].type.startsWith('image/')) { imageItem = items[i]; break; }
+            }
+            if (!imageItem) return;
+            pe.preventDefault();
+            const file = imageItem.getAsFile();
+            if (!file) return;
+            const arrayBuffer = await file.arrayBuffer();
+            let ext = 'png';
+            if (file.type) { const mimeExt = file.type.split('/')[1]; if (mimeExt === 'jpeg') ext = 'jpg'; else if (mimeExt === 'svg+xml') ext = 'svg'; else if (['png','gif','bmp','webp'].includes(mimeExt)) ext = mimeExt; }
+            const imgFileName = `remark_${Date.now()}.${ext}`;
+            try {
+              const savedName = await plugin.saveImageToVault(new Uint8Array(arrayBuffer), imgFileName);
+              plugin.insertAtCursor(textarea, `![[${savedName}]]`);
+              new Notice(t('main.imageSaved') + ': ' + savedName);
+            } catch (err) { new Notice(t('main.imageSaveFailed') + ': ' + err.message); }
+          });
+          textarea.addEventListener('blur', async () => {
+            const newValue = textarea.value.trim();
+            const actualRule2 = isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
+            if (actualRule2 && actualRule2.links) {
+              const al = lk.timestamp ? actualRule2.links.find(l => l.filePath === fp && l.timestamp === lk.timestamp) : actualRule2.links.find(l => l.filePath === fp && !l.timestamp);
+              if (al) { al.remark = newValue; if (targetEl) targetEl.dataset.links = JSON.stringify(actualRule2.links); if (onDirty) onDirty(); if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true); else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true); }
+            }
+            onRefresh();
+          });
+        };
+
+        remarkEl.addEventListener('dblclick', (de) => {
+          de.stopPropagation();
+          de.preventDefault();
+          switchToTextarea();
+        });
+
         if (!lk._fromFileRule || showFromFileRuleDelete) {
           const toolbar = document.createElement('div');
           toolbar.className = 'masonry-toolbar';
@@ -35831,19 +36228,19 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           });
           toolbar.appendChild(searchTag);
 
-          const copyBtn = document.createElement('button');
-          copyBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-          copyBtn.title = t('main.copyRemark');
-          copyBtn.style.cssText = 'padding:1px 3px;cursor:pointer;border:none;border-radius:3px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:16px;line-height:0;';
-          copyBtn.addEventListener('click', (ce) => { ce.preventDefault(); ce.stopPropagation(); navigator.clipboard.writeText(remarkContent).then(() => { copyBtn.style.color = 'var(--text-normal)'; setTimeout(() => { copyBtn.style.color = 'var(--text-muted)'; }, 800); }); });
-          toolbar.appendChild(copyBtn);
-
           const openBtn = document.createElement('button');
           openBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
           openBtn.title = t('main.openDocument');
           openBtn.style.cssText = 'padding:1px 3px;cursor:pointer;border:none;border-radius:3px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:16px;line-height:0;';
           openBtn.addEventListener('click', async (ce) => { ce.preventDefault(); ce.stopPropagation(); if (lk) await plugin.openLinkAndSearch(lk.filePath, lk.searchText); });
           toolbar.appendChild(openBtn);
+
+          const copyBtn = document.createElement('button');
+          copyBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+          copyBtn.title = t('main.copyRemark');
+          copyBtn.style.cssText = 'padding:1px 3px;cursor:pointer;border:none;border-radius:3px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:16px;line-height:0;';
+          copyBtn.addEventListener('click', (ce) => { ce.preventDefault(); ce.stopPropagation(); navigator.clipboard.writeText(remarkContent).then(() => { copyBtn.style.color = 'var(--text-normal)'; setTimeout(() => { copyBtn.style.color = 'var(--text-muted)'; }, 800); }); });
+          toolbar.appendChild(copyBtn);
 
           const deleteBtn = document.createElement('button');
           deleteBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
@@ -35876,6 +36273,46 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           });
           toolbar.appendChild(deleteBtn);
 
+          toolbar.addEventListener('dblclick', (de) => {
+            de.stopPropagation();
+            de.preventDefault();
+            switchToTextarea();
+          });
+
+          searchTag.addEventListener('dblclick', (de) => {
+            de.stopPropagation();
+            de.preventDefault();
+            if (keepOpenRef) keepOpenRef.val = true;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = lk.searchText || '';
+            const origW = searchTag.offsetWidth;
+            input.style.cssText = `font-size:9px;padding:1px 5px;border:none;border-radius:6px;background:var(--background-modifier-hover);color:var(--text-muted);width:${origW}px;outline:none;box-sizing:border-box;`;
+            searchTag.replaceWith(input);
+            input.focus();
+            input.select();
+            let saved = false;
+            const save = async () => {
+              if (saved) return; saved = true;
+              const val = input.value.trim();
+              lk.searchText = val;
+              searchTag.textContent = val ? val.substring(0, 15) + (val.length > 15 ? '...' : '') : '(' + t('main.noSearchText') + ')';
+              searchTag.style.fontStyle = val ? 'normal' : 'italic';
+              input.replaceWith(searchTag);
+              const actualRule3 = isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
+              if (actualRule3 && actualRule3.links) {
+                const al = lk.timestamp ? actualRule3.links.find(l => l.filePath === fp && l.timestamp === lk.timestamp) : actualRule3.links.find(l => l.filePath === fp && !l.timestamp);
+                if (al) al.searchText = val;
+                if (targetEl) targetEl.dataset.links = JSON.stringify(actualRule3.links);
+                if (onDirty) onDirty();
+                if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
+                else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+              }
+            };
+            input.addEventListener('blur', save);
+            input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { saved = true; input.replaceWith(searchTag); } });
+          });
+
           card.appendChild(toolbar);
         }
 
@@ -35889,7 +36326,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         const { link: lk, filePath: fp, fileHue: fh } = item;
         const remarkContent = lk.remark || '';
         const aiGroup = document.createElement('div');
-        aiGroup.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px solid var(--background-modifier-border);';
+        aiGroup.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08);';
 
         const aiTitleBar = document.createElement('div');
         aiTitleBar.style.cssText = 'display:flex;align-items:flex-start;gap:4px;margin-bottom:4px;';
@@ -36006,7 +36443,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       const groupEl = document.createElement('div');
       groupEl.className = 'remark-source-group';
-      groupEl.style.cssText = fileIndex > 0 ? 'margin-top:8px;padding-top:8px;border-top:1px solid var(--background-modifier-border);' : '';
+      groupEl.style.cssText = fileIndex > 0 ? 'margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08);' : '';
 
       const headerEl = document.createElement('div');
       headerEl.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;';
@@ -36049,7 +36486,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
         if (i > 0) {
           const innerDivider = document.createElement('div');
-          innerDivider.style.cssText = 'border-top:1px solid var(--background-modifier-border);margin:4px 0;';
+          innerDivider.style.cssText = 'border-top:1px solid rgba(255,255,255,0.08);margin:4px 0;';
           bodyEl.appendChild(innerDivider);
         }
 
@@ -36332,6 +36769,18 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             });
             toolBar.appendChild(searchTag);
 
+
+            const openBtn = document.createElement('button');
+            openBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="16.5" cy="16.5" r="2.5"/><path d="M18.5 18.5L21 21"/></svg>';
+            openBtn.title = t('main.openDocument');
+            openBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;';
+            openBtn.addEventListener('click', async (ce) => {
+              ce.preventDefault();
+              ce.stopPropagation();
+              if (link) await plugin.openLinkAndSearch(link.filePath, link.searchText);
+            });
+            toolBar.appendChild(openBtn);
+
             const copyBtn = document.createElement('button');
             copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
             copyBtn.title = t('main.copyRemark');
@@ -36345,17 +36794,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               });
             });
             toolBar.appendChild(copyBtn);
-
-            const openBtn = document.createElement('button');
-            openBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="16.5" cy="16.5" r="2.5"/><path d="M18.5 18.5L21 21"/></svg>';
-            openBtn.title = t('main.openDocument');
-            openBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;';
-            openBtn.addEventListener('click', async (ce) => {
-              ce.preventDefault();
-              ce.stopPropagation();
-              if (link) await plugin.openLinkAndSearch(link.filePath, link.searchText);
-            });
-            toolBar.appendChild(openBtn);
 
             const deleteBtn = document.createElement('button');
             deleteBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
@@ -36477,6 +36915,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     aiAskBtn.addEventListener('click', async (ce) => {
       ce.preventDefault();
       ce.stopPropagation();
+
       if (keepOpenRef) keepOpenRef.val = true;
       if (!aiHasContent) { new Notice(t('remark.aiAskDisabled')); return; }
       if (!ruleRegex) return;
@@ -36527,10 +36966,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         const aiQuestion = await plugin.callAI(prompt);
         if (!aiQuestion || !aiQuestion.trim()) { new Notice('AI 未返回有效问题'); return; }
         const newAiLink = { filePath: '', searchText: '', remark: '', timestamp: Date.now(), _aiQuestion: aiQuestion.trim(), _aiThread: [] };
-        if (rule) {
-          if (!rule.links) rule.links = [];
-          rule.links.push(newAiLink);
-          if (targetEl) targetEl.dataset.links = JSON.stringify(rule.links);
+        const actualRule = rule || (isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex));
+        if (actualRule) {
+          if (!actualRule.links) actualRule.links = [];
+          actualRule.links.push(newAiLink);
+          if (targetEl) targetEl.dataset.links = JSON.stringify(actualRule.links);
           if (onDirty) onDirty();
           if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
           else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
@@ -36560,10 +37000,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (keepOpenRef) keepOpenRef.val = true;
       if (!ruleRegex) return;
       const newLink = { filePath: plugin.currentFilePath || '', searchText: '', remark: '', timestamp: Date.now() };
-      if (rule) {
-        if (!rule.links) rule.links = [];
-        rule.links.push(newLink);
-        if (targetEl) targetEl.dataset.links = JSON.stringify(rule.links);
+      const actualRule = rule || (isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex));
+      if (actualRule) {
+        if (!actualRule.links) actualRule.links = [];
+        actualRule.links.push(newLink);
+        if (targetEl) targetEl.dataset.links = JSON.stringify(actualRule.links);
         if (onDirty) onDirty();
         if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
         else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
@@ -36586,8 +37027,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       : plugin.rules.find(r => r.regex === keywordRegex);
     if (!rule || !rule.links || rule.links.length === 0) return;
 
-    const popupBorderWidth = plugin.settings.popupBorderWidth !== undefined ? plugin.settings.popupBorderWidth : 1;
-    const popupBorderColor = plugin.settings.popupBorderColor || 'var(--text-accent)';
     const popupSpacing = plugin.settings.popupSpacing !== undefined ? plugin.settings.popupSpacing : 10;
     const popupFontSize = plugin.settings.popupFontSize !== undefined ? plugin.settings.popupFontSize : 14;
     const popupMaxWidth = plugin.settings.popupWidth !== undefined ? plugin.settings.popupWidth : 600;
@@ -36601,9 +37040,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     win.style.cssText = `
       position:fixed;z-index:1100;min-width:${_isDesktop ? '300px' : '0'};width:${actualMaxWidth}px;
       max-height:${maxWinHeight}px;
-      background:var(--background-primary);
-      border:${popupBorderWidth}px solid ${popupBorderColor};border-radius:8px;
-      box-shadow:0 4px 16px rgba(0,0,0,0.35);
+      background:rgba(var(--mono-rgb-0),0.75);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
+      border:none;border-radius:12px;
+      box-shadow:0 12px 40px rgba(0,0,0,0.35);
       overflow:hidden;display:flex;flex-direction:column;
       padding:${popupSpacing}px;opacity:${savedOpacity};
     `;
@@ -36619,8 +37058,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     titleBar.style.cssText = `
       display:flex;align-items:center;justify-content:space-between;
       padding:4px 8px;cursor:move;user-select:none;-webkit-user-select:none;
-      border-bottom:1px solid var(--background-modifier-border);
-      background:var(--background-secondary);border-radius:8px 8px 0 0;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+      background:transparent;border-radius:12px 12px 0 0;
       flex-shrink:0;min-height:24px;margin:-${popupSpacing}px -${popupSpacing}px ${popupSpacing}px -${popupSpacing}px;
     `;
 
@@ -36695,6 +37134,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     kwMasonryBtn.addEventListener('click', (ce) => {
       ce.stopPropagation();
       _remarkMasonryMode = !_remarkMasonryMode;
+      plugin.settings.remarkMasonryMode = _remarkMasonryMode;
+      plugin.saveData(plugin.settings);
       kwMasonryBtn.style.color = _remarkMasonryMode ? 'var(--text-accent)' : 'var(--text-faint)';
       const r = win.getBoundingClientRect();
       win.remove();
@@ -36714,7 +37155,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     setTimeout(() => document.addEventListener('mousedown', onDocClick), 0);
 
     const content = document.createElement('div');
-    content.style.cssText = `padding:${popupSpacing}px;overflow-y:auto;flex:1;font-size:${popupFontSize}px;line-height:${plugin.settings.popupLineHeight !== undefined ? plugin.settings.popupLineHeight : 1.5};border:1px solid var(--border-color);border-radius:4px;background-color:var(--background-secondary);user-select:text;-webkit-user-select:text;`;
+    content.style.cssText = `padding:${popupSpacing}px;overflow-y:auto;flex:1;font-size:${popupFontSize}px;line-height:${plugin.settings.popupLineHeight !== undefined ? plugin.settings.popupLineHeight : 1.5};border:none;border-radius:0;background-color:transparent;user-select:text;-webkit-user-select:text;`;
 
     const kwRefresh = () => {
       const r = win.getBoundingClientRect();
@@ -36731,8 +37172,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       popupSpacing,
       popupFontSize,
       popupLineHeight: plugin.settings.popupLineHeight !== undefined ? plugin.settings.popupLineHeight : 1.5,
-      popupBorderWidth,
-      popupBorderColor,
+
       onRefresh: kwRefresh,
       onDirty: null,
       keepOpenRef: null,
@@ -36742,7 +37182,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       alignItems: 'baseline',
       showFileRuleBadge: false,
       showFileNameEdit: false,
-      showImageRender: false,
+      showImageRender: true,
       showFromFileRuleDelete: false,
       cssScope: 'keyword-detail-window',
       masonry: _remarkMasonryMode
@@ -36930,7 +37370,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     if (allRelatedKeywords.size > 0) {
       const chipsBar = document.createElement('div');
       chipsBar.className = 'keyword-chips-bar';
-      chipsBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;background:var(--background-secondary);border-top:1px solid var(--background-modifier-border);border-radius:0 0 7px 7px;flex-shrink:0;margin:0 -' + popupSpacing + 'px -' + popupSpacing + 'px -' + popupSpacing + 'px;';
+              chipsBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;background:transparent;border-top:1px solid rgba(255,255,255,0.08);border-radius:0 0 12px 12px;flex-shrink:0;margin:0 -' + popupSpacing + 'px -' + popupSpacing + 'px -' + popupSpacing + 'px;';
 
       const label = document.createElement('span');
       label.textContent = '🔗';
@@ -36941,7 +37381,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         const chip = document.createElement('span');
         chip.className = 'keyword-chip';
         chip.title = (info.relation === 'mention' ? t('main.keywordMentions') : t('main.keywordMentionedBy')) + ' ' + kwRegex;
-        chip.style.cssText = 'display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid var(--background-modifier-border);background:var(--background-primary);transition:all 0.15s ease;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+                chip.style.cssText = 'display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(var(--mono-rgb-0),0.3);transition:all 0.15s ease;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
 
         const chipLabel = document.createElement('span');
         chipLabel.textContent = (info.relation === 'mention' ? '→ ' : '← ') + kwRegex;
@@ -36976,7 +37416,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
             previewEl = document.createElement('div');
             previewEl.className = 'keyword-chip-preview';
-            previewEl.style.cssText = `position:fixed;z-index:1200;max-width:350px;max-height:300px;overflow-y:auto;padding:${popupSpacing}px;background:var(--background-primary);border:${popupBorderWidth}px solid ${popupBorderColor};border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.35);font-size:12px;line-height:1.4;`;
+            previewEl.style.cssText = `position:fixed;z-index:1200;max-width:350px;max-height:300px;overflow-y:auto;padding:${popupSpacing}px;background:rgba(var(--mono-rgb-0),0.75);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border:none;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.35);font-size:12px;line-height:1.4;`;
 
             const titleDiv = document.createElement('div');
             titleDiv.textContent = kwRegex;
@@ -37350,26 +37790,24 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const popupFontSize = plugin.settings.popupFontSize !== undefined ? plugin.settings.popupFontSize : 14;
           const popupSpacing = plugin.settings.popupSpacing !== undefined ? plugin.settings.popupSpacing : 10;
           const popupMaxWidth = plugin.settings.popupWidth !== undefined ? plugin.settings.popupWidth : 600;
-          const popupBorderWidth = plugin.settings.popupBorderWidth !== undefined ? plugin.settings.popupBorderWidth : 1;
-          const popupBorderColor = plugin.settings.popupBorderColor || 'var(--text-accent)';
+
           
           popup.style.padding = `${popupSpacing}px`;
           popup.style.width = `${popupMaxWidth}px`;
           popup.style.maxWidth = _isDesktop ? 'none' : `${Math.min(popupMaxWidth, window.innerWidth - 20)}px`;
           popup.style.minWidth = '15px';
           popup.style.maxHeight = 'none'; // 由动态计算控制
-          popup.style.backgroundColor = 'var(--background-primary)';
-          popup.style.boxSizing = 'border-box'; // 确保边框宽度包含在元素尺寸内
+          popup.style.background = 'rgba(var(--mono-rgb-0),0.75)';
+          popup.style.backdropFilter = 'blur(16px) saturate(180%)';
+          popup.style.webkitBackdropFilter = 'blur(16px) saturate(180%)';
+          popup.style.boxSizing = 'border-box';
           popup.style.display = 'flex';
           popup.style.flexDirection = 'column';
-          // 应用保存的透明度
           const savedOpacity = plugin.settings.popupOpacity !== undefined ? plugin.settings.popupOpacity : 1;
           popup.style.opacity = savedOpacity;
-          // 使用用户设置的边框颜色
-          // 注意：popupBorderWidth控制边框宽度，popupSpacing控制内边距(边框与文本之间的空白)
-          popup.style.border = `${popupBorderWidth}px solid ${popupBorderColor}`;
-          popup.style.borderRadius = '8px';
-          popup.style.boxShadow = '0 4px 16px rgba(0,0,0,0.35)'; // 增加阴影不透明度，在深色模式下更明显
+          popup.style.border = 'none';
+          popup.style.borderRadius = '12px';
+          popup.style.boxShadow = '0 12px 40px rgba(0,0,0,0.35)';
           popup.style.userSelect = 'text';
           popup.style.webkitUserSelect = 'text';
           popup.style.resize = 'both';
@@ -37442,8 +37880,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
           // 深色模式下的增强样式
           if (document.body.classList.contains('theme-dark')) {
-            popup.style.boxShadow = '0 4px 16px rgba(0,0,0,0.5)'; // 深色模式下使用更深的阴影
-            popup.style.outline = '1px solid rgba(255, 255, 255, 0.1)'; // 添加微妙的轮廓，增强边缘清晰度
+            popup.style.boxShadow = '0 12px 40px rgba(0,0,0,0.5)';
           }
           
           // 计算位置
@@ -37522,8 +37959,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           popupTitleBar.style.cssText = `
             display:flex;align-items:center;justify-content:space-between;
             padding:4px 8px;cursor:move;user-select:none;-webkit-user-select:none;
-            border-bottom:1px solid var(--background-modifier-border);
-            background:var(--background-secondary);border-radius:8px 8px 0 0;
+            border-bottom:1px solid rgba(255,255,255,0.08);
+            background:transparent;border-radius:12px 12px 0 0;
             flex-shrink:0;min-height:24px;
           `;
           // 左侧按钮组容器
@@ -37588,6 +38025,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           popupMasonryBtn.addEventListener('click', (ce) => {
             ce.stopPropagation();
             _remarkMasonryMode = !_remarkMasonryMode;
+            plugin.settings.remarkMasonryMode = _remarkMasonryMode;
+            plugin.saveData(plugin.settings);
             popupMasonryBtn.style.color = _remarkMasonryMode ? 'var(--text-accent)' : 'var(--text-faint)';
             renderAllRemarks();
             repositionPopup();
@@ -37720,9 +38159,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 统一容器（预览和编辑共用）
           const contentContainer = document.createElement('div');
           contentContainer.style.padding = `${popupSpacing}px`;
-          contentContainer.style.border = '1px solid var(--border-color)';
-          contentContainer.style.borderRadius = '4px';
-          contentContainer.style.backgroundColor = 'var(--background-secondary)';
+          contentContainer.style.border = 'none';
+          contentContainer.style.borderRadius = '0';
+          contentContainer.style.backgroundColor = 'transparent';
           contentContainer.style.cursor = 'text';
           contentContainer.style.position = 'relative';
           contentContainer.style.maxHeight = `calc(${dynamicMaxHeight}px - ${popupSpacing * 2 + 26}px)`;
@@ -37836,8 +38275,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           let currentLinksByFile = null;
           const renderAllRemarks = () => {
             popup.style.minWidth = '';
+            let freshLinks = [];
+            try { const d = targetEl.dataset.links; if (d) freshLinks = JSON.parse(d); } catch {}
             const result = plugin.renderRemarkContent(contentContainer, {
-              links,
+              links: freshLinks,
               rule: null,
               ruleRegex: targetEl.dataset.ruleRegex,
               isGlobal: plugin.globalRules.some(r => r.regex === targetEl.dataset.ruleRegex),
@@ -37845,9 +38286,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               popupSpacing,
               popupFontSize,
               popupLineHeight: plugin.settings.popupLineHeight !== undefined ? plugin.settings.popupLineHeight : 1.5,
-              popupBorderWidth,
-              popupBorderColor,
-              onRefresh: () => { renderAllRemarks(); repositionPopup(); },
+
+              onRefresh: () => { keepOpen = true; renderAllRemarks(); repositionPopup(); },
               onDirty: () => { isDirty = true; },
               keepOpenRef: { val: false },
               isDirtyRef: { val: false },
@@ -37951,8 +38391,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 初始渲染
           renderAllRemarks();
           
+
           // 显示弹窗
-          popup.style.opacity = '1';
+          popup.style.opacity = String(savedOpacity);
           popup.style.visibility = 'visible';
           popup.style.transform = 'scale(1)';
           
@@ -38359,8 +38800,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           // 深色模式下的内容容器增强样式
           if (document.body.classList.contains('theme-dark')) {
-            contentContainer.style.border = '1px solid var(--background-modifier-border)';
-            contentContainer.style.backgroundColor = 'var(--background-primary)'; // 使用与弹窗一致的背景，增强统一感
+            contentContainer.style.border = 'none';
+            contentContainer.style.backgroundColor = 'transparent';
           }
           
           // 关闭弹窗（带延迟，确保鼠标有足够时间移到匹配文字上）
@@ -38369,6 +38810,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           let isPinned = false; // 拖动后固定弹窗，只能通过关闭按钮关闭
           let isDirty = false; // 标记弹窗期间是否有修改
           const hidePopup = (immediate = false, force = false) => {
+
             if (isHiding) return;
             if (!popup.parentNode) return; // 弹窗已移除，不再处理
             if (keepOpen && !force) return;
@@ -38390,7 +38832,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 const editingLinkFilePath = activeTextarea.dataset?.linkFilePath;
                 const editingLinkTimestamp = activeTextarea.dataset?.linkTimestamp;
                 
-                if (editingSource === 'link' && editingLinkFilePath && editingLinkTimestamp) {
+                if (editingSource === 'link' && editingLinkFilePath !== undefined && editingLinkTimestamp) {
                   const ruleRegex = targetEl.dataset.ruleRegex;
                   if (ruleRegex) {
                     const isGlobal = plugin.globalRules.some(r => r.regex === ruleRegex);
@@ -39042,7 +39484,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             if (allRelatedKeywords.size > 0) {
               const chipsBar = document.createElement('div');
               chipsBar.className = 'keyword-chips-bar';
-              chipsBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;background:var(--background-secondary);border-top:1px solid var(--background-modifier-border);border-radius:0 0 7px 7px;flex-shrink:0;margin:0 -' + popupSpacing + 'px -' + popupSpacing + 'px -' + popupSpacing + 'px;';
+      chipsBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;background:transparent;border-top:1px solid rgba(255,255,255,0.08);border-radius:0 0 12px 12px;flex-shrink:0;margin:0 -' + popupSpacing + 'px -' + popupSpacing + 'px -' + popupSpacing + 'px;';
 
               // 标签
               const label = document.createElement('span');
@@ -39054,7 +39496,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 const chip = document.createElement('span');
                 chip.className = 'keyword-chip';
                 chip.title = (info.relation === 'mention' ? t('main.keywordMentions') : t('main.keywordMentionedBy')) + ' ' + kwRegex;
-                chip.style.cssText = 'display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid var(--background-modifier-border);background:var(--background-primary);transition:all 0.15s ease;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+        chip.style.cssText = 'display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(var(--mono-rgb-0),0.3);transition:all 0.15s ease;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
 
                 const chipLabel = document.createElement('span');
                 chipLabel.textContent = (info.relation === 'mention' ? '→ ' : '← ') + kwRegex;
@@ -39090,7 +39532,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
                     previewEl = document.createElement('div');
                     previewEl.className = 'keyword-chip-preview';
-                    previewEl.style.cssText = `position:fixed;z-index:1200;max-width:350px;max-height:300px;overflow-y:auto;padding:${popupSpacing}px;background:var(--background-primary);border:${popupBorderWidth}px solid ${popupBorderColor};border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.35);font-size:12px;line-height:1.4;`;
+                    previewEl.style.cssText = `position:fixed;z-index:1200;max-width:350px;max-height:300px;overflow-y:auto;padding:${popupSpacing}px;background:rgba(var(--mono-rgb-0),0.75);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border:none;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.35);font-size:12px;line-height:1.4;`;
 
                     const titleDiv = document.createElement('div');
                     titleDiv.textContent = kwRegex;
@@ -39333,6 +39775,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             if (!inBounds) {
               // 如果开启备注弹窗不自动关闭，鼠标离开不关闭
               if (plugin.settings?.remarkKeepOpen) return;
+
               // 如果不在包围盒内，立即关闭
               hidePopup();
             } else {
@@ -39343,6 +39786,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               }
             }
           };
+          
+          popup.addEventListener('mousedown', () => { keepOpen = true; });
           
           // 添加鼠标移动监听
           document.addEventListener('mousemove', mouseMoveHandler);
@@ -39468,14 +39913,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           return;
         }
         
-        if (plugin.settings?.showRuleSourceBadge === false && !plugin.settings?.showRemarkBadge) return;
-        
         const ruleSource = target.dataset.ruleSource;
+        const ruleRegex = target.dataset.ruleRegex || '';
+        const isCounted = ruleRegex && plugin.countedRegexes.has(ruleRegex);
         
-        // 至少有一个可显示的按钮才展开
         const showGL = plugin.settings?.showRuleSourceBadge !== false && ruleSource;
         const showN = plugin.settings?.showRemarkBadge;
-        if (!showGL && !showN) return;
+        const showC = ruleRegex ? true : false;
+        const showI = ruleRegex ? true : false;
+        if (!showGL && !showN && !showC && !showI) return;
         
         hideMobileHighlightActions();
         mobileHighlightTarget = target;
@@ -39713,6 +40159,150 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             hideMobileHighlightActions();
           });
           container.appendChild(nBtn);
+        }
+        
+        // c 按钮（添加/移除计数）
+        if (showC) {
+          const cBtn = document.createElement('button');
+          cBtn.textContent = 'c';
+          cBtn.style.cssText = isCounted
+            ? `width: 40px; height: 40px; border-radius: 50%;
+               border: 1px solid var(--text-accent);
+               background: var(--background-modifier-hover);
+               color: var(--text-accent); font-size: 14px; font-weight: bold;
+               cursor: pointer; display: flex; align-items: center; justify-content: center;
+               box-shadow: 0 2px 8px rgba(0,0,0,0.15);`
+            : `width: 40px; height: 40px; border-radius: 50%;
+               border: 1px solid var(--background-modifier-border);
+               background: var(--background-primary);
+               color: var(--text-muted); font-size: 14px; font-weight: bold;
+               cursor: pointer; display: flex; align-items: center; justify-content: center;
+               box-shadow: 0 2px 8px rgba(0,0,0,0.15);`;
+          if (!plugin.settings?.hideTooltip) cBtn.title = isCounted ? t('main.removeCount') : t('main.addCount');
+          
+          cBtn.addEventListener('click', async (ce) => {
+            ce.stopPropagation();
+            ce.preventDefault();
+            if (!ruleRegex) return;
+            if (plugin.countedRegexes.has(ruleRegex)) {
+              plugin.countedRegexes.delete(ruleRegex);
+              new Notice(t('main.countRemoved'));
+            } else {
+              plugin.countedRegexes.add(ruleRegex);
+              new Notice(t('main.countAdded'));
+            }
+            plugin.rulesVersion++;
+            plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+            plugin.refreshCurrentView();
+            plugin.saveCountedRegexes();
+            hideMobileHighlightActions();
+          });
+          container.appendChild(cBtn);
+        }
+        
+        // i 按钮（添加/编辑行间注释）
+        if (showI) {
+          const iBtn = document.createElement('button');
+          iBtn.textContent = 'i';
+          iBtn.style.cssText = `
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 1px solid var(--background-modifier-border);
+            background: var(--background-primary);
+            color: var(--text-muted); font-size: 14px; font-weight: bold;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          `;
+          if (!plugin.settings?.hideTooltip) iBtn.title = t('floating.interlinearNote');
+          
+          iBtn.addEventListener('click', async (ce) => {
+            ce.stopPropagation();
+            ce.preventDefault();
+            const matchedText = target.textContent || '';
+            const existingData = await plugin.loadInterlinearNoteData();
+            const existingNote = existingData[ruleRegex] || '';
+            
+            const existing = document.querySelector('.interlinear-note-input-window');
+            if (existing) existing.remove();
+            
+            const win = document.createElement('div');
+            win.className = 'interlinear-note-input-window';
+            win.style.cssText = `
+              position:fixed;z-index:10001;
+              background:var(--background-primary);
+              border:2px solid var(--background-modifier-border);
+              border-radius:8px;
+              box-shadow:0 8px 32px rgba(0,0,0,0.3);
+              padding:0;display:flex;flex-direction:column;
+              min-width:260px;max-width:90vw;
+              overflow:hidden;
+            `;
+            
+            const titleBar = document.createElement('div');
+            titleBar.style.cssText = `
+              display:flex;align-items:center;justify-content:space-between;
+              padding:6px 12px;cursor:move;user-select:none;
+              border-bottom:1px solid var(--background-modifier-border);
+              background:var(--background-secondary);border-radius:8px 8px 0 0;
+              flex-shrink:0;min-height:24px;
+            `;
+            const titleText = document.createElement('span');
+            titleText.textContent = t('inNote.title') + (matchedText.length > 10 ? matchedText.substring(0, 10) + '...' : matchedText);
+            titleText.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
+            const closeBtn = document.createElement('span');
+            closeBtn.textContent = '✕';
+            closeBtn.style.cssText = 'cursor:pointer;font-size:13px;color:var(--text-faint);padding:1px 5px;border-radius:3px;transition:all 0.15s ease;flex-shrink:0;';
+            closeBtn.addEventListener('click', () => win.remove());
+            titleBar.appendChild(titleText);
+            titleBar.appendChild(closeBtn);
+            win.appendChild(titleBar);
+            
+            const inputRow = document.createElement('div');
+            inputRow.style.cssText = 'display:flex;align-items:center;gap:6px;padding:8px 12px;';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = existingNote;
+            input.placeholder = existingNote ? t('inNote.editPlaceholder') : t('inNote.addPlaceholder');
+            input.style.cssText = 'flex:1;padding:6px 10px;border:1px solid var(--background-modifier-border);border-radius:4px;font-size:13px;background:var(--background-primary);color:var(--text-normal);outline:none;';
+            
+            const addBtn = document.createElement('button');
+            addBtn.textContent = existingNote ? t('inNote.update') : t('inNote.add');
+            addBtn.style.cssText = 'padding:6px 14px;background:var(--interactive-accent);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;white-space:nowrap;';
+            
+            addBtn.addEventListener('click', async () => {
+              const noteText = input.value.trim();
+              const data = await plugin.loadInterlinearNoteData();
+              if (!noteText) {
+                delete data[ruleRegex];
+                await plugin.saveInterlinearNoteData(data);
+                win.remove();
+                new Notice(t('inNote.deleted'));
+                return;
+              }
+              data[ruleRegex] = noteText;
+              await plugin.saveInterlinearNoteData(data);
+              win.remove();
+              new Notice(t('inNote.added'));
+            });
+            
+            input.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') addBtn.click();
+              if (e.key === 'Escape') win.remove();
+            });
+            
+            inputRow.appendChild(input);
+            inputRow.appendChild(addBtn);
+            win.appendChild(inputRow);
+            document.body.appendChild(win);
+            
+            const ballRect = floatingBall ? floatingBall.getBoundingClientRect() : target.getBoundingClientRect();
+            win.style.left = Math.max(10, Math.min(ballRect.left, window.innerWidth - 280)) + 'px';
+            win.style.top = Math.max(10, ballRect.bottom + 8) + 'px';
+            
+            input.focus();
+            hideMobileHighlightActions();
+          });
+          container.appendChild(iBtn);
         }
         
         document.body.appendChild(container);

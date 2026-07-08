@@ -1,12 +1,15 @@
 ﻿**义父/Patron daddy**:[莫问归期6666](https://b23.tv/TMXF3Jh)
 
-SwiftGloss-demo(zh): https://github.com/dlsdgj/Obsidian-SwiftGloss-demo
+SwiftGlean-demo(zh): https://github.com/dlsdgj/Obsidian-SwiftGloss-demo
 
-# SwiftGloss / 积微探赜(zé) 
+# SwiftGlean / 积微探赜(zé) 
+
+> **Note**: SwiftGlean was formerly named **SwiftGloss** (v1.9.3 and earlier). The plugin ID remains `regex-css-highlighter` for compatibility.
+> 注意：SwiftGlean 原名 **SwiftGloss**（v1.9.3及更早版本）。插件ID保持 `regex-css-highlighter` 不变以兼容升级。
 
 Highlight text with regex and custom CSS. Add interlinear notes above keywords, keyword-level remarks with backlinks, and AskMe AI questions to deepen understanding. (Formerly Regex CSS Highlighter)/通过正则表达式匹配文本并应用自定义CSS高亮。支持在关键词上方添加行间注释、关键词级别的带反链批注，以及AskMe AI提问以加深理解。（原 Regex CSS Highlighter）
 
-![SwiftGloss Demo / SwiftGloss演示](./assets/PixPin_2026-07-05_04-56-33_compressed.gif)
+![SwiftGlean Demo / SwiftGlean演示](./assets/PixPin_2026-07-05_04-56-33_compressed.gif)
 
 
 

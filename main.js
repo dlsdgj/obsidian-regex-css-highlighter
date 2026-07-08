@@ -169,7 +169,7 @@ let _currentLang = 'zh';
 
 const i18n = {
   zh: {
-    'main.title': 'SwiftGloss',
+    'main.title': 'SwiftGlean',
     'main.openPluginLocation': '打开插件位置',
     'main.opacity': '透明度',
     'main.tab.styles': '样式',
@@ -1014,7 +1014,7 @@ const i18n = {
     'main.movedToLocalRule': '已移到文件规则',
   },
   en: {
-    'main.title': 'SwiftGloss',
+    'main.title': 'SwiftGlean',
     'main.openPluginLocation': 'Open Plugin Location',
     'main.opacity': 'Opacity',
     'main.tab.styles': 'Styles',
@@ -8625,7 +8625,7 @@ class AddRegexRuleModal {
     });
     
     const pluginVersion = this.plugin && this.plugin.manifest ? this.plugin.manifest.version : '';
-    const titleText = pluginVersion ? `SwiftGloss v${pluginVersion}` : "regex css highlighter";
+    const titleText = pluginVersion ? `SwiftGlean v${pluginVersion}` : "regex css highlighter";
     const titleEl = document.createElement("h2");
     titleEl.textContent = titleText;
     titleEl.style.cssText = "margin:0;font-size:14px;display:inline;flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
@@ -20375,7 +20375,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     this.createFloatingBall();
     
     // 左侧功能区按钮：打开主面板（悬浮球隐藏后可通过此按钮打开）
-    this.addRibbonIcon('highlighter', 'SwiftGloss', () => {
+    this.addRibbonIcon('highlighter', 'SwiftGlean', () => {
       new AddRegexRuleModal(this.app, this).open();
     });
     
@@ -39642,14 +39642,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               // 版本标签放入 chipsBar 内部（避免重叠）
               const versionLabel = document.createElement('span');
               const pluginVersion = plugin && plugin.manifest ? plugin.manifest.version : '';
-              versionLabel.textContent = 'SwiftGloss' + (pluginVersion ? ' v' + pluginVersion : '');
+              versionLabel.textContent = 'SwiftGlean' + (pluginVersion ? ' v' + pluginVersion : '');
               versionLabel.style.cssText = 'font-size:8px;color:var(--text-faint);opacity:0.3;user-select:none;-webkit-user-select:none;line-height:1;margin-left:auto;align-self:center;';
               chipsBar.appendChild(versionLabel);
             } else {
               // 无 chips 时，版本标签固定在弹窗底部
               const versionLabel = document.createElement('div');
               const pluginVersion = plugin && plugin.manifest ? plugin.manifest.version : '';
-              versionLabel.textContent = 'SwiftGloss' + (pluginVersion ? ' v' + pluginVersion : '');
+              versionLabel.textContent = 'SwiftGlean' + (pluginVersion ? ' v' + pluginVersion : '');
               versionLabel.style.cssText = 'position:absolute;bottom:2px;left:6px;font-size:8px;color:var(--text-faint);opacity:0.3;user-select:none;-webkit-user-select:none;line-height:1;pointer-events:none;';
               popup.appendChild(versionLabel);
             }

@@ -1,6 +1,6 @@
 {
   "id": "regex-css-highlighter",
-  "name": "SwiftGloss",
+  "name": "SwiftGlean",
   "version": "1.9.3",
   "minAppVersion": "0.15.0",
   "description": "Regex matching + CSS highlighting with real-time preview and instant effects. (formerly Regex Css Highlighter)",

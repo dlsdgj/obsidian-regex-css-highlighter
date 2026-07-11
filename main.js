@@ -169,7 +169,7 @@ let _currentLang = 'zh';
 
 const i18n = {
   zh: {
-    'main.title': 'SwiftGlean',
+    'main.title': 'SwiftGlossa',
     'main.openPluginLocation': '打开插件位置',
     'main.opacity': '透明度',
     'main.tab.styles': '样式',
@@ -309,6 +309,9 @@ const i18n = {
     'main.noSearchText': '无搜索词',
     'main.noTitle': '无标题',
     'main.copyRemark': '复制备注',
+    'main.pasteRemark': '粘贴备注',
+    'main.remarkPasted': '已粘贴',
+    'main.remarkAppended': '已追加',
     'main.openDocument': '打开文档',
     'main.deleteRemark': '删除备注',
     'main.cannotGetRuleInfo': '无法获取规则信息',
@@ -468,6 +471,7 @@ const i18n = {
     'remark.aiAskFailed': 'AI 提问失败',
     'remark.aiBreakdownFailed': 'AI 拆解失败',
     'remark.aiBreakdownQuestion': '请AI拆解此问题',
+    'remark.masonryMode': '瀑布流模式',
     'settings.aiSettings': 'AI设置',
     'settings.aiName': 'AI名称',
     'settings.aiApiUrl': 'API地址',
@@ -800,6 +804,11 @@ const i18n = {
     'settings.remarkBadgeThresholdHint': '匹配文本字数大于此值时显示标记(0=始终显示)',
     'settings.remarkDebugLog': '备注调试日志',
     'settings.remarkDebugLogHint': '在控制台输出备注相关调试信息',
+
+    'remark.aiRelationGraph': 'AI关系图',
+    'remark.aiRelationGraphGenerating': '生成中...',
+    'remark.aiRelationGraphFailed': '关系图生成失败',
+    'remark.aiRelationGraphNoContext': '无足够备注生成关系图',
     'settings.heading': '标题样式',
     'settings.popup': '弹窗设置',
     'settings.popupHoverDelay': '悬浮显示延迟',
@@ -1014,7 +1023,7 @@ const i18n = {
     'main.movedToLocalRule': '已移到文件规则',
   },
   en: {
-    'main.title': 'SwiftGlean',
+    'main.title': 'SwiftGlossa',
     'main.openPluginLocation': 'Open Plugin Location',
     'main.opacity': 'Opacity',
     'main.tab.styles': 'Styles',
@@ -1154,6 +1163,9 @@ const i18n = {
     'main.noSearchText': 'No search text',
     'main.noTitle': 'No title',
     'main.copyRemark': 'Copy remark',
+    'main.pasteRemark': 'Paste remark',
+    'main.remarkPasted': 'Pasted',
+    'main.remarkAppended': 'Appended',
     'main.openDocument': 'Open document',
     'main.deleteRemark': 'Delete remark',
     'main.cannotGetRuleInfo': 'Cannot get rule info',
@@ -1313,6 +1325,7 @@ const i18n = {
     'remark.aiAskFailed': 'AI ask failed',
     'remark.aiBreakdownFailed': 'AI breakdown failed',
     'remark.aiBreakdownQuestion': 'Ask AI to break down this question',
+    'remark.masonryMode': 'Masonry Mode',
     'settings.aiSettings': 'AI Settings',
     'settings.aiName': 'AI Name',
     'settings.aiApiUrl': 'API URL',
@@ -1645,6 +1658,11 @@ const i18n = {
     'settings.remarkBadgeThresholdHint': 'Show badge when matched text length exceeds this value (0=always show)',
     'settings.remarkDebugLog': 'Remark Debug Log',
     'settings.remarkDebugLogHint': 'Output remark debug messages to console',
+
+    'remark.aiRelationGraph': 'AI Relation Graph',
+    'remark.aiRelationGraphGenerating': 'Generating...',
+    'remark.aiRelationGraphFailed': 'Relation graph generation failed',
+    'remark.aiRelationGraphNoContext': 'Not enough remarks to generate relation graph',
     'settings.heading': 'Heading Styles',
     'settings.popup': 'Popup Settings',
     'settings.popupHoverDelay': 'Hover Display Delay',
@@ -8443,6 +8461,14 @@ class AddRegexRuleModal {
       document.removeEventListener('mouseup', this._dragMouseUpHandler);
       this._dragMouseUpHandler = null;
     }
+    if (this._dragTouchMoveHandler) {
+      document.removeEventListener('touchmove', this._dragTouchMoveHandler);
+      this._dragTouchMoveHandler = null;
+    }
+    if (this._dragTouchEndHandler) {
+      document.removeEventListener('touchend', this._dragTouchEndHandler);
+      this._dragTouchEndHandler = null;
+    }
     if (_activeContextMenuCleanup) {
       _activeContextMenuCleanup();
       _activeContextMenuCleanup = null;
@@ -8566,6 +8592,61 @@ class AddRegexRuleModal {
     };
     document.addEventListener("mouseup", this._dragMouseUpHandler);
     
+    titleBar.addEventListener("touchstart", (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT' || e.target === dragCloseBtn) return;
+      const touch = e.touches[0];
+      isDragging = true;
+      dragStartX = touch.clientX;
+      dragStartY = touch.clientY;
+      const rect = this.modalEl.getBoundingClientRect();
+      modalStartX = rect.left;
+      modalStartY = rect.top;
+    }, { passive: true });
+    
+    this._dragTouchMoveHandler = (e) => {
+      if (!isDragging) return;
+      const touch = e.touches[0];
+      const dx = touch.clientX - dragStartX;
+      const dy = touch.clientY - dragStartY;
+      this.modalEl.style.left = `${modalStartX + dx}px`;
+      this.modalEl.style.top = `${modalStartY + dy}px`;
+      if (!this._locked) {
+        this._locked = true;
+        dragCloseBtn.style.color = '#ff4444';
+        this._selectionChangeHandler = () => {
+          const selection = window.getSelection();
+          if (selection && selection.toString().trim()) {
+            const selectedText = selection.toString().trim();
+            const anchorNode = selection.anchorNode;
+            if (anchorNode && !this.modalEl.contains(anchorNode) && this.regexInput) {
+              this.regexInput.setValue(selectedText);
+            }
+          }
+        };
+        document.addEventListener('selectionchange', this._selectionChangeHandler);
+      }
+      if (this._resizeUpdatePosition) this._resizeUpdatePosition();
+    };
+    document.addEventListener("touchmove", this._dragTouchMoveHandler, { passive: false });
+    
+    this._dragTouchEndHandler = () => {
+      if (isDragging) {
+        isDragging = false;
+        if (_isDesktop) {
+          const rect = this.modalEl.getBoundingClientRect();
+          if (this.plugin) {
+            this.plugin.settings = this.plugin.settings || {};
+            this.plugin.settings.modalPosition = {
+              left: rect.left,
+              top: rect.top
+            };
+            this.plugin.saveData(this.plugin.settings);
+          }
+        }
+      }
+    };
+    document.addEventListener("touchend", this._dragTouchEndHandler);
+    
     dragCloseBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this._locked = false;
@@ -8625,7 +8706,7 @@ class AddRegexRuleModal {
     });
     
     const pluginVersion = this.plugin && this.plugin.manifest ? this.plugin.manifest.version : '';
-    const titleText = pluginVersion ? `SwiftGlean v${pluginVersion}` : "regex css highlighter";
+    const titleText = pluginVersion ? `SwiftGlossa v${pluginVersion}` : "regex css highlighter";
     const titleEl = document.createElement("h2");
     titleEl.textContent = titleText;
     titleEl.style.cssText = "margin:0;font-size:14px;display:inline;flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
@@ -13709,6 +13790,7 @@ class AddRegexRuleModal {
     remarkDebugLogHint.style.fontSize = "12px";
     remarkDebugLogHint.style.color = "var(--text-muted)";
     remarkDebugLogHint.style.marginLeft = "8px";
+
 
     // 添加保存按钮
     const savePopupSettingsButtonRow = popupSettingsContent.createDiv();
@@ -19712,6 +19794,14 @@ class AddRegexRuleModal {
       document.removeEventListener('mouseup', this._dragMouseUpHandler);
       this._dragMouseUpHandler = null;
     }
+    if (this._dragTouchMoveHandler) {
+      document.removeEventListener('touchmove', this._dragTouchMoveHandler);
+      this._dragTouchMoveHandler = null;
+    }
+    if (this._dragTouchEndHandler) {
+      document.removeEventListener('touchend', this._dragTouchEndHandler);
+      this._dragTouchEndHandler = null;
+    }
     if (_activeContextMenuCleanup) {
       _activeContextMenuCleanup();
       _activeContextMenuCleanup = null;
@@ -19810,6 +19900,38 @@ class RegexHighlightSettingTab extends PluginSettingTab {
 }
 
 module.exports = class MinimalRegexHighlightPlugin extends Plugin {
+  async saveImageToVault(imageData, fileName) {
+    const attachmentFolder = this.app.vault.config?.attachmentFolderPath || 'attachments';
+    const fullPath = `${attachmentFolder}/${fileName}`;
+    try {
+      if (!(await this.app.vault.adapter.exists(attachmentFolder))) {
+        await this.app.vault.adapter.mkdir(attachmentFolder);
+      }
+    } catch (e) {
+      await this.app.vault.adapter.mkdir(attachmentFolder);
+    }
+    let finalPath = fullPath;
+    let finalName = fileName;
+    let counter = 1;
+    while (await this.app.vault.adapter.exists(finalPath)) {
+      const ext = fileName.substring(fileName.lastIndexOf('.'));
+      const base = fileName.substring(0, fileName.lastIndexOf('.'));
+      finalName = `${base}_${counter}${ext}`;
+      finalPath = `${attachmentFolder}/${finalName}`;
+      counter++;
+    }
+    await this.app.vault.adapter.writeBinary(finalPath, imageData);
+    return finalName;
+  }
+
+  insertAtCursor(textarea, text) {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = textarea.value;
+    textarea.value = value.substring(0, start) + text + value.substring(end);
+    textarea.selectionStart = textarea.selectionEnd = start + text.length;
+  }
+
   async onload() {
     const { MarkdownView, Notice } = require('obsidian');
     
@@ -20164,6 +20286,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     // 初始化备注 HoverPopover 功能
     this.initRemarkHoverPopover(this.app);
     
+
     // 初始化规则来源标记(g/l)
     this.initRuleSourceBadge();
     
@@ -20375,7 +20498,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     this.createFloatingBall();
     
     // 左侧功能区按钮：打开主面板（悬浮球隐藏后可通过此按钮打开）
-    this.addRibbonIcon('highlighter', 'SwiftGlean', () => {
+    this.addRibbonIcon('highlighter', 'SwiftGlossa', () => {
       new AddRegexRuleModal(this.app, this).open();
     });
     
@@ -25227,6 +25350,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }
       };
 
+      btn.addEventListener('auxclick', (e) => {
+        if (e.button !== 1) return;
+        if (btn.dataset.randomMode === 'true' && optionId.startsWith('group_')) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.randomHighlightSelectedTextGlobal();
+        }
+      });
+
       btn.oncontextmenu = async (e) => {
         e.preventDefault();
 
@@ -28396,7 +28528,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   }
 
   // 调用AI API
-  async callAI(prompt) {
+  async callAI(prompt, options) {
     const settings = this.settings || {};
     
     // 获取当前选中的AI配置
@@ -28435,7 +28567,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             content: prompt
           }
         ],
-        max_tokens: 3000,
+        max_tokens: options?.maxTokens || 3000,
         temperature: 1
       };
       
@@ -32877,7 +33009,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           cssClass: rule.cssClass,
           remark: rule.remark || "",
           timestamp: rule.timestamp || 0,
-          ...(rule.links ? { links: rule.links } : {})
+          ...(rule.links ? { links: rule.links } : {}),
+          ...(rule._mermaidGraph ? { _mermaidGraph: rule._mermaidGraph } : {})
         }));
 
         const preMigrate = JSON.stringify(this.rules);
@@ -33131,7 +33264,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           cssClass: rule.cssClass,
           remark: rule.remark || "",
           disabled: rule.disabled || false,
-          ...(rule.links ? { links: rule.links } : {})
+          ...(rule.links ? { links: rule.links } : {}),
+          ...(rule._mermaidGraph ? { _mermaidGraph: rule._mermaidGraph } : {})
         }));
 
         const preMigrate = JSON.stringify(this.globalRules);
@@ -33554,7 +33688,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           }
         }
         if (allowedStyles.size > 0) {
-          return unusedStyles.filter(s => allowedStyles.has(s));
+          return Array.from(allowedStyles);
         }
       }
       
@@ -33797,42 +33931,83 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       const trimmedSelection = selectedText.trim();
       
-      if (!this.currentFilePath) {
-        new Notice(t('main.cannotGetFilePath'));
-        return;
-      }
-      
-      if (!this.rules || this.rules.length === 0) {
-        new Notice(t('main.noHighlightRule'));
-        return;
-      }
-      
-      let foundRuleIndex = -1;
-      for (let i = 0; i < this.rules.length; i++) {
-        const rule = this.rules[i];
-        if (textMatchesRegex(trimmedSelection, rule.regex) || 
-            textMatchesRegex(selectedText, rule.regex) ||
-            (rule.regex && rule.regex.includes(trimmedSelection))) {
-          foundRuleIndex = i;
-          break;
+      // 先查找全局规则
+      let foundGlobalRuleIndex = -1;
+      if (this.globalRules && this.globalRules.length > 0) {
+        for (let i = 0; i < this.globalRules.length; i++) {
+          const rule = this.globalRules[i];
+          if (textMatchesRegex(trimmedSelection, rule.regex) || 
+              textMatchesRegex(selectedText, rule.regex) ||
+              (rule.regex && rule.regex.includes(trimmedSelection))) {
+            foundGlobalRuleIndex = i;
+            break;
+          }
         }
       }
       
-      if (foundRuleIndex === -1) {
+      // 再查找局部规则
+      let foundLocalRuleIndex = -1;
+      if (this.currentFilePath && this.rules && this.rules.length > 0) {
+        for (let i = 0; i < this.rules.length; i++) {
+          const rule = this.rules[i];
+          if (textMatchesRegex(trimmedSelection, rule.regex) || 
+              textMatchesRegex(selectedText, rule.regex) ||
+              (rule.regex && rule.regex.includes(trimmedSelection))) {
+            foundLocalRuleIndex = i;
+            break;
+          }
+        }
+      }
+      
+      if (foundGlobalRuleIndex === -1 && foundLocalRuleIndex === -1) {
         new Notice(t('main.noMatchingRule'));
         return;
       }
       
-      const removedRule = this.rules[foundRuleIndex];
-      this.rules.splice(foundRuleIndex, 1);
+      const doRemove = async (isGlobal, ruleIndex) => {
+        const rulesList = isGlobal ? this.globalRules : this.rules;
+        const removedRule = rulesList[ruleIndex];
+        rulesList.splice(ruleIndex, 1);
+        
+        if (isGlobal) {
+          await this.saveGlobalRules(this.globalRules);
+        } else {
+          await this.saveFileRules(this.currentFilePath, this.rules);
+        }
+        
+        this.rulesVersion++;
+        this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+        this.refreshCurrentView();
+        
+        new Notice(isGlobal ? t('main.globalRuleRemoved') : t('main.styleRemoved'));
+      };
       
-      await this.saveFileRules(this.currentFilePath, this.rules);
+      // 优先处理全局规则
+      if (foundGlobalRuleIndex !== -1) {
+        const rule = this.globalRules[foundGlobalRuleIndex];
+        const hasRemark = (rule.remark && rule.remark.trim()) || (rule.links && rule.links.length > 0);
+        if (hasRemark) {
+          new ConfirmModal(this.app, t('main.globalRule'), t('main.remark') + ': ' + (rule.remark || '').substring(0, 50) + (rule.links ? ` (${rule.links.length} links)` : ''), async () => {
+            await doRemove(true, foundGlobalRuleIndex);
+          }).open();
+          return;
+        }
+        await doRemove(true, foundGlobalRuleIndex);
+        return;
+      }
       
-      this.rulesVersion++;
-      this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
-      this.refreshCurrentView();
-      
-      new Notice(t('main.styleRemoved'));
+      // 处理局部规则
+      if (foundLocalRuleIndex !== -1) {
+        const rule = this.rules[foundLocalRuleIndex];
+        const hasRemark = (rule.remark && rule.remark.trim()) || (rule.links && rule.links.length > 0);
+        if (hasRemark) {
+          new ConfirmModal(this.app, t('main.confirm'), t('main.remark') + ': ' + (rule.remark || '').substring(0, 50) + (rule.links ? ` (${rule.links.length} links)` : ''), async () => {
+            await doRemove(false, foundLocalRuleIndex);
+          }).open();
+          return;
+        }
+        await doRemove(false, foundLocalRuleIndex);
+      }
       
     } catch (error) {
       console.error('移除样式失败:', error);
@@ -36020,8 +36195,33 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
     if (masonry) {
       const masonryStyle = document.createElement('style');
-      masonryStyle.textContent = `.${cssScope} .masonry-grid{column-gap:8px;}.${cssScope} .masonry-card{break-inside:avoid;margin-bottom:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(var(--mono-rgb-0),0.3);overflow:hidden;position:relative;}.${cssScope} .masonry-card:hover .masonry-toolbar{opacity:1;}.${cssScope} .masonry-color-bar{height:3px;border-radius:6px 6px 0 0;}.${cssScope} .masonry-card-body{padding:6px 8px;}.${cssScope} .masonry-file-tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:8px;display:inline-block;margin-bottom:4px;}.${cssScope} .masonry-toolbar{opacity:0;transition:opacity 0.15s ease;position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:flex-end;gap:3px;padding:4px 6px;background:linear-gradient(transparent,rgba(var(--mono-rgb-0),0.6) 40%);border-radius:0 0 6px 6px;pointer-events:none;}.${cssScope} .masonry-card:hover .masonry-toolbar{pointer-events:auto;}`;
+      masonryStyle.textContent = `.${cssScope} .masonry-grid{column-gap:8px;}.${cssScope} .masonry-card{break-inside:avoid;margin-bottom:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(var(--mono-rgb-0),0.3);overflow:hidden;position:relative;}.${cssScope} .masonry-card:hover .masonry-toolbar{opacity:1;}.${cssScope} .masonry-color-bar{height:3px;border-radius:6px 6px 0 0;}.${cssScope} .masonry-card-body{padding:6px 8px;}.${cssScope} .masonry-file-tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:8px;display:inline-block;margin-bottom:4px;}.${cssScope} .masonry-toolbar{opacity:0;transition:opacity 0.15s ease;position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:flex-end;gap:3px;padding:4px 6px;background:linear-gradient(transparent,rgba(var(--mono-rgb-0),0.6) 40%);border-radius:0 0 6px 6px;pointer-events:none;}.${cssScope} .masonry-card:hover .masonry-toolbar{pointer-events:auto;}.${cssScope} .masonry-card-body img{max-width:100%;height:auto;border-radius:4px;cursor:zoom-in;}`;
       container.appendChild(masonryStyle);
+
+      let _imgFloatEl = null;
+      container.addEventListener('mouseenter', (e) => {
+        const img = e.target;
+        if (img.tagName !== 'IMG' || !img.closest('.masonry-card-body')) return;
+        if (_imgFloatEl) _imgFloatEl.remove();
+        _imgFloatEl = document.createElement('div');
+        _imgFloatEl.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.5);overflow:hidden;transition:opacity 0.15s ease;opacity:0;';
+        const floatImg = document.createElement('img');
+        floatImg.src = img.src;
+        floatImg.style.cssText = 'display:block;max-width:min(90vw, 800px);max-height:80vh;border-radius:8px;';
+        _imgFloatEl.appendChild(floatImg);
+        document.body.appendChild(_imgFloatEl);
+        const rect = img.getBoundingClientRect();
+        const fw = Math.min(window.innerWidth * 0.9, 800);
+        const fh = Math.min(window.innerHeight * 0.8, fw * (img.naturalHeight / img.naturalWidth));
+        _imgFloatEl.style.left = Math.max(10, rect.left + rect.width / 2 - fw / 2) + 'px';
+        _imgFloatEl.style.top = Math.max(10, rect.top + rect.height / 2 - fh / 2) + 'px';
+        requestAnimationFrame(() => { if (_imgFloatEl) _imgFloatEl.style.opacity = '1'; });
+      }, true);
+      container.addEventListener('mouseleave', (e) => {
+        const img = e.target;
+        if (img.tagName !== 'IMG' || !img.closest('.masonry-card-body')) return;
+        if (_imgFloatEl) { _imgFloatEl.remove(); _imgFloatEl = null; }
+      }, true);
     }
 
     const styleEl = document.createElement('style');
@@ -36229,11 +36429,55 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           toolbar.appendChild(searchTag);
 
           const openBtn = document.createElement('button');
-          openBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
+          openBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="16.5" cy="16.5" r="2.5"/><path d="M18.5 18.5L21 21"/></svg>';
           openBtn.title = t('main.openDocument');
-          openBtn.style.cssText = 'padding:1px 3px;cursor:pointer;border:none;border-radius:3px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:16px;line-height:0;';
+          openBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;';
+
           openBtn.addEventListener('click', async (ce) => { ce.preventDefault(); ce.stopPropagation(); if (lk) await plugin.openLinkAndSearch(lk.filePath, lk.searchText); });
           toolbar.appendChild(openBtn);
+
+          const pasteBtn = document.createElement('button');
+          pasteBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>';
+          pasteBtn.title = t('main.pasteRemark');
+          pasteBtn.style.cssText = 'padding:1px 3px;cursor:pointer;border:none;border-radius:3px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:16px;line-height:0;';
+          pasteBtn.addEventListener('mousedown', (me) => { me.preventDefault(); });
+          pasteBtn.addEventListener('click', async (ce) => {
+            ce.preventDefault(); ce.stopPropagation();
+            const ta = toolbar.parentElement?.querySelector('textarea[data-source="link"]');
+            if (ta) {
+              try {
+                const clipText = await navigator.clipboard.readText();
+                if (!clipText.trim()) return;
+                const start = ta.selectionStart;
+                const end = ta.selectionEnd;
+                const before = ta.value.substring(0, start);
+                const after = ta.value.substring(end);
+                ta.value = before + clipText.trim() + after;
+                ta.selectionStart = ta.selectionEnd = start + clipText.trim().length;
+                ta.focus();
+                new Notice(t('main.remarkPasted'));
+              } catch (e) {}
+              return;
+            }
+            try {
+              const clipText = await navigator.clipboard.readText();
+              if (!clipText.trim()) return;
+              const actualRule = isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
+              if (actualRule && actualRule.links) {
+                const al = lk.timestamp ? actualRule.links.find(l => l.filePath === fp && l.timestamp === lk.timestamp) : actualRule.links.find(l => l.filePath === fp && !l.timestamp);
+                if (al) {
+                  al.remark = remarkContent.trim() ? remarkContent.trim() + '\n' + clipText.trim() : clipText.trim();
+                  if (targetEl) targetEl.dataset.links = JSON.stringify(actualRule.links);
+                  if (onDirty) onDirty();
+                  if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
+                  else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                  new Notice(remarkContent.trim() ? t('main.remarkAppended') : t('main.remarkPasted'));
+                  onRefresh();
+                }
+              }
+            } catch (e) { /* clipboard read may fail */ }
+          });
+          toolbar.appendChild(pasteBtn);
 
           const copyBtn = document.createElement('button');
           copyBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
@@ -36781,6 +37025,50 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             });
             toolBar.appendChild(openBtn);
 
+            const pasteBtn = document.createElement('button');
+            pasteBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>';
+            pasteBtn.title = t('main.pasteRemark');
+            pasteBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;';
+            pasteBtn.addEventListener('mousedown', (me) => { me.preventDefault(); });
+            pasteBtn.addEventListener('click', async (ce) => {
+              ce.preventDefault();
+              ce.stopPropagation();
+              const ta = toolBar.parentElement?.querySelector('textarea[data-source="link"]');
+              if (ta) {
+                try {
+                  const clipText = await navigator.clipboard.readText();
+                  if (!clipText.trim()) return;
+                  const start = ta.selectionStart;
+                  const end = ta.selectionEnd;
+                  const before = ta.value.substring(0, start);
+                  const after = ta.value.substring(end);
+                  ta.value = before + clipText.trim() + after;
+                  ta.selectionStart = ta.selectionEnd = start + clipText.trim().length;
+                  ta.focus();
+                  new Notice(t('main.remarkPasted'));
+                } catch (e) {}
+                return;
+              }
+              try {
+                const clipText = await navigator.clipboard.readText();
+                if (!clipText.trim()) return;
+                const actualRule = isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
+                if (actualRule && actualRule.links) {
+                  const al = link.timestamp ? actualRule.links.find(l => l.filePath === link.filePath && l.timestamp === link.timestamp) : actualRule.links.find(l => l.filePath === link.filePath && !l.timestamp);
+                  if (al) {
+                    al.remark = remarkContent.trim() ? remarkContent.trim() + '\n' + clipText.trim() : clipText.trim();
+                    if (targetEl) targetEl.dataset.links = JSON.stringify(actualRule.links);
+                    if (onDirty) onDirty();
+                    if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
+                    else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                    new Notice(remarkContent.trim() ? t('main.remarkAppended') : t('main.remarkPasted'));
+                    onRefresh();
+                  }
+                }
+              } catch (e) { /* clipboard read may fail */ }
+            });
+            toolBar.appendChild(pasteBtn);
+
             const copyBtn = document.createElement('button');
             copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
             copyBtn.title = t('main.copyRemark');
@@ -36986,6 +37274,632 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     });
     aiBtnContainer.appendChild(aiAskBtn);
 
+    const aiGraphBtn = document.createElement('button');
+    aiGraphBtn.textContent = '⬡';
+    aiGraphBtn.title = t('remark.aiRelationGraph');
+    aiGraphBtn.style.cssText = `font-weight:800;font-size:13px;padding:2px 8px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1ce060, #004620, #1ce060, #6acb11);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 224, 96, 0.8));background-color:rgba(28, 224, 96, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 224, 96, 0.3), 0 0 15px rgba(0, 70, 32, 0.2);animation:hp-green-shift 4s ease infinite;line-height:1;margin-left:4px;${!_isDesktop ? 'width:36px;height:36px;aspect-ratio:1/1;' : ''}`;
+    const aiGraphBtnStyle = document.createElement('style');
+    aiGraphBtnStyle.textContent = '@keyframes hp-green-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }';
+    container.appendChild(aiGraphBtnStyle);
+    if (!aiHasContent) {
+      aiGraphBtn.style.opacity = '0.35';
+      aiGraphBtn.style.cursor = 'not-allowed';
+    }
+
+    const _sanitizeMermaid = (code) => {
+      const _sanitizeText = (text) => {
+        return text.replace(/\(/g, '（').replace(/\)/g, '）').replace(/\[/g, '【').replace(/\]/g, '】').replace(/\{/g, '｛').replace(/\}/g, '｝').replace(/</g, '《').replace(/>/g, '》').replace(/&/g, '＆').replace(/#/g, '＃').replace(/[|｜]/g, '／');
+      };
+      const _nodeIdRe = '[\\w\\u4e00-\\u9fff\\u00B7\\u30FB\\u2027\\-]+';
+      let result = code
+        .replace(/-\s+->/g, '-->')
+        .replace(/-\s+\.->/g, '-.->')
+        .replace(/=\s+=>/g, '==>')
+        .replace(/\n{3,}/g, '\n\n');
+
+      const lines = result.split('\n');
+      const expanded = [];
+      let crossLineNodeId = '';
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('flowchart') || trimmed.startsWith('graph') || trimmed.startsWith('classDef') || trimmed.startsWith('class ') || trimmed.startsWith('direction') || trimmed.startsWith('%%')) {
+          expanded.push(line);
+          crossLineNodeId = '';
+          continue;
+        }
+        const parts = [];
+        let remaining = line;
+        let lastNodeId = crossLineNodeId;
+        let lastNodeDef = '';
+        crossLineNodeId = '';
+        const _parseBracketDef = (rest) => {
+          const bm = rest.match(/^\s*(\[\\"|\(\\"|\[)/);
+          if (!bm) return { def: '', rest };
+          const bt = bm[1];
+          let r = rest.substring(bm[0].length);
+          if (bt === '["') {
+            const ei = r.indexOf('"]');
+            if (ei >= 0) { const t = r.substring(0, ei); r = r.substring(ei + 2); return { def: `["${_sanitizeText(t)}"]`, rest: r }; }
+          } else if (bt === '("') {
+            const ei = r.indexOf('")');
+            if (ei >= 0) { const t = r.substring(0, ei); r = r.substring(ei + 2); return { def: `("${_sanitizeText(t)}")`, rest: r }; }
+          } else if (bt === '[') {
+            const ei = r.indexOf(']');
+            if (ei >= 0) { const t = r.substring(0, ei); r = r.substring(ei + 1); return { def: `[${_sanitizeText(t)}]`, rest: r }; }
+          }
+          return { def: '', rest };
+        };
+        const _parseEdgeTail = (rest) => {
+          const labelMatch = rest.match(/^\s*\|/);
+          if (labelMatch) {
+            const afterLabel = rest.substring(labelMatch[0].length);
+            const labelEnd = afterLabel.indexOf('|');
+            if (labelEnd >= 0) {
+              const label = afterLabel.substring(0, labelEnd);
+              let r2 = afterLabel.substring(labelEnd + 1);
+              const toMatch = r2.match(new RegExp(`^\\s*(${_nodeIdRe})`));
+              if (toMatch) {
+                const toId = toMatch[1];
+                r2 = r2.substring(toMatch[0].length);
+                const toBracket = _parseBracketDef(r2);
+                r2 = toBracket.rest;
+                const styleMatch = r2.match(/^\s*:::([\w]+)/);
+                let styleSuffix = '';
+                if (styleMatch) { styleSuffix = `:::${styleMatch[1]}`; r2 = r2.substring(styleMatch[0].length); }
+                return { ok: true, label: _sanitizeText(label), toId, toBracket: toBracket.def, styleSuffix, rest: r2 };
+              }
+            }
+          }
+          const toMatch = rest.match(new RegExp(`^\\s*(${_nodeIdRe})`));
+          if (toMatch) {
+            const toId = toMatch[1];
+            let r2 = rest.substring(toMatch[0].length);
+            const toBracket = _parseBracketDef(r2);
+            r2 = toBracket.rest;
+            const styleMatch = r2.match(/^\s*:::([\w]+)/);
+            let styleSuffix = '';
+            if (styleMatch) { styleSuffix = `:::${styleMatch[1]}`; r2 = r2.substring(styleMatch[0].length); }
+            return { ok: true, label: null, toId, toBracket: toBracket.def, styleSuffix, rest: r2 };
+          }
+          return { ok: false };
+        };
+        while (remaining.length > 0) {
+          remaining = remaining.trimStart();
+          if (!remaining) break;
+          const arrowPrefix = remaining.match(/^(-->|---|->|-\.->|==>)/);
+          if (arrowPrefix) {
+            if (lastNodeDef || lastNodeId) {
+              const fromDef = lastNodeDef || lastNodeId;
+              const arrowStr = arrowPrefix[1];
+              const afterArrow = remaining.substring(arrowPrefix[0].length);
+              const edge = _parseEdgeTail(afterArrow);
+              if (edge.ok) {
+                const stmt = edge.label !== null
+                  ? `${fromDef} ${arrowStr}|${edge.label}| ${edge.toId}${edge.toBracket}${edge.styleSuffix}`
+                  : `${fromDef} ${arrowStr} ${edge.toId}${edge.toBracket}${edge.styleSuffix}`;
+                parts.push(stmt);
+                lastNodeId = edge.toId;
+                lastNodeDef = '';
+                remaining = edge.rest;
+                continue;
+              }
+            }
+            parts.push(remaining);
+            break;
+          }
+          const nodeDef = remaining.match(new RegExp(`^(${_nodeIdRe})\\s*(\\[\\"|\\(\\"|\\[)`));
+          const edgeDef = remaining.match(new RegExp(`^(${_nodeIdRe})\\s*(-->|---|->|-\\.->|==>)\\s*\\|`));
+          const edgeNoLabel = remaining.match(new RegExp(`^(${_nodeIdRe})\\s*(-->|---|->|-\\.->|==>)\\s*(${_nodeIdRe})`));
+          const bareNode = remaining.match(new RegExp(`^(${_nodeIdRe})(\\s*:::([\\w]+))?(?=\\s+${_nodeIdRe}|\\s*$)`));
+      if (nodeDef) {
+        const nodeId = nodeDef[1];
+        const bracketType = nodeDef[2];
+        let rest = remaining.substring(nodeDef[0].length);
+        let nodeStmt = '';
+        if (bracketType === '["') {
+          const endIdx = rest.indexOf('"]');
+          if (endIdx >= 0) {
+            const text = rest.substring(0, endIdx);
+            nodeStmt = `${nodeId}["${_sanitizeText(text)}"]`;
+            rest = rest.substring(endIdx + 2);
+            const styleMatch = rest.match(/^\s*:::([\w]+)/);
+            if (styleMatch) { nodeStmt += `:::${styleMatch[1]}`; rest = rest.substring(styleMatch[0].length); }
+          }
+        } else if (bracketType === '("') {
+          const endIdx = rest.indexOf('")');
+          if (endIdx >= 0) {
+            const text = rest.substring(0, endIdx);
+            nodeStmt = `${nodeId}("${_sanitizeText(text)}")`;
+            rest = rest.substring(endIdx + 2);
+            const styleMatch = rest.match(/^\s*:::([\w]+)/);
+            if (styleMatch) { nodeStmt += `:::${styleMatch[1]}`; rest = rest.substring(styleMatch[0].length); }
+          }
+        } else if (bracketType === '[') {
+          const endIdx = rest.indexOf(']');
+          if (endIdx >= 0) {
+            const text = rest.substring(0, endIdx);
+            nodeStmt = `${nodeId}[${_sanitizeText(text)}]`;
+            rest = rest.substring(endIdx + 1);
+            const styleMatch = rest.match(/^\s*:::([\w]+)/);
+            if (styleMatch) { nodeStmt += `:::${styleMatch[1]}`; rest = rest.substring(styleMatch[0].length); }
+          }
+        }
+        if (nodeStmt) {
+          const nextArrow = rest.match(/^\s*(-->|---|->|-\.->|==>)/);
+          if (nextArrow) {
+            const afterArrow = rest.substring(nextArrow.index + nextArrow[0].length);
+            const edge = _parseEdgeTail(afterArrow);
+            if (edge.ok) {
+              const stmt = edge.label !== null
+                ? `${nodeStmt} ${nextArrow[1]}|${edge.label}| ${edge.toId}${edge.toBracket}${edge.styleSuffix}`
+                : `${nodeStmt} ${nextArrow[1]} ${edge.toId}${edge.toBracket}${edge.styleSuffix}`;
+              parts.push(stmt);
+              lastNodeId = edge.toId;
+              lastNodeDef = '';
+              remaining = edge.rest;
+              continue;
+            }
+            lastNodeId = nodeId;
+            lastNodeDef = nodeStmt;
+            remaining = rest;
+            continue;
+          }
+          parts.push(nodeStmt);
+          lastNodeId = nodeId;
+          lastNodeDef = '';
+          remaining = rest;
+          continue;
+        }
+          } else if (edgeDef) {
+            const fromId = edgeDef[1];
+            const arrow = edgeDef[2];
+            let rest = remaining.substring(edgeDef[0].length);
+            const labelEnd = rest.indexOf('|');
+            if (labelEnd >= 0) {
+              const label = rest.substring(0, labelEnd);
+              rest = rest.substring(labelEnd + 1);
+              const toMatch = rest.match(new RegExp(`^\\s*(${_nodeIdRe})`));
+              if (toMatch) {
+                const toId = toMatch[1];
+                rest = rest.substring(toMatch[0].length);
+                const toBracket = _parseBracketDef(rest);
+                rest = toBracket.rest;
+                const styleMatch = rest.match(/^\s*:::([\w]+)/);
+                let styleSuffix = '';
+                if (styleMatch) { styleSuffix = `:::${styleMatch[1]}`; rest = rest.substring(styleMatch[0].length); }
+                parts.push(`${fromId} ${arrow}|${_sanitizeText(label)}| ${toId}${toBracket.def}${styleSuffix}`);
+                lastNodeId = toId;
+                lastNodeDef = '';
+                remaining = rest;
+                continue;
+              }
+            }
+          } else if (edgeNoLabel) {
+            const fromId = edgeNoLabel[1];
+            const arrow = edgeNoLabel[2];
+            const toId = edgeNoLabel[3];
+            let rest = remaining.substring(edgeNoLabel[0].length);
+            const toBracket = _parseBracketDef(rest);
+            rest = toBracket.rest;
+            const styleMatch = rest.match(/^\s*:::([\w]+)/);
+            let styleSuffix = '';
+            if (styleMatch) { styleSuffix = `:::${styleMatch[1]}`; rest = rest.substring(styleMatch[0].length); }
+            parts.push(`${fromId} ${arrow} ${toId}${toBracket.def}${styleSuffix}`);
+            lastNodeId = toId;
+            lastNodeDef = '';
+            remaining = rest;
+            continue;
+          } else if (bareNode) {
+            let stmt = bareNode[1];
+            if (bareNode[3]) stmt += `:::${bareNode[3]}`;
+            parts.push(stmt);
+            lastNodeId = bareNode[1];
+            lastNodeDef = '';
+            remaining = remaining.substring(bareNode[0].length);
+            continue;
+          }
+          parts.push(remaining);
+          break;
+        }
+        expanded.push(...parts);
+        crossLineNodeId = lastNodeId;
+      }
+      return expanded.join('\n');
+    };
+
+    const _renderGraphSection = (mermaidCode, existingSection) => {
+      const graphSection = existingSection || document.createElement('div');
+      graphSection.className = 'ai-relation-graph-section';
+      graphSection.style.cssText = 'margin-bottom:8px;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-secondary);';
+      graphSection.innerHTML = '';
+
+      const graphHeader = document.createElement('div');
+      graphHeader.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
+      const graphTitle = document.createElement('span');
+      graphTitle.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.3px;';
+      graphTitle.textContent = '⬡ ' + t('remark.aiRelationGraph');
+      graphHeader.appendChild(graphTitle);
+
+      const graphToolbar = document.createElement('div');
+      graphToolbar.style.cssText = 'display:flex;align-items:center;gap:4px;';
+
+      const zoomOutBtn = document.createElement('span');
+      zoomOutBtn.textContent = '−';
+      zoomOutBtn.style.cssText = 'cursor:pointer;font-size:14px;color:var(--text-muted);padding:0 4px;border-radius:4px;transition:color 0.15s ease;user-select:none;';
+      zoomOutBtn.addEventListener('mouseenter', () => { zoomOutBtn.style.color = 'var(--text-normal)'; });
+      zoomOutBtn.addEventListener('mouseleave', () => { zoomOutBtn.style.color = 'var(--text-muted)'; });
+
+      const zoomLevel = document.createElement('span');
+      zoomLevel.style.cssText = 'font-size:10px;color:var(--text-muted);min-width:30px;text-align:center;';
+      zoomLevel.textContent = 'fit';
+
+      const zoomInBtn = document.createElement('span');
+      zoomInBtn.textContent = '+';
+      zoomInBtn.style.cssText = 'cursor:pointer;font-size:14px;color:var(--text-muted);padding:0 4px;border-radius:4px;transition:color 0.15s ease;user-select:none;';
+      zoomInBtn.addEventListener('mouseenter', () => { zoomInBtn.style.color = 'var(--text-normal)'; });
+      zoomInBtn.addEventListener('mouseleave', () => { zoomInBtn.style.color = 'var(--text-muted)'; });
+
+      const regenBtn = document.createElement('span');
+      regenBtn.textContent = '↻';
+      regenBtn.style.cssText = 'cursor:pointer;font-size:14px;color:var(--text-muted);padding:0 4px;border-radius:4px;transition:color 0.15s ease;margin-left:2px;display:inline-block;';
+      regenBtn.addEventListener('mouseenter', () => { if (!regenBtn.dataset.spinning) regenBtn.style.color = 'var(--text-normal)'; });
+      regenBtn.addEventListener('mouseleave', () => { if (!regenBtn.dataset.spinning) regenBtn.style.color = 'var(--text-muted)'; });
+      regenBtn.addEventListener('click', async (re) => {
+        re.preventDefault();
+        re.stopPropagation();
+        if (regenBtn.dataset.spinning) return;
+        regenBtn.dataset.spinning = '1';
+        regenBtn.style.animation = 'rg-spin 1s linear infinite';
+        regenBtn.style.color = 'var(--text-accent)';
+        try {
+          const newCode = await _generateGraph();
+          if (newCode) {
+            const actualRule = isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
+            if (actualRule) {
+              actualRule._mermaidGraph = newCode;
+              if (targetEl) targetEl.dataset.links = JSON.stringify(actualRule.links || []);
+              if (onDirty) onDirty();
+              if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
+              else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+            }
+            _renderGraphSection(newCode, graphSection);
+          }
+        } catch (e) {
+          new Notice(t('remark.aiRelationGraphFailed') + ': ' + (e.message || ''));
+        } finally {
+          regenBtn.dataset.spinning = '';
+          regenBtn.style.animation = '';
+          regenBtn.style.color = 'var(--text-muted)';
+        }
+      });
+
+      const deleteBtn = document.createElement('span');
+      deleteBtn.textContent = '✕';
+      deleteBtn.style.cssText = 'cursor:pointer;font-size:12px;color:var(--text-muted);padding:0 4px;border-radius:4px;transition:color 0.15s ease;margin-left:2px;';
+      deleteBtn.addEventListener('mouseenter', () => { deleteBtn.style.color = 'var(--text-error)'; });
+      deleteBtn.addEventListener('mouseleave', () => { deleteBtn.style.color = 'var(--text-muted)'; });
+      deleteBtn.addEventListener('click', async (de) => {
+        de.preventDefault();
+        de.stopPropagation();
+        graphSection.remove();
+        const actualRule = isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
+        if (actualRule) {
+          delete actualRule._mermaidGraph;
+          if (targetEl) targetEl.dataset.links = JSON.stringify(actualRule.links || []);
+          if (onDirty) onDirty();
+          if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
+          else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+        }
+      });
+
+      const spinStyle = document.createElement('style');
+      spinStyle.textContent = '@keyframes rg-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+      graphSection.appendChild(spinStyle);
+
+      graphToolbar.appendChild(zoomOutBtn);
+      graphToolbar.appendChild(zoomLevel);
+      graphToolbar.appendChild(zoomInBtn);
+      graphToolbar.appendChild(regenBtn);
+      graphToolbar.appendChild(deleteBtn);
+      graphHeader.appendChild(graphToolbar);
+      graphSection.appendChild(graphHeader);
+
+      const graphViewport = document.createElement('div');
+      graphViewport.className = 'ai-graph-viewport';
+      graphViewport.style.cssText = 'overflow-x:auto;overflow-y:hidden;position:relative;cursor:grab;min-height:40px;';
+
+      const graphContent = document.createElement('div');
+      graphContent.className = 'ai-graph-content';
+      graphContent.style.cssText = 'transform-origin:top left;transition:transform 0.15s ease;';
+      graphContent.dataset.scale = '1';
+
+      const mermaidEl = document.createElement('div');
+      mermaidEl.className = 'mermaid';
+      mermaidEl.style.cssText = 'font-size:12px;';
+      mermaidEl.textContent = mermaidCode;
+      graphContent.appendChild(mermaidEl);
+      graphViewport.appendChild(graphContent);
+      graphSection.appendChild(graphViewport);
+
+       const applyZoom = (newScale, skipSave) => {
+         newScale = Math.max(0.3, Math.min(3, newScale));
+         graphContent.dataset.scale = String(newScale);
+         graphContent.style.transform = `scale(${newScale})`;
+         const svg = graphContent.querySelector('svg');
+         if (svg) {
+           const vb = svg.getAttribute('viewBox');
+           let svgH = 0;
+           if (vb) {
+             const parts = vb.split(/[\s,]+/).map(Number);
+             if (parts.length === 4 && parts[3] > 0) svgH = parts[3];
+           }
+           if (!svgH) svgH = parseFloat(svg.style.height) || svg.getBoundingClientRect().height / newScale;
+           graphContent.style.height = Math.ceil(svgH * newScale) + 'px';
+         } else {
+           const rawH = graphContent.scrollHeight / (parseFloat(graphContent.dataset.scale) || 1);
+           graphContent.style.height = Math.ceil(rawH * newScale) + 'px';
+         }
+         zoomLevel.textContent = Math.round(newScale * 100) + '%';
+         if (!skipSave) {
+           plugin.settings.graphZoomLevel = newScale;
+           plugin.saveData(plugin.settings).catch(() => {});
+         }
+       };
+
+      const autoFitZoom = () => {
+        requestAnimationFrame(() => {
+          const svg = graphContent.querySelector('svg');
+          if (!svg) return;
+          const vb = svg.getAttribute('viewBox');
+          if (vb) {
+            const parts = vb.split(/[\s,]+/).map(Number);
+            if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
+              svg.removeAttribute('width');
+              svg.removeAttribute('height');
+              svg.style.width = parts[2] + 'px';
+              svg.style.height = parts[3] + 'px';
+              svg.style.maxWidth = 'none';
+            }
+          }
+          requestAnimationFrame(() => {
+            const savedZoom = plugin.settings?.graphZoomLevel;
+            if (savedZoom && savedZoom > 0) {
+              applyZoom(savedZoom, true);
+              zoomLevel.textContent = Math.round(savedZoom * 100) + '%';
+            } else {
+              const contentW = graphContent.scrollWidth;
+              const viewportW = graphViewport.clientWidth;
+              if (contentW > 0 && viewportW > 0) {
+                const fitScale = Math.min(1, viewportW / contentW);
+                applyZoom(fitScale, true);
+                zoomLevel.textContent = 'fit';
+              }
+            }
+
+          });
+        });
+      };
+
+      zoomInBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); applyZoom((parseFloat(graphContent.dataset.scale) || 1) + 0.05); });
+      zoomOutBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); applyZoom((parseFloat(graphContent.dataset.scale) || 1) - 0.05); });
+      graphViewport.addEventListener('wheel', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault(); e.stopPropagation();
+            applyZoom((parseFloat(graphContent.dataset.scale) || 1) + (e.deltaY > 0 ? -0.05 : 0.05));
+        }
+      }, { passive: false });
+
+      (async () => {
+        try {
+          const { MarkdownRenderer: MR, Component } = require('obsidian');
+          const component = new Component();
+          component.load();
+          const renderTarget = document.createElement('div');
+          await MR.renderMarkdown('```mermaid\n' + mermaidCode + '\n```', renderTarget, plugin.currentFilePath || '', component);
+          if (renderTarget.querySelector('.mermaid')) {
+            mermaidEl.remove();
+            graphContent.appendChild(renderTarget.querySelector('.mermaid'));
+          } else if (renderTarget.firstElementChild) {
+            mermaidEl.remove();
+            graphContent.appendChild(renderTarget);
+          }
+        } catch (renderErr) {
+          if (plugin.settings?.remarkDebugLog) console.warn('[SwiftGloss] Mermaid render failed:', renderErr);
+        }
+        autoFitZoom();
+      })();
+
+      if (!graphSection.parentElement) {
+        let insertBefore = null;
+        for (const child of container.childNodes) {
+          if (child.nodeType === 1 && child.tagName !== 'STYLE' && !child.classList?.contains('ai-relation-graph-section')) {
+            insertBefore = child;
+            break;
+          }
+        }
+        container.insertBefore(graphSection, insertBefore);
+      }
+      if (keepOpenRef) keepOpenRef.val = true;
+      return graphSection;
+    };
+
+    const _extractSnippet = (text, keyword, radius) => {
+      const idx = text.indexOf(keyword);
+      if (idx < 0) return '';
+      const start = Math.max(0, idx - radius);
+      const end = Math.min(text.length, idx + keyword.length + radius);
+      let snippet = text.substring(start, end);
+      if (start > 0) snippet = '...' + snippet;
+      if (end < text.length) snippet = snippet + '...';
+      return snippet;
+    };
+
+    const _generateGraph = async () => {
+      if (!ruleRegex) return null;
+      const currentRule = isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
+      const _isChinese = (text) => {
+        if (/[\u3040-\u309f\u30a0-\u30ff]/.test(text)) return false;
+        if (/[\uac00-\ud7af\u1100-\u11ff]/.test(text)) return false;
+        const cjk = text.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g);
+        return (cjk ? cjk.length : 0) / Math.max(text.replace(/\s/g, '').length, 1) > 0.15;
+      };
+      const allRemarkTexts = [];
+      if (currentRule && currentRule.links) allRemarkTexts.push(...currentRule.links.filter(l => l.remark && l.remark.trim()).map(l => l.remark.trim()));
+      const isZh = _isChinese(allRemarkTexts.join(' '));
+      let contextParts = [];
+      if (currentRule && currentRule.links) {
+        const currentRemarks = currentRule.links.filter(l => l.remark && l.remark.trim()).map(l => l.remark.trim());
+        if (currentRemarks.length > 0) contextParts.push(isZh ? `【关键词: ${ruleRegex}】\n${currentRemarks.join('\n')}` : `[Keyword: ${ruleRegex}]\n${currentRemarks.join('\n')}`);
+      }
+      const kwIndex = plugin.buildKeywordIndex();
+      const blIndex = plugin.buildBacklinkIndex(kwIndex);
+      const relatedKwMap = new Map();
+      if (currentRule && currentRule.links) {
+        const sortedKws = [...kwIndex.values()].filter(k => k.plainTexts && k.plainTexts.length > 0 && k.regex !== ruleRegex);
+        for (const link of currentRule.links) {
+          const rt = link.remark || '';
+          if (!rt.trim()) continue;
+          for (const kw of sortedKws) {
+            if (relatedKwMap.has(kw.regex)) continue;
+            const matchedPlain = kw.plainTexts.find(p => rt.includes(p));
+            if (matchedPlain) {
+              const snippet = _extractSnippet(rt, matchedPlain, 40);
+              relatedKwMap.set(kw.regex, { regex: kw.regex, relation: 'mention', snippet, matchedPlain });
+            }
+          }
+        }
+      }
+      const mentionedBy = blIndex.get(ruleRegex) || [];
+      for (const bl of mentionedBy) {
+        if (!relatedKwMap.has(bl.sourceRegex)) {
+          const srcRule = plugin.globalRules.find(r => r.regex === bl.sourceRegex) || plugin.rules.find(r => r.regex === bl.sourceRegex);
+          let snippet = '';
+          if (srcRule && srcRule.links) {
+            for (const link of srcRule.links) {
+              const rt = link.remark || '';
+              if (!rt.trim()) continue;
+              const matchedPlain = ruleRegex;
+              if (rt.includes(matchedPlain)) { snippet = _extractSnippet(rt, matchedPlain, 40); break; }
+            }
+          }
+          relatedKwMap.set(bl.sourceRegex, { regex: bl.sourceRegex, relation: 'mentionedBy', snippet, matchedPlain: ruleRegex });
+        }
+      }
+      for (const [kwRegex, relInfo] of relatedKwMap) {
+        const kwRule = plugin.globalRules.find(r => r.regex === kwRegex) || plugin.rules.find(r => r.regex === kwRegex);
+        if (kwRule && kwRule.links) {
+          const kwRemarks = kwRule.links.filter(l => l.remark && l.remark.trim()).map(l => l.remark.trim());
+          if (kwRemarks.length > 0) {
+            const relLabel = isZh
+              ? (relInfo.relation === 'mention' ? '→ 提及' : '← 被提及')
+              : (relInfo.relation === 'mention' ? '→ mentions' : '← mentioned by');
+            const snippetLine = relInfo.snippet
+              ? (isZh ? `\n关联依据: "${relInfo.snippet}"` : `\nContext: "${relInfo.snippet}"`)
+              : '';
+            const header = isZh ? '关联关键词' : 'Related keyword';
+            contextParts.push(`【${header}${relLabel}: ${kwRegex}】${snippetLine}\n${kwRemarks.join('\n')}`);
+          }
+        }
+      }
+      const fullContext = contextParts.join('\n\n');
+      if (!fullContext.trim()) { new Notice(t('remark.aiRelationGraphNoContext')); return null; }
+
+      const promptZh = `你是一个知识关系分析专家。请根据以下关键词及其关联关键词的备注内容，生成一个 Mermaid 关系图。
+
+要求：
+1. 使用 Mermaid flowchart LR 语法（从左到右布局）
+2. 中心关键词用特殊样式标注：中心关键词ID:::center
+3. 每条边必须有语义标签，如：-->|属于|、-->|对立|、-->|因果|、-->|包含|、-->|提出者|、-->|影响| 等
+4. 关系类型应从备注内容中推断，不要使用泛化的"相关"，尽量用具体的语义关系
+5. 节点ID用英文/拼音，节点文本用中文原文关键词
+6. 只输出 Mermaid 代码，不要任何解释或前缀后缀
+7. 代码块用 \`\`\`mermaid 和 \`\`\` 包裹
+8. 节点数量控制在8-15个，选择最重要的关系
+9. 根据备注内容的语言自动判断节点标签语言
+10. 【关键】节点文本中禁止使用半角括号()、方括号[]、花括号{}、尖括号<>、竖线|，必须用全角（）【】｛｝《》／替代。禁止使用&、#、<、>、--等Mermaid保留符号
+11. 【重要】关系图应体现知识的深层结构，不要只画直接关系。如果A和B通过C有间接关系，必须画出C作为中间节点。例如：不要只画"自由-->|属于|存在主义"，而应画出"自由-->|核心议题|存在主义-->|哲学流派|克尔凯郭尔"
+12. 【重要】如果两个关键词之间存在双向或循环关系，使用双向箭头表示，如：A <-->|互为因果| B
+13. 【重要】优先展示因果链、层级结构、对比关系等深层关系，而非简单的并列或提及关系
+14. 【严禁】不要为偶然的、非概念性的用词创建关系边。关联依据中标注了每个关联关键词在备注中的出现上下文，你必须判断该出现是否构成实质性的语义关联。例如：如果备注中"他选择了乐观"里的"选择"只是日常动词用法，并非在讨论"选择/决策"这一概念，则不应创建与"选择/决策"的关系边。只有当备注内容确实在讨论、分析、定义该概念时，才应建立关系。
+
+以下是备注内容：
+
+${fullContext}`;
+
+      const promptEn = `You are an expert in knowledge relationship analysis. Generate a Mermaid relationship graph based on the following keyword and its related keywords' remarks.
+
+Requirements:
+1. Use Mermaid flowchart LR syntax (left-to-right layout)
+2. Mark the center keyword with a special style: centerKeywordID:::center
+3. Every edge must have a semantic label, e.g.: -->|belongs to|, -->|opposes|, -->|causes|, -->|contains|, -->|proposed by|, -->|influences|, etc.
+4. Infer relationship types from remark content. Do not use generic "related to" — use specific semantic relationships.
+5. Use English/pinyin for node IDs, use the original keyword text for node labels
+6. Output ONLY Mermaid code, no explanations or prefixes/suffixes
+7. Wrap code in \`\`\`mermaid and \`\`\`
+8. Keep node count between 8-15, selecting the most important relationships
+9. Auto-detect node label language based on remark content language
+10. [CRITICAL] Node text must NOT contain half-width brackets ()[]{}<> or pipe |. Replace with full-width （）【】｛｝《》／. Also forbidden: &, #, <, >, -- and other Mermaid reserved symbols.
+11. [IMPORTANT] The graph should reflect deep knowledge structure, not just direct relationships. If A and B are indirectly related through C, C must appear as an intermediate node. E.g.: don't just draw "freedom-->|belongs to|existentialism", draw "freedom-->|core theme|existentialism-->|philosophical school|Kierkegaard"
+12. [IMPORTANT] If two keywords have a bidirectional or cyclic relationship, use a bidirectional arrow, e.g.: A <-->|mutual causation| B
+13. [IMPORTANT] Prioritize causal chains, hierarchical structures, and contrast relationships over simple co-occurrence or mention relationships
+14. [STRICT] Do NOT create relationship edges for incidental, non-conceptual word usage. The "Context" field shows the specific context where each related keyword appears in the remarks. You must judge whether that occurrence constitutes a substantive semantic connection. For example: if a remark says "he chose optimism" and "chose" is just a common verb, not a discussion of the concept "choice/decision-making", then no edge should be created to "choice/decision-making". Only create edges when the remark genuinely discusses, analyzes, or defines the concept.
+
+Here are the remarks:
+
+${fullContext}`;
+
+      const prompt = isZh ? promptZh : promptEn;
+      const aiResponse = await plugin.callAI(prompt, { maxTokens: 4096 });
+      if (!aiResponse || !aiResponse.trim()) { new Notice(t('remark.aiRelationGraphFailed')); return null; }
+
+      let mermaidCode = aiResponse.trim();
+      const codeBlockMatch = mermaidCode.match(/```mermaid\s*\n([\s\S]*?)```/);
+      if (codeBlockMatch) mermaidCode = codeBlockMatch[1].trim();
+      mermaidCode = mermaidCode.replace(/^```mermaid\s*\n?/, '').replace(/\n?```\s*$/, '').trim();
+      if (!mermaidCode.startsWith('flowchart') && !mermaidCode.startsWith('graph')) {
+        mermaidCode = 'flowchart LR\n' + mermaidCode;
+      }
+      mermaidCode = _sanitizeMermaid(mermaidCode);
+      return mermaidCode;
+    };
+
+    const currentRule = isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
+    if (currentRule?._mermaidGraph) {
+      _renderGraphSection(_sanitizeMermaid(currentRule._mermaidGraph));
+    }
+
+    aiGraphBtn.addEventListener('click', async (ce) => {
+      ce.preventDefault();
+      ce.stopPropagation();
+      if (keepOpenRef) keepOpenRef.val = true;
+      if (!aiHasContent || !ruleRegex) { new Notice(t('remark.aiRelationGraphNoContext')); return; }
+
+      aiGraphBtn.style.opacity = '0.5';
+      aiGraphBtn.textContent = '...';
+      aiGraphBtn.style.pointerEvents = 'none';
+      try {
+        const mermaidCode = await _generateGraph();
+        if (!mermaidCode) return;
+        const actualRule = isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
+        if (actualRule) {
+          actualRule._mermaidGraph = mermaidCode;
+          if (targetEl) targetEl.dataset.links = JSON.stringify(actualRule.links || []);
+          if (onDirty) onDirty();
+          if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
+          else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+        }
+        const existingSection = container.querySelector('.ai-relation-graph-section');
+        _renderGraphSection(mermaidCode, existingSection || undefined);
+      } catch (err) {
+        new Notice(t('remark.aiRelationGraphFailed') + ': ' + (err.message || ''));
+      } finally {
+        aiGraphBtn.style.opacity = aiHasContent ? '1' : '0.35';
+        aiGraphBtn.textContent = '⬡';
+        aiGraphBtn.style.pointerEvents = '';
+      }
+    });
+    aiBtnContainer.appendChild(aiGraphBtn);
+
     const addBtn = document.createElement('button');
     addBtn.className = 'remark-add-btn';
     addBtn.textContent = '+';
@@ -37013,6 +37927,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     });
     aiBtnContainer.appendChild(addBtn);
     container.appendChild(aiBtnContainer);
+
 
     return { linksByFile };
   }
@@ -37126,7 +38041,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     closeBtn.addEventListener('touchcancel', cancelKwLongPress);
     const kwMasonryBtn = document.createElement('span');
     kwMasonryBtn.textContent = '⊞';
-    kwMasonryBtn.title = '瀑布流模式';
+    kwMasonryBtn.title = t('remark.masonryMode');
     kwMasonryBtn.style.cssText = 'cursor:pointer;font-size:13px;color:var(--text-faint);padding:1px 5px;border-radius:3px;transition:all 0.15s ease;flex-shrink:0;margin-right:2px;';
     if (_remarkMasonryMode) kwMasonryBtn.style.color = 'var(--text-accent)';
     kwMasonryBtn.addEventListener('mouseenter', () => { kwMasonryBtn.style.background = 'var(--background-modifier-hover)'; kwMasonryBtn.style.color = 'var(--text-normal)'; });
@@ -37683,6 +38598,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     };
   }
 
+
   // 初始化备注 HoverPopover 功能
   initRemarkHoverPopover(app) {
     // 存储当前显示的 HoverPopover 实例
@@ -37694,7 +38610,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const plugin = this;
     
     this.registerDomEvent(document, 'mouseover', async (e) => {
-      if (isClosing) return;
+      if (isClosing) {
+        if (currentPopover && currentPopover._popup && !document.body.contains(currentPopover._popup)) {
+          isClosing = false;
+          currentPopover = null;
+          currentTargetEl = null;
+        } else {
+          return;
+        }
+      }
       if (e.buttons > 0) return;
       if (!(e.target instanceof Element)) return;
       
@@ -37712,7 +38636,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (!highlightEl) return;
       
       // 如果当前已有弹窗，检查是否是同一个规则（通过 ruleRegex 判断，而非 DOM 引用）
-      if (currentPopover && currentTargetEl) {
+      if (currentPopover && currentTargetEl && !plugin._keepExistingPopup) {
         const currentRegex = currentTargetEl.dataset?.ruleRegex;
         const newRegex = highlightEl.dataset?.ruleRegex;
         if (currentRegex && newRegex && currentRegex === newRegex) {
@@ -37720,6 +38644,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           currentTargetEl = highlightEl;
           return;
         }
+      }
+      if (plugin._keepExistingPopup) {
+        plugin._keepExistingPopup = false;
       }
       
       // 如果当前已有弹窗且目标是当前元素或其内部节点，则不处理（避免闪烁）
@@ -37775,9 +38702,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           if (isClosing) return;
           
           // 隐藏当前弹窗
-          if (currentPopover) {
+          if (currentPopover && !plugin._keepExistingPopup) {
             currentPopover.hide();
             currentPopover = null;
+          } else if (plugin._keepExistingPopup) {
+            plugin._keepExistingPopup = false;
           }
           
           // 再次检查，如果在关闭中则不创建
@@ -37786,6 +38715,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 创建自定义浮动弹窗
           const popup = document.createElement('div');
           popup.classList.add('remark-custom-popup');
+          popup.dataset.ruleRegex = targetEl.dataset.ruleRegex || '';
+          popup.dataset.ruleSource = targetEl.dataset.ruleSource || '';
           popup.style.position = 'fixed';
           popup.style.zIndex = '1000';
           // 初始隐藏弹窗，直到内容渲染完成
@@ -38015,6 +38946,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             popupCloseLongPress = setTimeout(() => {
               popupLongPressTriggered = true;
               document.querySelectorAll('.keyword-detail-window, .remark-custom-popup').forEach(w => w.remove());
+              isClosing = false;
+              currentPopover = null;
+              currentTargetEl = null;
             }, 600);
           };
           const cancelLongPress = () => { if (popupCloseLongPress) clearTimeout(popupCloseLongPress); };
@@ -38033,7 +38967,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           popupCloseBtn.addEventListener('touchcancel', cancelLongPress);
           const popupMasonryBtn = document.createElement('span');
           popupMasonryBtn.textContent = '⊞';
-          popupMasonryBtn.title = '瀑布流模式';
+          popupMasonryBtn.title = t('remark.masonryMode');
           popupMasonryBtn.style.cssText = 'cursor:pointer;font-size:13px;color:var(--text-faint);padding:1px 5px;border-radius:3px;transition:all 0.15s ease;flex-shrink:0;margin-right:2px;';
           if (_remarkMasonryMode) popupMasonryBtn.style.color = 'var(--text-accent)';
           popupMasonryBtn.addEventListener('mouseenter', () => { popupMasonryBtn.style.background = 'var(--background-modifier-hover)'; popupMasonryBtn.style.color = 'var(--text-normal)'; });
@@ -39642,14 +40576,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               // 版本标签放入 chipsBar 内部（避免重叠）
               const versionLabel = document.createElement('span');
               const pluginVersion = plugin && plugin.manifest ? plugin.manifest.version : '';
-              versionLabel.textContent = 'SwiftGlean' + (pluginVersion ? ' v' + pluginVersion : '');
+              versionLabel.textContent = 'SwiftGlossa' + (pluginVersion ? ' v' + pluginVersion : '');
               versionLabel.style.cssText = 'font-size:8px;color:var(--text-faint);opacity:0.3;user-select:none;-webkit-user-select:none;line-height:1;margin-left:auto;align-self:center;';
               chipsBar.appendChild(versionLabel);
             } else {
               // 无 chips 时，版本标签固定在弹窗底部
               const versionLabel = document.createElement('div');
               const pluginVersion = plugin && plugin.manifest ? plugin.manifest.version : '';
-              versionLabel.textContent = 'SwiftGlean' + (pluginVersion ? ' v' + pluginVersion : '');
+              versionLabel.textContent = 'SwiftGlossa' + (pluginVersion ? ' v' + pluginVersion : '');
               versionLabel.style.cssText = 'position:absolute;bottom:2px;left:6px;font-size:8px;color:var(--text-faint);opacity:0.3;user-select:none;-webkit-user-select:none;line-height:1;pointer-events:none;';
               popup.appendChild(versionLabel);
             }
@@ -40670,15 +41604,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         ce.stopPropagation();
         ce.preventDefault();
 
-        // 检查是否已有备注弹窗显示，且弹窗对应同一个目标元素
+        const ruleRegex = target.dataset.ruleRegex;
+        const ruleSource = target.dataset.ruleSource;
         const existingPopup = document.querySelector('.remark-custom-popup');
-        if (existingPopup) {
-          // 找到弹窗中的"+"按钮并触发点击，直接在弹窗中追加备注
+        if (existingPopup && existingPopup.dataset.ruleRegex === ruleRegex && existingPopup.dataset.ruleSource === ruleSource) {
           const addBtn = existingPopup.querySelector('.remark-add-btn');
           if (addBtn) {
             addBtn.click();
             hideRemarkBadge();
-            // 延迟后自动进入编辑模式：找到空备注并触发双击
             setTimeout(() => {
               const emptyRemark = existingPopup.querySelector('[data-remark-source="link"]');
               if (emptyRemark && emptyRemark.textContent?.includes(t('main.doubleClickToEditRemark'))) {
@@ -40688,10 +41621,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             return;
           }
         }
+        if (existingPopup) {
+          plugin._keepExistingPopup = true;
+        }
 
-        // 没有弹窗时，先添加空 link entry，然后触发弹窗显示
-        const ruleRegex = target.dataset.ruleRegex;
-        const ruleSource = target.dataset.ruleSource;
+        // 先添加空 link entry，然后触发弹窗显示
+
         const matchedText = target.textContent || '';
         const isGlobalRule = ruleSource === 'global';
 
@@ -40738,7 +41673,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
         // 等待弹窗出现后自动进入编辑模式
         setTimeout(() => {
-          const popup = document.querySelector('.remark-custom-popup');
+          const popups = document.querySelectorAll('.remark-custom-popup');
+          const popup = Array.from(popups).find(p => p.dataset.ruleRegex === ruleRegex && p.dataset.ruleSource === ruleSource) || popups[popups.length - 1];
           if (popup) {
             const emptyRemark = popup.querySelector('[data-remark-source="link"]');
             if (emptyRemark && emptyRemark.textContent?.includes('双击编辑')) {

@@ -2,7 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.9.3 (2026-07-07)
+## 🆕 v1.9.4 (2026-07-12)
+
+- **Mermaid Parser Rewrite / Mermaid解析器重写** — Rewrote `_sanitizeMermaid` line parser: removed conflicting pre-processing regexes, added cross-line node tracking (`lastNodeId`/`lastNodeDef`), `_parseBracketDef`/`_parseEdgeTail` helpers; correctly handles chained edges (`A -->|label| B -->|label2| C`) and bracket node definitions (`A["text"] --> B["text2"]`) / 重写`_sanitizeMermaid`行解析器：移除冲突的预处理正则，新增跨行节点追踪和辅助函数，正确处理链式边和带括号定义的节点
+- **AI Graph Anti-Weak-Relation / AI关系图防牵强关系** — Added `_extractSnippet` to show context snippets for each related keyword in the prompt; new prompt rule #14 explicitly forbids creating edges for incidental word usage (e.g. "chose" as a verb ≠ "choice/decision" concept) / 新增`_extractSnippet`在Prompt中展示关联依据上下文片段，第14条规则严禁为偶然用词建边
+- **AI Graph Bilingual Prompt / AI关系图双语Prompt** — Auto-detects remark language (Chinese vs non-Chinese, excluding Japanese/Korean from Chinese detection) and selects Chinese or English prompt and context labels accordingly / 自动检测备注语言，中文用中文Prompt，日语韩语及其他语言用英文Prompt
+- **Graph Zoom Height Fix / 关系图缩放高度修复** — `applyZoom` now calculates height from SVG viewBox intrinsic dimensions instead of `getBoundingClientRect()`, ensuring correct height on initial render without manual zoom / `applyZoom`改用SVG viewBox固有尺寸计算高度，初始渲染即正确适配，无需手动缩放
+- **Graph Scrollbar Fix / 关系图滚动条修复** — Changed viewport overflow from `auto` to `overflow-x:auto;overflow-y:hidden`, removing unnecessary vertical scrollbar / viewport溢出改为水平自动垂直隐藏，移除不必要的垂直滚动条
+- **Masonry Mode i18n / 瀑布流模式国际化** — Replaced hardcoded "瀑布流模式" with `t('remark.masonryMode')` i18n key; added Chinese and English translations / 硬编码"瀑布流模式"改为i18n调用，中英文翻译表均已添加
+
+## v1.9.3.4 (2026-07-11)
+
+- **Random Group All Styles / 随机分组全部样式** — Fixed floating ball random highlight with group filter showing "no unused styles"; now randomly picks from all styles in the group regardless of usage / 修复悬浮球随机分组高亮提示"没有可用的未使用样式"的问题，现在从分组内所有样式中随机选取
+- **Open Doc Button Style / 打开文档按钮样式** — Changed open document button icon to document+🔍 style matching SwiftMatch plugin / 打开文档按钮图标改为与SwiftMatch插件一致的文档+🔍样式
+- **Paste Remark Button / 粘贴备注按钮** — Added paste button between open document and copy buttons; appends to existing remark content / 在打开文档与复制按钮之间新增粘贴按钮，备注已有内容时执行追加
+- **Paste in Edit Mode / 编辑状态粘贴修复** — Fixed paste button losing textarea focus in edit mode; now inserts clipboard text at cursor position / 修复编辑状态下点击粘贴按钮导致textarea失焦的问题，现在直接在光标位置插入剪贴板文本
+
+## v1.9.3.3 (2026-07-09)
+
+- **Remark Badge Wrong Target Fix / 备注n按钮错位修复** — Fixed bug where clicking "n" badge to add remark would add it to an already-open popup of a different keyword instead of the clicked one; now correctly identifies target by ruleRegex/ruleSource / 修复点击"n"按钮添加备注时，若其他关键词的备注弹窗已打开，备注会错误添加到已打开弹窗而非点击的关键词的问题
+- **Multiple Remark Popups / 多备注弹窗共存** — Different keywords' remark popups can now stay open simultaneously instead of closing each other / 不同关键词的备注弹窗现在可以同时打开，不再互相关闭
+
+## v1.9.3.2 (2026-07-09)
+
+- **Floating Group Middle-Click Global / 悬浮分组随机模式中键全局** — Middle-click on floating group button with random mode enabled now applies as global rule, consistent with floating ball behavior / 开启随机模式的悬浮分组按钮中键点击可应用为全局规则，与悬浮球操作一致
+- **Mobile Main Panel Drag / 手机端主面板拖动** — Added touch event support to main panel title bar, enabling drag-to-move on mobile / 主面板标题栏添加触摸事件支持，手机端可拖动标题栏移动面板位置
+- **Shortcut Delete Global Rule / 快捷键删除全局规则** — Remove style shortcut now also deletes global rules; confirmation dialog shown when rule has remarks / 移除样式快捷键现在也支持删除全局规则，含备注时弹出确认窗口
+- **Remark Popup Long-Press Close Bug / 备注弹窗长按关闭修复** — Fixed bug where long-pressing close button on remark popup prevented subsequent remark popups from triggering until another keyword's popup was shown / 修复长按关闭按钮关闭备注弹窗后，再次悬浮无法触发备注弹窗的问题
+
+## v1.9.3.1 (2026-07-09)
+
+- **Rename to SwiftGlossa / 更名为SwiftGlossa** — Renamed plugin from SwiftGloss to SwiftGlossa for uniqueness; plugin ID remains `regex-css-highlighter` for compatibility / 插件从SwiftGloss更名为SwiftGlossa以保唯一性；插件ID保持`regex-css-highlighter`不变以兼容升级
+
+## v1.9.3 (2026-07-07)
 
 - **Desktop Chips Drag / 桌面端chips区拖动窗口** — Click empty area in bottom chips bar to drag remark popup and keyword detail window on desktop (previously mobile-only) / 桌面端点击备注弹窗和关键词窗口底部chips区空白处可拖动窗口位置（此前仅手机端支持）
 - **n Badge Position / n按钮位置上移** — Moved "n" remark badge upward to align with g/l badge when hovering highlighted text / 鼠标悬浮高亮文本时"n"按钮上移至与g/l按钮平行位置

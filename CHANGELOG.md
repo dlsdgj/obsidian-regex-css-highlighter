@@ -2,7 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.9.5 (2026-07-16)
+## 🆕 v1.9.6 (2026-07-17)
+
+- **Panel Auto-Refresh / 面板自动刷新** — Right panel now listens to `rulesUpdateEmitter`; clicking l/g button or adding rules via floating ball/group/style buttons instantly updates the panel without manual refresh / 右侧面板监听`rulesUpdateEmitter`事件，点击l/g按钮或通过悬浮球/分组/样式按钮添加规则后面板即时刷新
+- **Mobile Sidebar Remark / 手机端侧边栏备注** — New "Mobile Remark in Sidebar" setting; when enabled, clicking a keyword on mobile shows remarks in the sidebar background instead of a popup, with haptic feedback; swipe left to view / 新增"手机端备注在侧边栏显示"设置，开启后手机端点击关键词在侧边栏后台显示备注而非弹窗，带震动反馈，手动滑动查看
+- **Mobile Sidebar Fix / 手机端侧边栏修复** — Fixed mobile `contextmenu` event (long-press/select text) incorrectly closing the sidebar panel; added sidebar mode check matching `_outsideClickHandler` / 修复手机端`contextmenu`事件（长按/选中文本）误关闭侧边栏面板，添加侧边栏模式检查
+- **Remark Text Selectable / 备注文字可选** — `inline-remark-section` now has `user-select:text`; mobile CSS excludes remark area from `user-select:none`, enabling text selection and drag-to-search / 备注区域添加`user-select:text`，手机端CSS排除备注区域，支持文字选中拖放搜索
+
+## v1.9.5 (2026-07-16)
 
 - **Related Notes / 显示相关笔记** — New setting "Show Related Notes"; when selecting or clicking a keyword, notes whose filenames contain the keyword are shown above the remark area; left-click opens in new tab, middle-click opens in background tab; also works for non-rule selected text / 新增"显示相关笔记"设置选项，选中或点击关键词时在备注区域上方显示文件名包含该关键词的笔记链接，左键新标签页打开，中键后台打开；非规则选中文本也支持
 - **Underline Count Support / 下划线样式计数支持** — Removed 3 exclusion points that prevented underline-style keywords (e.g. `.underline-solid-1`) from displaying match counts; underline keywords now show counts normally / 移除3处下划线样式排除逻辑，下划线类关键词现在可正常显示计数

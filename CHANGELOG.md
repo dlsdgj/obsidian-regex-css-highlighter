@@ -2,7 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.9.4 (2026-07-12)
+## 🆕 v1.9.5 (2026-07-16)
+
+- **Related Notes / 显示相关笔记** — New setting "Show Related Notes"; when selecting or clicking a keyword, notes whose filenames contain the keyword are shown above the remark area; left-click opens in new tab, middle-click opens in background tab; also works for non-rule selected text / 新增"显示相关笔记"设置选项，选中或点击关键词时在备注区域上方显示文件名包含该关键词的笔记链接，左键新标签页打开，中键后台打开；非规则选中文本也支持
+- **Underline Count Support / 下划线样式计数支持** — Removed 3 exclusion points that prevented underline-style keywords (e.g. `.underline-solid-1`) from displaying match counts; underline keywords now show counts normally / 移除3处下划线样式排除逻辑，下划线类关键词现在可正常显示计数
+- **Remark Add Button Fix / 备注添加按钮修复** — Rewrote "+" button save logic to use `ruleSource === 'global'` (matching n-button pattern) instead of unreliable reference comparison; fixed first-time remark addition failing for local rules in sidebar / 重写"+"按钮保存逻辑，改用`ruleSource`判断全局/局部规则，修复侧边栏中局部规则首次添加备注失败的问题
+- **Sidebar Panel Group Collapse / 侧边栏分组折叠** — When no keyword matches, all style groups are now collapsed by default to reduce visual clutter; previously all groups expanded when clicking empty area / 无关键词匹配时所有样式分组默认折叠，减少视觉干扰
+- **Sidebar Button Hide / 侧边栏按钮隐藏** — "Move to Sidebar" and "Close" buttons are now hidden in sidebar mode and won't reappear after language switch / 侧边栏模式下隐藏"移至侧边栏"和"关闭"按钮，切换语言后不再闪现
+- **Remark Filename Edit / 备注文件名编辑** — Double-click on remark file name tag (both normal and masonry mode) to edit the filePath; Enter/blur saves, Escape cancels / 双击备注文件名标签可编辑filePath，回车/失焦保存，Esc取消
+- **AI Button Shape / AI按钮圆形化** — AI Ask, AI Graph, and Add (+) buttons now display as 36px circles on desktop (previously elliptical) / AI提问、AI关系图、添加(+)按钮桌面端统一为36px圆形
+- **Status Bar Hide / 状态栏隐藏** — Settings popup now uses `display:none` instead of `transform:translateY(100%)` to hide the status bar / 设置弹窗改用`display:none`隐藏状态栏
+- **Debug Logs Removed / 调试日志移除** — Removed all 14 `[SG-DEBUG]` console.log statements / 移除全部14条`[SG-DEBUG]`调试日志
+
+## v1.9.4.3 (2026-07-15)
+
+- **Popup Mouse Tracking Fix / 弹窗鼠标追踪修复** — Replaced unreliable `relatedTarget`-based `handleMouseOut` with `mousemove` bounds-box detection; added `popup.contains(el)` check in `isInBounds` for fixed-position badges that extend outside bounding rect / 将不可靠的`relatedTarget`依赖改为`mousemove`包围盒检测；`isInBounds`增加`popup.contains`检测以覆盖fixed定位的badge元素
+- **Dynamic Z-Index / 动态Z层级** — Added `bringToFront` with static `_topZ` counter (starting at 1200); all popup-like windows raise z-index on mousedown, preventing chip preview from appearing behind other windows / 新增`bringToFront`动态提升z-index（初始1200），所有弹窗类窗口mousedown时提升层级，修复chip预览显示在窗口下方的问题
+- **AI Graph Height Fix / AI关系图高度修复** — `applyZoom` sets SVG width/height directly instead of `transform:scale()`; `tryFit` waits for actual SVG content elements (g/path/rect) with size >50px via `requestAnimationFrame`; viewport height synced with content height / `applyZoom`直接设SVG宽高而非`transform:scale()`；`tryFit`通过`requestAnimationFrame`等待实际图形元素且尺寸>50px；viewport高度与内容同步
+- **SVG className Fix / SVG className修复** — Fixed crash when accessing SVG element `className` (which is `SVGAnimatedString` not a string) by checking type before calling `.substring()` / 修复SVG元素className为`SVGAnimatedString`时调用`.substring()`崩溃的问题
+- **Scroll Position Preserve / 滚动位置保留** — `renderRemarkContent` now preserves `scrollTop` across content re-renders using `requestAnimationFrame` / `renderRemarkContent`重渲染时通过`requestAnimationFrame`保留滚动位置
+- **Image Hover Skip / 图片悬浮预览跳过** — Masonry card image hover preview no longer appears when image is already displayed at ≥95% of its natural size / 瀑布流卡片图片已100%显示时不再弹出悬浮预览
+- **Debug Logs Removed / 调试日志移除** — Removed all `console.log('[RemarkPopup]')` debug messages / 移除所有`[RemarkPopup]`调试日志
+
+## v1.9.4.2 (2026-07-14)
+
+- **AI Graph Async Render Fix / AI关系图异步渲染修复** — Fixed remark popup showing incomplete AI relationship graph on open; mermaid SVG renders asynchronously but `autoFitZoom` ran before SVG was ready, leaving graph height unset; added MutationObserver to detect SVG appearance and re-apply zoom, plus `onReposition` callback to recalculate popup position after graph is fully rendered / 修复备注弹窗打开时AI关系图显示不全的问题；mermaid SVG异步渲染但autoFitZoom在SVG就绪前执行导致高度未设置，新增MutationObserver监听SVG出现后重新应用缩放，并添加onReposition回调在图形渲染完成后重新计算弹窗位置
+
+## v1.9.4.1 (2026-07-14)
+
+- **Interlinear Note Regex Key Fix / 行间注释正则Key修复** — Fixed interlinear note using matched text as key instead of full regex (e.g., only storing "Geoffery Hinton" instead of "Geoffery Hinton|Hinton|杰弗里·辛顿"); remark popup now uses ruleRegex as key / 修复行间注释以匹配文本而非完整正则作为key的问题，备注弹窗现在使用ruleRegex作为key
+- **Interlinear Note Regex Rendering / 行间注释正则渲染** — Rendering now splits regex keys by `|` to match each alternative separately, supporting multi-branch regex patterns / 渲染时按`|`分割正则key分别匹配，支持多分支正则模式
+- **Interlinear Note Auto-Migration / 行间注释自动迁移** — Added `findInterlinearNote` and `migrateInterlinearNoteKey` methods; when rule regex changes (e.g., "戴宗"→"戴宗|戴院长"), old key is automatically found and migrated to new key / 新增回退查找和自动迁移方法，规则正则变更后自动查找旧key并迁移到新key
+- **List Mode Title Size Fix / 列表模式标题大小修复** — Adjusted remark popup list mode file title from 12px to 10px to match masonry mode, reducing vertical space usage / 备注弹窗列表模式文档标题从12px调整为与瀑布流一致的10px，减少纵向空间占用
+
+## v1.9.4 (2026-07-12)
 
 - **Mermaid Parser Rewrite / Mermaid解析器重写** — Rewrote `_sanitizeMermaid` line parser: removed conflicting pre-processing regexes, added cross-line node tracking (`lastNodeId`/`lastNodeDef`), `_parseBracketDef`/`_parseEdgeTail` helpers; correctly handles chained edges (`A -->|label| B -->|label2| C`) and bracket node definitions (`A["text"] --> B["text2"]`) / 重写`_sanitizeMermaid`行解析器：移除冲突的预处理正则，新增跨行节点追踪和辅助函数，正确处理链式边和带括号定义的节点
 - **AI Graph Anti-Weak-Relation / AI关系图防牵强关系** — Added `_extractSnippet` to show context snippets for each related keyword in the prompt; new prompt rule #14 explicitly forbids creating edges for incidental word usage (e.g. "chose" as a verb ≠ "choice/decision" concept) / 新增`_extractSnippet`在Prompt中展示关联依据上下文片段，第14条规则严禁为偶然用词建边

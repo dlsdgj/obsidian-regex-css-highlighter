@@ -1,4 +1,4 @@
-﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover, PluginSettingTab } = require("obsidian");
+﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover, PluginSettingTab, ItemView, WorkspaceLeaf } = require("obsidian");
 const { Decoration, EditorView } = require("@codemirror/view");
 const { StateField, StateEffect } = require("@codemirror/state");
 
@@ -420,6 +420,8 @@ const i18n = {
     'main.doubleClickGroup': '双击分组标题移动到单显区',
     'main.leftClickApply': '左键单击应用样式',
     'settings.display': '显示',
+    'settings.collapseGroupOnMatch': '默认折叠分组',
+    'settings.collapseGroupOnMatchDesc': '点击规则或搜索匹配时，保持分组折叠状态，仅显示匹配的样式',
     'settings.readingModeLineHeight': '阅读模式行高',
     'settings.readingModeMargin': '阅读模式边距',
     'settings.leftMargin': '左边距',
@@ -650,6 +652,8 @@ const i18n = {
     'main.batchModeDesc': '进入/退出批量管理模式，批量选择和移动样式',
     'main.batchManageStyles': '批量管理样式',
     'main.closePanel': '关闭面板',
+    'main.moveToSidebar': '移至侧边栏',
+    'main.openMainPanelFirst': '请先打开主面板',
     'main.regexLabel': '正则表达式',
     'main.searchOrAdd': '搜索或添加',
     'main.cannotOpenPluginLocation': '无法打开插件位置，请检查控制台获取详细信息。',
@@ -798,6 +802,7 @@ const i18n = {
     'settings.remarkPopupBorderColor': '备注弹窗边框颜色',
     'settings.remarkPopupOnlyOnSelection': '仅在选中文本时弹出',
     'settings.remarkPopupHideOnSelection': '选中文本时不弹出备注',
+    'settings.hidePopupWhenSidebarOpen': '侧边栏打开时不显示弹窗',
     'settings.showRemarkBadge': '在高亮文字右上角显示备注提示符',
     'settings.showRemarkBadgeHint': '悬停高亮文本时显示n(备注)标记',
     'settings.remarkBadgeThreshold': '字数阈值',
@@ -1274,6 +1279,8 @@ const i18n = {
     'main.doubleClickGroup': 'Double-click group title to move to single display',
     'main.leftClickApply': 'Left-click to apply style',
     'settings.display': 'Display',
+    'settings.collapseGroupOnMatch': 'Collapse Group on Match',
+    'settings.collapseGroupOnMatchDesc': 'Keep groups collapsed when clicking a rule or searching, showing only matching styles',
     'settings.readingModeLineHeight': 'Reading Mode Line Height',
     'settings.readingModeMargin': 'Reading Mode Margin',
     'settings.leftMargin': 'Left Margin',
@@ -1504,6 +1511,8 @@ const i18n = {
     'main.batchModeDesc': 'Enter/exit batch management mode for selecting and moving styles',
     'main.batchManageStyles': 'Batch Manage Styles',
     'main.closePanel': 'Close Panel',
+    'main.moveToSidebar': 'Move to Sidebar',
+    'main.openMainPanelFirst': 'Please open the main panel first',
     'main.regexLabel': 'Regex',
     'main.searchOrAdd': 'Search or Add',
     'main.cannotOpenPluginLocation': 'Cannot open plugin location, please check console for details.',
@@ -1652,6 +1661,7 @@ const i18n = {
     'settings.remarkPopupBorderColor': 'Remark Popup Border Color',
     'settings.remarkPopupOnlyOnSelection': 'Only Popup on Selected Text',
     'settings.remarkPopupHideOnSelection': 'Hide Popup When Text Selected',
+    'settings.hidePopupWhenSidebarOpen': 'Hide Popup When Sidebar Open',
     'settings.showRemarkBadge': 'Show remark indicator at top-right of highlighted text',
     'settings.showRemarkBadgeHint': 'Show n(remark) badge when hovering highlighted text',
     'settings.remarkBadgeThreshold': 'Character Threshold',
@@ -7544,7 +7554,7 @@ class AddRegexRuleModal {
       position:fixed;
       background:rgba(var(--mono-rgb-0),0.75);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
       border:1px solid rgba(255,255,255,0.12);border-radius:12px;
-      box-shadow:0 12px 40px rgba(0,0,0,0.35);z-index:10000;
+      box-shadow:0 12px 40px rgba(0,0,0,0.35);z-index:1200;
       overflow:hidden;display:flex;flex-direction:column;
     `;
 
@@ -7563,6 +7573,7 @@ class AddRegexRuleModal {
 
     if (this._isOpen) return;
     this._isOpen = true;
+    this.plugin._regexHighlightModal = this;
     if (!HTMLElement.prototype.createDiv) {
       HTMLElement.prototype.createDiv = function(clsOrOpts) { const el = document.createElement('div'); if (typeof clsOrOpts === 'string') { el.className = clsOrOpts; } else if (clsOrOpts && typeof clsOrOpts === 'object') { if (clsOrOpts.cls) el.className = clsOrOpts.cls; if (clsOrOpts.text) el.textContent = clsOrOpts.text; } this.appendChild(el); return el; };
       HTMLElement.prototype.createEl = function(tag, opts) { const el = document.createElement(tag); if (opts) { if (typeof opts === 'string') { el.className = opts; } else if (typeof opts === 'object') { if (opts.cls) el.className = opts.cls; if (opts.text) el.textContent = opts.text; if (opts.attr) Object.entries(opts.attr).forEach(([k,v]) => el.setAttribute(k,v)); if (opts.title) el.title = opts.title; if (opts.type) el.type = opts.type; if (opts.placeholder) el.placeholder = opts.placeholder; if (opts.value !== undefined) el.value = opts.value; } } this.appendChild(el); return el; };
@@ -7572,6 +7583,11 @@ class AddRegexRuleModal {
       this._patchedPrototype = true;
     }
     document.body.appendChild(this.modalEl);
+    this.modalEl.addEventListener('mousedown', () => {
+      if (this.modalEl.parentElement === document.body) {
+        this.plugin.constructor.bringToFront(this.modalEl);
+      }
+    });
     
     // 手机端：阻止长按导致浏览器进入选中/卡死状态
     if (!_isDesktop) {
@@ -7643,12 +7659,13 @@ class AddRegexRuleModal {
     this.onOpen();
     
     this._outsideClickHandler = (e) => {
-
       if (!this._isOpen) return;
       if (_isDesktop && this._locked) return;
       if (this._subModalOpen) return;
       if (this.modalEl.contains(e.target)) return;
+      if (this.modalEl.parentElement !== document.body) return;
       if (e.target.closest('.menu, .suggestion-container, .prompt, .notice, .rch-context-menu, .modal-resize-handle, .settings-popup-window')) return;
+
       this.close();
     };
     setTimeout(() => {
@@ -7693,8 +7710,8 @@ class AddRegexRuleModal {
       this._mobileStyleEl = null;
     }
     this.onClose();
-    if (this.modalEl && document.body.contains(this.modalEl)) {
-      document.body.removeChild(this.modalEl);
+    if (this.modalEl && this.modalEl.parentElement) {
+      this.modalEl.parentElement.removeChild(this.modalEl);
     }
     if (!_isDesktop) {
       window.getSelection()?.removeAllRanges();
@@ -7709,6 +7726,8 @@ class AddRegexRuleModal {
       document.body.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1, pointerType: 'touch', clientX: 0, clientY: 0 }));
     }
     this._isOpen = false;
+    this.plugin._regexHighlightModal = null;
+
   }
   
   // 直接将CSS代码添加到文件中，插入到第一个@keyframes之前
@@ -8469,6 +8488,15 @@ class AddRegexRuleModal {
       document.removeEventListener('touchend', this._dragTouchEndHandler);
       this._dragTouchEndHandler = null;
     }
+    if (this._selectionChangeHandler) {
+      document.removeEventListener('selectionchange', this._selectionChangeHandler);
+      this._selectionChangeHandler = null;
+    }
+    if (this._floatingSelectionHandler) {
+      document.removeEventListener('selectionchange', this._floatingSelectionHandler);
+      this._floatingSelectionHandler = null;
+    }
+    this._locked = false;
     if (_activeContextMenuCleanup) {
       _activeContextMenuCleanup();
       _activeContextMenuCleanup = null;
@@ -8490,31 +8518,35 @@ class AddRegexRuleModal {
     
     contentEl.style.width = "100%";
     
-    this.modalEl.style.width = `${userWidth}px`;
-    this.modalEl.style.maxWidth = '95vw';
-    this.modalEl.style.minWidth = "0";
-    if (savedHeight) {
-      this.modalEl.style.height = `${savedHeight}px`;
-      this.modalEl.style.maxHeight = 'none';
-    } else {
-      this.modalEl.style.maxHeight = "80vh";
-    }
-    
-    const savedPosition = _isDesktop ? this.plugin.settings?.modalPosition : null;
-    if (savedPosition && savedPosition.left !== undefined && savedPosition.top !== undefined) {
-      const posLeft = Math.min(savedPosition.left, window.innerWidth - 100);
-      const posTop = Math.min(savedPosition.top, window.innerHeight - 100);
-      this.modalEl.style.left = `${Math.max(0, posLeft)}px`;
-      this.modalEl.style.top = `${Math.max(0, posTop)}px`;
-    } else {
-      this.modalEl.style.left = `${Math.max(0, (window.innerWidth - userWidth) / 2)}px`;
-      this.modalEl.style.top = `${Math.max(0, (window.innerHeight - (savedHeight || 600)) / 2)}px`;
+    const _inSidebar = this.modalEl.parentElement && this.modalEl.parentElement !== document.body;
+
+    if (!_inSidebar) {
+      this.modalEl.style.width = `${userWidth}px`;
+      this.modalEl.style.maxWidth = '95vw';
+      this.modalEl.style.minWidth = "0";
+      if (savedHeight) {
+        this.modalEl.style.height = `${savedHeight}px`;
+        this.modalEl.style.maxHeight = 'none';
+      } else {
+        this.modalEl.style.maxHeight = "80vh";
+      }
+      
+      const savedPosition = _isDesktop ? this.plugin.settings?.modalPosition : null;
+      if (savedPosition && savedPosition.left !== undefined && savedPosition.top !== undefined) {
+        const posLeft = Math.min(savedPosition.left, window.innerWidth - 100);
+        const posTop = Math.min(savedPosition.top, window.innerHeight - 100);
+        this.modalEl.style.left = `${Math.max(0, posLeft)}px`;
+        this.modalEl.style.top = `${Math.max(0, posTop)}px`;
+      } else {
+        this.modalEl.style.left = `${Math.max(0, (window.innerWidth - userWidth) / 2)}px`;
+        this.modalEl.style.top = `${Math.max(0, (window.innerHeight - (savedHeight || 600)) / 2)}px`;
+      }
     }
     
     // 创建标题栏（直接挂在modalEl上，不在contentEl滚动区域内）
     const titleBar = document.createElement('div');
     titleBar.className = 'rch-title-bar';
-    titleBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-shrink:0;padding:6px 8px;cursor:grab;user-select:none;background:rgba(var(--mono-rgb-0),0.6);border-bottom:1px solid rgba(255,255,255,0.08);';
+    titleBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-shrink:0;padding:6px 8px;' + (_inSidebar ? 'cursor:default;' : 'cursor:grab;') + 'user-select:none;background:rgba(var(--mono-rgb-0),0.6);border-bottom:1px solid rgba(255,255,255,0.08);';
     this.modalEl.insertBefore(titleBar, this.contentEl);
     
     // 拖动时显示的红色关闭按钮
@@ -8538,6 +8570,7 @@ class AddRegexRuleModal {
     
     titleBar.addEventListener("mousedown", (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT' || e.target === dragCloseBtn) return;
+      if (_inSidebar) return;
       isDragging = true;
       dragStartX = e.clientX;
       dragStartY = e.clientY;
@@ -8594,6 +8627,7 @@ class AddRegexRuleModal {
     
     titleBar.addEventListener("touchstart", (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT' || e.target === dragCloseBtn) return;
+      if (_inSidebar) return;
       const touch = e.touches[0];
       isDragging = true;
       dragStartX = touch.clientX;
@@ -8716,14 +8750,33 @@ class AddRegexRuleModal {
     const titleRightBtns = document.createElement('div');
     titleRightBtns.style.cssText = 'display:flex;align-items:center;gap:6px;flex-shrink:0;';
     titleBar.appendChild(titleRightBtns);
+
+    const sidebarBtn = document.createElement('span');
+    sidebarBtn.textContent = '◧';
+    sidebarBtn.style.cssText = 'font-size:14px;cursor:pointer;color:var(--text-muted);padding:0 4px;border-radius:3px;transition:all 0.15s;';
+    sidebarBtn.title = t('main.moveToSidebar') || '移至侧边栏';
+    sidebarBtn.addEventListener('mouseenter', () => { sidebarBtn.style.background = 'var(--background-modifier-hover)'; sidebarBtn.style.color = 'var(--text-normal)'; });
+    sidebarBtn.addEventListener('mouseleave', () => { sidebarBtn.style.background = ''; sidebarBtn.style.color = 'var(--text-muted)'; });
+    sidebarBtn.addEventListener('click', () => {
+      this.plugin.openSidebarView();
+    });
+    titleRightBtns.appendChild(sidebarBtn);
+
     titleRightBtns.appendChild(dragCloseBtn);
     
+    if (_inSidebar) {
+      sidebarBtn.style.display = 'none';
+      dragCloseBtn.style.display = 'none';
+    }
     // 应用初始透明度
-    const defaultOpacity = Math.max(20, Math.min(100, this.plugin.settings?.mainModalOpacity || 100));
-    this.modalEl.style.opacity = defaultOpacity / 100;
+    if (!_inSidebar) {
+      const defaultOpacity = Math.max(20, Math.min(100, this.plugin.settings?.mainModalOpacity || 100));
+      this.modalEl.style.opacity = defaultOpacity / 100;
+    }
     
     // Ctrl+滚轮调透明度，Alt+滚轮调宽度
     this.modalEl.addEventListener("wheel", (e) => {
+      if (_inSidebar) return;
       if (e.ctrlKey) {
         e.preventDefault();
         const step = e.deltaY > 0 ? -5 : 5;
@@ -8746,13 +8799,15 @@ class AddRegexRuleModal {
     }, { passive: false });
     
     // 恢复右下角调整大小按钮
-    setupModalResizeHandle(this, this.modalEl, null, null, {
-      minWidth: _isDesktop ? 300 : 200, maxWidth: 2000,
-      widthStep: 50,
-      widthSettingsKey: 'modalWidth',
-      heightSettingsKey: 'modalHeight',
-      opacitySettingsKey: 'mainModalOpacity'
-    });
+    if (!_inSidebar) {
+      setupModalResizeHandle(this, this.modalEl, null, null, {
+        minWidth: _isDesktop ? 300 : 200, maxWidth: 2000,
+        widthStep: 50,
+        widthSettingsKey: 'modalWidth',
+        heightSettingsKey: 'modalHeight',
+        opacitySettingsKey: 'mainModalOpacity'
+      });
+    }
     
     // 如果CSS样式未加载（插件cssStyles为空），则异步加载作为后备
     if (!this.cssStyles || this.cssStyles.size === 0) {
@@ -9299,6 +9354,7 @@ class AddRegexRuleModal {
         const currentToggleBtn = categoryContainer.querySelector('.style-toggle-btn');
         
         if (hasMatchingStyle && matchingStyleButtons.length > 0) {
+          const collapseOnMatch = this.plugin?.settings?.collapseGroupOnMatch === true;
           // 记录分组是否从隐藏状态展开
           const wasHidden = !isContainerVisible;
           
@@ -9377,25 +9433,46 @@ class AddRegexRuleModal {
           
           // 根据分组的当前状态决定显示方式
           if (wasHidden && isSingleDisplay) {
-            // 单显分组：显示所有按钮，只对匹配按钮添加高亮
-            groupStyleButtons.forEach(button => {
-              button.style.display = 'flex';
-              if (matchingStyleButtons.includes(button)) {
-                button.style.border = "2px solid var(--interactive-accent)";
-              } else {
-                button.style.border = "0px solid #ddd";
-                button.style.boxShadow = "0 1px 2px rgba(0,0,0,0.1)";
-                button.style.zIndex = "1";
+            if (collapseOnMatch) {
+              groupStyleButtons.forEach(button => {
+                if (matchingStyleButtons.includes(button)) {
+                  button.style.display = 'flex';
+                  button.style.border = "2px solid var(--interactive-accent)";
+                } else {
+                  button.style.display = 'none';
+                  button.style.border = "0px solid #ddd";
+                  button.style.boxShadow = "0 1px 2px rgba(0,0,0,0.1)";
+                  button.style.zIndex = "1";
+                }
+              });
+              if (currentToggleBtn) {
+                currentToggleBtn.textContent = '>';
+                currentToggleBtn.title = t('main.expandGroupStyles');
               }
-            });
-            if (currentToggleBtn) {
-              currentToggleBtn.textContent = '<';
-              currentToggleBtn.title = t('main.collapseGroupStyles');
-            }
-            const catNameForStyle = categoryContainer.getAttribute('data-category');
-            if (this.plugin?.settings?.collapsedGroupStyles) {
-              delete this.plugin.settings.collapsedGroupStyles[catNameForStyle];
+              const catNameForStyle = categoryContainer.getAttribute('data-category');
+              this.plugin.settings.collapsedGroupStyles = this.plugin.settings.collapsedGroupStyles || {};
+              this.plugin.settings.collapsedGroupStyles[catNameForStyle] = true;
               this.plugin.saveData(this.plugin.settings);
+            } else {
+              groupStyleButtons.forEach(button => {
+                button.style.display = 'flex';
+                if (matchingStyleButtons.includes(button)) {
+                  button.style.border = "2px solid var(--interactive-accent)";
+                } else {
+                  button.style.border = "0px solid #ddd";
+                  button.style.boxShadow = "0 1px 2px rgba(0,0,0,0.1)";
+                  button.style.zIndex = "1";
+                }
+              });
+              if (currentToggleBtn) {
+                currentToggleBtn.textContent = '<';
+                currentToggleBtn.title = t('main.collapseGroupStyles');
+              }
+              const catNameForStyle = categoryContainer.getAttribute('data-category');
+              if (this.plugin?.settings?.collapsedGroupStyles) {
+                delete this.plugin.settings.collapsedGroupStyles[catNameForStyle];
+                this.plugin.saveData(this.plugin.settings);
+              }
             }
           } else if (wasHidden) {
             // 如果分组是从隐藏状态展开的，只显示匹配的按钮
@@ -9477,25 +9554,37 @@ class AddRegexRuleModal {
             });
             
             // 保持折叠状态，不修改toggle按钮
-          } else {
-            // 如果分组处于展开状态，显示所有样式按钮
+          } else if (collapseOnMatch) {
             groupStyleButtons.forEach(button => {
-              button.style.display = 'flex';
-              
-              // 如果是匹配按钮，添加高亮样式
               if (matchingStyleButtons.includes(button)) {
+                button.style.display = 'flex';
                 button.style.border = "2px solid var(--interactive-accent)";
-
-
-
-
               } else {
-                // 清除其他按钮的高亮样式
+                button.style.display = 'none';
                 button.style.border = "0px solid #ddd";
                 button.style.transform = "scale(1)";
                 button.style.boxShadow = "0 1px 2px rgba(0,0,0,0.1)";
                 button.style.zIndex = "1";
-                
+              }
+            });
+            if (currentToggleBtn) {
+              currentToggleBtn.textContent = '>';
+              currentToggleBtn.title = t('main.expandGroupStyles');
+            }
+            const catNameForStyle = categoryContainer.getAttribute('data-category');
+            this.plugin.settings.collapsedGroupStyles = this.plugin.settings.collapsedGroupStyles || {};
+            this.plugin.settings.collapsedGroupStyles[catNameForStyle] = true;
+            this.plugin.saveData(this.plugin.settings);
+          } else {
+            groupStyleButtons.forEach(button => {
+              button.style.display = 'flex';
+              if (matchingStyleButtons.includes(button)) {
+                button.style.border = "2px solid var(--interactive-accent)";
+              } else {
+                button.style.border = "0px solid #ddd";
+                button.style.transform = "scale(1)";
+                button.style.boxShadow = "0 1px 2px rgba(0,0,0,0.1)";
+                button.style.zIndex = "1";
               }
             });
           }
@@ -9715,7 +9804,8 @@ class AddRegexRuleModal {
     mainContainer.style.padding = "2px";
     mainContainer.style.border = "none";
     mainContainer.style.borderRadius = "0";
-    
+
+
 
     const fontSizeCheckQueue = this._fontSizeCheckQueue = [];
     
@@ -10252,12 +10342,19 @@ class AddRegexRuleModal {
             style: this.cssStyles.get(className)
           };
           
-          // 检查是否已存在对应的规则
+          // 检查是否已存在对应的规则（包括全局规则）
           const currentRules = Array.isArray(this.plugin.rules) ? this.plugin.rules : [];
+          const globalRules = Array.isArray(this.plugin.globalRules) ? this.plugin.globalRules : [];
           const existingRule = currentRules.find(rule => 
             rule.regex === regexValue && rule.cssClass === className
           );
+          const existingGlobalRule = globalRules.find(rule =>
+            rule.regex === regexValue && rule.cssClass === className
+          );
           const ruleIndex = currentRules.findIndex(rule => 
+            rule.regex === regexValue && rule.cssClass === className
+          );
+          const globalRuleIndex = globalRules.findIndex(rule =>
             rule.regex === regexValue && rule.cssClass === className
           );
           
@@ -10527,13 +10624,37 @@ class AddRegexRuleModal {
             const currentRegexValue = regexInput ? regexInput.getValue() : regexValue;
             
             if (existingRule) {
-              // 规则已存在，执行删除后重新应用操作
+              // 局部规则已存在，执行删除后重新应用操作
               await this.deleteRule(ruleIndex);
               if (currentRegexValue && currentRegexValue.trim() !== '') {
                 await this.plugin.addRule(currentRegexValue, className, false, this.remark);
                 
                 
                 this.showSuccessMessage(t('main.ruleReapplied') + ` "${currentRegexValue}" ` + t('main.styleClass') + ` .${className}`);
+                
+                this.clearHistorySection();
+                this.clearGlobalRulesSection();
+                this.clearRemarkSection();
+                this.addHistorySection(this.contentEl);
+                this.addGlobalRulesSection(this.contentEl);
+                this.addHeadingStylesSection(this.contentEl);
+                this.addRemarkSection(this.contentEl);
+                
+                this.updateStyleButtonState(currentRegexValue, className, true);
+                
+                if (typeof this.plugin.reloadStyles === 'function') {
+                  await this.plugin.reloadStyles();
+                }
+                
+                this.plugin.checkAndApplyHighlights();
+              }
+            } else if (existingGlobalRule) {
+              // 全局规则已存在，更新全局规则
+              if (currentRegexValue && currentRegexValue.trim() !== '') {
+                await this.plugin.editGlobalRule(globalRuleIndex, currentRegexValue, className, existingGlobalRule.remark || '');
+                
+                
+                this.showSuccessMessage(t('main.globalRuleUpdated') + ` "${currentRegexValue}" ` + t('main.styleClass') + ` .${className}`);
                 
                 this.clearHistorySection();
                 this.clearGlobalRulesSection();
@@ -12041,10 +12162,9 @@ class AddRegexRuleModal {
             }
           });
         }
-      } else if (!isGroupCollapsed) {
-        // 如果没有选中文本且分组不是折叠状态，显示所有样式按钮
+      } else {
         styleButtons.forEach(button => {
-          button.style.display = 'flex';
+          button.style.display = 'none';
         });
       }
       
@@ -12064,9 +12184,8 @@ class AddRegexRuleModal {
           toggleBtn.title = t('main.expandGroupStyles');
         }
       } else {
-        // 如果没有选中文本，根据样式按钮的可见性设置状态
-        toggleBtn.textContent = hasVisibleButtons ? "<" : ">";
-        toggleBtn.title = hasVisibleButtons ? t('main.collapseGroup') : t('main.expandGroup');
+        toggleBtn.textContent = ">";
+        toggleBtn.title = t('main.expandGroup');
       }
       toggleBtn.style.cursor = "pointer";
       toggleBtn.style.padding = "1px 6px";
@@ -12211,6 +12330,24 @@ class AddRegexRuleModal {
       });
     });
     
+    // 浮动面板的选中文本自动输入监听
+    if (!_inSidebar) {
+      this._floatingSelectionHandler = () => {
+        if (this.modalEl.parentElement !== document.body) return;
+        if (!this.regexInput) return;
+        const selection = window.getSelection();
+        if (selection && selection.toString().trim()) {
+          const selectedText = selection.toString().trim();
+          const anchorNode = selection.anchorNode;
+          if (anchorNode && !this.modalEl.contains(anchorNode)) {
+            this.regexInput.setValue(selectedText);
+            if (this.highlightMatchingRuleButtons) this.highlightMatchingRuleButtons();
+            if (this.showInlineRemarkForRegex) this.showInlineRemarkForRegex(selectedText);
+          }
+        }
+      };
+      document.addEventListener('selectionchange', this._floatingSelectionHandler);
+    }
 
     // 添加重新打开按钮的点击事件监听器
     let chipHoverTimer = null;
@@ -12792,18 +12929,24 @@ class AddRegexRuleModal {
       settingsChipsRow.style.opacity = '1';
       settingsChipsRow.style.pointerEvents = 'auto';
       
+      const statusBar = document.querySelector('.status-bar');
+      if (statusBar) {
+        statusBar.style.display = 'none';
+      }
+      
       if (settingsPopup) {
         const oldContent = settingsPopup.querySelector('.settings-popup-content');
         if (oldContent) oldContent.remove();
       } else {
         settingsPopup = document.createElement('div');
         settingsPopup.className = 'settings-popup-window';
-        settingsPopup.style.cssText = `position:fixed;z-index:10000;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.35);padding:12px 16px;min-width:280px;max-width:500px;`;
+        settingsPopup.style.cssText = `position:fixed;z-index:99999;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.35);padding:12px 16px;min-width:280px;max-width:500px;`;
         if (document.body.classList.contains('theme-dark')) {
           settingsPopup.style.boxShadow = '0 4px 16px rgba(0,0,0,0.5)';
           settingsPopup.style.outline = '1px solid rgba(255,255,255,0.1)';
         }
-        document.body.appendChild(settingsPopup);
+        const popupParent = document.querySelector('.app-container') || document.body;
+        popupParent.appendChild(settingsPopup);
         
         settingsPopup.addEventListener('mouseenter', () => {
           if (settingsPopupCloseTimer) { clearTimeout(settingsPopupCloseTimer); settingsPopupCloseTimer = null; }
@@ -12874,6 +13017,10 @@ class AddRegexRuleModal {
         settingsChipsRow.style.opacity = '0';
         settingsChipsRow.style.pointerEvents = 'none';
 
+      }
+      const statusBar = document.querySelector('.status-bar');
+      if (statusBar) {
+        statusBar.style.display = '';
       }
     };
     
@@ -13218,6 +13365,60 @@ class AddRegexRuleModal {
     chipHoverDelayInput.addEventListener("change", async () => {
       if (!this.plugin.settings) this.plugin.settings = {};
       this.plugin.settings.chipHoverDelay = parseInt(chipHoverDelayInput.value) || 0;
+      await this.plugin.saveData(this.plugin.settings);
+    });
+
+    const collapseGroupOnMatchRow = displayContent.createDiv();
+    collapseGroupOnMatchRow.style.display = "flex";
+    collapseGroupOnMatchRow.style.alignItems = "center";
+    collapseGroupOnMatchRow.style.marginBottom = "5px";
+    collapseGroupOnMatchRow.style.flexWrap = "wrap";
+
+    const collapseGroupOnMatchLabel = collapseGroupOnMatchRow.createEl("span");
+    collapseGroupOnMatchLabel.textContent = t('settings.collapseGroupOnMatch') + ": ";
+    collapseGroupOnMatchLabel.style.marginRight = "10px";
+    collapseGroupOnMatchLabel.style.fontSize = "14px";
+
+    const collapseGroupOnMatchInput = collapseGroupOnMatchRow.createEl("input");
+    collapseGroupOnMatchInput.type = "checkbox";
+    collapseGroupOnMatchInput.checked = this.plugin.settings?.collapseGroupOnMatch === true;
+
+    const collapseGroupOnMatchHint = collapseGroupOnMatchRow.createEl("span");
+    collapseGroupOnMatchHint.textContent = t('settings.collapseGroupOnMatchDesc');
+    collapseGroupOnMatchHint.style.fontSize = "12px";
+    collapseGroupOnMatchHint.style.color = "var(--text-muted)";
+    collapseGroupOnMatchHint.style.marginLeft = "8px";
+
+    collapseGroupOnMatchInput.addEventListener("change", async (e) => {
+      if (!this.plugin.settings) this.plugin.settings = {};
+      this.plugin.settings.collapseGroupOnMatch = e.target.checked;
+      await this.plugin.saveData(this.plugin.settings);
+    });
+
+    const showRelatedNotesRow = displayContent.createDiv();
+    showRelatedNotesRow.style.display = "flex";
+    showRelatedNotesRow.style.alignItems = "center";
+    showRelatedNotesRow.style.marginBottom = "5px";
+    showRelatedNotesRow.style.flexWrap = "wrap";
+
+    const showRelatedNotesLabel = showRelatedNotesRow.createEl("span");
+    showRelatedNotesLabel.textContent = "显示相关笔记: ";
+    showRelatedNotesLabel.style.marginRight = "10px";
+    showRelatedNotesLabel.style.fontSize = "14px";
+
+    const showRelatedNotesInput = showRelatedNotesRow.createEl("input");
+    showRelatedNotesInput.type = "checkbox";
+    showRelatedNotesInput.checked = this.plugin.settings?.showRelatedNotes !== false;
+
+    const showRelatedNotesHint = showRelatedNotesRow.createEl("span");
+    showRelatedNotesHint.textContent = "选中/点击关键词时在备注区域上方显示相关笔记链接";
+    showRelatedNotesHint.style.fontSize = "12px";
+    showRelatedNotesHint.style.color = "var(--text-muted)";
+    showRelatedNotesHint.style.marginLeft = "8px";
+
+    showRelatedNotesInput.addEventListener("change", async (e) => {
+      if (!this.plugin.settings) this.plugin.settings = {};
+      this.plugin.settings.showRelatedNotes = e.target.checked;
       await this.plugin.saveData(this.plugin.settings);
     });
 
@@ -13719,6 +13920,21 @@ class AddRegexRuleModal {
     remarkPopupHideOnSelectionLabel.style.fontSize = "14px";
     remarkPopupHideOnSelectionLabel.style.cursor = "pointer";
 
+    const hidePopupWhenSidebarOpenRow = popupSettingsContent.createDiv();
+    hidePopupWhenSidebarOpenRow.style.display = "flex";
+    hidePopupWhenSidebarOpenRow.style.alignItems = "center";
+    hidePopupWhenSidebarOpenRow.style.marginBottom = "5px";
+
+    const hidePopupWhenSidebarOpenCheckbox = hidePopupWhenSidebarOpenRow.createEl("input");
+    hidePopupWhenSidebarOpenCheckbox.type = "checkbox";
+    hidePopupWhenSidebarOpenCheckbox.checked = this.plugin.settings?.hidePopupWhenSidebarOpen !== false;
+    hidePopupWhenSidebarOpenCheckbox.style.marginRight = "8px";
+    hidePopupWhenSidebarOpenCheckbox.style.cursor = "pointer";
+
+    const hidePopupWhenSidebarOpenLabel = hidePopupWhenSidebarOpenRow.createEl("span", { text: t('settings.hidePopupWhenSidebarOpen') });
+    hidePopupWhenSidebarOpenLabel.style.fontSize = "14px";
+    hidePopupWhenSidebarOpenLabel.style.cursor = "pointer";
+
     // 备注提示符设置
     const showRemarkBadgeRow = popupSettingsContent.createDiv();
     showRemarkBadgeRow.style.display = "flex";
@@ -13820,6 +14036,7 @@ class AddRegexRuleModal {
 
         this.plugin.settings.remarkPopupOnlyOnSelection = remarkPopupOnlyOnSelectionCheckbox.checked;
         this.plugin.settings.remarkPopupHideOnSelection = remarkPopupHideOnSelectionCheckbox.checked;
+        this.plugin.settings.hidePopupWhenSidebarOpen = hidePopupWhenSidebarOpenCheckbox.checked;
         this.plugin.settings.showRemarkBadge = showRemarkBadgeCheckbox.checked;
         this.plugin.settings.remarkBadgeThreshold = parseInt(remarkBadgeThresholdInput.value) || 0;
         this.plugin.settings.remarkDebugLog = remarkDebugLogCheckbox.checked;
@@ -15332,6 +15549,7 @@ class AddRegexRuleModal {
         groupGrid.style.flexWrap = 'wrap';
         groupGrid.style.gap = '4px';
         groupGrid.style.marginBottom = '8px';
+        groupGrid.setAttribute('data-rule-group', '__ungrouped__');
         groupGrids['__ungrouped__'] = groupGrid;
       }
       if (hasLocal) {
@@ -15379,6 +15597,7 @@ class AddRegexRuleModal {
         groupGrid.style.flexWrap = 'wrap';
         groupGrid.style.gap = '4px';
         groupGrid.style.marginBottom = '8px';
+        groupGrid.setAttribute('data-rule-group', '__local__');
         groupGrids['__local__'] = groupGrid;
       }
 
@@ -15563,18 +15782,14 @@ class AddRegexRuleModal {
           globalButton.style.border = "1px dashed #999";
         }
         
-        // 添加tooltip提示功能，显示正则规则、样式名称和备注
         let tooltipText = (isLocal ? (t('main.localRule') || '文件规则') : t('main.globalRule')) + `\n` + t('main.regex') + `: ${rule.regex}\n` + t('main.styleClass') + `: .${rule.cssClass}\n` + t('main.clickToEdit');
-        // 添加remark到tooltip中
-        tooltipText += `\n` + t('main.remark') + `: ${rule.remark || t('main.empty')}`;
-        // 添加禁用状态提示
         tooltipText += `\n` + t('main.status') + `: ${isDisabled ? t('main.disabled') : t('main.enabled')}`;
 
         globalButton.setAttribute("title", tooltipText);
         
         globalButton.draggable = true;
         globalButton.setAttribute('data-rule-id', ruleId);
-        if (_isDesktop) this._addRemarkHover(globalButton, rule);
+
         globalButton.addEventListener('dragstart', (e) => {
           this._isDragging = true;
           const ruleType = isLocal ? 'local-rule' : 'global-rule';
@@ -15656,6 +15871,7 @@ class AddRegexRuleModal {
             this.remark = rule.remark || '';
             if (this._refreshUpdateChip) this._refreshUpdateChip();
           }
+          this.toggleInlineRemark(ruleId, rule);
         });
         
 
@@ -16739,196 +16955,275 @@ class AddRegexRuleModal {
     });
   }
 
-  _addRemarkHover(buttonEl, rule) {
-    const links = rule.links || [];
-    const externalRemark = rule.remark || '';
-    const hasLinkRemarks = links.some(l => l.remark && l.remark.trim());
-    if (!hasLinkRemarks && !externalRemark) return;
-    let hoverTimeout = null;
-    let popup = null;
+
+  toggleInlineRemark(ruleId, rule, forceRefresh) {
+    const existing = this.contentEl.querySelector('.inline-remark-section');
+    if (existing && !forceRefresh && this._inlineRemarkRuleId === ruleId) {
+      existing.remove();
+      this._inlineRemarkRuleId = null;
+      return;
+    }
+    if (existing) existing.remove();
+    this._showInlineRemarkForRules(ruleId, [rule]);
+  }
+
+  _showRelatedNotesOnly(searchText) {
     const plugin = this.plugin;
-    const showPopup = () => {
-      if (popup) return;
-      popup = document.createElement('div');
-      popup.classList.add('remark-custom-popup');
-      popup.style.position = 'fixed';
-      popup.style.zIndex = '10001';
-      popup.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
-      popup.style.transform = 'scale(0.95)';
-      popup.style.transformOrigin = 'center bottom';
-      const popupFontSize = plugin?.settings?.popupFontSize !== undefined ? plugin.settings.popupFontSize : 14;
-      const popupSpacing = plugin?.settings?.popupSpacing !== undefined ? plugin.settings.popupSpacing : 10;
-      const popupMaxWidth = plugin?.settings?.popupWidth !== undefined ? plugin.settings.popupWidth : 400;
-      popup.style.padding = `${popupSpacing}px`;
-      popup.style.maxWidth = `${popupMaxWidth}px`;
-      popup.style.minWidth = '80px';
-      popup.style.background = 'rgba(var(--mono-rgb-0),0.75)';
-      popup.style.backdropFilter = 'blur(16px) saturate(180%)';
-      popup.style.webkitBackdropFilter = 'blur(16px) saturate(180%)';
-      popup.style.border = 'none';
-      popup.style.borderRadius = '12px';
-      popup.style.boxShadow = '0 12px 40px rgba(0,0,0,0.35)';
-      popup.style.fontSize = `${popupFontSize}px`;
-      popup.style.lineHeight = `${plugin?.settings?.popupLineHeight !== undefined ? plugin.settings.popupLineHeight : 1.5}`;
-      popup.style.color = 'var(--text-normal)';
-      popup.style.userSelect = 'text';
-      popup.style.webkitUserSelect = 'text';
-      if (document.body.classList.contains('theme-dark')) {
-        popup.style.boxShadow = '0 12px 40px rgba(0,0,0,0.5)';
-      }
-      const style = document.createElement('style');
-      style.textContent = `
-        .remark-custom-popup p { margin: 0; }
-        .remark-custom-popup ul, .remark-custom-popup ol { margin: 0; padding-left: 20px; }
-        .remark-custom-popup li { margin: 0; }
-        .remark-custom-popup h1, .remark-custom-popup h2, .remark-custom-popup h3, .remark-custom-popup h4, .remark-custom-popup h5, .remark-custom-popup h6 { margin: 0; }
-        .remark-custom-popup blockquote { margin: 0; }
-        .remark-custom-popup hr { margin: 5px 0; }
-        .remark-custom-popup table {
-          border-collapse: separate; border-spacing: 0; margin: 8px 0;
-          width: 100%; border-radius: 6px; overflow: hidden;
-          border: 1px solid var(--border-color); font-size: 11px;
-        }
-        .remark-custom-popup th, .remark-custom-popup td {
-          padding: 5px 10px; text-align: left;
-          border-bottom: 1px solid var(--border-color);
-          border-right: 1px solid var(--border-color);
-        }
-        .remark-custom-popup th:last-child, .remark-custom-popup td:last-child { border-right: none; }
-        .remark-custom-popup tr:last-child td { border-bottom: none; }
-        .remark-custom-popup th {
-          background: linear-gradient(180deg, var(--background-modifier-hover), var(--background-secondary));
-          font-weight: 600; font-size: 11px; text-transform: uppercase;
-          letter-spacing: 0.3px; color: var(--text-muted);
-        }
-        .remark-custom-popup tr:nth-child(even) td { background-color: rgba(0,0,0,0.03); }
-        .remark-custom-popup tr:hover td { background-color: var(--background-modifier-hover); }
-        .remark-custom-popup img { max-width: 100%; height: auto; border-radius: 4px; margin: 4px 0; }
-        .remark-custom-popup .internal-embed { max-width: 100%; }
-        .remark-custom-popup .internal-embed img { max-width: 100%; height: auto; border-radius: 4px; margin: 4px 0; }
-      `;
-      popup.appendChild(style);
-      const titleDiv = document.createElement('div');
-      titleDiv.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-      titleDiv.textContent = rule.regex;
-      popup.appendChild(titleDiv);
-      const linksByFile = new Map();
-      if (links.length > 0) {
-        for (const link of links) {
-          const key = link.filePath;
-          if (!linksByFile.has(key)) linksByFile.set(key, []);
-          linksByFile.get(key).push(link);
-        }
-      }
-      // 全局规则弹窗中追加同 regex 的文件规则备注
-      if (plugin.globalRules?.some(r => r.regex === rule.regex) && plugin._fileRulesData) {
-        for (const fp of Object.keys(plugin._fileRulesData)) {
-          const entry = plugin._fileRulesData[fp];
-          if (!entry?.rules) continue;
-          const fileRule = entry.rules.find(r => r.regex === rule.regex);
-          if (fileRule && fileRule.links && fileRule.links.length > 0) {
-            for (const fl of fileRule.links) {
-              const key = fl.filePath;
-              if (!linksByFile.has(key)) linksByFile.set(key, []);
-              linksByFile.get(key).push({ ...fl, _fromFileRule: true, _sourceFilePath: fp });
-            }
+    const existing = this.contentEl.querySelector('.inline-related-notes-section');
+    if (existing) existing.remove();
+    const searchTerms = searchText.split('|').map(s => s.trim()).filter(s => s.length > 0);
+    if (searchTerms.length === 0) return;
+    const allFiles = plugin.app.vault.getFiles();
+    const mdFiles = allFiles.filter(f => f.extension === 'md');
+    const relatedNotes = [];
+    for (const term of searchTerms) {
+      for (const f of mdFiles) {
+        const nameWithoutExt = f.name.replace(/\.md$/, '');
+        if (nameWithoutExt.includes(term) && f.path !== plugin.currentFilePath) {
+          if (!relatedNotes.some(n => n.path === f.path)) {
+            relatedNotes.push(f);
           }
         }
       }
-      const contentDiv = document.createElement('div');
-      contentDiv.className = 'remark-popup-content';
-      contentDiv.style.cssText = 'white-space:pre-wrap;word-break:break-word;';
-      if (linksByFile.size > 0) {
-        let fileIndex = 0;
-        for (const [filePath, fileLinks] of linksByFile) {
-          const fileName = filePath.split('/').pop().replace(/\.md$/, '');
-          const groupEl = document.createElement('div');
-          groupEl.className = 'remark-source-group';
-          groupEl.style.cssText = fileIndex > 0
-            ? 'margin-top:8px;padding-top:8px;border-top:1px solid var(--background-modifier-border);'
-            : '';
-          const headerEl = document.createElement('div');
-          headerEl.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;';
-          const fileHues = [210, 30, 150, 340, 270, 60, 180, 90];
-          const fileHue = fileHues[fileIndex % fileHues.length];
-          const fileNameEl = document.createElement('span');
-          fileNameEl.textContent = '📄 ' + (fileName || '(' + t('main.noTitle') + ')');
-          fileNameEl.style.cssText = `font-size:12px;font-weight:600;color:hsl(${fileHue},50%,35%);background:hsl(${fileHue},50%,90%);padding:2px 8px;border-radius:10px;flex-shrink:0;white-space:nowrap;`;
-          headerEl.appendChild(fileNameEl);
-          const hasFileRuleLink = fileLinks.some(l => l._fromFileRule);
-          if (hasFileRuleLink) {
-            const fileRuleBadge = document.createElement('span');
-            fileRuleBadge.textContent = 'l';
-            fileRuleBadge.style.cssText = `font-size:10px;font-weight:700;color:hsl(${fileHue},50%,35%);background:hsl(${fileHue},50%,85%);padding:1px 5px;border-radius:8px;flex-shrink:0;`;
-            headerEl.appendChild(fileRuleBadge);
-          }
-          groupEl.appendChild(headerEl);
-          const bodyEl = document.createElement('div');
-          bodyEl.className = 'remark-source-body';
-          for (let i = 0; i < fileLinks.length; i++) {
-            const link = fileLinks[i];
-            const remarkContent = link.remark || '';
-            if (!remarkContent.trim()) continue;
-            if (i > 0 || bodyEl.childNodes.length > 0) {
-              const innerDivider = document.createElement('div');
-              innerDivider.style.cssText = 'border-top:1px solid rgba(255,255,255,0.08);margin:4px 0;';
-              bodyEl.appendChild(innerDivider);
-            }
-            const remarkWrapper = document.createElement('div');
-            remarkWrapper.style.cssText = 'display:flex;align-items:flex-start;gap:6px;';
-            const dot = document.createElement('span');
-            dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:hsl(${fileHue},50%,50%);flex-shrink:0;margin-top:5px;`;
-            remarkWrapper.appendChild(dot);
-            const remarkBox = document.createElement('div');
-            remarkBox.style.cssText = 'flex:1;min-width:0;overflow:hidden;';
-            const remarkEl = document.createElement('div');
-            remarkEl.className = 'remark-popup-content';
-            remarkEl.style.cssText = 'white-space:pre-wrap;word-break:break-word;';
-            remarkEl.textContent = remarkContent;
-            remarkBox.appendChild(remarkEl);
-            remarkWrapper.appendChild(remarkBox);
-            bodyEl.appendChild(remarkWrapper);
-          }
-          groupEl.appendChild(bodyEl);
-          contentDiv.appendChild(groupEl);
-          fileIndex++;
+    }
+    if (relatedNotes.length === 0) return;
+    const section = document.createElement('div');
+    section.className = 'inline-related-notes-section';
+    section.style.cssText = 'margin-top:8px;padding:8px;border:1px solid var(--background-modifier-border);border-radius:8px;background:var(--background-secondary);max-height:60vh;overflow-y:auto;';
+    const headerRow = document.createElement('div');
+    headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
+    const titleDiv = document.createElement('div');
+    titleDiv.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
+    titleDiv.textContent = '📎 相关笔记';
+    headerRow.appendChild(titleDiv);
+    const closeBtn = document.createElement('span');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = 'cursor:pointer;font-size:14px;color:var(--text-muted);padding:0 4px;flex-shrink:0;';
+    closeBtn.addEventListener('click', () => { section.remove(); });
+    headerRow.appendChild(closeBtn);
+    section.appendChild(headerRow);
+    const relatedList = document.createElement('div');
+    relatedList.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+    for (const note of relatedNotes.slice(0, 10)) {
+      const noteLink = document.createElement('a');
+      noteLink.className = 'related-note-link internal-link';
+      const nameWithoutExt = note.name.replace(/\.md$/, '');
+      noteLink.textContent = nameWithoutExt;
+      noteLink.title = note.path;
+      noteLink.dataset.href = note.path;
+      noteLink.dataset.path = note.path;
+      noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;';
+      noteLink.addEventListener('mouseenter', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.5)'; });
+      noteLink.addEventListener('mouseleave', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
+      noteLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        plugin.app.workspace.openLinkText(note.path, '', false);
+      });
+      noteLink.addEventListener('auxclick', (e) => {
+        if (e.button === 1) {
+          e.preventDefault();
+          e.stopPropagation();
+          plugin.app.workspace.openLinkText(note.path, '', true);
         }
-      }
-      if (externalRemark && !hasLinkRemarks) {
-        const fallbackDiv = document.createElement('div');
-        fallbackDiv.style.cssText = 'white-space:pre-wrap;word-break:break-word;';
-        fallbackDiv.textContent = externalRemark;
-        contentDiv.appendChild(fallbackDiv);
-      }
-      popup.appendChild(contentDiv);
-      document.body.appendChild(popup);
-      const rect = buttonEl.getBoundingClientRect();
-      let left = rect.left + rect.width / 2 - popup.offsetWidth / 2;
-      if (left < 10) left = 10;
-      else if (left + popup.offsetWidth > window.innerWidth - 10) left = window.innerWidth - popup.offsetWidth - 10;
-      const spaceAbove = rect.top;
-      const spaceBelow = window.innerHeight - rect.bottom;
-      let top;
-      if (spaceAbove >= spaceBelow || spaceAbove >= 100) {
-        top = rect.top - popup.offsetHeight - 6;
-      } else {
-        top = rect.bottom + 6;
-      }
-      if (top < 10) top = 10;
-      popup.style.left = left + 'px';
-      popup.style.top = top + 'px';
-      popup.style.opacity = '1';
-      popup.style.transform = 'scale(1)';
-    };
-    const hidePopup = () => {
-      if (hoverTimeout) { clearTimeout(hoverTimeout); hoverTimeout = null; }
-      if (popup) { popup.remove(); popup = null; }
-    };
-    buttonEl.addEventListener('mouseenter', () => {
-      hoverTimeout = setTimeout(showPopup, plugin?.settings?.popupHoverDelay || 300);
+      });
+      relatedList.appendChild(noteLink);
+    }
+    if (relatedNotes.length > 10) {
+      const moreTag = document.createElement('span');
+      moreTag.textContent = `+${relatedNotes.length - 10}`;
+      moreTag.style.cssText = 'font-size:10px;color:var(--text-muted);padding:2px 4px;';
+      relatedList.appendChild(moreTag);
+    }
+    section.appendChild(relatedList);
+    this.contentEl.appendChild(section);
+  }
+
+  showInlineRemarkForRegex(regex) {
+    const plugin = this.plugin;
+    const allRules = [
+      ...(Array.isArray(plugin.globalRules) ? plugin.globalRules : []),
+      ...(Array.isArray(plugin.rules) ? plugin.rules : [])
+    ];
+    const matchingRules = allRules.filter(r => {
+      const ruleParts = r.regex.split('|');
+      return ruleParts.includes(regex) || r.regex.includes(regex) || regex.includes(r.regex);
+
     });
-    buttonEl.addEventListener('mouseleave', hidePopup);
-    buttonEl.addEventListener('mousedown', hidePopup);
+    if (matchingRules.length === 0) {
+      const existing = this.contentEl.querySelector('.inline-remark-section');
+      if (existing) existing.remove();
+      this._inlineRemarkRuleId = null;
+      if (plugin.settings?.showRelatedNotes !== false && regex) {
+        this._showRelatedNotesOnly(regex);
+      }
+      return;
+    }
+    const existing = this.contentEl.querySelector('.inline-remark-section');
+    if (existing) existing.remove();
+    const existingRelated = this.contentEl.querySelector('.inline-related-notes-section');
+    if (existingRelated) existingRelated.remove();
+    const ruleId = 'regex-' + regex;
+    this._showInlineRemarkForRules(ruleId, matchingRules);
+  }
+
+  _showInlineRemarkForRules(ruleId, rules) {
+    const existingSection = this.contentEl.querySelector('.inline-remark-section');
+    if (existingSection) existingSection.remove();
+    this._inlineRemarkRuleId = ruleId;
+    const plugin = this.plugin;
+    const popupSpacing = plugin?.settings?.popupSpacing !== undefined ? plugin.settings.popupSpacing : 10;
+    const popupFontSize = plugin?.settings?.popupFontSize !== undefined ? plugin.settings.popupFontSize : 14;
+
+    const section = document.createElement('div');
+    section.className = 'inline-remark-section';
+    section.style.cssText = 'margin-top:8px;padding:8px;border:1px solid var(--background-modifier-border);border-radius:8px;background:var(--background-secondary);max-height:60vh;overflow-y:auto;';
+
+    const headerRow = document.createElement('div');
+    headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
+    const titleDiv = document.createElement('div');
+    titleDiv.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
+    titleDiv.textContent = rules.map(r => r.regex).join(' | ');
+    headerRow.appendChild(titleDiv);
+    const closeBtn = document.createElement('span');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = 'cursor:pointer;font-size:14px;color:var(--text-muted);padding:0 4px;flex-shrink:0;';
+    closeBtn.addEventListener('click', () => {
+      section.remove();
+      this._inlineRemarkRuleId = null;
+    });
+    headerRow.appendChild(closeBtn);
+    section.appendChild(headerRow);
+
+    const _remarkMasonryMode = plugin.settings?.remarkMasonryMode !== undefined ? plugin.settings.remarkMasonryMode : true;
+
+    for (let ri = 0; ri < rules.length; ri++) {
+      const rule = rules[ri];
+      const isGlobal = plugin.globalRules?.some(r => r.regex === rule.regex && r.cssClass === rule.cssClass);
+
+      if (rules.length > 1 && ri > 0) {
+        const divider = document.createElement('div');
+        divider.style.cssText = 'border-top:2px solid var(--background-modifier-border);margin:8px 0;';
+        section.appendChild(divider);
+      }
+      if (rules.length > 1) {
+        const ruleHeader = document.createElement('div');
+        ruleHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-accent);margin-bottom:4px;';
+        ruleHeader.textContent = rule.regex + (isGlobal ? ' (全局)' : ' (文件)');
+        section.appendChild(ruleHeader);
+      }
+
+      const contentContainer = document.createElement('div');
+      contentContainer.style.cssText = `padding:${popupSpacing}px;font-size:${popupFontSize}px;line-height:${plugin?.settings?.popupLineHeight !== undefined ? plugin.settings.popupLineHeight : 1.5};`;
+      section.appendChild(contentContainer);
+
+      const ruleIdForRefresh = isGlobal ? rule.regex + '-' + rule.cssClass : 'history-' + rule.regex + '-' + rule.cssClass;
+      plugin.renderRemarkContent(contentContainer, {
+        links: rule.links,
+        rule,
+        ruleRegex: rule.regex,
+        isGlobal,
+        ruleSource: isGlobal ? 'global' : 'local',
+        popupSpacing,
+        popupFontSize,
+        popupLineHeight: plugin.settings.popupLineHeight !== undefined ? plugin.settings.popupLineHeight : 1.5,
+        onRefresh: () => { this._showInlineRemarkForRules(ruleId, rules); },
+        onReposition: null,
+        onDirty: null,
+        keepOpenRef: null,
+        isDirtyRef: null,
+        targetEl: null,
+        dotSize: 8,
+        alignItems: 'flex-start',
+        showFileRuleBadge: true,
+        showFileNameEdit: true,
+        showImageRender: true,
+        showFromFileRuleDelete: true,
+        cssScope: 'inline-remark-section',
+        masonry: _remarkMasonryMode
+      });
+    }
+
+    const keywordIndex = plugin.buildKeywordIndex();
+    const backlinkIndex = plugin.buildBacklinkIndex(keywordIndex);
+    const allRelatedKeywords = new Map();
+    for (const rule of rules) {
+      const mentionedKeywords = [];
+      const currentRule = plugin.globalRules.find(r => r.regex === rule.regex) || plugin.rules.find(r => r.regex === rule.regex);
+      if (currentRule && currentRule.links) {
+        const sortedKws = [...keywordIndex.values()]
+          .filter(k => k.plainTexts && k.plainTexts.length > 0 && k.regex !== rule.regex)
+          .sort((a, b) => Math.max(...b.plainTexts.map(p => p.length)) - Math.max(...a.plainTexts.map(p => p.length)));
+        for (const link of currentRule.links) {
+          const remarkText = link.remark || '';
+          if (!remarkText.trim()) continue;
+          for (const kw of sortedKws) {
+            if (mentionedKeywords.some(m => m.regex === kw.regex)) continue;
+            if (kw.plainTexts.some(p => remarkText.includes(p))) {
+              mentionedKeywords.push(kw);
+            }
+          }
+        }
+      }
+      const mentionedBy = backlinkIndex.get(rule.regex) || [];
+      for (const kw of mentionedKeywords) {
+        if (!allRelatedKeywords.has(kw.regex)) allRelatedKeywords.set(kw.regex, { regex: kw.regex, cssClass: kw.cssClass, relation: 'mention' });
+      }
+      for (const bl of mentionedBy) {
+        if (!allRelatedKeywords.has(bl.sourceRegex)) {
+          const sourceRule = plugin.globalRules.find(r => r.regex === bl.sourceRegex) || plugin.rules.find(r => r.regex === bl.sourceRegex);
+          allRelatedKeywords.set(bl.sourceRegex, { regex: bl.sourceRegex, cssClass: sourceRule?.cssClass || '', relation: 'mentionedBy' });
+        }
+      }
+    }
+
+    if (allRelatedKeywords.size > 0) {
+      const chipsBar = document.createElement('div');
+      chipsBar.className = 'keyword-chips-bar';
+      chipsBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;background:transparent;border-top:1px solid rgba(255,255,255,0.08);flex-shrink:0;';
+
+      const chipsLabel = document.createElement('span');
+      chipsLabel.textContent = '🔗';
+      chipsLabel.style.cssText = 'font-size:11px;color:var(--text-muted);margin-right:2px;align-self:center;';
+      chipsBar.appendChild(chipsLabel);
+
+      for (const [kwRegex, info] of allRelatedKeywords) {
+        const chip = document.createElement('span');
+        chip.className = 'keyword-chip';
+        chip.title = (info.relation === 'mention' ? t('main.keywordMentions') : t('main.keywordMentionedBy')) + ' ' + kwRegex;
+        chip.style.cssText = 'display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(var(--mono-rgb-0),0.3);transition:all 0.15s ease;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+
+        const chipLabel = document.createElement('span');
+        chipLabel.textContent = (info.relation === 'mention' ? '→ ' : '← ') + kwRegex;
+        if (info.cssClass) {
+          chipLabel.className = info.cssClass + ' highlight-regex-text';
+          chip.style.borderColor = 'transparent';
+        } else {
+          chipLabel.style.cssText = 'font-weight:500;color:var(--text-normal);';
+        }
+        chip.appendChild(chipLabel);
+
+        chip.addEventListener('click', (ce) => {
+          ce.preventDefault();
+          ce.stopPropagation();
+          const existingWin = document.querySelector(`.keyword-detail-window[data-keyword="${CSS.escape(kwRegex)}"]`);
+          if (existingWin) {
+            existingWin.remove();
+          } else {
+            plugin.openKeywordWindow(kwRegex);
+          }
+        });
+
+        chipsBar.appendChild(chip);
+      }
+
+      section.appendChild(chipsBar);
+    }
+
+    this.contentEl.appendChild(section);
+    requestAnimationFrame(() => {
+      section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
   }
 
   addRemarkSection(contentEl) {
@@ -17271,12 +17566,9 @@ class AddRegexRuleModal {
         // 添加数据属性用于识别匹配的规则按钮
         historyButton.dataset.ruleRegex = rule.regex;
         historyButton.dataset.ruleCssClass = rule.cssClass;
-        this._addRemarkHover(historyButton, rule);
+
         
-        // 添加tooltip提示功能，显示正则规则、样式名称和备注
-        let tooltipText = t('main.localRule') + `\n` + t('main.regex') + `: ${rule.regex}\n` + t('main.styleClass') + `: .${rule.cssClass}\n` + t('main.clickToApply') + `\nCtrl+` + t('main.clickToGlobal') + `\n` + t('main.remark') + `: ${rule.remark || t('main.empty')}`;
-        // 总是添加remark到tooltip中
-        // tooltipText += `\n` + t('main.remark') + `: ${rule.remark || t('main.empty')}`;
+        let tooltipText = t('main.localRule') + `\n` + t('main.regex') + `: ${rule.regex}\n` + t('main.styleClass') + `: .${rule.cssClass}\n` + t('main.clickToApply') + `\nCtrl+` + t('main.clickToGlobal');
         historyButton.setAttribute("title", tooltipText);
         
         // 创建样式预览区域 - 使用与样式按钮相同的结构
@@ -17307,7 +17599,7 @@ class AddRegexRuleModal {
           
           if (isCtrlClick) {
             // Ctrl+点击：将规则添加为全局高亮
-            console.log('Adding history rule to global with Ctrl+click:', rule.regex, rule.cssClass);
+
             const success = await this.plugin.moveRuleToGlobal(rule.regex, rule.cssClass);
             if (success) {
               this.showSuccessMessage(t('main.ruleMovedToGlobal') + ` "${rule.regex}"`);
@@ -19786,6 +20078,10 @@ class AddRegexRuleModal {
       document.removeEventListener('selectionchange', this._selectionChangeHandler);
       this._selectionChangeHandler = null;
     }
+    if (this._floatingSelectionHandler) {
+      document.removeEventListener('selectionchange', this._floatingSelectionHandler);
+      this._floatingSelectionHandler = null;
+    }
     if (this._dragMouseMoveHandler) {
       document.removeEventListener('mousemove', this._dragMouseMoveHandler);
       this._dragMouseMoveHandler = null;
@@ -19825,6 +20121,7 @@ class AddRegexRuleModal {
     }
     window.getSelection()?.removeAllRanges();
     document.activeElement?.blur();
+    this._inlineRemarkRuleId = null;
     this.contentEl.innerHTML = '';
     if (this.settingsBarEl) this.settingsBarEl.innerHTML = '';
     const oldTitleBar = this.modalEl.querySelector('.rch-title-bar');
@@ -19848,6 +20145,28 @@ class AddRegexRuleModal {
         if (oldInputBar) oldInputBar.remove();
         if (typeof this.onOpen === 'function') {
           await this.onOpen();
+        }
+        if (this.modalEl.parentElement && this.modalEl.parentElement !== document.body) {
+          this.modalEl.style.position = 'relative';
+          this.modalEl.style.left = '';
+          this.modalEl.style.top = '';
+          this.modalEl.style.width = '100%';
+          this.modalEl.style.height = '100%';
+          this.modalEl.style.maxHeight = 'none';
+          this.modalEl.style.minWidth = '0';
+          this.modalEl.style.maxWidth = 'none';
+          this.modalEl.style.borderRadius = '0';
+          this.modalEl.style.zIndex = '';
+          this.modalEl.style.opacity = '1';
+          this.modalEl.style.boxShadow = 'none';
+          this.modalEl.style.background = 'var(--background-primary)';
+          this.modalEl.style.backdropFilter = 'none';
+          this.modalEl.style.webkitBackdropFilter = 'none';
+          this.modalEl.style.border = 'none';
+          const sidebarBtn = this.modalEl.querySelector('.rch-title-bar .rch-close-btn')?.previousElementSibling;
+          const closeBtn = this.modalEl.querySelector('.rch-title-bar .rch-close-btn');
+          if (sidebarBtn) sidebarBtn.style.display = 'none';
+          if (closeBtn) closeBtn.style.display = 'none';
         }
       }
     } catch (error) {
@@ -19899,7 +20218,163 @@ class RegexHighlightSettingTab extends PluginSettingTab {
   }
 }
 
+const SWIFTGLOSSA_SIDEBAR_VIEW_TYPE = 'swiftglossa-sidebar';
+
+class SwiftGlossaSidebarView extends ItemView {
+  constructor(leaf, plugin) {
+    super(leaf);
+    this.plugin = plugin;
+    this._savedStyles = null;
+    this._savedParent = null;
+  }
+
+  getViewType() { return SWIFTGLOSSA_SIDEBAR_VIEW_TYPE; }
+  getDisplayText() { return 'SwiftGlossa'; }
+  getIcon() { return 'palette'; }
+  isVisible() {
+    const rect = this.containerEl.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  }
+
+  async onOpen() {
+
+    const container = this.containerEl.children[1] || this.containerEl;
+    container.empty();
+    container.style.padding = '0';
+    container.style.overflow = 'hidden';
+
+    this.plugin._sidebarView = this;
+
+    let modal = this.plugin._regexHighlightModal;
+    if (!modal || !modal.modalEl) {
+
+      modal = new AddRegexRuleModal(this.app, this.plugin);
+      modal.open();
+      this.plugin._regexHighlightModal = modal;
+    }
+
+    if (!modal || !modal.modalEl) {
+      container.createEl('div', { text: t('main.openMainPanelFirst') || '请先打开主面板' });
+      return;
+    }
+
+    if (modal.modalEl.parentElement && modal.modalEl.parentElement !== container) {
+      this._savedParent = modal.modalEl.parentElement;
+    } else {
+      this._savedParent = null;
+    }
+    this._savedStyles = {};
+    const propsToSave = ['position','left','top','width','height','maxHeight','minWidth','maxWidth','borderRadius','zIndex','opacity','boxShadow','background','backdropFilter','webkitBackdropFilter','border'];
+    for (const prop of propsToSave) {
+      this._savedStyles[prop] = modal.modalEl.style[prop];
+    }
+
+    modal.modalEl.style.position = 'relative';
+    modal.modalEl.style.left = '';
+    modal.modalEl.style.top = '';
+    modal.modalEl.style.width = '100%';
+    modal.modalEl.style.height = '100%';
+    modal.modalEl.style.maxHeight = 'none';
+    modal.modalEl.style.minWidth = '0';
+    modal.modalEl.style.maxWidth = 'none';
+    modal.modalEl.style.borderRadius = '0';
+    modal.modalEl.style.zIndex = '';
+    modal.modalEl.style.opacity = '1';
+    modal.modalEl.style.boxShadow = 'none';
+    modal.modalEl.style.background = 'var(--background-primary)';
+    modal.modalEl.style.backdropFilter = 'none';
+    modal.modalEl.style.webkitBackdropFilter = 'none';
+    modal.modalEl.style.border = 'none';
+
+    container.appendChild(modal.modalEl);
+
+    const sidebarBtn = modal.modalEl.querySelector('.rch-title-bar .rch-close-btn')?.previousElementSibling;
+    const closeBtn = modal.modalEl.querySelector('.rch-title-bar .rch-close-btn');
+    if (sidebarBtn) sidebarBtn.style.display = 'none';
+    if (closeBtn) closeBtn.style.display = 'none';
+
+    // 清理浮动模式的resize handle
+    if (modal._resizeHandle && document.body.contains(modal._resizeHandle)) {
+      document.body.removeChild(modal._resizeHandle);
+      modal._resizeHandle = null;
+    }
+    if (modal._resizeUpdatePosition) {
+      window.removeEventListener("resize", modal._resizeUpdatePosition);
+      modal._resizeUpdatePosition = null;
+    }
+    if (modal._positionInterval) {
+      clearInterval(modal._positionInterval);
+      modal._positionInterval = null;
+    }
+    if (modal._resizeObserver) {
+      modal._resizeObserver.disconnect();
+      modal._resizeObserver = null;
+    }
+
+    this._sidebarModal = modal;
+
+    this._sidebarSelectionHandler = () => {
+      if (!this.isVisible()) return;
+      const modal = this._sidebarModal;
+      if (!modal || !modal.regexInput) return;
+      const selection = window.getSelection();
+      if (selection && selection.toString().trim()) {
+        const selectedText = selection.toString().trim();
+        const anchorNode = selection.anchorNode;
+        if (anchorNode && !modal.modalEl.contains(anchorNode)) {
+          modal.regexInput.setValue(selectedText);
+          if (modal.highlightMatchingRuleButtons) modal.highlightMatchingRuleButtons();
+          if (modal.showInlineRemarkForRegex) modal.showInlineRemarkForRegex(selectedText);
+        }
+      }
+    };
+    document.addEventListener('selectionchange', this._sidebarSelectionHandler);
+
+    this._sidebarClickHandler = (e) => {
+      if (!this.isVisible()) return;
+      if (!(e.target instanceof Element)) return;
+      const modal = this._sidebarModal;
+      if (!modal || !modal.regexInput) return;
+      if (modal.modalEl.contains(e.target)) return;
+      const highlightEl = e.target.closest('.highlight-tooltip-text, .highlight-regex-text');
+      if (!highlightEl) return;
+      const ruleRegex = highlightEl.dataset?.ruleRegex || highlightEl.dataset?.remark;
+      if (ruleRegex) {
+        modal.regexInput.setValue(ruleRegex);
+        if (modal.highlightMatchingRuleButtons) modal.highlightMatchingRuleButtons();
+        if (modal.showInlineRemarkForRegex) modal.showInlineRemarkForRegex(ruleRegex);
+      }
+    };
+    document.addEventListener('click', this._sidebarClickHandler, true);
+  }
+
+  async onClose() {
+
+    const modal = this.plugin._regexHighlightModal;
+    if (this._sidebarSelectionHandler) {
+      document.removeEventListener('selectionchange', this._sidebarSelectionHandler);
+      this._sidebarSelectionHandler = null;
+    }
+    if (this._sidebarClickHandler) {
+      document.removeEventListener('click', this._sidebarClickHandler, true);
+      this._sidebarClickHandler = null;
+    }
+    this.plugin._sidebarView = null;
+    this._savedStyles = null;
+    this._savedParent = null;
+    if (modal) {
+
+      modal.close();
+    }
+  }
+}
+
 module.exports = class MinimalRegexHighlightPlugin extends Plugin {
+  static _topZ = 1200;
+  static bringToFront(el) {
+    MinimalRegexHighlightPlugin._topZ++;
+    el.style.zIndex = String(MinimalRegexHighlightPlugin._topZ);
+  }
   async saveImageToVault(imageData, fileName) {
     const attachmentFolder = this.app.vault.config?.attachmentFolderPath || 'attachments';
     const fullPath = `${attachmentFolder}/${fileName}`;
@@ -19934,6 +20409,8 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
 
   async onload() {
     const { MarkdownView, Notice } = require('obsidian');
+    
+    this.registerView(SWIFTGLOSSA_SIDEBAR_VIEW_TYPE, (leaf) => new SwiftGlossaSidebarView(leaf, this));
     
     this.countedRegexes = new Set();
 
@@ -19973,7 +20450,9 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       showHeadingLevelLabel: false,
       disableHeadingStyle: true,
       showRecentRulesWhenCollapsed: true,
+      collapseGroupOnMatch: false,
       remarkKeepOpen: false,
+      hidePopupWhenSidebarOpen: true,
       hideOpenFileLink: true,
       headingStyles: {},
       collapsedCategories: {},
@@ -19992,6 +20471,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       popupLineHeight: 1.5,
 
       showRemarkBadge: true,
+      showRelatedNotes: true,
       remarkMasonryMode: false,
       remarkBadgeThreshold: 2,
       defaultPreviewTextCN: '',
@@ -20204,12 +20684,26 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
         if (this._interlinearNoteCacheResolved && Object.keys(this._interlinearNoteCacheResolved).length > 0) {
           if (!el.querySelector('.in-note-wrapper')) {
             const blockText2 = el.textContent || '';
-            const hasNote = Object.entries(this._interlinearNoteCacheResolved).some(([t]) => blockText2.includes(t));
+            const hasNote = Object.entries(this._interlinearNoteCacheResolved).some(([t]) => {
+              if (t.includes('|')) {
+                return t.split('|').some(alt => alt && blockText2.includes(alt));
+              }
+              return blockText2.includes(t);
+            });
             if (hasNote) {
               this.injectInterlinearNoteStyles();
               for (const [text, note] of Object.entries(this._interlinearNoteCacheResolved)) {
-                if (blockText2.includes(text)) {
-                  this.highlightTextWithInterlinearNote(el, text, note);
+                if (text.includes('|')) {
+                  const alternatives = text.split('|');
+                  for (const alt of alternatives) {
+                    if (alt && blockText2.includes(alt)) {
+                      this.highlightTextWithInterlinearNote(el, alt, note);
+                    }
+                  }
+                } else {
+                  if (blockText2.includes(text)) {
+                    this.highlightTextWithInterlinearNote(el, text, note);
+                  }
                 }
               }
             }
@@ -20409,10 +20903,11 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
               changes: { from: 0, to: 0, insert: '' }
             });
             cmView.requestMeasure();
+              }
+            }
+
           }
-        }
-      }
-    });
+        });
     
     // 初始化当前活跃文件 - 延迟更长时间确保Obsidian完全加载
     setTimeout(() => {
@@ -20432,6 +20927,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       id: "add-regex-highlight-rule",
       name: "打开主窗口",
       callback: () => {
+
         new AddRegexRuleModal(this.app, this).open();
       },
       hotkeys: [
@@ -27785,6 +28281,29 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     }
   }
 
+  findInterlinearNote(data, key) {
+    if (!data || !key) return { note: '', foundKey: null };
+    if (data[key]) return { note: data[key], foundKey: key };
+    const alternatives = key.includes('|') ? key.split('|') : [key];
+    for (const existingKey of Object.keys(data)) {
+      const existingAlts = existingKey.includes('|') ? existingKey.split('|') : [existingKey];
+      if (alternatives.some(alt => existingAlts.includes(alt)) || existingAlts.some(alt => alternatives.includes(alt))) {
+        return { note: data[existingKey], foundKey: existingKey };
+      }
+    }
+    return { note: '', foundKey: null };
+  }
+
+  async migrateInterlinearNoteKey(data, oldKey, newKey) {
+    if (!data || !oldKey || !newKey || oldKey === newKey) return false;
+    if (data[newKey]) return false;
+    if (!data[oldKey]) return false;
+    data[newKey] = data[oldKey];
+    delete data[oldKey];
+    await this.saveInterlinearNoteData(data);
+    return true;
+  }
+
   async saveInterlinearNoteData(data) {
     await crossFS.write(this.app.vault, '.obsidian/plugins/Regex-Css-Highlighter/interlinear-note-data.json', JSON.stringify(data, null, 2));
     this._interlinearNoteCacheResolved = null;
@@ -27871,8 +28390,17 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const existing = document.querySelector('.interlinear-note-input-window');
     if (existing) existing.remove();
 
+    const trimmedText = selectedText.trim();
+    const matchingRule = [...this.rules, ...this.globalRules].find(r => {
+      try { return new RegExp(r.regex).test(trimmedText); } catch { return r.regex === trimmedText; }
+    });
+    const inNoteKey = matchingRule ? matchingRule.regex : trimmedText;
+
     const existingData = await this.loadInterlinearNoteData();
-    const existingNote = existingData[selectedText.trim()] || '';
+    const { note: existingNote, foundKey } = this.findInterlinearNote(existingData, inNoteKey);
+    if (foundKey && foundKey !== inNoteKey) {
+      await this.migrateInterlinearNoteKey(existingData, foundKey, inNoteKey);
+    }
 
     const win = document.createElement('div');
     win.className = 'interlinear-note-input-window';
@@ -27924,7 +28452,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     addBtn.addEventListener('click', async () => {
       const noteText = input.value.trim();
       const data = await this.loadInterlinearNoteData();
-      const key = selectedText.trim();
+      const key = inNoteKey;
       if (!noteText) {
         delete data[key];
         await this.saveInterlinearNoteData(data);
@@ -28046,9 +28574,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       return;
     }
     const data = await this.loadInterlinearNoteData();
-    const key = selectedText.trim();
-    if (data[key]) {
-      delete data[key];
+    const trimmedText = selectedText.trim();
+    const matchingRule = [...this.rules, ...this.globalRules].find(r => {
+      try { return new RegExp(r.regex).test(trimmedText); } catch { return r.regex === trimmedText; }
+    });
+    const key = matchingRule ? matchingRule.regex : trimmedText;
+    const { foundKey } = this.findInterlinearNote(data, key);
+    const effectiveKey = foundKey || key;
+    if (data[effectiveKey]) {
+      delete data[effectiveKey];
       await this.saveInterlinearNoteData(data);
       new Notice(t('inNote.deleted'));
     } else {
@@ -28057,6 +28591,21 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   }
   
   // 卸载插件时清理资源
+  async openSidebarView() {
+    const existing = this.app.workspace.getLeavesOfType(SWIFTGLOSSA_SIDEBAR_VIEW_TYPE);
+    if (existing.length > 0) {
+      const leaf = existing[0];
+      await leaf.setViewState({ type: SWIFTGLOSSA_SIDEBAR_VIEW_TYPE, active: true });
+      this.app.workspace.revealLeaf(leaf);
+      return;
+    }
+    const rightLeaf = this.app.workspace.getRightLeaf(false);
+    if (rightLeaf) {
+      await rightLeaf.setViewState({ type: SWIFTGLOSSA_SIDEBAR_VIEW_TYPE, active: true });
+      this.app.workspace.revealLeaf(rightLeaf);
+    }
+  }
+
   onunload() {
     if (this._fileRulesWriteTimer) {
       clearTimeout(this._fileRulesWriteTimer);
@@ -32820,6 +33369,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     this.rulesVersion++;
     this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
     
+    // 刷新主面板内容（更新文档名分组等）
+    const modal = this._regexHighlightModal;
+    if (modal && typeof modal.refreshModalContent === 'function') {
+      try { await modal.refreshModalContent(); } catch (e) { console.error(e); }
+    }
+    
     // 规则加载完成后，需要确保当前视图应用了新规则
     const { MarkdownView } = require('obsidian');
     const activeLeaf = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -34067,8 +34622,17 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           this.injectInterlinearNoteStyles();
           for (const [text, note] of Object.entries(this._interlinearNoteCacheResolved)) {
             const blockText = contentEl.textContent || '';
-            if (blockText.includes(text)) {
-              this.highlightTextWithInterlinearNote(contentEl, text, note);
+            if (text.includes('|')) {
+              const alternatives = text.split('|');
+              for (const alt of alternatives) {
+                if (alt && blockText.includes(alt)) {
+                  this.highlightTextWithInterlinearNote(contentEl, alt, note);
+                }
+              }
+            } else {
+              if (blockText.includes(text)) {
+                this.highlightTextWithInterlinearNote(contentEl, text, note);
+              }
             }
           }
         }
@@ -34440,8 +35004,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       const regexMatchesMap = {};
       if (this._cachedFileContent) {
         for (const r of this.countedRegexes) {
-          const hasUnderlineRule = [...(fileRules.filter(rule => rule.regex === r)), ...(globalRules.filter(rule => rule.regex === r))].some(rule => rule.cssClass && rule.cssClass.startsWith('underline-'));
-          if (hasUnderlineRule) continue;
+
           try {
             const countRe = new RegExp(sortRegexByLength(r), "g");
             const matches = [];
@@ -34459,8 +35022,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         countedSpans.forEach(span => {
           const r = span.dataset.ruleRegex;
           if (regexTotalMap[r] > 0 && regexMatchesMap[r]) {
-            const hasUnderline = [...span.classList].some(c => c.startsWith('underline-'));
-            if (!hasUnderline) {
+
+            {
               let globalIdx = 0;
               const blockEl = span.closest('p, li, h1, h2, h3, h4, h5, h6, blockquote, td, th');
               if (blockEl && fileContent) {
@@ -34481,8 +35044,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                   const blockSpans = blockEl.querySelectorAll('span.highlight-regex-text[data-rule-regex][data-match-first]');
                   for (const bs of blockSpans) {
                     if (bs === span) break;
-                    const bsUl = [...bs.classList].some(c => c.startsWith('underline-'));
-                    if (!bsUl && bs.dataset.ruleRegex === r) matchesBeforeInBlock++;
+                    if (bs.dataset.ruleRegex === r) matchesBeforeInBlock++;
                   }
                   globalIdx = matchesBeforeBlock + matchesBeforeInBlock + 1;
                 }
@@ -34820,11 +35382,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     let noteWindowTimeout = null;
     // 用于跟踪鼠标是否在备注窗口上
     let isMouseOverNoteWindow = false;
+    let boundsCheckHandler = null;
     
     // 鼠标进入事件处理函数
     const handleMouseOver = (e) => {
-      // 检查事件目标是否是Element对象
       if (!(e.target instanceof Element)) return;
+      if (e.target.closest('.inline-remark-section')) return;
+      if (e.target.closest('.swiftglossa-sidebar')) return;
+      if (this._sidebarView && this._sidebarView.isVisible() && this.settings?.hidePopupWhenSidebarOpen && !this._forceShowPopup) return;
       
       // 检查事件目标或其祖先是否带有highlight-tooltip-text类
       const target = e.target.closest('.highlight-tooltip-text');
@@ -34846,6 +35411,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       // 首先移除现有的备注窗口（如果有），防止叠加
       if (currentNoteWindow && document.body.contains(currentNoteWindow)) {
         clearTimeout(noteWindowTimeout);
+        if (boundsCheckHandler) { document.removeEventListener('mousemove', boundsCheckHandler); boundsCheckHandler = null; }
         // 清理Markdown组件
         if (currentNoteWindow._previewDiv && currentNoteWindow._previewDiv._component) {
           currentNoteWindow._previewDiv._component.unload();
@@ -35143,15 +35709,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       // 添加弹窗的鼠标离开事件监听器
       noteWindow.addEventListener('mouseleave', () => {
-        // 如果开启备注弹窗不自动关闭，鼠标离开不关闭
         if (this.settings?.remarkKeepOpen) return;
-        
-        // 鼠标离开弹窗时，清除标志位并延迟关闭弹窗
         isMouseOverNoteWindow = false;
-        // 延迟关闭，确保如果鼠标只是快速移动到弹窗外又回来，不会立即关闭
+        if (boundsCheckHandler) return;
         noteWindowTimeout = setTimeout(() => {
           if (!isMouseOverNoteWindow && currentNoteWindow === noteWindow) {
-            // 清理Markdown组件
             if (previewDiv._component) {
               previewDiv._component.unload();
               previewDiv._component = null;
@@ -35165,48 +35727,35 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               }
             }, 150);
           }
-        }, 50);
+        }, 300);
       });
           };
     
     // 鼠标离开事件处理函数
     const handleMouseOut = (e) => {
-      // 如果开启备注弹窗不自动关闭，鼠标离开不关闭
       if (this.settings?.remarkKeepOpen) return;
-      
-      // 检查事件目标是否是Element对象
       if (!(e.target instanceof Element)) return;
-      
-      // 检查事件目标或其祖先是否带有highlight-tooltip-text类
       const target = e.target.closest('.highlight-tooltip-text');
       if (!target || !currentNoteWindow) return;
-      
-      // 检查鼠标是否只是移动到了另一个高亮元素上
       if (e.relatedTarget && e.relatedTarget.closest('.highlight-tooltip-text')) {
         return;
       }
-      
-      // 检查鼠标是否移动到了弹窗上
       if (e.relatedTarget && e.relatedTarget.closest('.highlight-note-window')) {
-        // 鼠标移动到了弹窗上，设置标志位并返回
         isMouseOverNoteWindow = true;
         return;
       }
       
-      // 延迟关闭弹窗，给用户时间移动鼠标到弹窗上
-      noteWindowTimeout = setTimeout(() => {
-        // 只有当鼠标不在弹窗上时，才关闭弹窗
+      if (boundsCheckHandler) { document.removeEventListener('mousemove', boundsCheckHandler); boundsCheckHandler = null; }
+      if (noteWindowTimeout) { clearTimeout(noteWindowTimeout); noteWindowTimeout = null; }
+      
+      const closeNoteWindow = () => {
         if (!isMouseOverNoteWindow && currentNoteWindow && document.body.contains(currentNoteWindow)) {
-          // 清理Markdown组件
           if (currentNoteWindow._previewDiv && currentNoteWindow._previewDiv._component) {
             currentNoteWindow._previewDiv._component.unload();
             currentNoteWindow._previewDiv._component = null;
           }
-          // 添加淡出动画
           currentNoteWindow.style.opacity = '0';
           currentNoteWindow.style.transform = 'translateX(0) translateY(-8px)';
-          
-          // 延迟移除元素
           setTimeout(() => {
             if (currentNoteWindow && document.body.contains(currentNoteWindow)) {
               currentNoteWindow.remove();
@@ -35214,7 +35763,43 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             }
           }, 200);
         }
-      }, 100);
+        if (boundsCheckHandler) { document.removeEventListener('mousemove', boundsCheckHandler); boundsCheckHandler = null; }
+      };
+      
+      boundsCheckHandler = (me) => {
+        if (!currentNoteWindow || !document.body.contains(currentNoteWindow)) {
+          if (boundsCheckHandler) { document.removeEventListener('mousemove', boundsCheckHandler); boundsCheckHandler = null; }
+          return;
+        }
+        const pr = currentNoteWindow.getBoundingClientRect();
+        const tr = target.getBoundingClientRect();
+        const bx1 = Math.min(pr.left, tr.left) - 15;
+        const bx2 = Math.max(pr.right, tr.right) + 15;
+        const by1 = Math.min(pr.top, tr.top) - 15;
+        const by2 = Math.max(pr.bottom, tr.bottom) + 15;
+        
+        const inBox = me.clientX >= bx1 && me.clientX <= bx2 && me.clientY >= by1 && me.clientY <= by2;
+        const el = document.elementFromPoint(me.clientX, me.clientY);
+        const onPopupEl = el && (currentNoteWindow.contains(el) || el.closest('.rule-source-badge') || el.closest('.remark-badge'));
+        
+        if (inBox || onPopupEl) {
+          isMouseOverNoteWindow = true;
+          if (noteWindowTimeout) { clearTimeout(noteWindowTimeout); noteWindowTimeout = null; }
+        } else {
+          isMouseOverNoteWindow = false;
+          if (noteWindowTimeout) clearTimeout(noteWindowTimeout);
+          noteWindowTimeout = setTimeout(closeNoteWindow, 300);
+          console.log('[Tooltip] boundsCheck: 鼠标离开包围盒, 将关闭:', {
+            mouse: { x: me.clientX, y: me.clientY },
+            bounds: { bx1, bx2, by1, by2 },
+            popupRect: { top: pr.top, bottom: pr.bottom, left: pr.left, right: pr.right },
+            targetRect: { top: tr.top, bottom: tr.bottom, left: tr.left, right: tr.right },
+            elementUnderMouse: el?.tagName,
+            elementClass: (typeof el?.className === 'string' ? el.className : el?.className?.baseVal)?.substring(0, 80)
+          });
+        }
+      };
+      document.addEventListener('mousemove', boundsCheckHandler);
     };
     
     // 注册事件监听器
@@ -35605,8 +36190,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             try { re = new RegExp(sortRegexByLength(regex), "g"); } catch { continue; }
             
             const isCounted = plugin.countedRegexes.has(regex);
-            const hasUnderline = cssClass && cssClass.startsWith('underline-');
-            const shouldCount = isCounted && !hasUnderline;
+            const shouldCount = isCounted;
             let countTotal = 0;
             const countPositions = [];
             if (shouldCount) {
@@ -35817,18 +36401,21 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               const hasCountForText = plugin.countedRegexes && plugin.countedRegexes.size > 0 && [...plugin.countedRegexes].some(r => {
                 try { return new RegExp(sortRegexByLength(r)).test(text); } catch { return false; }
               });
-              for (let {from, to} of view.visibleRanges) {
-                let docText = view.state.doc.sliceString(from, to);
-                let searchIndex = 0;
-                let matchIndex;
-                while ((matchIndex = docText.indexOf(text, searchIndex)) !== -1) {
-                  const startPos = from + matchIndex;
-                  const inNoteClasses = hasCountForText ? 'in-note-wrapper has-counter' : 'in-note-wrapper';
-                  ranges.push(cmView.Decoration.mark({
-                    class: inNoteClasses,
-                    attributes: { 'data-note': note }
-                  }).range(startPos, startPos + text.length));
-                  searchIndex = matchIndex + 1;
+              const inNoteClasses = hasCountForText ? 'in-note-wrapper has-counter' : 'in-note-wrapper';
+              const alternatives = text.includes('|') ? text.split('|').filter(a => a) : [text];
+              for (const alt of alternatives) {
+                for (let {from, to} of view.visibleRanges) {
+                  let docText = view.state.doc.sliceString(from, to);
+                  let searchIndex = 0;
+                  let matchIndex;
+                  while ((matchIndex = docText.indexOf(alt, searchIndex)) !== -1) {
+                    const startPos = from + matchIndex;
+                    ranges.push(cmView.Decoration.mark({
+                      class: inNoteClasses,
+                      attributes: { 'data-note': note }
+                    }).range(startPos, startPos + alt.length));
+                    searchIndex = matchIndex + 1;
+                  }
                 }
               }
             }
@@ -36177,6 +36764,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       popupLineHeight,
 
       onRefresh,
+      onReposition,
       onDirty,
       keepOpenRef,
       isDirtyRef,
@@ -36191,6 +36779,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       masonry
     } = opts;
 
+    const savedScrollTop = container.scrollTop;
     container.innerHTML = '';
 
     if (masonry) {
@@ -36202,6 +36791,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       container.addEventListener('mouseenter', (e) => {
         const img = e.target;
         if (img.tagName !== 'IMG' || !img.closest('.masonry-card-body')) return;
+        if (img.naturalWidth > 0 && img.offsetWidth >= img.naturalWidth * 0.95) return;
         if (_imgFloatEl) _imgFloatEl.remove();
         _imgFloatEl = document.createElement('div');
         _imgFloatEl.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.5);overflow:hidden;transition:opacity 0.15s ease;opacity:0;';
@@ -36227,6 +36817,69 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const styleEl = document.createElement('style');
     styleEl.textContent = `.${cssScope} .remark-popup-content p{margin:0;}.${cssScope} .remark-popup-content ul,.${cssScope} .remark-popup-content ol{margin:0;padding-left:20px;}.${cssScope} .remark-popup-content li{margin:0;}.${cssScope} .remark-popup-content h1,.${cssScope} .remark-popup-content h2,.${cssScope} .remark-popup-content h3,.${cssScope} .remark-popup-content h4,.${cssScope} .remark-popup-content h5,.${cssScope} .remark-popup-content h6{margin:0;}.${cssScope} .remark-popup-content blockquote{margin:0;}.${cssScope} .remark-popup-content hr{margin:5px 0;}.${cssScope} .remark-popup-content table{border-collapse:separate;border-spacing:0;margin:8px 0;width:100%;border-radius:6px;overflow:hidden;border:1px solid var(--border-color);font-size:11px;}.${cssScope} .remark-popup-content th,.${cssScope} .remark-popup-content td{padding:5px 10px;text-align:left;border-bottom:1px solid var(--border-color);border-right:1px solid var(--border-color);}.${cssScope} .remark-popup-content th:last-child,.${cssScope} .remark-popup-content td:last-child{border-right:none;}.${cssScope} .remark-popup-content tr:last-child td{border-bottom:none;}.${cssScope} .remark-popup-content th{background:linear-gradient(180deg,var(--background-modifier-hover),var(--background-secondary));font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);}.${cssScope} .remark-popup-content tr:nth-child(even) td{background-color:rgba(0,0,0,0.03);}.${cssScope} .remark-popup-content tr:hover td{background-color:var(--background-modifier-hover);}.${cssScope} .remark-popup-content img{max-width:100%;height:auto;border-radius:4px;margin:4px 0;}.${cssScope} .remark-popup-content .internal-embed{max-width:100%;}.${cssScope} .remark-popup-content .internal-embed img{max-width:100%;height:auto;border-radius:4px;margin:4px 0;}`;
     container.appendChild(styleEl);
+
+    if (plugin.settings?.showRelatedNotes !== false && ruleRegex) {
+      const searchTerms = ruleRegex.split('|').map(s => s.trim()).filter(s => s.length > 0);
+      if (searchTerms.length > 0) {
+        const allFiles = plugin.app.vault.getFiles();
+        const mdFiles = allFiles.filter(f => f.extension === 'md');
+        const relatedNotes = [];
+        for (const term of searchTerms) {
+          for (const f of mdFiles) {
+            const nameWithoutExt = f.name.replace(/\.md$/, '');
+            if (nameWithoutExt.includes(term) && f.path !== plugin.currentFilePath) {
+              if (!relatedNotes.some(n => n.path === f.path)) {
+                relatedNotes.push(f);
+              }
+            }
+          }
+        }
+        if (relatedNotes.length > 0) {
+          const relatedSection = document.createElement('div');
+          relatedSection.className = 'related-notes-section';
+          relatedSection.style.cssText = 'margin-bottom:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:6px;background:rgba(var(--mono-rgb-0),0.15);';
+          const relatedHeader = document.createElement('div');
+          relatedHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;gap:4px;';
+          relatedHeader.textContent = '📎 相关笔记';
+          relatedSection.appendChild(relatedHeader);
+          const relatedList = document.createElement('div');
+          relatedList.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+          for (const note of relatedNotes.slice(0, 10)) {
+            const noteLink = document.createElement('a');
+            noteLink.className = 'related-note-link internal-link';
+            const nameWithoutExt = note.name.replace(/\.md$/, '');
+            noteLink.textContent = nameWithoutExt;
+            noteLink.title = note.path;
+            noteLink.dataset.href = note.path;
+            noteLink.dataset.path = note.path;
+            noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;';
+            noteLink.addEventListener('mouseenter', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.5)'; });
+            noteLink.addEventListener('mouseleave', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
+            noteLink.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              plugin.app.workspace.openLinkText(note.path, '', false);
+            });
+            noteLink.addEventListener('auxclick', (e) => {
+              if (e.button === 1) {
+                e.preventDefault();
+                e.stopPropagation();
+                plugin.app.workspace.openLinkText(note.path, '', true);
+              }
+            });
+            relatedList.appendChild(noteLink);
+          }
+          if (relatedNotes.length > 10) {
+            const moreTag = document.createElement('span');
+            moreTag.textContent = `+${relatedNotes.length - 10}`;
+            moreTag.style.cssText = 'font-size:10px;color:var(--text-muted);padding:2px 4px;';
+            relatedList.appendChild(moreTag);
+          }
+          relatedSection.appendChild(relatedList);
+          container.appendChild(relatedSection);
+        }
+      }
+    }
 
     const linksByFile = new Map();
     if (links && links.length > 0) {
@@ -36307,7 +36960,40 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         const fileTag = document.createElement('span');
         fileTag.className = 'masonry-file-tag';
         fileTag.textContent = fn || '(' + t('main.noTitle') + ')';
-        fileTag.style.cssText = `color:hsl(${fh},50%,35%);background:hsl(${fh},50%,90%);`;
+        fileTag.style.cssText = `color:hsl(${fh},50%,35%);background:hsl(${fh},50%,90%);cursor:text;`;
+        fileTag.addEventListener('dblclick', (de) => {
+          de.stopPropagation();
+          de.preventDefault();
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = fp || '';
+          const origW = fileTag.offsetWidth;
+          input.style.cssText = `font-size:9px;padding:1px 5px;border:none;border-radius:6px;background:var(--background-modifier-hover);color:var(--text-muted);width:${origW}px;outline:none;box-sizing:border-box;`;
+          fileTag.replaceWith(input);
+          input.focus();
+          input.select();
+          let saved = false;
+          const save = async () => {
+            if (saved) return; saved = true;
+            const val = input.value.trim();
+            const newFn = val ? val.split('/').pop().replace(/\.md$/, '') : '';
+            fileTag.textContent = newFn || '(' + t('main.noTitle') + ')';
+            input.replaceWith(fileTag);
+            const actualRuleM = ruleSource === 'global' ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
+            if (actualRuleM && actualRuleM.links) {
+              for (const lk of fileLinks) {
+                const al = lk.timestamp ? actualRuleM.links.find(l => l.filePath === fp && l.timestamp === lk.timestamp) : actualRuleM.links.find(l => l.filePath === fp);
+                if (al) al.filePath = val;
+              }
+              if (targetEl) targetEl.dataset.links = JSON.stringify(actualRuleM.links);
+              if (onDirty) onDirty();
+              if (ruleSource === 'global') await plugin.saveGlobalRules(plugin.globalRules, true);
+              else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+            }
+          };
+          input.addEventListener('blur', save);
+          input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { saved = true; input.replaceWith(fileTag); } });
+        });
         cardBody.appendChild(fileTag);
 
         const remarkEl = document.createElement('div');
@@ -36700,10 +37386,44 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         fileNameEl.dataset.editField = 'filePath';
         fileNameEl.dataset.filePath = filePath;
       }
-      fileNameEl.style.cssText = `font-size:12px;font-weight:600;color:hsl(${fileHue},50%,35%);background:hsl(${fileHue},50%,90%);padding:2px 8px;border-radius:10px;flex-shrink:0;${showFileNameEdit ? 'cursor:text;border-bottom:1px dashed transparent;white-space:nowrap;' : ''}`;
+      fileNameEl.style.cssText = `font-size:10px;font-weight:600;color:hsl(${fileHue},50%,35%);background:hsl(${fileHue},50%,90%);padding:1px 6px;border-radius:8px;flex-shrink:0;${showFileNameEdit ? 'cursor:text;border-bottom:1px dashed transparent;white-space:nowrap;' : ''}`;
       if (showFileNameEdit) {
         fileNameEl.addEventListener('mouseenter', () => { fileNameEl.style.borderBottomColor = 'var(--text-muted)'; });
         fileNameEl.addEventListener('mouseleave', () => { fileNameEl.style.borderBottomColor = 'transparent'; });
+        fileNameEl.addEventListener('dblclick', (de) => {
+          de.stopPropagation();
+          de.preventDefault();
+          if (keepOpenRef) keepOpenRef.val = true;
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = filePath || '';
+          const origW = fileNameEl.offsetWidth;
+          input.style.cssText = `font-size:9px;padding:1px 5px;border:none;border-radius:6px;background:var(--background-modifier-hover);color:var(--text-muted);width:${origW}px;outline:none;box-sizing:border-box;`;
+          fileNameEl.replaceWith(input);
+          input.focus();
+          input.select();
+          let saved = false;
+          const save = async () => {
+            if (saved) return; saved = true;
+            const val = input.value.trim();
+            const newFileName = val ? val.split('/').pop().replace(/\.md$/, '') : '';
+            fileNameEl.textContent = '📄 ' + (newFileName || '(' + t('main.noTitle') + ')');
+            input.replaceWith(fileNameEl);
+            const actualRuleFn = ruleSource === 'global' ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
+            if (actualRuleFn && actualRuleFn.links) {
+              for (const lk of fileLinks) {
+                const al = lk.timestamp ? actualRuleFn.links.find(l => l.filePath === filePath && l.timestamp === lk.timestamp) : actualRuleFn.links.find(l => l.filePath === filePath);
+                if (al) al.filePath = val;
+              }
+              if (targetEl) targetEl.dataset.links = JSON.stringify(actualRuleFn.links);
+              if (onDirty) onDirty();
+              if (ruleSource === 'global') await plugin.saveGlobalRules(plugin.globalRules, true);
+              else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+            }
+          };
+          input.addEventListener('blur', save);
+          input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { saved = true; input.replaceWith(fileNameEl); } });
+        });
       }
       headerLeft.appendChild(fileNameEl);
 
@@ -37160,7 +37880,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     aiAskBtn.className = 'remark-ai-ask-btn';
     aiAskBtn.textContent = '?';
     aiAskBtn.title = t('remark.aiAsk');
-    aiAskBtn.style.cssText = `font-weight:800;font-size:14px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #e0a01c, #460000, #e0a01c, #cb6a11);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(224, 160, 28, 0.8));background-color:rgba(224, 160, 28, 0.05);box-shadow:inset 0 0 0 1px rgba(224, 160, 28, 0.3), 0 0 15px rgba(70, 0, 0, 0.2);animation:hp-amber-shift 4s ease infinite;line-height:1;${!_isDesktop ? 'width:36px;height:36px;aspect-ratio:1/1;' : ''}`;
+    aiAskBtn.style.cssText = `font-weight:800;font-size:14px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #e0a01c, #460000, #e0a01c, #cb6a11);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(224, 160, 28, 0.8));background-color:rgba(224, 160, 28, 0.05);box-shadow:inset 0 0 0 1px rgba(224, 160, 28, 0.3), 0 0 15px rgba(70, 0, 0, 0.2);animation:hp-amber-shift 4s ease infinite;line-height:1;width:36px;height:36px;aspect-ratio:1/1;`;
     const aiBtnStyle = document.createElement('style');
     aiBtnStyle.textContent = '@keyframes hp-amber-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }';
     container.appendChild(aiBtnStyle);
@@ -37277,7 +37997,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const aiGraphBtn = document.createElement('button');
     aiGraphBtn.textContent = '⬡';
     aiGraphBtn.title = t('remark.aiRelationGraph');
-    aiGraphBtn.style.cssText = `font-weight:800;font-size:13px;padding:2px 8px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1ce060, #004620, #1ce060, #6acb11);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 224, 96, 0.8));background-color:rgba(28, 224, 96, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 224, 96, 0.3), 0 0 15px rgba(0, 70, 32, 0.2);animation:hp-green-shift 4s ease infinite;line-height:1;margin-left:4px;${!_isDesktop ? 'width:36px;height:36px;aspect-ratio:1/1;' : ''}`;
+    aiGraphBtn.style.cssText = `font-weight:800;font-size:13px;padding:2px 8px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1ce060, #004620, #1ce060, #6acb11);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 224, 96, 0.8));background-color:rgba(28, 224, 96, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 224, 96, 0.3), 0 0 15px rgba(0, 70, 32, 0.2);animation:hp-green-shift 4s ease infinite;line-height:1;margin-left:4px;width:36px;height:36px;aspect-ratio:1/1;`;
     const aiGraphBtnStyle = document.createElement('style');
     aiGraphBtnStyle.textContent = '@keyframes hp-green-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }';
     container.appendChild(aiGraphBtnStyle);
@@ -37621,63 +38341,73 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       graphViewport.appendChild(graphContent);
       graphSection.appendChild(graphViewport);
 
-       const applyZoom = (newScale, skipSave) => {
-         newScale = Math.max(0.3, Math.min(3, newScale));
-         graphContent.dataset.scale = String(newScale);
-         graphContent.style.transform = `scale(${newScale})`;
-         const svg = graphContent.querySelector('svg');
-         if (svg) {
-           const vb = svg.getAttribute('viewBox');
-           let svgH = 0;
-           if (vb) {
-             const parts = vb.split(/[\s,]+/).map(Number);
-             if (parts.length === 4 && parts[3] > 0) svgH = parts[3];
+        const applyZoom = (newScale, skipSave) => {
+           newScale = Math.max(0.3, Math.min(3, newScale));
+           const svg = graphContent.querySelector('svg');
+           if (svg) {
+             if (!svg._sgNatW) {
+               const prev = graphContent.style.transform;
+               graphContent.style.transform = 'none';
+               svg._sgNatW = svg.offsetWidth || svg.getBoundingClientRect().width || 800;
+               svg._sgNatH = svg.offsetHeight || svg.getBoundingClientRect().height || 400;
+               graphContent.style.transform = prev;
+             }
+             const scaledH = Math.ceil(svg._sgNatH * newScale);
+             svg.style.width = Math.ceil(svg._sgNatW * newScale) + 'px';
+             svg.style.height = scaledH + 'px';
+             graphContent.style.transform = 'none';
+             graphContent.style.height = scaledH + 'px';
+             graphViewport.style.height = scaledH + 'px';
+           } else {
+             const rawH = graphContent.scrollHeight;
+             graphContent.style.height = Math.ceil(rawH * newScale) + 'px';
+             graphViewport.style.height = Math.ceil(rawH * newScale) + 'px';
            }
-           if (!svgH) svgH = parseFloat(svg.style.height) || svg.getBoundingClientRect().height / newScale;
-           graphContent.style.height = Math.ceil(svgH * newScale) + 'px';
-         } else {
-           const rawH = graphContent.scrollHeight / (parseFloat(graphContent.dataset.scale) || 1);
-           graphContent.style.height = Math.ceil(rawH * newScale) + 'px';
-         }
-         zoomLevel.textContent = Math.round(newScale * 100) + '%';
-         if (!skipSave) {
-           plugin.settings.graphZoomLevel = newScale;
-           plugin.saveData(plugin.settings).catch(() => {});
-         }
-       };
+           graphContent.dataset.scale = String(newScale);
+           zoomLevel.textContent = Math.round(newScale * 100) + '%';
+           if (!skipSave) {
+             plugin.settings.graphZoomLevel = newScale;
+             plugin.saveData(plugin.settings).catch(() => {});
+           }
+         };
 
       const autoFitZoom = () => {
-        requestAnimationFrame(() => {
+        const tryFit = (attempt = 0) => {
           const svg = graphContent.querySelector('svg');
-          if (!svg) return;
-          const vb = svg.getAttribute('viewBox');
-          if (vb) {
-            const parts = vb.split(/[\s,]+/).map(Number);
-            if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
-              svg.removeAttribute('width');
-              svg.removeAttribute('height');
-              svg.style.width = parts[2] + 'px';
-              svg.style.height = parts[3] + 'px';
-              svg.style.maxWidth = 'none';
-            }
+          if (!svg) {
+            if (attempt < 30) setTimeout(() => tryFit(attempt + 1), 300);
+            return;
           }
+          svg.style.maxWidth = 'none';
           requestAnimationFrame(() => {
+            const svgW = svg.offsetWidth || Math.ceil(svg.getBoundingClientRect().width);
+            const svgH = svg.offsetHeight || Math.ceil(svg.getBoundingClientRect().height);
+            const hasContent = svg.querySelector('g, path, rect, circle, line, polygon, text');
+            if (!hasContent || svgW < 50 || svgH < 50) {
+              if (attempt < 30) setTimeout(() => tryFit(attempt + 1), 300);
+              return;
+            }
+            svg._sgNatW = svgW;
+            svg._sgNatH = svgH;
             const savedZoom = plugin.settings?.graphZoomLevel;
             if (savedZoom && savedZoom > 0) {
               applyZoom(savedZoom, true);
               zoomLevel.textContent = Math.round(savedZoom * 100) + '%';
             } else {
-              const contentW = graphContent.scrollWidth;
               const viewportW = graphViewport.clientWidth;
-              if (contentW > 0 && viewportW > 0) {
-                const fitScale = Math.min(1, viewportW / contentW);
+              if (svgW > 0 && viewportW > 0) {
+                const fitScale = Math.min(1, viewportW / svgW);
                 applyZoom(fitScale, true);
                 zoomLevel.textContent = 'fit';
               }
             }
+            requestAnimationFrame(() => {
+              if (onReposition) onReposition();
 
+              });
           });
-        });
+        };
+        tryFit();
       };
 
       zoomInBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); applyZoom((parseFloat(graphContent.dataset.scale) || 1) + 0.05); });
@@ -37707,6 +38437,16 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           if (plugin.settings?.remarkDebugLog) console.warn('[SwiftGloss] Mermaid render failed:', renderErr);
         }
         autoFitZoom();
+        if (!graphContent.querySelector('svg')) {
+          const svgObs = new MutationObserver(() => {
+            if (graphContent.querySelector('svg')) {
+              svgObs.disconnect();
+              autoFitZoom();
+            }
+          });
+          svgObs.observe(graphContent, { childList: true, subtree: true });
+          setTimeout(() => svgObs.disconnect(), 8000);
+        }
       })();
 
       if (!graphSection.parentElement) {
@@ -37719,6 +38459,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }
         container.insertBefore(graphSection, insertBefore);
       }
+
       if (keepOpenRef) keepOpenRef.val = true;
       return graphSection;
     };
@@ -37904,7 +38645,7 @@ ${fullContext}`;
     addBtn.className = 'remark-add-btn';
     addBtn.textContent = '+';
     addBtn.title = t('remark.addRemark');
-    addBtn.style.cssText = `font-weight:800;font-size:14px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1CB5E0, #000046, #1CB5E0, #6a11cb);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 181, 224, 0.8));background-color:rgba(28, 181, 224, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 181, 224, 0.3), 0 0 15px rgba(0, 0, 70, 0.2);animation:hp-blue-shift 4s ease infinite;line-height:1;${!_isDesktop ? 'width:36px;height:36px;aspect-ratio:1/1;' : ''}`;
+    addBtn.style.cssText = `font-weight:800;font-size:14px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1CB5E0, #000046, #1CB5E0, #6a11cb);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 181, 224, 0.8));background-color:rgba(28, 181, 224, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 181, 224, 0.3), 0 0 15px rgba(0, 0, 70, 0.2);animation:hp-blue-shift 4s ease infinite;line-height:1;width:36px;height:36px;aspect-ratio:1/1;`;
     const addBtnStyle = document.createElement('style');
     addBtnStyle.textContent = '@keyframes hp-blue-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }';
     container.appendChild(addBtnStyle);
@@ -37913,21 +38654,36 @@ ${fullContext}`;
       ce.stopPropagation();
       if (keepOpenRef) keepOpenRef.val = true;
       if (!ruleRegex) return;
+      const isGlobalRule = ruleSource === 'global';
       const newLink = { filePath: plugin.currentFilePath || '', searchText: '', remark: '', timestamp: Date.now() };
-      const actualRule = rule || (isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex));
-      if (actualRule) {
-        if (!actualRule.links) actualRule.links = [];
-        actualRule.links.push(newLink);
-        if (targetEl) targetEl.dataset.links = JSON.stringify(actualRule.links);
-        if (onDirty) onDirty();
-        if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
-        else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+      if (isGlobalRule) {
+        const r = plugin.globalRules.find(r => r.regex === ruleRegex);
+        if (r) {
+          if (!r.links) r.links = [];
+          r.links.push(newLink);
+          if (targetEl) targetEl.dataset.links = JSON.stringify(r.links);
+          if (onDirty) onDirty();
+          await plugin.saveGlobalRules(plugin.globalRules, true);
+        }
+      } else {
+        const r = plugin.rules.find(r => r.regex === ruleRegex);
+        if (r) {
+          if (!r.links) r.links = [];
+          r.links.push(newLink);
+          if (targetEl) targetEl.dataset.links = JSON.stringify(r.links);
+          if (onDirty) onDirty();
+          await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+        }
       }
       onRefresh();
     });
     aiBtnContainer.appendChild(addBtn);
     container.appendChild(aiBtnContainer);
 
+
+    if (savedScrollTop > 0) {
+      requestAnimationFrame(() => { container.scrollTop = savedScrollTop; });
+    }
 
     return { linksByFile };
   }
@@ -37953,7 +38709,7 @@ ${fullContext}`;
     win.dataset.keyword = keywordRegex;
     const maxWinHeight = _isDesktop ? Math.min(window.innerHeight * 0.75, 600) : Math.min(window.innerHeight * 0.6, 500);
     win.style.cssText = `
-      position:fixed;z-index:1100;min-width:${_isDesktop ? '300px' : '0'};width:${actualMaxWidth}px;
+      position:fixed;z-index:1200;min-width:${_isDesktop ? '300px' : '0'};width:${actualMaxWidth}px;
       max-height:${maxWinHeight}px;
       background:rgba(var(--mono-rgb-0),0.75);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
       border:none;border-radius:12px;
@@ -37961,6 +38717,7 @@ ${fullContext}`;
       overflow:hidden;display:flex;flex-direction:column;
       padding:${popupSpacing}px;opacity:${savedOpacity};
     `;
+    win.addEventListener('mousedown', () => plugin.constructor.bringToFront(win));
 
     // 随机偏移，避免多个窗口重叠
     const existingWins = document.querySelectorAll('.keyword-detail-window');
@@ -38357,6 +39114,7 @@ ${fullContext}`;
             });
 
             document.body.appendChild(previewEl);
+            plugin.constructor.bringToFront(previewEl);
 
             const chipRect = chip.getBoundingClientRect();
             const previewHeight = previewEl.offsetHeight;
@@ -38624,6 +39382,11 @@ ${fullContext}`;
       
       const target = e.target;
       
+      if (target.closest('.inline-remark-section')) return;
+      if (target.closest('.swiftglossa-sidebar')) return;
+      
+      if (plugin._sidebarView && plugin._sidebarView.isVisible() && plugin.settings?.hidePopupWhenSidebarOpen && !plugin._forceShowPopup) return;
+      
       // 检查是否在弹窗内，如果在则不处理（优先检查，避免弹窗内部触发新弹窗）
       if (currentPopover && currentPopover._popup && currentPopover._popup.contains(target)) return;
       
@@ -38658,6 +39421,7 @@ ${fullContext}`;
         const linksData = highlightEl.dataset.links;
         if (linksData) links = JSON.parse(linksData);
       } catch(e) {}
+
 
       if (!remark && links.length === 0) return;
       
@@ -38718,7 +39482,7 @@ ${fullContext}`;
           popup.dataset.ruleRegex = targetEl.dataset.ruleRegex || '';
           popup.dataset.ruleSource = targetEl.dataset.ruleSource || '';
           popup.style.position = 'fixed';
-          popup.style.zIndex = '1000';
+          popup.style.zIndex = '1200';
           // 初始隐藏弹窗，直到内容渲染完成
           popup.style.opacity = '0';
           popup.style.visibility = 'hidden';
@@ -38850,6 +39614,7 @@ ${fullContext}`;
           // 检查上下空间是否足够
           const canShowAbove = spaceAbove >= requiredHeight;
           const canShowBelow = spaceBelow >= requiredHeight;
+
           
           if (canShowAbove && canShowBelow) {
             // 两边都够，选择空间更大的
@@ -38888,10 +39653,9 @@ ${fullContext}`;
             // 弹窗在关键词下方
             dynamicMaxHeight = window.innerHeight - rect.bottom - margin;
           }
-          dynamicMaxHeight = Math.max(dynamicMaxHeight, 80); // 最小高度80px
+          dynamicMaxHeight = Math.max(dynamicMaxHeight, 80);
           popup.style.maxHeight = dynamicMaxHeight + 'px';
           
-          // 保存初始位置信息供后续使用
           let lastPopupHeight = estimatedPopupHeight;
           let initialTop = top;
           let initialShowArrowAtBottom = showArrowAtBottom;
@@ -39240,6 +40004,7 @@ ${fullContext}`;
               popupLineHeight: plugin.settings.popupLineHeight !== undefined ? plugin.settings.popupLineHeight : 1.5,
 
               onRefresh: () => { keepOpen = true; renderAllRemarks(); repositionPopup(); },
+              onReposition: () => { repositionPopup(); },
               onDirty: () => { isDirty = true; },
               keepOpenRef: { val: false },
               isDirtyRef: { val: false },
@@ -39337,6 +40102,7 @@ ${fullContext}`;
               const chipsBar = popup.querySelector('.keyword-chips-bar');
               const chipsHeight = chipsBar ? chipsBar.offsetHeight : 0;
               contentContainer.style.maxHeight = `calc(${newDynamicMaxHeight}px - ${popupSpacing * 2 + 26 + chipsHeight}px)`;
+
             });
           };
           
@@ -40307,7 +41073,7 @@ ${fullContext}`;
           popupLeftBtns.appendChild(countBtn);
 
           // 行间注释文本框（常显，双击编辑，支持拖放文本）
-          const inNoteKey = (targetEl.textContent || '').trim();
+          const inNoteKey = ruleRegex || (targetEl.textContent || '').trim();
           const inNoteTag = document.createElement('span');
           inNoteTag.dataset.editField = 'inNote';
           inNoteTag.dataset.inNoteKey = inNoteKey;
@@ -40337,7 +41103,11 @@ ${fullContext}`;
             inNoteTag.style.color = 'var(--text-muted)';
             if (!droppedText || !inNoteKey) return;
             const data = await plugin.loadInterlinearNoteData();
-            const existingNote = data[inNoteKey] || '';
+            const { note: existingNote, foundKey } = plugin.findInterlinearNote(data, inNoteKey);
+            const saveKey = foundKey || inNoteKey;
+            if (foundKey && foundKey !== inNoteKey) {
+              await plugin.migrateInterlinearNoteKey(data, foundKey, inNoteKey);
+            }
             if (existingNote && !existingNote.includes(droppedText)) {
               data[inNoteKey] = existingNote + '\n' + droppedText;
             } else if (!existingNote) {
@@ -40355,7 +41125,11 @@ ${fullContext}`;
             const key = inNoteTag.dataset.inNoteKey || '';
             if (!key) return;
             const data = await plugin.loadInterlinearNoteData();
-            const oldNote = data[key] || '';
+            const { note: oldNote, foundKey } = plugin.findInterlinearNote(data, key);
+            const effectiveKey = foundKey || key;
+            if (foundKey && foundKey !== key) {
+              await plugin.migrateInterlinearNoteKey(data, foundKey, key);
+            }
             const input = document.createElement('input');
             input.type = 'text';
             input.value = oldNote;
@@ -40385,7 +41159,10 @@ ${fullContext}`;
           // 加载已有行间注释
           (async () => {
             const data = await plugin.loadInterlinearNoteData();
-            const note = data[inNoteKey] || '';
+            const { note, foundKey } = plugin.findInterlinearNote(data, inNoteKey);
+            if (foundKey && foundKey !== inNoteKey) {
+              await plugin.migrateInterlinearNoteKey(data, foundKey, inNoteKey);
+            }
             inNoteTag.textContent = note ? note.substring(0, 20) + (note.length > 20 ? '...' : '') : t('inNote.placeholder');
           })();
           popupLeftBtns.appendChild(inNoteTag);
@@ -40484,7 +41261,8 @@ ${fullContext}`;
 
                     previewEl = document.createElement('div');
                     previewEl.className = 'keyword-chip-preview';
-                    previewEl.style.cssText = `position:fixed;z-index:1200;max-width:350px;max-height:300px;overflow-y:auto;padding:${popupSpacing}px;background:rgba(var(--mono-rgb-0),0.75);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border:none;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.35);font-size:12px;line-height:1.4;`;
+            previewEl.style.cssText = `position:fixed;z-index:1200;max-width:350px;max-height:300px;overflow-y:auto;padding:${popupSpacing}px;background:rgba(var(--mono-rgb-0),0.75);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border:none;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.35);font-size:12px;line-height:1.4;`;
+            previewEl.addEventListener('mousedown', () => plugin.constructor.bringToFront(previewEl));
 
                     const titleDiv = document.createElement('div');
                     titleDiv.textContent = kwRegex;
@@ -40509,7 +41287,8 @@ ${fullContext}`;
                       }, 200);
                     });
 
-                    document.body.appendChild(previewEl);
+            document.body.appendChild(previewEl);
+            plugin.constructor.bringToFront(previewEl);
 
                     const chipRect = chip.getBoundingClientRect();
                     const previewHeight = previewEl.offsetHeight;
@@ -40663,7 +41442,8 @@ ${fullContext}`;
           document.addEventListener('mousemove', onPopupMouseMove);
 
           // 添加到页面
-          document.body.appendChild(popup);
+      const appRoot = document.querySelector('.app-container') || document.body;
+      appRoot.appendChild(popup);
           
           // Alt+滚轮调整宽度，Ctrl+滚轮调整透明度
           let popupOpacity = savedOpacity;
@@ -40699,7 +41479,7 @@ ${fullContext}`;
           let boundsTop = Math.min(popupRect.top, targetRect.top);
           let boundsBottom = Math.max(popupRect.bottom, targetRect.bottom);
           
-          // 更新包围盒的函数
+
           const updateBounds = () => {
             popupRect = popup.getBoundingClientRect();
             targetRect = targetEl.getBoundingClientRect();
@@ -40707,7 +41487,6 @@ ${fullContext}`;
             boundsRight = Math.max(popupRect.right, targetRect.right);
             boundsTop = Math.min(popupRect.top, targetRect.top);
             boundsBottom = Math.max(popupRect.bottom, targetRect.bottom);
-            
 
           };
           
@@ -40715,7 +41494,10 @@ ${fullContext}`;
           
           // 检查鼠标是否在包围盒内
           const isInBounds = (x, y) => {
-            return x >= boundsLeft && x <= boundsRight && y >= boundsTop && y <= boundsBottom;
+            if (x >= boundsLeft && x <= boundsRight && y >= boundsTop && y <= boundsBottom) return true;
+            const el = document.elementFromPoint(x, y);
+            if (el && (popup.contains(el) || el.closest('.rule-source-badge') || el.closest('.remark-badge') || el.closest('.keyword-chip-preview'))) return true;
+            return false;
           };
           
           // 保存 mouseMoveHandler 和延迟关闭定时器
@@ -40733,13 +41515,9 @@ ${fullContext}`;
             const mouseY = e.clientY;
             const inBounds = isInBounds(mouseX, mouseY);
             
-
-            
             if (!inBounds) {
-              // 如果开启备注弹窗不自动关闭，鼠标离开不关闭
               if (plugin.settings?.remarkKeepOpen) return;
 
-              // 如果不在包围盒内，立即关闭
               hidePopup();
             } else {
               // 如果回到包围盒内，取消任何可能的延迟关闭
@@ -40750,7 +41528,7 @@ ${fullContext}`;
             }
           };
           
-          popup.addEventListener('mousedown', () => { keepOpen = true; });
+          popup.addEventListener('mousedown', () => { keepOpen = true; plugin.constructor.bringToFront(popup); });
           
           // 添加鼠标移动监听
           document.addEventListener('mousemove', mouseMoveHandler);
@@ -40805,6 +41583,7 @@ ${fullContext}`;
       if (showTimeout) {
         clearTimeout(showTimeout);
         showTimeout = null;
+
       }
     });
   }
@@ -40881,7 +41660,7 @@ ${fullContext}`;
         const isCounted = ruleRegex && plugin.countedRegexes.has(ruleRegex);
         
         const showGL = plugin.settings?.showRuleSourceBadge !== false && ruleSource;
-        const showN = plugin.settings?.showRemarkBadge;
+        const showN = plugin.settings?.showRemarkBadge && !(plugin._sidebarView && plugin._sidebarView.isVisible());
         const showC = ruleRegex ? true : false;
         const showI = ruleRegex ? true : false;
         if (!showGL && !showN && !showC && !showI) return;
@@ -41117,7 +41896,12 @@ ${fullContext}`;
             } catch (err) {}
             
             // 触发备注弹窗：模拟mouseover事件到目标高亮元素
+            plugin._forceShowPopup = true;
+            plugin._skipHoverDelay = true;
+            plugin._keepExistingPopup = false;
+
             target.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true }));
+            setTimeout(() => { plugin._forceShowPopup = false; }, 500);
             
             hideMobileHighlightActions();
           });
@@ -41182,7 +41966,10 @@ ${fullContext}`;
             ce.preventDefault();
             const matchedText = target.textContent || '';
             const existingData = await plugin.loadInterlinearNoteData();
-            const existingNote = existingData[ruleRegex] || '';
+            const { note: existingNote, foundKey } = plugin.findInterlinearNote(existingData, ruleRegex);
+            if (foundKey && foundKey !== ruleRegex) {
+              await plugin.migrateInterlinearNoteKey(existingData, foundKey, ruleRegex);
+            }
             
             const existing = document.querySelector('.interlinear-note-input-window');
             if (existing) existing.remove();
@@ -41545,6 +42332,7 @@ ${fullContext}`;
       if (!(e.target instanceof Element)) return;
 
       if (!plugin.settings?.showRemarkBadge) return;
+      if (plugin._sidebarView && plugin._sidebarView.isVisible()) return;
 
       if (e.target.classList.contains('remark-badge')) {
         cancelHideRemarkBadge();

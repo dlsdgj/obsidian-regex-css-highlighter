@@ -2,7 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.9.7 (2026-07-18)
+## 🆕 v1.9.8 (2026-07-18)
+
+- **Panel Chip Bar Position Fix / 面板ChipBar位置修复** — Fixed rule group chips moving below remark section after updating rules; `addGlobalRulesSection`/`addHeadingStylesSection` now correctly insert before `.inline-remark-section` / 修复更新规则后规则分组chips移到备注下方的问题，插入逻辑增加inline-remark-section参考
+- **Rule Click Input Restore / 规则点击输入框恢复** — After panel auto-refresh, clicking a rule button now correctly fills the regex into the top input box and restores `currentEditingRule` / 面板自动刷新后点击规则按钮正确填入关键词到输入框并恢复编辑状态
+- **Local Chip Name Translation Fix / 文件规则Chip名称修复** — Fixed file rule chip showing raw translation key "main.currentFile" instead of "当前文件" when active view is unavailable / 修复文件规则chip显示未解析翻译键"main.currentFile"的问题
+- **File Rules Load on First Open / 首次打开加载文件规则** — Right panel now loads current file rules on first open, ensuring the file-name chip group appears immediately / 右侧面板首次打开时加载当前文件规则，文件名chip分组立即可见
+- **Collapse Setting Persistence / 折叠设置持久化修复** — Activating a rule group chip no longer overwrites the "默认折叠规则分组" setting; the preference is only changed via the toggle button / 激活规则分组chip不再覆盖"默认折叠规则分组"设置，仅通过折叠按钮修改
+- **Chip Hover After Rule Delete / 删除规则后Chip悬浮修复** — Top chip bar (CSS/KEY WORDS) hover behavior no longer breaks after deleting rules; switched to `mouseover`/`mouseout` event delegation with `relatedTarget` checks, and added display state sync after section rebuild / 删除规则后顶部chip悬浮触发不再失效，改用mouseover/mouseout事件委托并添加重建后显示状态同步
+- **Rule Group Activation Fix / 规则分组激活修复** — Clicking a global rule button no longer jumps to the file-rules group; `highlightMatchingRuleButtons` now only activates the group matching `currentEditingRule` / 点击全局规则按钮不再跳到文件规则分组，仅激活与当前编辑规则匹配的分组
+
+## v1.9.7 (2026-07-18)
 
 - **Regex Pattern Matching for Related Content / 正则模式匹配相关内容** — Related notes and highlights now support regex patterns (e.g. `(?<!发展)中国`); auto-extracts plain text fallback when full regex matching fails / 相关笔记和高亮现在支持正则模式关键词，正则匹配失败时自动提取纯文本回退匹配
 - **Panel Content Preserve on Navigation / 跳转后保持面板内容** — Clicking related notes/highlights links no longer refreshes the right panel; current keyword display is preserved after navigation / 点击相关笔记/高亮跳转后右侧面板不再刷新，保持当前关键词显示

@@ -8870,6 +8870,15 @@ class AddRegexRuleModal {
       }
     }
     
+    // 确保当前文件的规则已加载
+    {
+      const av = this.app.workspace.getActiveViewOfType(MarkdownView);
+      if (av?.file?.path && (!this.plugin.currentFilePath || this.plugin.currentFilePath !== av.file.path)) {
+        await this.plugin.loadFileRules(av.file.path);
+        this.plugin.currentFilePath = av.file.path;
+      }
+    }
+    
     // 获取选中的文字
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     let selectedText = this.plugin.getSelectedText() || this._savedSelectedText;
@@ -9382,7 +9391,12 @@ class AddRegexRuleModal {
           if (groupContainer) {
             const grp = groupContainer.getAttribute('data-rule-group');
             if (grp && !(this._isRuleGroupCollapsed && this._isRuleGroupCollapsed())) {
-              if (typeof this._activateGlobalGroup === 'function') {
+              const editingRegex = this.currentEditingRule?.regex;
+              const editingIsGlobal = this.currentEditingRule?.isGlobal;
+              const isEditingMatch = editingRegex && matchingRule.regex === editingRegex && 
+                ((editingIsGlobal && grp !== '__local__') || (!editingIsGlobal && grp === '__local__'));
+              const shouldActivate = isEditingMatch || (!editingRegex && index === 0);
+              if (shouldActivate && typeof this._activateGlobalGroup === 'function') {
                 this._activateGlobalGroup(grp);
               }
             }
@@ -12476,17 +12490,22 @@ class AddRegexRuleModal {
           styleContent.forEach(el => { el.style.display = 'none'; });
           rulesContent.forEach(el => { el.style.display = 'none'; });
           
+          const getStyleContent = () => contentEl.querySelectorAll('.rch-style-container, .heading-styles-section');
+          const getRulesContent = () => contentEl.querySelectorAll('.global-rules-section');
+          
           const updateDisplay = () => {
             const activeChip = pinnedChip || hoveredChip;
+            const curStyle = getStyleContent();
+            const curRules = getRulesContent();
             if (activeChip === styleChip) {
-              styleContent.forEach(el => { el.style.display = ''; });
-              rulesContent.forEach(el => { el.style.display = 'none'; });
+              curStyle.forEach(el => { el.style.display = ''; });
+              curRules.forEach(el => { el.style.display = 'none'; });
             } else if (activeChip === rulesChip) {
-              rulesContent.forEach(el => { el.style.display = ''; });
-              styleContent.forEach(el => { el.style.display = 'none'; });
+              curRules.forEach(el => { el.style.display = ''; });
+              curStyle.forEach(el => { el.style.display = 'none'; });
             } else {
-              styleContent.forEach(el => { el.style.display = 'none'; });
-              rulesContent.forEach(el => { el.style.display = 'none'; });
+              curStyle.forEach(el => { el.style.display = 'none'; });
+              curRules.forEach(el => { el.style.display = 'none'; });
             }
             const updateChipStyle = (chip, isActive) => {
               chip.style.borderColor = isActive ? 'var(--interactive-accent)' : 'var(--background-modifier-border)';
@@ -12516,7 +12535,7 @@ class AddRegexRuleModal {
             clearTimeout(hideTimer);
           };
           
-          const setupChipHover = (chip, contents) => {
+          const setupChipHover = (chip, contentSelector) => {
             chip.addEventListener('mouseenter', () => {
               cancelHide();
               hoveredChip = chip;
@@ -12534,22 +12553,24 @@ class AddRegexRuleModal {
               }
               updateDisplay();
             });
-            contents.forEach(el => {
-              el.addEventListener('mouseenter', () => {
-                cancelHide();
-                if (!pinnedChip) {
-                  hoveredChip = chip;
-                  updateDisplay();
-                }
-              });
-              el.addEventListener('mouseleave', () => {
-                scheduleHide();
-              });
+            contentEl.addEventListener('mouseover', (e) => {
+              if (!e.target.closest(contentSelector)) return;
+              cancelHide();
+              if (!pinnedChip) {
+                hoveredChip = chip;
+                updateDisplay();
+              }
+            });
+            contentEl.addEventListener('mouseout', (e) => {
+              const target = e.target.closest(contentSelector);
+              if (!target) return;
+              if (e.relatedTarget && target.contains(e.relatedTarget)) return;
+              scheduleHide();
             });
           };
           
-          setupChipHover(styleChip, styleContent);
-          setupChipHover(rulesChip, rulesContent);
+          setupChipHover(styleChip, '.rch-style-container, .heading-styles-section');
+          setupChipHover(rulesChip, '.global-rules-section');
           
           // 确保chipBar在styleEl/rulesEl之前，备注在之后
           const insertBefore = styleEl || rulesEl;
@@ -15577,24 +15598,19 @@ class AddRegexRuleModal {
       contentEl.removeChild(globalSection);
     }
     
-    // 找到设置面板元素
+    const inlineRemark = contentEl.querySelector('.inline-remark-section');
     const settingsPanel = contentEl.querySelector('.regex-highlighter-settings');
-    
-    // 找到备注容器（用于插入位置参考）
     const remarkSection = contentEl.querySelector('.remark-section');
     
-    // 如果存在备注容器，则在备注容器之前插入全局规则容器
-    // 这样全局规则会在备注之前
-    if (remarkSection) {
+    if (inlineRemark) {
+      contentEl.insertBefore(globalSection, inlineRemark);
+    } else if (remarkSection) {
       contentEl.insertBefore(globalSection, remarkSection);
     } else if (settingsPanel) {
-      // 如果没有备注容器，但有设置面板，则在设置面板之前插入全局规则容器
       contentEl.insertBefore(globalSection, settingsPanel);
     } else {
-      // 如果没有设置面板，则添加到contentEl的末尾
       contentEl.appendChild(globalSection);
     }
-   // globalSection.style.backgroundColor = "#F0EEE6"; // 浅蓝色背景以区分全局规则
     
      const globalTitle = globalSection.createEl("h3", { text: t('main.highlightRules') });
      globalTitle.style.margin = "0 0 4px 0";
@@ -15663,7 +15679,7 @@ class AddRegexRuleModal {
             localChipName = words.length > 3 ? words.slice(0, 3).join(' ') + '…' : rawName;
           }
         } else {
-          localChipName = t('main.currentFile') || '当前文件';
+          localChipName = '当前文件';
         }
       }
 
@@ -16086,8 +16102,7 @@ class AddRegexRuleModal {
       const activateGlobalGroup = (grp) => {
         if (isRuleGroupCollapsed) {
           isRuleGroupCollapsed = false;
-          this.plugin.settings.isRuleGroupCollapsed = false;
-          this.plugin.saveData(this.plugin.settings);
+
           if (ruleGroupToggleBtn) {
             ruleGroupToggleBtn.textContent = '<';
             ruleGroupToggleBtn.title = t('main.collapseGroupStyles');
@@ -16781,6 +16796,30 @@ class AddRegexRuleModal {
       }
 
     }
+    
+    // 同步chipBar的显示状态到新创建的section
+    const chipBar = contentEl.querySelector('.rch-top-chip-bar');
+    if (chipBar) {
+      const activeChip = chipBar.querySelector('[data-active="true"]');
+      const rulesChip = chipBar.querySelector('.rch-rules-chip');
+      const styleChip = chipBar.querySelector('.rch-style-chip');
+      const newRulesEl = contentEl.querySelector('.global-rules-section');
+      const newStyleEl = contentEl.querySelector('.rch-style-container');
+      const newHeadingEl = contentEl.querySelector('.heading-styles-section');
+      if (activeChip === rulesChip && newRulesEl) {
+        newRulesEl.style.display = '';
+        if (newStyleEl) newStyleEl.style.display = 'none';
+        if (newHeadingEl) newHeadingEl.style.display = 'none';
+      } else if (activeChip === styleChip) {
+        if (newRulesEl) newRulesEl.style.display = 'none';
+        if (newStyleEl) newStyleEl.style.display = '';
+        if (newHeadingEl) newHeadingEl.style.display = '';
+      } else {
+        if (newRulesEl) newRulesEl.style.display = 'none';
+        if (newStyleEl) newStyleEl.style.display = 'none';
+        if (newHeadingEl) newHeadingEl.style.display = 'none';
+      }
+    }
   }
 
   // 添加标题样式部分
@@ -16806,21 +16845,18 @@ class AddRegexRuleModal {
       contentEl.removeChild(headingSection);
     }
     
-    // 找到设置面板元素
     const settingsPanel = contentEl.querySelector('.regex-highlighter-settings');
     
-    // 找到备注容器（用于插入位置参考）
+    const inlineRemark = contentEl.querySelector('.inline-remark-section');
     const remarkSection = contentEl.querySelector('.remark-section');
     
-    // 如果存在备注容器，则在备注容器之前插入标题样式容器
-    // 这样标题样式会在备注之前
-    if (remarkSection) {
+    if (inlineRemark) {
+      contentEl.insertBefore(headingSection, inlineRemark);
+    } else if (remarkSection) {
       contentEl.insertBefore(headingSection, remarkSection);
     } else if (settingsPanel) {
-      // 如果没有备注容器，但有设置面板，则在设置面板之前插入标题样式容器
       contentEl.insertBefore(headingSection, settingsPanel);
     } else {
-      // 如果没有设置面板，则添加到contentEl的末尾
       contentEl.appendChild(headingSection);
     }
     
@@ -17402,6 +17438,30 @@ class AddRegexRuleModal {
     } else {
       renderHeadingStyleButtons(headingStyles);
     }
+    
+    // 同步chipBar的显示状态到新创建的section
+    const chipBar = contentEl.querySelector('.rch-top-chip-bar');
+    if (chipBar) {
+      const activeChip = chipBar.querySelector('[data-active="true"]');
+      const rulesChip = chipBar.querySelector('.rch-rules-chip');
+      const styleChip = chipBar.querySelector('.rch-style-chip');
+      const newRulesEl = contentEl.querySelector('.global-rules-section');
+      const newStyleEl = contentEl.querySelector('.rch-style-container');
+      const newHeadingEl = contentEl.querySelector('.heading-styles-section');
+      if (activeChip === styleChip) {
+        if (newRulesEl) newRulesEl.style.display = 'none';
+        if (newStyleEl) newStyleEl.style.display = '';
+        if (newHeadingEl) newHeadingEl.style.display = '';
+      } else if (activeChip === rulesChip) {
+        if (newRulesEl) newRulesEl.style.display = '';
+        if (newStyleEl) newStyleEl.style.display = 'none';
+        if (newHeadingEl) newHeadingEl.style.display = 'none';
+      } else {
+        if (newRulesEl) newRulesEl.style.display = 'none';
+        if (newStyleEl) newStyleEl.style.display = 'none';
+        if (newHeadingEl) newHeadingEl.style.display = 'none';
+      }
+    }
   }
 
   // 清理标题样式容器
@@ -17426,7 +17486,26 @@ class AddRegexRuleModal {
       if (this._skipRefreshOnInteraction) {
         this._skipRefreshOnInteraction = false;
       } else {
+        const savedRegex = rule.regex;
+        const savedCssClass = rule.cssClass;
+        const savedRemark = rule.remark || '';
+        const savedIsGlobal = this.plugin.globalRules?.some(r => r.regex === rule.regex && r.cssClass === rule.cssClass) || false;
         this.refreshModalContent().then(() => {
+          if (this.regexInput) {
+            this.regexInput.setValue(savedRegex);
+            this.regexInput.inputEl.focus();
+            this.regexInput.inputEl.select();
+            this.updateStyleButtonsPreview(savedRegex);
+            this.highlightMatchingRuleButtons();
+          }
+          const ruleIndex = savedIsGlobal
+            ? this.plugin.globalRules.findIndex(r => r.regex === savedRegex && r.cssClass === savedCssClass)
+            : this.plugin.rules.findIndex(r => r.regex === savedRegex && r.cssClass === savedCssClass);
+          if (ruleIndex !== -1) {
+            this.currentEditingRule = { index: ruleIndex, regex: savedRegex, cssClass: savedCssClass, isGlobal: savedIsGlobal, remark: savedRemark };
+            this.remark = savedRemark;
+            if (this._refreshUpdateChip) this._refreshUpdateChip();
+          }
           this.toggleInlineRemark(ruleId, rule, forceRefresh);
         });
         return;
@@ -17901,12 +17980,19 @@ class AddRegexRuleModal {
     }
 
     this.contentEl.appendChild(section);
+    const chipBar = this.contentEl.querySelector('.rch-top-chip-bar');
     const chipContents = this.contentEl.querySelectorAll('.rch-style-container, .global-rules-section, .heading-styles-section');
     chipContents.forEach(el => {
       if (el.nextSibling !== section) {
         this.contentEl.insertBefore(el, section);
       }
     });
+    if (chipBar) {
+      const firstContent = this.contentEl.querySelector('.rch-style-container, .global-rules-section, .heading-styles-section');
+      if (firstContent) {
+        this.contentEl.insertBefore(chipBar, firstContent);
+      }
+    }
 
     requestAnimationFrame(() => {
       section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

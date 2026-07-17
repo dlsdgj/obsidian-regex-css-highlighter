@@ -15,6 +15,25 @@ const hlMarshmallowField = StateField.define({
   provide: field => EditorView.decorations.from(field)
 });
 
+function _extractPlainText(term) {
+  try {
+    new RegExp(term);
+    const extracted = term.replace(/\(\?<[!=][^)]*\)/g, '').replace(/\(\?[!=][^)]*\)/g, '').replace(/[\^\$\.\*\+\?\(\)\[\]\{\}\\|]/g, '').trim();
+    return extracted || term;
+  } catch {
+    return term;
+  }
+}
+
+function _regexMatch(text, term) {
+  try {
+    const re = new RegExp(term);
+    return re.test(text);
+  } catch {
+    return text.includes(_extractPlainText(term));
+  }
+}
+
 // 直接将CSS规则追加到动态样式元素，确保新样式立即生效（无需重新读取文件）
 function appendCSSToDynamicStyle(cssRule) {
   let styleElement = document.getElementById('Regex-Css-Highlighter-dynamic-styles');
@@ -179,6 +198,16 @@ const i18n = {
     'main.noStyles': '暂无样式',
     'main.openCssEditor': '打开样式编辑器',
     'main.openStyleCategories': '打开样式分组',
+    'main.styleChipLabel': '🎨 CSS',
+    'main.rulesChipLabel': '📝 KEY WORDS',
+    'main.relatedNotes': '📎 相关笔记',
+    'main.relatedHighlights': '🖍 相关高亮',
+    'main.highlightDbReady': 'SwiftGlossa: 高亮数据库构建完成',
+    'settings.showRelatedNotes': '显示相关笔记',
+    'settings.showRelatedNotesDesc': '选中/点击关键词时在备注区域上方显示相关笔记链接',
+    'settings.showRelatedHighlights': '显示相关高亮',
+    'settings.showRelatedHighlightsDesc': '选中/点击关键词时显示匹配的Obsidian原生高亮文本',
+    'settings.mobileRemarkInSidebar': '手机端备注在侧边栏显示',
     'main.addGroup': '添加分组',
     'main.getMoreStyles': '获取更多样式',
     'main.defaultHide': '默认隐藏',
@@ -420,8 +449,10 @@ const i18n = {
     'main.doubleClickGroup': '双击分组标题移动到单显区',
     'main.leftClickApply': '左键单击应用样式',
     'settings.display': '显示',
-    'settings.collapseGroupOnMatch': '默认折叠分组',
-    'settings.collapseGroupOnMatchDesc': '点击规则或搜索匹配时，保持分组折叠状态，仅显示匹配的样式',
+    'settings.collapseGroupOnMatch': '默认折叠样式分组',
+    'settings.collapseGroupOnMatchDesc': '点击规则或搜索匹配时，保持样式分组折叠状态，仅显示匹配的样式',
+    'settings.collapseRuleGroupOnMatch': '默认折叠规则分组',
+    'settings.collapseRuleGroupOnMatchDesc': '点击规则或搜索匹配时，保持规则分组折叠状态，仅显示匹配的规则',
     'settings.readingModeLineHeight': '阅读模式行高',
     'settings.readingModeMargin': '阅读模式边距',
     'settings.leftMargin': '左边距',
@@ -1038,6 +1069,16 @@ const i18n = {
     'main.noStyles': 'No styles',
     'main.openCssEditor': 'Open Style Editor',
     'main.openStyleCategories': 'Open Style Categories',
+    'main.styleChipLabel': '🎨 CSS',
+    'main.rulesChipLabel': '📝 KEY WORDS',
+    'main.relatedNotes': '📎 Related Notes',
+    'main.relatedHighlights': '🖍 Related Highlights',
+    'main.highlightDbReady': 'SwiftGlossa: Highlight database built',
+    'settings.showRelatedNotes': 'Show Related Notes',
+    'settings.showRelatedNotesDesc': 'Show related note links above remarks when selecting/clicking a keyword',
+    'settings.showRelatedHighlights': 'Show Related Highlights',
+    'settings.showRelatedHighlightsDesc': 'Show matching Obsidian native highlights when selecting/clicking a keyword',
+    'settings.mobileRemarkInSidebar': 'Show remarks in sidebar on mobile',
     'main.addGroup': 'Add Group',
     'main.getMoreStyles': 'Get More Styles',
     'main.defaultHide': 'Default Hide',
@@ -1279,8 +1320,10 @@ const i18n = {
     'main.doubleClickGroup': 'Double-click group title to move to single display',
     'main.leftClickApply': 'Left-click to apply style',
     'settings.display': 'Display',
-    'settings.collapseGroupOnMatch': 'Collapse Group on Match',
-    'settings.collapseGroupOnMatchDesc': 'Keep groups collapsed when clicking a rule or searching, showing only matching styles',
+    'settings.collapseGroupOnMatch': 'Collapse Style Group on Match',
+    'settings.collapseGroupOnMatchDesc': 'Keep style groups collapsed when clicking a rule or searching, showing only matching styles',
+    'settings.collapseRuleGroupOnMatch': 'Collapse Rule Group on Match',
+    'settings.collapseRuleGroupOnMatchDesc': 'Keep rule groups collapsed when clicking a rule or searching, showing only matching rules',
     'settings.readingModeLineHeight': 'Reading Mode Line Height',
     'settings.readingModeMargin': 'Reading Mode Margin',
     'settings.leftMargin': 'Left Margin',
@@ -7660,7 +7703,7 @@ class AddRegexRuleModal {
     
     this._rulesUpdateHandler = () => {
       if (!this._isOpen) return;
-      this.refreshModalContent();
+      this._needsRefresh = true;
     };
     this.plugin.rulesUpdateEmitter.addEventListener('update', this._rulesUpdateHandler);
     
@@ -9100,6 +9143,12 @@ class AddRegexRuleModal {
     this.highlightMatchingRuleButtons = () => {
       const inputValue = inputEl.value.trim();
       
+      // 如果chip未激活，不处理匹配高亮
+      const styleChip = this.contentEl.querySelector('.rch-style-chip');
+      const rulesChip = this.contentEl.querySelector('.rch-rules-chip');
+      const styleActive = styleChip && styleChip.dataset.active === 'true';
+      const rulesActive = rulesChip && rulesChip.dataset.active === 'true';
+      
       // 获取所有历史规则按钮和CSS样式按钮
       const historyButtons = this.contentEl.querySelectorAll('.history-section [data-rule-regex]');
       const styleButtons = this.contentEl.querySelectorAll('.style-option, [data-category]');
@@ -9125,8 +9174,51 @@ class AddRegexRuleModal {
       // 获取所有全局规则按钮
       const globalButtons = this.contentEl.querySelectorAll('.global-rules-section [data-rule-regex]');
 
-      // 如果全局规则处于折叠状态，处理全局规则按钮的显示
-      if (this.plugin.isGlobalHistoryCollapsed) {
+      // 规则处理（仅在rulesActive时执行）
+      if (rulesActive) {
+
+      // 如果规则分组处于折叠状态，处理分组内规则按钮的显示
+      if (this.plugin.settings?.isRuleGroupCollapsed !== false && inputValue) {
+        const groupGridsInDom = this.contentEl.querySelectorAll('.global-rules-section [data-rule-group]');
+        groupGridsInDom.forEach(grid => {
+          const gridButtons = grid.querySelectorAll('[data-rule-regex]');
+          let hasMatch = false;
+          gridButtons.forEach(btn => {
+            const ruleRegex = btn.dataset.ruleRegex;
+            const ruleParts = ruleRegex.split('|');
+            const isMatching = ruleParts.includes(inputValue) || ruleRegex.includes(inputValue) || inputValue.includes(ruleRegex);
+            if (isMatching) {
+              btn.style.display = 'flex';
+              hasMatch = true;
+            } else {
+              btn.style.display = 'none';
+            }
+          });
+          if (hasMatch) {
+            grid.style.display = 'flex';
+            const grp = grid.getAttribute('data-rule-group');
+            const matchingChip = this.contentEl.querySelector(`.global-rules-section [data-group="${grp}"]`);
+            if (matchingChip) {
+              matchingChip.style.border = '1px solid var(--interactive-accent)';
+              matchingChip.style.background = 'var(--interactive-accent)';
+              matchingChip.style.color = '#fff';
+            }
+          } else {
+            grid.style.display = 'none';
+          }
+        });
+      } else if (this.plugin.settings?.isRuleGroupCollapsed !== false && !inputValue) {
+        const groupGridsInDom = this.contentEl.querySelectorAll('.global-rules-section [data-rule-group]');
+        groupGridsInDom.forEach(grid => {
+          grid.style.display = 'none';
+        });
+        const allChips = this.contentEl.querySelectorAll('.global-rules-section .rch-global-group-chip');
+        allChips.forEach(c => {
+          c.style.border = '1px solid var(--background-modifier-border)';
+          c.style.background = 'rgba(var(--mono-rgb-0),0.5)';
+          c.style.color = 'var(--text-muted)';
+        });
+      } else if (this.plugin.isGlobalHistoryCollapsed) {
         const globalRules = Array.isArray(this.plugin.globalRules) ? this.plugin.globalRules : [];
         let hasVisibleButton = false;
 
@@ -9239,6 +9331,8 @@ class AddRegexRuleModal {
         }
       }
 
+      } // end if (rulesActive)
+
 
       
       // 如果输入框为空，不高亮任何按钮
@@ -9285,10 +9379,12 @@ class AddRegexRuleModal {
         if (matchingButton) {
           matchingButton.style.border = "2px solid var(--interactive-accent)";
           const groupContainer = matchingButton.closest('[data-rule-group]');
-          if (groupContainer && typeof this._activateGlobalGroup === 'function') {
+          if (groupContainer) {
             const grp = groupContainer.getAttribute('data-rule-group');
-            if (grp) {
-              this._activateGlobalGroup(grp);
+            if (grp && !(this._isRuleGroupCollapsed && this._isRuleGroupCollapsed())) {
+              if (typeof this._activateGlobalGroup === 'function') {
+                this._activateGlobalGroup(grp);
+              }
             }
           }
         }
@@ -9329,6 +9425,9 @@ class AddRegexRuleModal {
       
       // 如果没有匹配的CSS类，直接返回
       if (matchingCssClasses.size === 0) return;
+      
+      // 如果样式chip未激活，跳过样式按钮匹配
+      if (!styleActive) return;
       
       // 查找所有分组容器
       const categoryContainers = this.contentEl.querySelectorAll('[data-category]');
@@ -9683,9 +9782,19 @@ class AddRegexRuleModal {
     // 将regexInput保存为实例属性，以便在历史记录按钮中访问
     this.regexInput = regexInput;
     
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const val = inputEl.value.trim();
+        if (val) {
+          this.showInlineRemarkForRegex(val);
+        }
+      }
+    });
+    
     // 添加样式选择区域
     const styleContainer = contentEl.createDiv();
-    
+    styleContainer.className = 'rch-style-container';
     // 创建标题和链接容器
 
     // 创建单显区域（标签页栏 + 内容展开区）- 放在常显区域上方
@@ -12333,6 +12442,128 @@ class AddRegexRuleModal {
         this.addHeadingStylesSection(contentEl);
         this.addRemarkSection(contentEl);
         this.addWidthSettingsSection(contentEl);
+        
+        // 将样式分组和高亮规则包裹在可折叠chip中（互斥）
+        const existingChipBar = contentEl.querySelector('.rch-top-chip-bar');
+        if (existingChipBar) existingChipBar.remove();
+        
+        const styleEl = contentEl.querySelector('.rch-style-container');
+        const rulesEl = contentEl.querySelector('.global-rules-section');
+        const headingEl = contentEl.querySelector('.heading-styles-section');
+        
+        if (styleEl || rulesEl) {
+          const chipBar = contentEl.createDiv();
+          chipBar.className = 'rch-top-chip-bar';
+          chipBar.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;position:sticky;top:0;z-index:10;background:var(--background-secondary);padding:4px 0;';
+          
+          const styleChip = chipBar.createEl('span');
+          styleChip.className = 'rch-top-chip rch-style-chip';
+          styleChip.textContent = t('main.styleChipLabel');
+          styleChip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:14px;font-size:12px;font-weight:600;cursor:pointer;user-select:none;transition:all 0.15s ease;border:1px solid var(--background-modifier-border);color:var(--text-muted);';
+          
+          const rulesChip = chipBar.createEl('span');
+          rulesChip.className = 'rch-top-chip rch-rules-chip';
+          rulesChip.textContent = t('main.rulesChipLabel');
+          rulesChip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:14px;font-size:12px;font-weight:600;cursor:pointer;user-select:none;transition:all 0.15s ease;border:1px solid var(--background-modifier-border);color:var(--text-muted);';
+          
+          let pinnedChip = null;
+          let hoveredChip = null;
+          let hideTimer = null;
+          
+          const styleContent = [styleEl, headingEl].filter(Boolean);
+          const rulesContent = [rulesEl].filter(Boolean);
+          
+          styleContent.forEach(el => { el.style.display = 'none'; });
+          rulesContent.forEach(el => { el.style.display = 'none'; });
+          
+          const updateDisplay = () => {
+            const activeChip = pinnedChip || hoveredChip;
+            if (activeChip === styleChip) {
+              styleContent.forEach(el => { el.style.display = ''; });
+              rulesContent.forEach(el => { el.style.display = 'none'; });
+            } else if (activeChip === rulesChip) {
+              rulesContent.forEach(el => { el.style.display = ''; });
+              styleContent.forEach(el => { el.style.display = 'none'; });
+            } else {
+              styleContent.forEach(el => { el.style.display = 'none'; });
+              rulesContent.forEach(el => { el.style.display = 'none'; });
+            }
+            const updateChipStyle = (chip, isActive) => {
+              chip.style.borderColor = isActive ? 'var(--interactive-accent)' : 'var(--background-modifier-border)';
+              chip.style.color = isActive ? 'var(--interactive-accent)' : 'var(--text-muted)';
+              chip.dataset.active = isActive ? 'true' : '';
+            };
+            updateChipStyle(styleChip, activeChip === styleChip);
+            updateChipStyle(rulesChip, activeChip === rulesChip);
+            if (activeChip && inputEl.value.trim()) {
+              requestAnimationFrame(() => {
+                if (typeof this.highlightMatchingRuleButtons === 'function') {
+                  this.highlightMatchingRuleButtons();
+                }
+              });
+            }
+          };
+          
+          const scheduleHide = () => {
+            clearTimeout(hideTimer);
+            hideTimer = setTimeout(() => {
+              hoveredChip = null;
+              updateDisplay();
+            }, 150);
+          };
+          
+          const cancelHide = () => {
+            clearTimeout(hideTimer);
+          };
+          
+          const setupChipHover = (chip, contents) => {
+            chip.addEventListener('mouseenter', () => {
+              cancelHide();
+              hoveredChip = chip;
+              updateDisplay();
+            });
+            chip.addEventListener('mouseleave', () => {
+              scheduleHide();
+            });
+            chip.addEventListener('click', () => {
+              cancelHide();
+              if (pinnedChip === chip) {
+                pinnedChip = null;
+              } else {
+                pinnedChip = chip;
+              }
+              updateDisplay();
+            });
+            contents.forEach(el => {
+              el.addEventListener('mouseenter', () => {
+                cancelHide();
+                if (!pinnedChip) {
+                  hoveredChip = chip;
+                  updateDisplay();
+                }
+              });
+              el.addEventListener('mouseleave', () => {
+                scheduleHide();
+              });
+            });
+          };
+          
+          setupChipHover(styleChip, styleContent);
+          setupChipHover(rulesChip, rulesContent);
+          
+          // 确保chipBar在styleEl/rulesEl之前，备注在之后
+          const insertBefore = styleEl || rulesEl;
+          if (insertBefore && insertBefore.parentNode === contentEl) {
+            contentEl.insertBefore(chipBar, insertBefore);
+          } else {
+            contentEl.appendChild(chipBar);
+          }
+          
+          // 确保备注section始终在chip内容之后
+          const remarkSections = contentEl.querySelectorAll('.inline-remark-section, .inline-related-notes-section, .inline-related-highlights-section');
+          remarkSections.forEach(s => { contentEl.appendChild(s); });
+        }
+        
         if (this.plugin.settings?.enableDebugLog) console.timeEnd('[主面板] onOpen总耗时');
       });
     });
@@ -13402,6 +13633,33 @@ class AddRegexRuleModal {
       await this.plugin.saveData(this.plugin.settings);
     });
 
+    const collapseRuleGroupOnMatchRow = displayContent.createDiv();
+    collapseRuleGroupOnMatchRow.style.display = "flex";
+    collapseRuleGroupOnMatchRow.style.alignItems = "center";
+    collapseRuleGroupOnMatchRow.style.marginBottom = "5px";
+    collapseRuleGroupOnMatchRow.style.flexWrap = "wrap";
+
+    const collapseRuleGroupOnMatchLabel = collapseRuleGroupOnMatchRow.createEl("span");
+    collapseRuleGroupOnMatchLabel.textContent = t('settings.collapseRuleGroupOnMatch') + ": ";
+    collapseRuleGroupOnMatchLabel.style.marginRight = "10px";
+    collapseRuleGroupOnMatchLabel.style.fontSize = "14px";
+
+    const collapseRuleGroupOnMatchInput = collapseRuleGroupOnMatchRow.createEl("input");
+    collapseRuleGroupOnMatchInput.type = "checkbox";
+    collapseRuleGroupOnMatchInput.checked = this.plugin.settings?.isRuleGroupCollapsed !== false;
+
+    const collapseRuleGroupOnMatchHint = collapseRuleGroupOnMatchRow.createEl("span");
+    collapseRuleGroupOnMatchHint.textContent = t('settings.collapseRuleGroupOnMatchDesc');
+    collapseRuleGroupOnMatchHint.style.fontSize = "12px";
+    collapseRuleGroupOnMatchHint.style.color = "var(--text-muted)";
+    collapseRuleGroupOnMatchHint.style.marginLeft = "8px";
+
+    collapseRuleGroupOnMatchInput.addEventListener("change", async (e) => {
+      if (!this.plugin.settings) this.plugin.settings = {};
+      this.plugin.settings.isRuleGroupCollapsed = e.target.checked;
+      await this.plugin.saveData(this.plugin.settings);
+    });
+
     const showRelatedNotesRow = displayContent.createDiv();
     showRelatedNotesRow.style.display = "flex";
     showRelatedNotesRow.style.alignItems = "center";
@@ -13409,7 +13667,7 @@ class AddRegexRuleModal {
     showRelatedNotesRow.style.flexWrap = "wrap";
 
     const showRelatedNotesLabel = showRelatedNotesRow.createEl("span");
-    showRelatedNotesLabel.textContent = "显示相关笔记: ";
+    showRelatedNotesLabel.textContent = t('settings.showRelatedNotes') + ": ";
     showRelatedNotesLabel.style.marginRight = "10px";
     showRelatedNotesLabel.style.fontSize = "14px";
 
@@ -13418,7 +13676,7 @@ class AddRegexRuleModal {
     showRelatedNotesInput.checked = this.plugin.settings?.showRelatedNotes !== false;
 
     const showRelatedNotesHint = showRelatedNotesRow.createEl("span");
-    showRelatedNotesHint.textContent = "选中/点击关键词时在备注区域上方显示相关笔记链接";
+    showRelatedNotesHint.textContent = t('settings.showRelatedNotesDesc');
     showRelatedNotesHint.style.fontSize = "12px";
     showRelatedNotesHint.style.color = "var(--text-muted)";
     showRelatedNotesHint.style.marginLeft = "8px";
@@ -13426,6 +13684,33 @@ class AddRegexRuleModal {
     showRelatedNotesInput.addEventListener("change", async (e) => {
       if (!this.plugin.settings) this.plugin.settings = {};
       this.plugin.settings.showRelatedNotes = e.target.checked;
+      await this.plugin.saveData(this.plugin.settings);
+    });
+
+    const showRelatedHighlightsRow = displayContent.createDiv();
+    showRelatedHighlightsRow.style.display = "flex";
+    showRelatedHighlightsRow.style.alignItems = "center";
+    showRelatedHighlightsRow.style.marginBottom = "5px";
+    showRelatedHighlightsRow.style.flexWrap = "wrap";
+
+    const showRelatedHighlightsLabel = showRelatedHighlightsRow.createEl("span");
+    showRelatedHighlightsLabel.textContent = t('settings.showRelatedHighlights') + ": ";
+    showRelatedHighlightsLabel.style.marginRight = "10px";
+    showRelatedHighlightsLabel.style.fontSize = "14px";
+
+    const showRelatedHighlightsInput = showRelatedHighlightsRow.createEl("input");
+    showRelatedHighlightsInput.type = "checkbox";
+    showRelatedHighlightsInput.checked = this.plugin.settings?.showRelatedHighlights !== false;
+
+    const showRelatedHighlightsHint = showRelatedHighlightsRow.createEl("span");
+    showRelatedHighlightsHint.textContent = t('settings.showRelatedHighlightsDesc');
+    showRelatedHighlightsHint.style.fontSize = "12px";
+    showRelatedHighlightsHint.style.color = "var(--text-muted)";
+    showRelatedHighlightsHint.style.marginLeft = "8px";
+
+    showRelatedHighlightsInput.addEventListener("change", async (e) => {
+      if (!this.plugin.settings) this.plugin.settings = {};
+      this.plugin.settings.showRelatedHighlights = e.target.checked;
       await this.plugin.saveData(this.plugin.settings);
     });
 
@@ -13939,7 +14224,7 @@ class AddRegexRuleModal {
     mobileRemarkInSidebarCheckbox.style.marginRight = "8px";
     mobileRemarkInSidebarCheckbox.style.cursor = "pointer";
 
-    const mobileRemarkInSidebarLabel = mobileRemarkInSidebarRow.createEl("span", { text: '手机端备注在侧边栏显示' });
+    const mobileRemarkInSidebarLabel = mobileRemarkInSidebarRow.createEl("span", { text: t('settings.mobileRemarkInSidebar') });
     mobileRemarkInSidebarLabel.style.fontSize = "14px";
     mobileRemarkInSidebarLabel.style.cursor = "pointer";
 
@@ -15311,9 +15596,10 @@ class AddRegexRuleModal {
     }
    // globalSection.style.backgroundColor = "#F0EEE6"; // 浅蓝色背景以区分全局规则
     
-    const globalTitle = globalSection.createEl("h3", { text: t('main.highlightRules') });
-    globalTitle.style.margin = "0 0 4px 0";
-    globalTitle.style.fontSize = "14px";
+     const globalTitle = globalSection.createEl("h3", { text: t('main.highlightRules') });
+     globalTitle.style.margin = "0 0 4px 0";
+     globalTitle.style.fontSize = "14px";
+     globalTitle.style.display = "none";
 
     const globalChipsRow = globalSection.createDiv();
     globalChipsRow.style.display = 'none';
@@ -15701,10 +15987,112 @@ class AddRegexRuleModal {
         addGlobalGroupChip.style.color = 'var(--text-muted)';
       });
 
+      let isRuleGroupCollapsed = this.plugin.settings?.isRuleGroupCollapsed !== false;
+
+
+      let ruleGroupToggleBtn = null;
+
+      const applyRuleGroupCollapse = () => {
+        const inputEl = this.contentEl.querySelector('input[placeholder="' + t('main.regexPlaceholder') + '"]');
+        const inputValue = inputEl ? inputEl.value.trim() : '';
+        if (isRuleGroupCollapsed) {
+          if (ruleGroupToggleBtn) {
+            ruleGroupToggleBtn.textContent = '>';
+            ruleGroupToggleBtn.title = t('main.expandGroupStyles');
+          }
+          for (const g in groupGrids) {
+            const grid = groupGrids[g];
+            if (inputValue) {
+              const gridButtons = grid.querySelectorAll('[data-rule-regex]');
+              let hasMatch = false;
+              gridButtons.forEach(btn => {
+                const ruleRegex = btn.dataset.ruleRegex;
+                const ruleParts = ruleRegex.split('|');
+                const isMatching = ruleParts.includes(inputValue) || ruleRegex.includes(inputValue) || inputValue.includes(ruleRegex);
+                if (isMatching) {
+                  btn.style.display = 'flex';
+                  hasMatch = true;
+                } else {
+                  btn.style.display = 'none';
+                }
+              });
+              if (hasMatch) {
+                grid.style.display = 'flex';
+                const matchingChip = globalChipsRow.querySelector(`[data-group="${g}"]`);
+                if (matchingChip) {
+                  matchingChip.style.border = '1px solid var(--interactive-accent)';
+                  matchingChip.style.background = 'var(--interactive-accent)';
+                  matchingChip.style.color = '#fff';
+                }
+              } else {
+                grid.style.display = 'none';
+              }
+            } else {
+              grid.style.display = 'none';
+              grid.querySelectorAll('[data-rule-regex]').forEach(btn => {
+                btn.style.display = 'flex';
+              });
+            }
+          }
+          if (!inputValue) {
+            const allChips = globalChipsRow.querySelectorAll('.rch-global-group-chip');
+            allChips.forEach(c => {
+              c.style.border = '1px solid var(--background-modifier-border)';
+              c.style.background = 'rgba(var(--mono-rgb-0),0.5)';
+              c.style.color = 'var(--text-muted)';
+            });
+          }
+        } else {
+          if (ruleGroupToggleBtn) {
+            ruleGroupToggleBtn.textContent = '<';
+            ruleGroupToggleBtn.title = t('main.collapseGroupStyles');
+          }
+          for (const g in groupGrids) {
+            const grid = groupGrids[g];
+            if (activeGlobalGroup) {
+              grid.style.display = (g === activeGlobalGroup) ? 'flex' : 'none';
+            } else {
+              grid.style.display = 'flex';
+            }
+            grid.querySelectorAll('[data-rule-regex]').forEach(btn => {
+              btn.style.display = 'flex';
+            });
+          }
+          if (activeGlobalGroup) {
+            const allChips = globalChipsRow.querySelectorAll('.rch-global-group-chip');
+            allChips.forEach(c => {
+              const cGroup = c.getAttribute('data-group');
+              if (cGroup === activeGlobalGroup) {
+                c.style.border = '1px solid var(--interactive-accent)';
+                c.style.background = 'var(--interactive-accent)';
+                c.style.color = '#fff';
+              } else {
+                c.style.border = '1px solid var(--background-modifier-border)';
+                c.style.background = 'rgba(var(--mono-rgb-0),0.5)';
+                c.style.color = 'var(--text-muted)';
+              }
+            });
+          }
+        }
+      };
+      this._applyRuleGroupCollapse = applyRuleGroupCollapse;
+      this._isRuleGroupCollapsed = () => isRuleGroupCollapsed;
+      this._setRuleGroupCollapsed = (val) => { isRuleGroupCollapsed = val; };
+
+
       globalChipsRow.style.display = 'flex';
 
       let activeGlobalGroup = this.plugin.settings?.activeGlobalGroup || null;
       const activateGlobalGroup = (grp) => {
+        if (isRuleGroupCollapsed) {
+          isRuleGroupCollapsed = false;
+          this.plugin.settings.isRuleGroupCollapsed = false;
+          this.plugin.saveData(this.plugin.settings);
+          if (ruleGroupToggleBtn) {
+            ruleGroupToggleBtn.textContent = '<';
+            ruleGroupToggleBtn.title = t('main.collapseGroupStyles');
+          }
+        }
         activeGlobalGroup = grp;
         this.plugin.settings.activeGlobalGroup = grp;
         this.plugin.saveData(this.plugin.settings);
@@ -15779,9 +16167,12 @@ class AddRegexRuleModal {
       }, true);
 
       // 恢复之前激活的分组
-      if (activeGlobalGroup && groupGrids[activeGlobalGroup]) {
+      if (activeGlobalGroup && groupGrids[activeGlobalGroup] && !isRuleGroupCollapsed) {
         activateGlobalGroup(activeGlobalGroup);
       }
+
+      // 应用初始折叠状态
+      applyRuleGroupCollapse();
 
       allRules.forEach((rule, index) => {
         const ruleId = `${rule.regex}|${rule.cssClass}`;
@@ -16358,6 +16749,36 @@ class AddRegexRuleModal {
           globalButton.addEventListener("selectstart", (e) => { e.preventDefault(); });
         } // end if (_isDesktop)
       });
+
+      // 在规则按钮最后面添加折叠/展开按钮（参考样式分组的toggle按钮）
+      ruleGroupToggleBtn = globalList.createDiv();
+      ruleGroupToggleBtn.className = 'rch-rule-group-toggle-btn';
+      ruleGroupToggleBtn.textContent = isRuleGroupCollapsed ? '>' : '<';
+      ruleGroupToggleBtn.title = isRuleGroupCollapsed ? t('main.expandGroupStyles') : t('main.collapseGroupStyles');
+      ruleGroupToggleBtn.style.cssText = 'cursor:pointer;padding:1px 6px;border:1px solid #6c757d;border-radius:3px;background-color:#6c757d;color:white;font-size:16px;font-weight:bold;min-height:23px;display:inline-flex;align-items:center;justify-content:center;transition:all 0.2s;width:fit-content;';
+      ruleGroupToggleBtn.addEventListener('mouseenter', () => {
+        ruleGroupToggleBtn.style.backgroundColor = '#5a6268';
+        ruleGroupToggleBtn.style.borderColor = '#545b62';
+        ruleGroupToggleBtn.style.transform = 'translateY(-2px)';
+        ruleGroupToggleBtn.style.boxShadow = '0 2px 3px rgba(108,117,125,0.3)';
+      });
+      ruleGroupToggleBtn.addEventListener('mouseleave', () => {
+        ruleGroupToggleBtn.style.backgroundColor = '#6c757d';
+        ruleGroupToggleBtn.style.borderColor = '#6c757d';
+        ruleGroupToggleBtn.style.transform = 'translateY(0)';
+        ruleGroupToggleBtn.style.boxShadow = 'none';
+      });
+      ruleGroupToggleBtn.addEventListener('click', () => {
+        isRuleGroupCollapsed = !isRuleGroupCollapsed;
+        this.plugin.settings.isRuleGroupCollapsed = isRuleGroupCollapsed;
+        this.plugin.saveData(this.plugin.settings);
+        applyRuleGroupCollapse();
+      });
+
+      // 按钮创建完成后，重新应用规则分组折叠状态
+      if (this._applyRuleGroupCollapse) {
+        this._applyRuleGroupCollapse();
+      }
 
     }
   }
@@ -17000,6 +17421,17 @@ class AddRegexRuleModal {
 
 
   toggleInlineRemark(ruleId, rule, forceRefresh) {
+    if (this._needsRefresh) {
+      this._needsRefresh = false;
+      if (this._skipRefreshOnInteraction) {
+        this._skipRefreshOnInteraction = false;
+      } else {
+        this.refreshModalContent().then(() => {
+          this.toggleInlineRemark(ruleId, rule, forceRefresh);
+        });
+        return;
+      }
+    }
     const existing = this.contentEl.querySelector('.inline-remark-section');
     if (existing && !forceRefresh && this._inlineRemarkRuleId === ruleId) {
       existing.remove();
@@ -17010,10 +17442,13 @@ class AddRegexRuleModal {
     this._showInlineRemarkForRules(ruleId, [rule]);
   }
 
+
   _showRelatedNotesOnly(searchText) {
     const plugin = this.plugin;
     const existing = this.contentEl.querySelector('.inline-related-notes-section');
     if (existing) existing.remove();
+    const existingHl = this.contentEl.querySelector('.inline-related-highlights-section');
+    if (existingHl) existingHl.remove();
     const searchTerms = searchText.split('|').map(s => s.trim()).filter(s => s.length > 0);
     if (searchTerms.length === 0) return;
     const allFiles = plugin.app.vault.getFiles();
@@ -17022,7 +17457,7 @@ class AddRegexRuleModal {
     for (const term of searchTerms) {
       for (const f of mdFiles) {
         const nameWithoutExt = f.name.replace(/\.md$/, '');
-        if (nameWithoutExt.includes(term) && f.path !== plugin.currentFilePath) {
+        if (_regexMatch(nameWithoutExt, term) && f.path !== plugin.currentFilePath) {
           if (!relatedNotes.some(n => n.path === f.path)) {
             relatedNotes.push(f);
           }
@@ -17032,12 +17467,12 @@ class AddRegexRuleModal {
     if (relatedNotes.length === 0) return;
     const section = document.createElement('div');
     section.className = 'inline-related-notes-section';
-    section.style.cssText = 'margin-top:8px;padding:8px;border:1px solid var(--background-modifier-border);border-radius:8px;background:var(--background-secondary);max-height:60vh;overflow-y:auto;';
+    section.style.cssText = 'margin-top:8px;padding:8px;border:1px solid var(--background-modifier-border);border-radius:8px;background:var(--background-secondary);';
     const headerRow = document.createElement('div');
     headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
     const titleDiv = document.createElement('div');
     titleDiv.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
-    titleDiv.textContent = '📎 相关笔记';
+    titleDiv.textContent = t('main.relatedNotes');
     headerRow.appendChild(titleDiv);
     const closeBtn = document.createElement('span');
     closeBtn.textContent = '✕';
@@ -17058,16 +17493,19 @@ class AddRegexRuleModal {
       noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;';
       noteLink.addEventListener('mouseenter', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.5)'; });
       noteLink.addEventListener('mouseleave', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
+      noteLink.addEventListener('mousedown', (e) => {
+        if (e.button === 1) e.preventDefault();
+      });
       noteLink.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        plugin.app.workspace.openLinkText(note.path, '', false);
+        plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
       });
       noteLink.addEventListener('auxclick', (e) => {
         if (e.button === 1) {
           e.preventDefault();
           e.stopPropagation();
-          plugin.app.workspace.openLinkText(note.path, '', true);
+          plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
         }
       });
       relatedList.appendChild(noteLink);
@@ -17075,14 +17513,208 @@ class AddRegexRuleModal {
     if (relatedNotes.length > 10) {
       const moreTag = document.createElement('span');
       moreTag.textContent = `+${relatedNotes.length - 10}`;
-      moreTag.style.cssText = 'font-size:10px;color:var(--text-muted);padding:2px 4px;';
+      moreTag.style.cssText = 'font-size:10px;color:var(--text-muted);padding:2px 4px;cursor:pointer;border-radius:4px;transition:background 0.15s ease;';
+      moreTag.addEventListener('mouseenter', () => { moreTag.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
+      moreTag.addEventListener('mouseleave', () => { moreTag.style.background = ''; });
+      moreTag.addEventListener('click', () => {
+        const existingLinks = relatedList.querySelectorAll('.related-note-link');
+        const shownPaths = new Set();
+        for (const link of existingLinks) { shownPaths.add(link.dataset.path); }
+        for (const note of relatedNotes) {
+          if (shownPaths.has(note.path)) continue;
+          const noteLink = document.createElement('a');
+          noteLink.className = 'related-note-link internal-link';
+          const nameWithoutExt = note.name.replace(/\.md$/, '');
+          noteLink.textContent = nameWithoutExt;
+          noteLink.title = note.path;
+          noteLink.dataset.href = note.path;
+          noteLink.dataset.path = note.path;
+          noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;';
+          noteLink.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); });
+          noteLink.addEventListener('mouseenter', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.5)'; });
+          noteLink.addEventListener('mouseleave', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
+          noteLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
+          });
+          noteLink.addEventListener('auxclick', (e) => {
+            if (e.button === 1) {
+              e.preventDefault();
+              e.stopPropagation();
+              plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
+            }
+          });
+          relatedList.insertBefore(noteLink, moreTag);
+        }
+        moreTag.remove();
+      });
       relatedList.appendChild(moreTag);
     }
     section.appendChild(relatedList);
     this.contentEl.appendChild(section);
   }
 
+  async _showRelatedHighlights(searchText) {
+    const plugin = this.plugin;
+    const existing = this.contentEl.querySelector('.inline-related-highlights-section');
+    if (existing) existing.remove();
+    const searchTerms = searchText.split('|').map(s => s.trim()).filter(s => s.length > 0);
+    if (searchTerms.length === 0) return;
+    const matches = [];
+    if (plugin._highlightDbReady && plugin._highlightDb.length > 0) {
+      for (const entry of plugin._highlightDb) {
+        const isMatch = searchTerms.some(term =>
+          _regexMatch(entry.text, term) || entry.text.includes(_extractPlainText(term))
+        );
+        if (isMatch) {
+          matches.push({ text: entry.text, path: entry.path, name: entry.name });
+        }
+      }
+    } else {
+      const allFiles = plugin.app.vault.getFiles();
+      const mdFiles = allFiles.filter(f => f.extension === 'md');
+      const highlightRegex = /==([^=\n]{1,200})==/g;
+      for (const f of mdFiles) {
+        try {
+          const content = await plugin.app.vault.cachedRead(f);
+          if (!content) continue;
+          highlightRegex.lastIndex = 0;
+          let m;
+          while ((m = highlightRegex.exec(content)) !== null) {
+            const hlText = m[1].trim();
+            if (!hlText || hlText.includes('base64,') || hlText.startsWith('![') || hlText.startsWith('data:')) continue;
+            const isMatch = searchTerms.some(term =>
+              _regexMatch(hlText, term) || hlText.includes(_extractPlainText(term))
+            );
+            if (isMatch) {
+              matches.push({ text: hlText, path: f.path, name: f.name.replace(/\.md$/, '') });
+            }
+          }
+        } catch (err) {}
+      }
+    }
+    if (matches.length === 0) return;
+    const section = document.createElement('div');
+    section.className = 'inline-related-highlights-section';
+    section.style.cssText = 'margin-top:4px;padding:8px;border:1px solid var(--background-modifier-border);border-radius:8px;background:var(--background-secondary);user-select:text;-webkit-user-select:text;';
+    const headerRow = document.createElement('div');
+    headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
+    const titleDiv = document.createElement('div');
+    titleDiv.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
+    titleDiv.textContent = t('main.relatedHighlights') + ' (' + matches.length + ')';
+    headerRow.appendChild(titleDiv);
+    const closeBtn = document.createElement('span');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = 'cursor:pointer;font-size:14px;color:var(--text-muted);padding:0 4px;flex-shrink:0;';
+    closeBtn.addEventListener('click', () => { section.remove(); });
+    headerRow.appendChild(closeBtn);
+    section.appendChild(headerRow);
+    const hlHues = [210, 30, 150, 340, 270, 60, 180, 90, 120, 0];
+    const hlList = document.createElement('div');
+    hlList.style.cssText = 'display:flex;flex-direction:column;gap:3px;';
+    const seen = new Set();
+    const limit = 30;
+    let count = 0;
+    let hlFileIdx = 0;
+    const hlFileMap = new Map();
+    for (const match of matches) {
+      const key = match.path + '::' + match.text;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      count++;
+      if (count > limit) break;
+      if (!hlFileMap.has(match.path)) { hlFileMap.set(match.path, hlFileIdx); hlFileIdx++; }
+      const fh = hlHues[hlFileMap.get(match.path) % hlHues.length];
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:stretch;gap:0;font-size:11px;';
+      const bar = document.createElement('span');
+      bar.style.cssText = `width:3px;border-radius:2px;flex-shrink:0;background:hsl(${fh},50%,50%);margin-right:6px;`;
+      const contentWrap = document.createElement('div');
+      contentWrap.style.cssText = 'flex:1;min-width:0;';
+      const titleRow = document.createElement('div');
+      titleRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:2px;';
+      const fileLink = document.createElement('a');
+      fileLink.className = 'internal-link';
+      fileLink.textContent = match.name;
+      fileLink.title = match.path;
+      fileLink.dataset.href = match.path;
+      fileLink.style.cssText = `color:hsl(${fh},50%,45%);cursor:pointer;text-decoration:none;white-space:nowrap;font-weight:600;font-size:10px;`;
+      const jumpToHighlight = async () => {
+        await plugin.app.workspace.openLinkText(match.path, '', true);
+        await new Promise(r => setTimeout(r, 300));
+        const view = plugin.app.workspace.getActiveViewOfType(require('obsidian').MarkdownView);
+        if (view && view.editor) {
+          const firstSentence = match.text.split(/[。！？.!?\n]/)[0] || match.text.substring(0, 30);
+          const content = view.editor.getValue();
+          const idx = content.indexOf(firstSentence);
+          if (idx !== -1) {
+            const before = content.substring(0, idx);
+            const line = before.split('\n').length - 1;
+            const ch = before.split('\n').pop().length;
+            view.editor.setCursor({ line, ch });
+            view.editor.scrollIntoView({ from: { line, ch }, to: { line, ch: ch + firstSentence.length } });
+          }
+        }
+      };
+      fileLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        jumpToHighlight();
+      });
+      titleRow.appendChild(fileLink);
+      contentWrap.appendChild(titleRow);
+      const hlSpan = document.createElement('span');
+      hlSpan.style.cssText = 'background:rgba(255,235,100,0.25);padding:1px 4px;border-radius:3px;display:block;';
+      let highlighted = false;
+      for (const term of searchTerms) {
+        const plainTerm = _extractPlainText(term);
+        const parts = match.text.split(plainTerm);
+        if (parts.length > 1) {
+          hlSpan.textContent = '';
+          for (let i = 0; i < parts.length; i++) {
+            if (parts[i]) hlSpan.appendChild(document.createTextNode(parts[i]));
+            if (i < parts.length - 1) {
+              const mark = document.createElement('mark');
+              mark.textContent = plainTerm;
+              mark.style.cssText = 'background:rgba(255,200,0,0.5);color:inherit;padding:0 1px;border-radius:2px;';
+              hlSpan.appendChild(mark);
+            }
+          }
+          highlighted = true;
+          break;
+        }
+      }
+      if (!highlighted) hlSpan.textContent = match.text;
+      contentWrap.appendChild(hlSpan);
+      row.appendChild(bar);
+      row.appendChild(contentWrap);
+      hlList.appendChild(row);
+    }
+    if (matches.length > limit) {
+      const moreRow = document.createElement('div');
+      moreRow.style.cssText = 'font-size:10px;color:var(--text-muted);padding:2px 4px;text-align:center;';
+      moreRow.textContent = `+${matches.length - limit} 更多`;
+      hlList.appendChild(moreRow);
+    }
+    section.appendChild(hlList);
+    this.contentEl.appendChild(section);
+  }
+
   showInlineRemarkForRegex(regex) {
+    if (this._needsRefresh) {
+      this._needsRefresh = false;
+      if (this._skipRefreshOnInteraction) {
+        this._skipRefreshOnInteraction = false;
+      } else {
+        this.refreshModalContent().then(() => {
+          if (this.regexInput) this.regexInput.setValue(regex);
+          if (this.highlightMatchingRuleButtons) this.highlightMatchingRuleButtons();
+          this.showInlineRemarkForRegex(regex);
+        });
+        return;
+      }
+    }
     const plugin = this.plugin;
     const allRules = [
       ...(Array.isArray(plugin.globalRules) ? plugin.globalRules : []),
@@ -17100,12 +17732,17 @@ class AddRegexRuleModal {
       if (plugin.settings?.showRelatedNotes !== false && regex) {
         this._showRelatedNotesOnly(regex);
       }
+      if (plugin.settings?.showRelatedHighlights !== false && regex) {
+        this._showRelatedHighlights(regex);
+      }
       return;
     }
     const existing = this.contentEl.querySelector('.inline-remark-section');
     if (existing) existing.remove();
     const existingRelated = this.contentEl.querySelector('.inline-related-notes-section');
     if (existingRelated) existingRelated.remove();
+    const existingHighlights = this.contentEl.querySelector('.inline-related-highlights-section');
+    if (existingHighlights) existingHighlights.remove();
     const ruleId = 'regex-' + regex;
     this._showInlineRemarkForRules(ruleId, matchingRules);
   }
@@ -17120,7 +17757,7 @@ class AddRegexRuleModal {
 
     const section = document.createElement('div');
     section.className = 'inline-remark-section';
-    section.style.cssText = 'margin-top:8px;padding:8px;border:1px solid var(--background-modifier-border);border-radius:8px;background:var(--background-secondary);max-height:60vh;overflow-y:auto;user-select:text;-webkit-user-select:text;';
+    section.style.cssText = 'margin-top:8px;padding:8px;border:1px solid var(--background-modifier-border);border-radius:8px;background:var(--background-secondary);user-select:text;-webkit-user-select:text;';
 
     const headerRow = document.createElement('div');
     headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
@@ -17264,6 +17901,13 @@ class AddRegexRuleModal {
     }
 
     this.contentEl.appendChild(section);
+    const chipContents = this.contentEl.querySelectorAll('.rch-style-container, .global-rules-section, .heading-styles-section');
+    chipContents.forEach(el => {
+      if (el.nextSibling !== section) {
+        this.contentEl.insertBefore(el, section);
+      }
+    });
+
     requestAnimationFrame(() => {
       section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
@@ -18027,14 +18671,37 @@ class AddRegexRuleModal {
 
   
   async editGlobalRule(index, newRegex, cssClass, remark = undefined) {
-    // 更新全局规则，保留原有的remark（如果没有提供新的remark）
     const existingRemark = this.plugin.globalRules[index]?.remark || '';
     const existingLinks = this.plugin.globalRules[index]?.links || undefined;
+    const oldRegex = this.plugin.globalRules[index]?.regex;
     const updatedRule = { regex: newRegex, cssClass: cssClass, remark: remark !== undefined ? remark : existingRemark };
     if (existingLinks) updatedRule.links = existingLinks;
     this.plugin.globalRules[index] = updatedRule;
     
-    // 保存全局规则（saveGlobalRules已包含版本更新、事件发射和视图刷新）
+    // 如果regex改变了，更新分组映射
+    if (oldRegex && oldRegex !== newRegex) {
+      try {
+        const groupsPath = '.obsidian/plugins/Regex-Css-Highlighter/global-rule-groups.json';
+        let curGroups = {};
+        try {
+          const existing = await this.app.vault.adapter.read(groupsPath);
+          curGroups = JSON.parse(existing);
+        } catch (err) {}
+        for (const grp in curGroups) {
+          const idx = curGroups[grp].indexOf(oldRegex);
+          if (idx !== -1) {
+            curGroups[grp][idx] = newRegex;
+          }
+        }
+        await this.app.vault.adapter.write(groupsPath, JSON.stringify(curGroups, null, 2));
+        if (this.plugin && typeof this.plugin.loadGlobalRuleGroups === 'function') {
+          await this.plugin.loadGlobalRuleGroups();
+        }
+      } catch (err) {
+        console.error('更新规则分组映射失败:', err);
+      }
+    }
+    
     await this.plugin.saveGlobalRules(this.plugin.globalRules);
     
     // 按照固定顺序重新加载：当前文件规则 > 全局规则 > 已备注文本
@@ -20498,6 +21165,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       disableHeadingStyle: true,
       showRecentRulesWhenCollapsed: true,
       collapseGroupOnMatch: false,
+      isRuleGroupCollapsed: true,
       remarkKeepOpen: false,
       hidePopupWhenSidebarOpen: true,
       hideOpenFileLink: true,
@@ -20520,6 +21188,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
 
       showRemarkBadge: true,
       showRelatedNotes: true,
+      showRelatedHighlights: true,
 
 
       remarkMasonryMode: false,
@@ -21067,6 +21736,10 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     
     // 注册插件设置页（提示用户设置在主面板底部）
     this.addSettingTab(new RegexHighlightSettingTab(this.app, this));
+    
+    this._highlightDb = [];
+    this._highlightDbReady = false;
+    setTimeout(() => { this._buildHighlightDb(); }, 30000);
     
   }
   
@@ -33098,6 +33771,35 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     }
   }
 
+  async _buildHighlightDb() {
+    try {
+      const allFiles = this.app.vault.getFiles();
+      const mdFiles = allFiles.filter(f => f.extension === 'md');
+      const highlightRegex = /==([^=\n]{1,200})==/g;
+      const db = [];
+      for (const f of mdFiles) {
+        try {
+          const content = await this.app.vault.cachedRead(f);
+          if (!content) continue;
+          highlightRegex.lastIndex = 0;
+          let m;
+          while ((m = highlightRegex.exec(content)) !== null) {
+            const hlText = m[1].trim();
+            if (hlText && !hlText.includes('base64,') && !hlText.startsWith('![') && !hlText.startsWith('data:')) {
+              db.push({ text: hlText, path: f.path, name: f.name.replace(/\.md$/, '') });
+            }
+          }
+        } catch (err) {}
+      }
+      this._highlightDb = db;
+      this._highlightDbReady = true;
+      const { Notice } = require('obsidian');
+      new Notice(t('main.highlightDbReady') + ' (' + db.length + ')');
+    } catch (err) {
+      console.error('构建高亮数据库失败:', err);
+    }
+  }
+
   async loadGlobalRuleGroups() {
     try {
       let groupsContent;
@@ -33431,18 +34133,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     this.rulesVersion++;
     this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
     
-    // 刷新主面板内容（更新文档名分组等）
     const modal = this._regexHighlightModal;
-    if (modal && typeof modal.refreshModalContent === 'function') {
-      try { await modal.refreshModalContent(); } catch (e) { console.error(e); }
+    if (modal) {
+      modal._needsRefresh = true;
+      modal._skipRefreshOnInteraction = true;
     }
     
-    // 规则加载完成后，需要确保当前视图应用了新规则
     const { MarkdownView } = require('obsidian');
     const activeLeaf = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (activeLeaf && activeLeaf.getMode() === 'preview') {
-      // 阅读模式：PostProcessor 延迟处理可能在规则加载前已运行，
-      // 导致高亮未应用，这里补一次确保视口内高亮正确
       this.checkAndApplyHighlights();
       return;
     }
@@ -34245,6 +34944,29 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       const newRegex = allParts.join('|');
       existingRule.regex = newRegex;
       
+      if (isGlobalRule && originalRegex !== newRegex) {
+        try {
+          const groupsPath = '.obsidian/plugins/Regex-Css-Highlighter/global-rule-groups.json';
+          let curGroups = {};
+          try {
+            const existing = await this.app.vault.adapter.read(groupsPath);
+            curGroups = JSON.parse(existing);
+          } catch (err) {}
+          for (const grp in curGroups) {
+            const idx = curGroups[grp].indexOf(originalRegex);
+            if (idx !== -1) {
+              curGroups[grp][idx] = newRegex;
+            }
+          }
+          await this.app.vault.adapter.write(groupsPath, JSON.stringify(curGroups, null, 2));
+          if (typeof this.loadGlobalRuleGroups === 'function') {
+            await this.loadGlobalRuleGroups();
+          }
+        } catch (err) {
+          console.error('合并规则时更新分组映射失败:', err);
+        }
+      }
+      
       if (isGlobalRule) {
         await this.saveGlobalRules(this.globalRules);
       } else {
@@ -34738,9 +35460,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         const noteWrapper = parent;
         const noteParent = noteWrapper.parentNode;
         if (noteParent) {
-          const innerNodes = [];
-          while (span.firstChild) innerNodes.push(span.firstChild);
-          for (const child of innerNodes) noteWrapper.insertBefore(child, span);
+          const fragment = document.createDocumentFragment();
+          while (span.firstChild) {
+            fragment.appendChild(span.firstChild);
+          }
+          noteWrapper.insertBefore(fragment, span);
           noteWrapper.removeChild(span);
           continue;
         }
@@ -36890,7 +37614,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         for (const term of searchTerms) {
           for (const f of mdFiles) {
             const nameWithoutExt = f.name.replace(/\.md$/, '');
-            if (nameWithoutExt.includes(term) && f.path !== plugin.currentFilePath) {
+            if (_regexMatch(nameWithoutExt, term) && f.path !== plugin.currentFilePath) {
               if (!relatedNotes.some(n => n.path === f.path)) {
                 relatedNotes.push(f);
               }
@@ -36903,7 +37627,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           relatedSection.style.cssText = 'margin-bottom:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:6px;background:rgba(var(--mono-rgb-0),0.15);';
           const relatedHeader = document.createElement('div');
           relatedHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;gap:4px;';
-          relatedHeader.textContent = '📎 相关笔记';
+          relatedHeader.textContent = t('main.relatedNotes');
           relatedSection.appendChild(relatedHeader);
           const relatedList = document.createElement('div');
           relatedList.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
@@ -36918,16 +37642,19 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;';
             noteLink.addEventListener('mouseenter', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.5)'; });
             noteLink.addEventListener('mouseleave', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
+            noteLink.addEventListener('mousedown', (e) => {
+              if (e.button === 1) e.preventDefault();
+            });
             noteLink.addEventListener('click', (e) => {
               e.preventDefault();
               e.stopPropagation();
-              plugin.app.workspace.openLinkText(note.path, '', false);
+              plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
             });
             noteLink.addEventListener('auxclick', (e) => {
               if (e.button === 1) {
                 e.preventDefault();
                 e.stopPropagation();
-                plugin.app.workspace.openLinkText(note.path, '', true);
+                plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
               }
             });
             relatedList.appendChild(noteLink);
@@ -36935,11 +37662,159 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           if (relatedNotes.length > 10) {
             const moreTag = document.createElement('span');
             moreTag.textContent = `+${relatedNotes.length - 10}`;
-            moreTag.style.cssText = 'font-size:10px;color:var(--text-muted);padding:2px 4px;';
+            moreTag.style.cssText = 'font-size:10px;color:var(--text-muted);padding:2px 4px;cursor:pointer;border-radius:4px;transition:background 0.15s ease;';
+            moreTag.addEventListener('mouseenter', () => { moreTag.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
+            moreTag.addEventListener('mouseleave', () => { moreTag.style.background = ''; });
+            moreTag.addEventListener('click', () => {
+              const existingLinks = relatedList.querySelectorAll('.related-note-link');
+              const shownPaths = new Set();
+              for (const link of existingLinks) { shownPaths.add(link.dataset.path); }
+              for (const note of relatedNotes) {
+                if (shownPaths.has(note.path)) continue;
+                const noteLink = document.createElement('a');
+                noteLink.className = 'related-note-link internal-link';
+                const nameWithoutExt = note.name.replace(/\.md$/, '');
+                noteLink.textContent = nameWithoutExt;
+                noteLink.title = note.path;
+                noteLink.dataset.href = note.path;
+                noteLink.dataset.path = note.path;
+                noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;';
+                noteLink.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); });
+                noteLink.addEventListener('mouseenter', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.5)'; });
+                noteLink.addEventListener('mouseleave', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
+                noteLink.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
+                });
+                noteLink.addEventListener('auxclick', (e) => {
+                  if (e.button === 1) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
+                  }
+                });
+                relatedList.insertBefore(noteLink, moreTag);
+              }
+              moreTag.remove();
+            });
             relatedList.appendChild(moreTag);
           }
           relatedSection.appendChild(relatedList);
           container.appendChild(relatedSection);
+        }
+      }
+    }
+
+    if (plugin.settings?.showRelatedHighlights !== false && ruleRegex) {
+      const hlSearchTerms = ruleRegex.split('|').map(s => s.trim()).filter(s => s.length > 0);
+      if (hlSearchTerms.length > 0) {
+        const hlMatches = [];
+        if (plugin._highlightDbReady && plugin._highlightDb.length > 0) {
+          for (const entry of plugin._highlightDb) {
+            const isMatch = hlSearchTerms.some(term =>
+              _regexMatch(entry.text, term) || entry.text.includes(_extractPlainText(term))
+            );
+            if (isMatch) hlMatches.push(entry);
+          }
+        }
+        if (hlMatches.length > 0) {
+          const hlSection = document.createElement('div');
+          hlSection.className = 'related-highlights-section';
+          hlSection.style.cssText = 'margin-bottom:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:6px;background:rgba(var(--mono-rgb-0),0.15);';
+          const hlHeader = document.createElement('div');
+          hlHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;gap:4px;';
+          hlHeader.textContent = t('main.relatedHighlights') + ' (' + hlMatches.length + ')';
+          hlSection.appendChild(hlHeader);
+          const hlHues = [210, 30, 150, 340, 270, 60, 180, 90, 120, 0];
+          const hlList = document.createElement('div');
+          hlList.style.cssText = 'display:flex;flex-direction:column;gap:3px;';
+          const hlSeen = new Set();
+          const hlLimit = 20;
+          let hlCount = 0;
+          let hlFileIdx = 0;
+          const hlFileMap = new Map();
+          for (const m of hlMatches) {
+            const key = m.path + '::' + m.text;
+            if (hlSeen.has(key)) continue;
+            hlSeen.add(key);
+            hlCount++;
+            if (hlCount > hlLimit) break;
+            if (!hlFileMap.has(m.path)) { hlFileMap.set(m.path, hlFileIdx); hlFileIdx++; }
+            const fh = hlHues[hlFileMap.get(m.path) % hlHues.length];
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:stretch;gap:0;font-size:11px;';
+            const bar = document.createElement('span');
+            bar.style.cssText = `width:3px;border-radius:2px;flex-shrink:0;background:hsl(${fh},50%,50%);margin-right:6px;`;
+            const contentWrap = document.createElement('div');
+            contentWrap.style.cssText = 'flex:1;min-width:0;';
+            const titleRow = document.createElement('div');
+            titleRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:2px;';
+            const fileLink = document.createElement('a');
+            fileLink.className = 'internal-link';
+            fileLink.textContent = m.name;
+            fileLink.title = m.path;
+            fileLink.dataset.href = m.path;
+            fileLink.style.cssText = `color:hsl(${fh},50%,45%);cursor:pointer;text-decoration:none;white-space:nowrap;font-weight:600;font-size:10px;`;
+            const jumpToHighlight = async () => {
+              await plugin.app.workspace.openLinkText(m.path, '', true);
+              await new Promise(r => setTimeout(r, 300));
+              const view = plugin.app.workspace.getActiveViewOfType(require('obsidian').MarkdownView);
+              if (view && view.editor) {
+                const firstSentence = m.text.split(/[。！？.!?\n]/)[0] || m.text.substring(0, 30);
+                const content = view.editor.getValue();
+                const idx = content.indexOf(firstSentence);
+                if (idx !== -1) {
+                  const before = content.substring(0, idx);
+                  const line = before.split('\n').length - 1;
+                  const ch = before.split('\n').pop().length;
+                  view.editor.setCursor({ line, ch });
+                  view.editor.scrollIntoView({ from: { line, ch }, to: { line, ch: ch + firstSentence.length } });
+                }
+              }
+            };
+            fileLink.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              jumpToHighlight();
+            });
+            titleRow.appendChild(fileLink);
+            contentWrap.appendChild(titleRow);
+            const hlSpan = document.createElement('span');
+            hlSpan.style.cssText = 'background:rgba(255,235,100,0.25);padding:1px 4px;border-radius:3px;user-select:text;-webkit-user-select:text;display:block;';
+            let highlighted = false;
+            for (const term of hlSearchTerms) {
+              const plainTerm = _extractPlainText(term);
+              const parts = m.text.split(plainTerm);
+              if (parts.length > 1) {
+                hlSpan.textContent = '';
+                for (let i = 0; i < parts.length; i++) {
+                  if (parts[i]) hlSpan.appendChild(document.createTextNode(parts[i]));
+                  if (i < parts.length - 1) {
+                    const mark = document.createElement('mark');
+                    mark.textContent = plainTerm;
+                    mark.style.cssText = 'background:rgba(255,200,0,0.5);color:inherit;padding:0 1px;border-radius:2px;';
+                    hlSpan.appendChild(mark);
+                  }
+                }
+                highlighted = true;
+                break;
+              }
+            }
+            if (!highlighted) hlSpan.textContent = m.text;
+            contentWrap.appendChild(hlSpan);
+            row.appendChild(bar);
+            row.appendChild(contentWrap);
+            hlList.appendChild(row);
+          }
+          if (hlMatches.length > hlLimit) {
+            const moreRow = document.createElement('div');
+            moreRow.style.cssText = 'font-size:10px;color:var(--text-muted);padding:2px 4px;text-align:center;';
+            moreRow.textContent = `+${hlMatches.length - hlLimit} 更多`;
+            hlList.appendChild(moreRow);
+          }
+          hlSection.appendChild(hlList);
+          container.appendChild(hlSection);
         }
       }
     }

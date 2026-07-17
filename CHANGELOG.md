@@ -2,7 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.9.6 (2026-07-17)
+## 🆕 v1.9.7 (2026-07-18)
+
+- **Regex Pattern Matching for Related Content / 正则模式匹配相关内容** — Related notes and highlights now support regex patterns (e.g. `(?<!发展)中国`); auto-extracts plain text fallback when full regex matching fails / 相关笔记和高亮现在支持正则模式关键词，正则匹配失败时自动提取纯文本回退匹配
+- **Panel Content Preserve on Navigation / 跳转后保持面板内容** — Clicking related notes/highlights links no longer refreshes the right panel; current keyword display is preserved after navigation / 点击相关笔记/高亮跳转后右侧面板不再刷新，保持当前关键词显示
+- **clearHighlights Memory Fix / clearHighlights内存修复** — Replaced array accumulation with DocumentFragment in `clearHighlights` to prevent RangeError on large documents / `clearHighlights`中用DocumentFragment替代数组累积，防止大文档RangeError
+- **Enter to Search / 输入框Enter搜索** — Pressing Enter in the panel input field now searches for matching keywords and displays related notes and highlights / 面板输入框按Enter键直接搜索匹配关键词并显示相关笔记和高亮
+
+## v1.9.6.2 (2026-07-18)
+
+- **Related Notes Middle-Click Fix / 相关笔记中键点击修复** — Middle-click on related note links now opens in background tab (previously opened in foreground); added `mousedown` `preventDefault()` to block browser auto-scroll on middle-click / 相关笔记链接中键点击改为后台新标签页打开（此前为前台），添加mousedown阻止默认自动滚动行为
+- **Related Notes Expand All / 相关笔记展开全部** — The "+n" tag after related notes is now clickable; clicking it expands all remaining note links instead of just showing a count / 相关笔记数量超过10时"+n"标签可点击，点击后展开所有剩余链接
+
+## v1.9.6 (2026-07-17)
 
 - **Panel Auto-Refresh / 面板自动刷新** — Right panel now listens to `rulesUpdateEmitter`; clicking l/g button or adding rules via floating ball/group/style buttons instantly updates the panel without manual refresh / 右侧面板监听`rulesUpdateEmitter`事件，点击l/g按钮或通过悬浮球/分组/样式按钮添加规则后面板即时刷新
 - **Mobile Sidebar Remark / 手机端侧边栏备注** — New "Mobile Remark in Sidebar" setting; when enabled, clicking a keyword on mobile shows remarks in the sidebar background instead of a popup, with haptic feedback; swipe left to view / 新增"手机端备注在侧边栏显示"设置，开启后手机端点击关键词在侧边栏后台显示备注而非弹窗，带震动反馈，手动滑动查看

@@ -2,7 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.9.8 (2026-07-18)
+## 🆕 v1.9.9 (2026-07-19)
+
+- **Floating Note Mobile Drag / 悬浮笔记手机拖动** — Added touchstart/touchmove/touchend handlers to global-note-card, enabling drag-to-move on mobile devices / 为global-note-card添加触摸事件处理，手机端可拖动悬浮笔记位置
+- **Remark Buttons Size Reduction / 备注按钮缩小** — Reduced remark popup action buttons (?、+、⬡) diameter from 36px to 26px on desktop for more compact layout / 桌面版备注弹窗操作按钮(?、+、⬡)直径从36px减至26px，布局更紧凑
+
+## v1.9.8.4 (2026-07-19)
+
+- **Popout Note Ctrl+Scroll Opacity Fix / 独立窗口Ctrl+滚轮透明度修复** — Fixed ipc-message args parsing (off-by-one) and note.id type mismatch (number vs string) that prevented Ctrl+scroll from adjusting popout window opacity / 修复ipc-message参数解析偏移和note.id类型不匹配（数字vs字符串）导致Ctrl+滚轮无法调整独立窗口透明度
+- **Popout Note Restore on Startup / 启动恢复独立窗口修复** — Popout windows now correctly restore on Obsidian startup; removed `_hidden` filter from restore, fixed `@electron/remote` require order, and ensured `renderGlobalNotesArea` runs after `_restoreNotePopouts` / 启动时独立窗口正确恢复，移除恢复时的_hidden过滤，修复@electron/remote获取顺序，确保render在restore之后执行
+- **Popout Note Empty Lines Fix / 独立窗口空行压缩修复** — Changed `content.textContent` to `content.innerText` in popout blur handler to preserve line breaks when syncing text back to chip panel / 独立窗口blur处理中用innerText替代textContent，保留换行符同步到chip面板
+- **Chip-to-Popout Sync Fix / Chip编辑同步到独立窗口修复** — Editing a note in the chip panel now correctly syncs to the popout window; fixed `_syncNoteToPopout` key type mismatch and switched to `innerText` for proper newline rendering / chip面板编辑笔记现在正确同步到独立窗口，修复_syncNoteToPopout键类型不匹配，改用innerText保留换行
+- **Popout Note Frosted Glass Style / 独立窗口毛玻璃样式** — Popout windows now use semi-transparent dark background (`rgba(30,30,30,0.72)`) simulating frosted glass effect with rounded corners and subtle borders / 独立窗口使用半透明深色背景模拟毛玻璃效果，圆角和细边框
+- **Popout Note Theme Switching / 独立窗口配色切换** — Shift+scroll now cycles through 5 color themes (dark, light, green, purple, brown) with smooth transitions; theme index saved to `_popoutTheme` / Shift+滚轮循环切换5套配色（深色、浅色、绿调、紫调、棕调），带过渡动画，保存到_popoutTheme
+- **Popout Note Font Size Zoom / 独立窗口文本缩放** — Alt+scroll now adjusts popout note text size (9-28px); font size saved to `_popoutFontSize` / Alt+滚轮调整独立窗口文本字号（9-28px），保存到_popoutFontSize
+- **Startup Performance Optimization / 启动性能优化** — Pinyin and interlinear note data loading moved out of critical `Promise.all` path; CSS file reading unified via `crossFS.read` + `_cachedCssContent` (eliminated 3x redundant reads); CSS parsing merged between `syncStylesToCategories` and `loadPluginCssStyles`; `loadGlobalRules` migration save deferred with `setTimeout` to avoid blocking `refreshCurrentView` during startup / 拼音和行间注释数据加载移出关键Promise.all路径；CSS文件读取统一走crossFS.read+_cachedCssContent（消除3次重复读取）；CSS解析在syncStylesToCategories和loadPluginCssStyles间合并；loadGlobalRules迁移回写延迟执行避免启动时阻塞refreshCurrentView
+
+## v1.9.8.3 (2026-07-18)
+
+- **Rule Group Buttons Visibility Fix / 规则分组按钮可见性修复** — When manually switching to a different rule group via chip hover, all buttons in that group now remain visible when moving the mouse downward; previously `highlightMatchingRuleButtons` filtered non-matching buttons to `display:none` even in the user's active group / 手动通过chip悬浮切换到其他规则分组后，鼠标下移时该分组内所有按钮保持可见，此前`highlightMatchingRuleButtons`会过滤掉用户活动分组中的非匹配按钮
+- **Rule Group Auto-Activate Guard / 规则分组自动激活守卫** — `_activateGlobalGroup` and collapsed-mode grid display logic now skip when user has manually selected a different group, preventing chip jump-back and button disappearance / `_activateGlobalGroup`和折叠模式grid显示逻辑在用户已手动选择其他分组时跳过，防止chip跳回和按钮消失
+- **Rule Group Chip Hover Cooldown / 规则分组Chip悬浮冷却** — Added cooldown and hover-verification after rule group chip hover-triggered activation, same as CSS group chip / 规则分组chip悬浮触发激活后添加冷却期和hover验证，与CSS分组chip一致
+
+## v1.9.8.2 (2026-07-18)
+
+- **Style Group Switch Fix / 样式分组切换修复** — Switching to a different style group via hover no longer jumps back to the original group; `highlightMatchingRuleButtons` now respects user's manual group selection and won't auto-expand the matched group when another group is active / 悬浮切换到其他样式分组时不再跳回原分组，`highlightMatchingRuleButtons`现在尊重用户手动选择的分组，不会在用户已切换分组时自动展开匹配分组
+- **Group Chip Hover Cooldown / 分组Chip悬浮冷却** — Added cooldown after group chip hover-triggered click to prevent DOM re-layout from causing cascading mouseenter events that repeatedly toggle groups / 分组chip悬浮触发click后添加冷却期，防止DOM重新布局导致连锁mouseenter事件反复切换分组
+
+## v1.9.8.1 (2026-07-18)
+
+- **Mobile Chip Toggle Fix / 手机端Chip切换修复** — Tapping an expanded top chip (CSS/KEY WORDS) now correctly collapses it on mobile; previously `hoveredChip` wasn't cleared on unpin, preventing toggle / 手机端点击已展开的顶部chip（CSS/KEY WORDS）现在能正确收起，此前取消pin时未清除hoveredChip导致无法切换
+- **No-Remark Keyword Window Fix / 无备注关键词窗口修复** — Keywords without remarks now correctly open the keyword detail window showing related notes and highlights; previously `openKeywordWindow` returned early when `links` was empty / 无备注关键词现在能正确打开关键词详情窗口显示相关笔记和高亮，此前links为空时函数提前返回
+- **Related Links Click Fix / 相关链接点击修复** — Related notes and highlights links now work on mobile; replaced `<a class="internal-link">` with `<span>` to avoid Obsidian intercepting click events, and fixed `innerHTML +=` destroying event listeners when `linksByFile` is empty / 相关笔记和高亮链接在手机端现在可正常点击，用`<span>`替代`<a class="internal-link">`避免Obsidian拦截click事件，修复`innerHTML +=`在linksByFile为空时销毁事件监听器的问题
+
+## v1.9.8 (2026-07-18)
 
 - **Panel Chip Bar Position Fix / 面板ChipBar位置修复** — Fixed rule group chips moving below remark section after updating rules; `addGlobalRulesSection`/`addHeadingStylesSection` now correctly insert before `.inline-remark-section` / 修复更新规则后规则分组chips移到备注下方的问题，插入逻辑增加inline-remark-section参考
 - **Rule Click Input Restore / 规则点击输入框恢复** — After panel auto-refresh, clicking a rule button now correctly fills the regex into the top input box and restores `currentEditingRule` / 面板自动刷新后点击规则按钮正确填入关键词到输入框并恢复编辑状态

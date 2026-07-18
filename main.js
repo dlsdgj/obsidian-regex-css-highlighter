@@ -198,8 +198,8 @@ const i18n = {
     'main.noStyles': '暂无样式',
     'main.openCssEditor': '打开样式编辑器',
     'main.openStyleCategories': '打开样式分组',
-    'main.styleChipLabel': '🎨 CSS',
-    'main.rulesChipLabel': '📝 KEY WORDS',
+    'main.styleChipLabel': 'CSS',
+    'main.rulesChipLabel': 'KEY WORDS',
     'main.relatedNotes': '📎 相关笔记',
     'main.relatedHighlights': '🖍 相关高亮',
     'main.highlightDbReady': 'SwiftGlossa: 高亮数据库构建完成',
@@ -988,6 +988,7 @@ const i18n = {
     'floating.hideFloatingBtns': '隐藏悬浮按钮',
     'floating.toggleFloatingBall': '显示/隐藏悬浮球',
     'floating.hideTextStyles': '隐藏/显示文本样式',
+    'floating.addFloatNote': '添加悬浮笔记',
     'floating.manageSnippets': '管理 CSS Snippets',
     'floating.alwaysModeDesc': '常显模式：悬浮球始终显示在屏幕上',
     'floating.followModeDesc': '跟随选中模式：选中文字时悬浮球出现在鼠标位置附近',
@@ -1069,8 +1070,8 @@ const i18n = {
     'main.noStyles': 'No styles',
     'main.openCssEditor': 'Open Style Editor',
     'main.openStyleCategories': 'Open Style Categories',
-    'main.styleChipLabel': '🎨 CSS',
-    'main.rulesChipLabel': '📝 KEY WORDS',
+    'main.styleChipLabel': 'CSS',
+    'main.rulesChipLabel': 'KEY WORDS',
     'main.relatedNotes': '📎 Related Notes',
     'main.relatedHighlights': '🖍 Related Highlights',
     'main.highlightDbReady': 'SwiftGlossa: Highlight database built',
@@ -1859,6 +1860,7 @@ const i18n = {
     'floating.hideFloatingBtns': 'Hide Floating Buttons',
     'floating.toggleFloatingBall': 'Show/Hide Floating Ball',
     'floating.hideTextStyles': 'Hide/Show Text Styles',
+    'floating.addFloatNote': 'Add Float Note',
     'floating.manageSnippets': 'Manage CSS Snippets',
     'floating.alwaysModeDesc': 'Always mode: Floating ball always visible on screen',
     'floating.followModeDesc': 'Follow selection mode: Floating ball appears near cursor when text is selected',
@@ -9188,8 +9190,11 @@ class AddRegexRuleModal {
 
       // 如果规则分组处于折叠状态，处理分组内规则按钮的显示
       if (this.plugin.settings?.isRuleGroupCollapsed !== false && inputValue) {
+        const currentActiveGroup = this.plugin?.settings?.activeGlobalGroup;
         const groupGridsInDom = this.contentEl.querySelectorAll('.global-rules-section [data-rule-group]');
         groupGridsInDom.forEach(grid => {
+          const grp = grid.getAttribute('data-rule-group');
+          const isUserActiveGroup = currentActiveGroup && currentActiveGroup === grp;
           const gridButtons = grid.querySelectorAll('[data-rule-regex]');
           let hasMatch = false;
           gridButtons.forEach(btn => {
@@ -9199,13 +9204,16 @@ class AddRegexRuleModal {
             if (isMatching) {
               btn.style.display = 'flex';
               hasMatch = true;
+            } else if (isUserActiveGroup) {
+              btn.style.display = 'flex';
             } else {
               btn.style.display = 'none';
             }
           });
-          if (hasMatch) {
+          if (currentActiveGroup && currentActiveGroup !== grp) {
+            // 用户已手动选择了其他分组，不覆盖显示状态
+          } else if (hasMatch || isUserActiveGroup) {
             grid.style.display = 'flex';
-            const grp = grid.getAttribute('data-rule-group');
             const matchingChip = this.contentEl.querySelector(`.global-rules-section [data-group="${grp}"]`);
             if (matchingChip) {
               matchingChip.style.border = '1px solid var(--interactive-accent)';
@@ -9397,7 +9405,10 @@ class AddRegexRuleModal {
                 ((editingIsGlobal && grp !== '__local__') || (!editingIsGlobal && grp === '__local__'));
               const shouldActivate = isEditingMatch || (!editingRegex && index === 0);
               if (shouldActivate && typeof this._activateGlobalGroup === 'function') {
-                this._activateGlobalGroup(grp);
+                const currentActiveGroup = this.plugin?.settings?.activeGlobalGroup;
+                if (!currentActiveGroup || currentActiveGroup === grp) {
+                  this._activateGlobalGroup(grp);
+                }
               }
             }
           }
@@ -9482,8 +9493,8 @@ class AddRegexRuleModal {
           const currentCategory = categoryContainer.getAttribute('data-category');
           const isSingleDisplay = this.plugin && this.plugin.collapsedCategories && this.plugin.collapsedCategories[currentCategory];
           
-          // 如果分组处于隐藏状态，自动展开它
-          if (wasHidden) {
+          // 如果分组处于隐藏状态，自动展开它（但用户已手动切换到其他分组时不覆盖）
+          if (wasHidden && !(activeTabCategory && activeTabCategory !== currentCategory)) {
             if (isSingleDisplay) {
               // 单显分组：将容器移到 tabContentContainer 展示，不修改 collapsedCategories
               // 先折叠之前展开的标签内容
@@ -9807,8 +9818,11 @@ class AddRegexRuleModal {
     });
     
     // 添加样式选择区域
+
     const styleContainer = contentEl.createDiv();
     styleContainer.className = 'rch-style-container';
+
+
     // 创建标题和链接容器
 
     // 创建单显区域（标签页栏 + 内容展开区）- 放在常显区域上方
@@ -12466,6 +12480,10 @@ class AddRegexRuleModal {
         const headingEl = contentEl.querySelector('.heading-styles-section');
         
         if (styleEl || rulesEl) {
+          if (this._chipHoverAbort) { this._chipHoverAbort.abort(); }
+          this._chipHoverAbort = new AbortController();
+          const abSig = this._chipHoverAbort.signal;
+
           const chipBar = contentEl.createDiv();
           chipBar.className = 'rch-top-chip-bar';
           chipBar.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;position:sticky;top:0;z-index:10;background:var(--background-secondary);padding:4px 0;';
@@ -12480,32 +12498,97 @@ class AddRegexRuleModal {
           rulesChip.textContent = t('main.rulesChipLabel');
           rulesChip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:14px;font-size:12px;font-weight:600;cursor:pointer;user-select:none;transition:all 0.15s ease;border:1px solid var(--background-modifier-border);color:var(--text-muted);';
           
+          const floatNoteChip = chipBar.createEl('span');
+          floatNoteChip.className = 'rch-top-chip rch-float-note-chip';
+          floatNoteChip.textContent = 'FLOATING NOTES';
+          floatNoteChip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:14px;font-size:12px;font-weight:600;cursor:pointer;user-select:none;transition:all 0.15s ease;border:1px solid var(--background-modifier-border);color:var(--text-muted);';
+          
           let pinnedChip = null;
           let hoveredChip = null;
           let hideTimer = null;
           
           const styleContent = [styleEl, headingEl].filter(Boolean);
           const rulesContent = [rulesEl].filter(Boolean);
+          const fnContainer = document.createElement('div');
+          fnContainer.className = 'float-note-chip-content';
+          fnContainer.style.display = 'none';
           
           styleContent.forEach(el => { el.style.display = 'none'; });
           rulesContent.forEach(el => { el.style.display = 'none'; });
           
           const getStyleContent = () => contentEl.querySelectorAll('.rch-style-container, .heading-styles-section');
           const getRulesContent = () => contentEl.querySelectorAll('.global-rules-section');
+
+          const renderFloatNotesInPanel = () => {
+            fnContainer.innerHTML = '';
+            const notes = this.plugin.globalNotes || [];
+            if (notes.length === 0) {
+              fnContainer.innerHTML = '<div style="font-size:11px;color:var(--text-faint);padding:4px 8px;">No floating notes yet. Add via floating ball menu.</div>';
+              return;
+            }
+            const masonry = document.createElement('div');
+            masonry.style.cssText = 'column-count:2;column-gap:6px;';
+            for (const note of notes) {
+              const card = document.createElement('div');
+              card.style.cssText = 'break-inside:avoid;margin-bottom:4px;padding:4px 6px;background:rgba(168,213,162,0.15);border:1px solid rgba(168,213,162,0.3);font-size:11px;color:var(--text-normal);white-space:pre-wrap;word-break:break-word;cursor:pointer;';
+              card.textContent = note.text || '(空)';
+              if (!note.text) card.style.color = 'var(--text-faint)';
+              card.addEventListener('dblclick', () => {
+                const input = document.createElement('textarea');
+                input.value = note.text;
+                input.style.cssText = 'font-size:11px;border:none;background:transparent;color:var(--text-normal);outline:none;width:100%;min-height:30px;resize:vertical;padding:0;box-sizing:border-box;';
+                card.textContent = '';
+                card.appendChild(input);
+                input.focus();
+                input.addEventListener('blur', () => {
+                  note.text = input.value;
+                  this.plugin.saveGlobalNotes();
+                  this.plugin.renderGlobalNotesArea();
+                  renderFloatNotesInPanel();
+                });
+                input.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { ev.preventDefault(); input.blur(); } });
+              });
+              card.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                const menu = new Menu();
+                menu.addItem((item) => { item.setTitle('删除笔记'); item.setIcon('trash'); item.onClick(() => { this.plugin.globalNotes = this.plugin.globalNotes.filter(n => n.id !== note.id); this.plugin.saveGlobalNotes(); this.plugin.renderGlobalNotesArea(); renderFloatNotesInPanel(); }); });
+                menu.addItem((item) => { item.setTitle(note._hidden ? '显示悬浮' : '隐藏悬浮'); item.setIcon(note._hidden ? 'eye' : 'eye-off'); item.onClick(() => { note._hidden = !note._hidden; this.plugin.saveGlobalNotes(); this.plugin.renderGlobalNotesArea(); renderFloatNotesInPanel(); }); });
+                if (_isDesktop) {
+                  menu.addItem((item) => { item.setTitle('弹出为独立窗口'); item.setIcon('pop-out'); item.onClick(() => { this.plugin._openNotePopout(note); renderFloatNotesInPanel(); }); });
+                }
+                menu.showAtMouseEvent(e);
+              });
+              masonry.appendChild(card);
+            }
+            fnContainer.appendChild(masonry);
+          };
           
           const updateDisplay = () => {
             const activeChip = pinnedChip || hoveredChip;
+
             const curStyle = getStyleContent();
             const curRules = getRulesContent();
+            const fnWasHidden = fnContainer.style.display === 'none';
             if (activeChip === styleChip) {
               curStyle.forEach(el => { el.style.display = ''; });
               curRules.forEach(el => { el.style.display = 'none'; });
+              fnContainer.style.display = 'none';
             } else if (activeChip === rulesChip) {
               curRules.forEach(el => { el.style.display = ''; });
               curStyle.forEach(el => { el.style.display = 'none'; });
+              fnContainer.style.display = 'none';
+            } else if (activeChip === floatNoteChip) {
+              if (fnWasHidden) renderFloatNotesInPanel();
+              if (fnContainer.previousElementSibling !== chipBar) {
+                chipBar.after(fnContainer);
+              }
+              fnContainer.style.display = '';
+              curStyle.forEach(el => { el.style.display = 'none'; });
+              curRules.forEach(el => { el.style.display = 'none'; });
             } else {
               curStyle.forEach(el => { el.style.display = 'none'; });
               curRules.forEach(el => { el.style.display = 'none'; });
+              fnContainer.style.display = 'none';
             }
             const updateChipStyle = (chip, isActive) => {
               chip.style.borderColor = isActive ? 'var(--interactive-accent)' : 'var(--background-modifier-border)';
@@ -12514,6 +12597,7 @@ class AddRegexRuleModal {
             };
             updateChipStyle(styleChip, activeChip === styleChip);
             updateChipStyle(rulesChip, activeChip === rulesChip);
+            updateChipStyle(floatNoteChip, activeChip === floatNoteChip);
             if (activeChip && inputEl.value.trim()) {
               requestAnimationFrame(() => {
                 if (typeof this.highlightMatchingRuleButtons === 'function') {
@@ -12534,45 +12618,27 @@ class AddRegexRuleModal {
           const cancelHide = () => {
             clearTimeout(hideTimer);
           };
-          
-          const setupChipHover = (chip, contentSelector) => {
-            chip.addEventListener('mouseenter', () => {
-              cancelHide();
-              hoveredChip = chip;
-              updateDisplay();
-            });
-            chip.addEventListener('mouseleave', () => {
-              scheduleHide();
-            });
+
+          const bindChip = (chip, contentEls) => {
+            chip.addEventListener('mouseenter', () => { cancelHide(); hoveredChip = chip; updateDisplay(); });
+            chip.addEventListener('mouseleave', () => { scheduleHide(); });
             chip.addEventListener('click', () => {
               cancelHide();
-              if (pinnedChip === chip) {
-                pinnedChip = null;
-              } else {
-                pinnedChip = chip;
-              }
+              if (pinnedChip === chip) { pinnedChip = null; if (hoveredChip === chip) hoveredChip = null; }
+              else { pinnedChip = chip; }
               updateDisplay();
             });
-            contentEl.addEventListener('mouseover', (e) => {
-              if (!e.target.closest(contentSelector)) return;
-              cancelHide();
-              if (!pinnedChip) {
-                hoveredChip = chip;
-                updateDisplay();
-              }
-            });
-            contentEl.addEventListener('mouseout', (e) => {
-              const target = e.target.closest(contentSelector);
-              if (!target) return;
-              if (e.relatedTarget && target.contains(e.relatedTarget)) return;
-              scheduleHide();
-            });
+            for (const el of contentEls) {
+              if (!el) continue;
+              el.addEventListener('mouseenter', () => { cancelHide(); hoveredChip = chip; updateDisplay(); }, { signal: abSig });
+              el.addEventListener('mouseleave', () => { hoveredChip = null; scheduleHide(); }, { signal: abSig });
+            }
           };
+
+          bindChip(styleChip, styleContent);
+          bindChip(rulesChip, rulesContent);
+          bindChip(floatNoteChip, [fnContainer]);
           
-          setupChipHover(styleChip, '.rch-style-container, .heading-styles-section');
-          setupChipHover(rulesChip, '.global-rules-section');
-          
-          // 确保chipBar在styleEl/rulesEl之前，备注在之后
           const insertBefore = styleEl || rulesEl;
           if (insertBefore && insertBefore.parentNode === contentEl) {
             contentEl.insertBefore(chipBar, insertBefore);
@@ -12580,7 +12646,9 @@ class AddRegexRuleModal {
             contentEl.appendChild(chipBar);
           }
           
-          // 确保备注section始终在chip内容之后
+          chipBar.after(fnContainer);
+
+          
           const remarkSections = contentEl.querySelectorAll('.inline-remark-section, .inline-related-notes-section, .inline-related-highlights-section');
           remarkSections.forEach(s => { contentEl.appendChild(s); });
         }
@@ -12610,18 +12678,26 @@ class AddRegexRuleModal {
 
     // 添加重新打开按钮的点击事件监听器
     let chipHoverTimer = null;
+    let chipHoverCooldown = false;
     collapsedCategoriesContainer.addEventListener('mouseenter', (e) => {
       const tab = e.target.closest('.collapsed-category-reopen-btn');
       if (!tab) return;
+      if (chipHoverCooldown) return;
       if (tab.getAttribute('data-category') === activeTabCategory) return;
       const delay = this.plugin?.settings?.chipHoverDelay !== undefined ? this.plugin.settings.chipHoverDelay : 300;
       if (delay <= 0) {
         tab.click();
+        chipHoverCooldown = true;
+        setTimeout(() => { chipHoverCooldown = false; }, 400);
         return;
       }
+      const targetTab = tab;
       chipHoverTimer = setTimeout(() => {
-        tab.click();
+        if (!targetTab.matches(':hover')) { chipHoverTimer = null; return; }
+        targetTab.click();
         chipHoverTimer = null;
+        chipHoverCooldown = true;
+        setTimeout(() => { chipHoverCooldown = false; }, 400);
       }, delay);
     }, true);
     
@@ -13137,6 +13213,7 @@ class AddRegexRuleModal {
     const settingsChipsRow = settingsBar.createDiv();
     settingsChipsRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;opacity:0;transition:opacity 0.2s ease;pointer-events:none;';
     
+
     settingsBar.addEventListener('mouseenter', () => {
       settingsChipsRow.style.opacity = '1';
       settingsChipsRow.style.pointerEvents = 'auto';
@@ -14490,7 +14567,8 @@ class AddRegexRuleModal {
       { id: 'styleShowcase', label: t('floating.styleShowcase') },
       { id: 'switchMode', label: t('floating.switchMode') },
       { id: 'hideFloatingBtns', label: t('floating.hideFloatingBtns') },
-      { id: 'hideTextStyles', label: t('floating.hideTextStyles') }
+      { id: 'hideTextStyles', label: t('floating.hideTextStyles') },
+      { id: 'addFloatNote', label: t('floating.addFloatNote') }
     ];
 
     const visibleOptions = this.plugin.floatButtonData?.floatingBallVisibleOptions || {};
@@ -16168,12 +16246,21 @@ class AddRegexRuleModal {
       });
 
       let chipHoverTimer = null;
+      let ruleChipHoverCooldown = false;
       globalChipsRow.addEventListener('mouseenter', (e) => {
         const chip = e.target.closest('.rch-global-group-chip');
         if (!chip) return;
+        if (ruleChipHoverCooldown) return;
         const grp = chip.getAttribute('data-group');
         if (!grp || activeGlobalGroup === grp) return;
-        chipHoverTimer = setTimeout(() => { activateGlobalGroup(grp); chipHoverTimer = null; }, 200);
+        const targetGrp = grp;
+        chipHoverTimer = setTimeout(() => {
+          if (!chip.matches(':hover')) { chipHoverTimer = null; return; }
+          activateGlobalGroup(targetGrp);
+          chipHoverTimer = null;
+          ruleChipHoverCooldown = true;
+          setTimeout(() => { ruleChipHoverCooldown = false; }, 400);
+        }, 200);
       }, true);
       globalChipsRow.addEventListener('mouseleave', (e) => {
         const chip = e.target.closest('.rch-global-group-chip');
@@ -17562,31 +17649,21 @@ class AddRegexRuleModal {
     const relatedList = document.createElement('div');
     relatedList.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
     for (const note of relatedNotes.slice(0, 10)) {
-      const noteLink = document.createElement('a');
-      noteLink.className = 'related-note-link internal-link';
+      const noteLink = document.createElement('span');
+      noteLink.className = 'related-note-link';
       const nameWithoutExt = note.name.replace(/\.md$/, '');
       noteLink.textContent = nameWithoutExt;
       noteLink.title = note.path;
-      noteLink.dataset.href = note.path;
       noteLink.dataset.path = note.path;
       noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;';
       noteLink.addEventListener('mouseenter', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.5)'; });
       noteLink.addEventListener('mouseleave', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
-      noteLink.addEventListener('mousedown', (e) => {
-        if (e.button === 1) e.preventDefault();
-      });
       noteLink.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
       });
-      noteLink.addEventListener('auxclick', (e) => {
-        if (e.button === 1) {
-          e.preventDefault();
-          e.stopPropagation();
-          plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
-        }
-      });
+
       relatedList.appendChild(noteLink);
     }
     if (relatedNotes.length > 10) {
@@ -17601,28 +17678,19 @@ class AddRegexRuleModal {
         for (const link of existingLinks) { shownPaths.add(link.dataset.path); }
         for (const note of relatedNotes) {
           if (shownPaths.has(note.path)) continue;
-          const noteLink = document.createElement('a');
-          noteLink.className = 'related-note-link internal-link';
+          const noteLink = document.createElement('span');
+          noteLink.className = 'related-note-link';
           const nameWithoutExt = note.name.replace(/\.md$/, '');
           noteLink.textContent = nameWithoutExt;
           noteLink.title = note.path;
-          noteLink.dataset.href = note.path;
           noteLink.dataset.path = note.path;
           noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;';
-          noteLink.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); });
           noteLink.addEventListener('mouseenter', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.5)'; });
           noteLink.addEventListener('mouseleave', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
           noteLink.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
-          });
-          noteLink.addEventListener('auxclick', (e) => {
-            if (e.button === 1) {
-              e.preventDefault();
-              e.stopPropagation();
-              plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
-            }
           });
           relatedList.insertBefore(noteLink, moreTag);
         }
@@ -17713,11 +17781,11 @@ class AddRegexRuleModal {
       contentWrap.style.cssText = 'flex:1;min-width:0;';
       const titleRow = document.createElement('div');
       titleRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:2px;';
-      const fileLink = document.createElement('a');
-      fileLink.className = 'internal-link';
+      const fileLink = document.createElement('span');
+      fileLink.className = 'related-highlight-link';
       fileLink.textContent = match.name;
       fileLink.title = match.path;
-      fileLink.dataset.href = match.path;
+      fileLink.dataset.path = match.path;
       fileLink.style.cssText = `color:hsl(${fh},50%,45%);cursor:pointer;text-decoration:none;white-space:nowrap;font-weight:600;font-size:10px;`;
       const jumpToHighlight = async () => {
         await plugin.app.workspace.openLinkText(match.path, '', true);
@@ -17878,7 +17946,7 @@ class AddRegexRuleModal {
 
       const ruleIdForRefresh = isGlobal ? rule.regex + '-' + rule.cssClass : 'history-' + rule.regex + '-' + rule.cssClass;
       plugin.renderRemarkContent(contentContainer, {
-        links: rule.links,
+      links: rule.links,
         rule,
         ruleRegex: rule.regex,
         isGlobal,
@@ -17963,6 +18031,7 @@ class AddRegexRuleModal {
         chip.appendChild(chipLabel);
 
         chip.addEventListener('click', (ce) => {
+
           ce.preventDefault();
           ce.stopPropagation();
           const existingWin = document.querySelector(`.keyword-detail-window[data-keyword="${CSS.escape(kwRegex)}"]`);
@@ -21354,7 +21423,8 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
         fontSwitch: false,
         switchMode: false,
         hideFloatingBtns: false,
-        hideTextStyles: false
+        hideTextStyles: false,
+        addFloatNote: true
       },
       hiddenFloatingStyleWindows: [],
       randomHighlightGroups: ''
@@ -21435,13 +21505,15 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       this.loadStyleCategories(),
       this.loadGlobalRules(),
       this.loadGlobalRuleGroups(),
-      this._preloadPinyinData(),
-      this._preloadInterlinearNoteData()
+      this.loadGlobalNotes()
     ]);
+    
+    this._preloadPinyinData();
+    this._preloadInterlinearNoteData();
     
     await this.syncStylesToCategories();
     
-    this.cssStyles = new Map();
+
     await this.loadPluginCssStyles();
     
     try {
@@ -21451,6 +21523,9 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     } catch (e) {
       console.error('Failed to inject CSS on load:', e);
     }
+
+    this._restoreNotePopouts();
+    this.renderGlobalNotesArea();
     
     // 预缓存拼音文本列表，用于快速预过滤
     let pinyinTexts = null;
@@ -24132,6 +24207,21 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       });
       if (isOptionVisible('hideTextStyles')) menu.appendChild(hideTextStylesOption);
 
+      // 添加悬浮笔记选项
+      const addFloatNoteOption = createMenuOptionWithFloat('addFloatNote', t('floating.addFloatNote'), () => {
+        const mx = this.lastMouseX || (window.innerWidth - 80);
+        const my = this.lastMouseY || 200;
+        const note = { id: Date.now(), text: '', collapsed: false, _inPanel: false, _hidden: false, _floatPos: { left: Math.min(mx, window.innerWidth - 180) + 'px', top: Math.min(my, window.innerHeight - 80) + 'px' } };
+        this.globalNotes.push(note);
+        this.saveGlobalNotes();
+        this.renderGlobalNotesArea();
+        if (document.body.contains(menu)) {
+          document.body.removeChild(menu);
+        }
+        hoverMenu = null;
+      });
+      if (isOptionVisible('addFloatNote')) menu.appendChild(addFloatNoteOption);
+
       // 分组选项 - 直接显示在悬浮球菜单中
       const floatingBallGroups = this.floatButtonData.floatingBallGroups || [];
       floatingBallGroups.forEach(groupName => {
@@ -25394,6 +25484,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       openMainPanel: () => {
         new AddRegexRuleModal(this.app, this).open();
       },
+      addFloatNote: () => {
+        const mx = this.lastMouseX || (window.innerWidth - 80);
+        const my = this.lastMouseY || 200;
+        const note = { id: Date.now(), text: '', collapsed: false, _inPanel: false, _hidden: false, _floatPos: { left: Math.min(mx, window.innerWidth - 180) + 'px', top: Math.min(my, window.innerHeight - 80) + 'px' } };
+        this.globalNotes.push(note);
+        this.saveGlobalNotes();
+        this.renderGlobalNotesArea();
+      },
       formatReplace: () => {
         new FormatReplaceModal(this.app, this).open();
       },
@@ -25661,6 +25759,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       pinyin: t('floating.pinyin'),
       styleShowcase: t('floating.styleShowcase'),
       removeHighlight: t('floating.removeHighlight'),
+      addFloatNote: t('floating.addFloatNote'),
       pinyinAddLocal: t('pinyin.addLocal'),
       pinyinAddGlobal: t('pinyin.addGlobal'),
       pinyinEditFile: t('pinyin.editFile'),
@@ -27690,7 +27789,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (_cachedCssContent) {
         cssContent = _cachedCssContent;
       } else {
-        cssContent = await this.app.vault.adapter.read(_CSS_REL_PATH);
+        cssContent = await crossFS.read(this.app.vault, _CSS_REL_PATH);
         _cachedCssContent = cssContent;
       }
     } catch (error) {
@@ -29428,6 +29527,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   }
 
   onunload() {
+    this._closeAllNotePopouts();
     if (this._fileRulesWriteTimer) {
       clearTimeout(this._fileRulesWriteTimer);
       this._flushFileRulesWrite();
@@ -33927,11 +34027,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       const cssContent = _cachedCssContent || await crossFS.read(this.app.vault, cssRelPath);
       if (!_cachedCssContent) _cachedCssContent = cssContent;
       
-      const classNameRegex = /\.([\w\u4e00-\u9fa5_-][\w\u4e00-\u9fa50-9_-]*)\s*\{/g;
+      const cssRuleRegex = /\.([^{]+)\s*\{([^}]+)\}/g;
       const cssClasses = new Set();
-      let match;
-      while ((match = classNameRegex.exec(cssContent)) !== null) {
-        cssClasses.add(match[1]);
+      this.cssStyles = new Map();
+      let ruleMatch;
+      while ((ruleMatch = cssRuleRegex.exec(cssContent)) !== null) {
+        const className = ruleMatch[1].trim();
+        const styles = ruleMatch[2].trim();
+        cssClasses.add(className);
+        this.cssStyles.set(className, styles);
       }
       
       const categories = styleCategories || {};
@@ -34007,7 +34111,15 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   // 加载插件CSS样式到cssStyles Map
   async loadPluginCssStyles() {
     try {
-      const cssContent = _cachedCssContent || await this.app.vault.adapter.read(_CSS_REL_PATH);
+      if (this.cssStyles && this.cssStyles.size > 0) {
+        if (this.settings && this.settings.headingStyles) {
+          Object.entries(this.settings.headingStyles).forEach(([className, styles]) => {
+            this.cssStyles.set(className, styles);
+          });
+        }
+        return;
+      }
+      const cssContent = _cachedCssContent || await crossFS.read(this.app.vault, _CSS_REL_PATH);
       if (!_cachedCssContent) _cachedCssContent = cssContent;
       
       const cssRules = cssContent.match(/\.([^{]+)\s*\{([^}]+)\}/g) || [];
@@ -34647,6 +34759,412 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
   
   // 加载全局规则
+  async loadGlobalNotes() {
+    try {
+      const relPath = '.obsidian/plugins/Regex-Css-Highlighter/global-notes.json';
+      let content = null;
+      try { content = await crossFS.read(this.app.vault, relPath); } catch (e) {}
+      if (content) {
+        this.globalNotes = JSON.parse(content);
+      } else {
+        this.globalNotes = [];
+      }
+    } catch (error) {
+      console.error('Error loading global notes:', error);
+      this.globalNotes = [];
+    }
+  }
+
+  async saveGlobalNotes() {
+    try {
+      const relPath = '.obsidian/plugins/Regex-Css-Highlighter/global-notes.json';
+      await crossFS.write(this.app.vault, relPath, JSON.stringify(this.globalNotes, null, 2));
+    } catch (error) {
+      console.error('Error saving global notes:', error);
+    }
+  }
+
+  renderGlobalNotesArea() {
+    const plugin = this;
+    document.querySelectorAll('.global-note-card').forEach(el => el.remove());
+    for (const note of plugin.globalNotes) {
+      if (note._hidden) continue;
+      if (note._popout && plugin._notePopouts && plugin._notePopouts[note.id] && !plugin._notePopouts[note.id].isDestroyed()) continue;
+      const card = document.createElement('div');
+      card.className = 'global-note-card';
+      card.dataset.noteId = note.id;
+      card.style.cssText = 'max-width:240px;min-width:80px;min-height:30px;padding:4px 6px;background:rgba(168,213,162,0.15);border:1px solid rgba(168,213,162,0.3);display:flex;flex-direction:column;cursor:grab;user-select:none;margin-bottom:4px;position:fixed;z-index:1200;';
+      const textEl = document.createElement('div');
+      textEl.className = 'global-note-text';
+      textEl.style.cssText = 'font-size:11px;color:var(--text-normal);padding:6px 8px;white-space:pre-wrap;word-break:break-word;min-height:20px;cursor:grab;';
+      textEl.textContent = note.text || '(双击编辑)';
+      if (!note.text) textEl.style.color = 'var(--text-faint)';
+      card.appendChild(textEl);
+      let isEditing = false;
+      let isDrag = false, dragStartX = 0, dragStartY = 0, cardStartX = 0, cardStartY = 0, dragMoved = false;
+      card.addEventListener('mousedown', (e) => {
+        if (isEditing) return;
+        if (e.button === 2) return;
+        isDrag = true;
+        dragMoved = false;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        const rect = card.getBoundingClientRect();
+        cardStartX = rect.left;
+        cardStartY = rect.top;
+        card.style.cursor = 'grabbing';
+        e.preventDefault();
+      });
+      const onMouseMove = (e) => {
+        if (!isDrag) return;
+        const dx = e.clientX - dragStartX;
+        const dy = e.clientY - dragStartY;
+        if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return;
+        dragMoved = true;
+        card.style.left = (cardStartX + dx) + 'px';
+        card.style.top = (cardStartY + dy) + 'px';
+      };
+      document.addEventListener('mousemove', onMouseMove);
+      const onMouseUp = (e) => {
+        if (!isDrag) return;
+        isDrag = false;
+        card.style.cursor = 'grab';
+        if (!dragMoved) return;
+        note._floatPos = { left: card.style.left, top: card.style.top };
+        plugin.saveGlobalNotes();
+      };
+      document.addEventListener('mouseup', onMouseUp);
+      card.addEventListener('touchstart', (e) => {
+        if (isEditing) return;
+        const touch = e.touches[0];
+        isDrag = true;
+        dragMoved = false;
+        dragStartX = touch.clientX;
+        dragStartY = touch.clientY;
+        const rect = card.getBoundingClientRect();
+        cardStartX = rect.left;
+        cardStartY = rect.top;
+        card.style.cursor = 'grabbing';
+      }, { passive: true });
+      const onTouchMove = (e) => {
+        if (!isDrag) return;
+        const touch = e.touches[0];
+        const dx = touch.clientX - dragStartX;
+        const dy = touch.clientY - dragStartY;
+        if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return;
+        dragMoved = true;
+        card.style.left = (cardStartX + dx) + 'px';
+        card.style.top = (cardStartY + dy) + 'px';
+      };
+      document.addEventListener('touchmove', onTouchMove, { passive: true });
+      const onTouchEnd = () => {
+        if (!isDrag) return;
+        isDrag = false;
+        card.style.cursor = 'grab';
+        if (!dragMoved) return;
+        note._floatPos = { left: card.style.left, top: card.style.top };
+        plugin.saveGlobalNotes();
+      };
+      document.addEventListener('touchend', onTouchEnd);
+      textEl.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        isEditing = true;
+        card.style.cursor = 'default';
+        const input = document.createElement('textarea');
+        input.value = note.text;
+        input.style.cssText = 'font-size:11px;border:none;background:transparent;color:var(--text-normal);outline:none;width:100%;min-height:40px;resize:vertical;padding:6px 8px;box-sizing:border-box;cursor:text;';
+        textEl.style.display = 'none';
+        card.appendChild(input);
+        input.focus();
+        const finishEdit = () => {
+          note.text = input.value;
+          plugin.saveGlobalNotes();
+          isEditing = false;
+          card.style.cursor = 'grab';
+          textEl.textContent = note.text || '(双击编辑)';
+          if (!note.text) textEl.style.color = 'var(--text-faint)';
+          else textEl.style.color = 'var(--text-normal)';
+          textEl.style.display = '';
+          input.remove();
+          plugin._syncNoteToPopout(note.id);
+        };
+        input.addEventListener('blur', finishEdit);
+        input.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { ev.preventDefault(); input.blur(); } });
+      });
+      card.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const menu = new Menu();
+        menu.addItem((item) => {
+          item.setTitle('删除笔记');
+          item.setIcon('trash');
+          item.onClick(() => {
+            card.remove();
+            plugin._closeNotePopout(note.id);
+            plugin.globalNotes = plugin.globalNotes.filter(n => n.id !== note.id);
+            plugin.saveGlobalNotes();
+          });
+        });
+        menu.addItem((item) => {
+          item.setTitle('编辑笔记');
+          item.setIcon('pencil');
+          item.onClick(() => { textEl.dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); });
+        });
+        menu.addItem((item) => {
+          item.setTitle(note._hidden ? '显示悬浮' : '隐藏悬浮');
+          item.setIcon(note._hidden ? 'eye' : 'eye-off');
+          item.onClick(() => {
+            note._hidden = !note._hidden;
+            plugin.saveGlobalNotes();
+            plugin.renderGlobalNotesArea();
+          });
+        });
+        if (_isDesktop) {
+          menu.addItem((item) => {
+            item.setTitle('弹出为独立窗口');
+            item.setIcon('pop-out');
+            item.onClick(() => {
+              card.remove();
+              plugin._openNotePopout(note);
+            });
+          });
+        }
+        menu.showAtMouseEvent(e);
+      });
+      if (note._floatPos) {
+        card.style.left = note._floatPos.left;
+        card.style.top = note._floatPos.top;
+      } else {
+        const mx = plugin.lastMouseX || (window.innerWidth - 100);
+        const my = plugin.lastMouseY || 200;
+        card.style.left = Math.min(mx, window.innerWidth - 260) + 'px';
+        card.style.top = Math.min(my, window.innerHeight - 80) + 'px';
+        note._floatPos = { left: card.style.left, top: card.style.top };
+      }
+      document.body.appendChild(card);
+    }
+  }
+
+  _notePopouts = {};
+
+  _openNotePopout(note) {
+    if (!_isDesktop) return;
+    if (this._notePopouts[note.id] && !this._notePopouts[note.id].isDestroyed()) {
+      this._notePopouts[note.id].focus();
+      return;
+    }
+     try {
+      let remote;
+      try { remote = require('@electron/remote'); } catch(e) { remote = require('electron').remote; }
+      const { BrowserWindow } = remote;
+
+      const pos = note._popoutPos || { x: 100, y: 100 };
+      const size = note._popoutSize || { w: 260, h: 120 };
+      const currentWin = remote.getCurrentWindow();
+      const win = new BrowserWindow({
+        x: pos.x, y: pos.y,
+        width: size.w, height: size.h,
+        frame: false,
+        transparent: true,
+        resizable: true,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        parent: currentWin || undefined,
+        webPreferences: { nodeIntegration: true, contextIsolation: false }
+      });
+      const themes = [
+        { bg:'rgba(30,30,30,0.72)', border:'rgba(255,255,255,0.1)', bar:'rgba(255,255,255,0.05)', text:'#e0e0e0', faint:'rgba(255,255,255,0.2)', editBg:'rgba(255,255,255,0.06)', editBorder:'rgba(255,255,255,0.12)', closeColor:'rgba(255,255,255,0.35)', closeHover:'rgba(255,255,255,0.8)' },
+        { bg:'rgba(245,250,243,0.85)', border:'rgba(0,0,0,0.1)', bar:'rgba(0,0,0,0.04)', text:'#333', faint:'rgba(0,0,0,0.25)', editBg:'rgba(0,0,0,0.04)', editBorder:'rgba(0,0,0,0.12)', closeColor:'rgba(0,0,0,0.35)', closeHover:'rgba(0,0,0,0.7)' },
+        { bg:'rgba(168,213,162,0.25)', border:'rgba(168,213,162,0.3)', bar:'rgba(168,213,162,0.15)', text:'#2d5a27', faint:'rgba(45,90,39,0.3)', editBg:'rgba(168,213,162,0.15)', editBorder:'rgba(168,213,162,0.4)', closeColor:'rgba(45,90,39,0.4)', closeHover:'rgba(45,90,39,0.8)' },
+        { bg:'rgba(180,160,200,0.3)', border:'rgba(140,120,180,0.3)', bar:'rgba(140,120,180,0.12)', text:'#3a2d50', faint:'rgba(58,45,80,0.3)', editBg:'rgba(140,120,180,0.1)', editBorder:'rgba(140,120,180,0.3)', closeColor:'rgba(58,45,80,0.4)', closeHover:'rgba(58,45,80,0.8)' },
+        { bg:'rgba(200,180,160,0.3)', border:'rgba(160,140,120,0.3)', bar:'rgba(160,140,120,0.12)', text:'#4a3a2a', faint:'rgba(74,58,42,0.3)', editBg:'rgba(160,140,120,0.1)', editBorder:'rgba(160,140,120,0.3)', closeColor:'rgba(74,58,42,0.4)', closeHover:'rgba(74,58,42,0.8)' }
+      ];
+      const themeIdx = note._popoutTheme || 0;
+      const initTheme = themes[themeIdx] || themes[0];
+      const initFontSize = note._popoutFontSize || 13;
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{background:${initTheme.bg};border:1px solid ${initTheme.border};border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:${initTheme.text};display:flex;flex-direction:column;transition:background 0.2s,color 0.2s,border-color 0.2s;}
+.bar{height:20px;cursor:grab;display:flex;align-items:center;justify-content:flex-end;padding:0 6px;background:${initTheme.bar};-webkit-app-region:drag;flex-shrink:0;border-radius:8px 8px 0 0;transition:background 0.2s;}
+.bar span{-webkit-app-region:no-drag;cursor:pointer;font-size:13px;color:${initTheme.closeColor};padding:0 4px;line-height:20px;transition:color 0.15s;}
+.bar span:hover{color:${initTheme.closeHover};}
+.content{flex:1;padding:8px 10px;font-size:${initFontSize}px;white-space:pre-wrap;word-break:break-word;min-height:40px;outline:none;color:${initTheme.text};overflow-y:auto;transition:font-size 0.1s;}
+.content.readonly{cursor:default;}
+.content.editing{cursor:text;background:${initTheme.editBg};box-shadow:inset 0 0 0 1px ${initTheme.editBorder};}
+.content:empty::before{content:'(dblclick to edit)';color:${initTheme.faint};}
+</style></head><body>
+<div class="bar"><span class="close-btn">✕</span></div>
+<div class="content readonly" contenteditable="false" spellcheck="false">${(note.text || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+<script>
+const { ipcRenderer } = require('electron');
+const content = document.querySelector('.content');
+const closeBtn = document.querySelector('.close-btn');
+let opacity = ${note._popoutOpacity || 1};
+let themeIdx = ${themeIdx};
+let fontSize = ${initFontSize};
+const themes = ${JSON.stringify(themes)};
+
+function applyTheme(t) {
+  document.body.style.background = t.bg;
+  document.body.style.borderColor = t.border;
+  document.body.style.color = t.text;
+  const bar = document.querySelector('.bar');
+  bar.style.background = t.bar;
+  const span = bar.querySelector('span');
+  span.style.color = t.closeColor;
+  span.onmouseenter = () => span.style.color = t.closeHover;
+  span.onmouseleave = () => span.style.color = t.closeColor;
+  content.style.color = t.text;
+  content.style.setProperty('--edit-bg', t.editBg);
+  content.style.setProperty('--edit-border', t.editBorder);
+  const s = document.querySelector('style');
+  s.textContent = s.textContent.replace(/\\.content\\.editing\\{[^}]*\\}/, '.content.editing{cursor:text;background:'+t.editBg+';box-shadow:inset 0 0 0 1px '+t.editBorder+';}');
+  const emptyRule = s.textContent.match(/\\.content:empty::before\\{[^}]*\\}/);
+  if (emptyRule) s.textContent = s.textContent.replace(emptyRule[0], '.content:empty::before{content:\\'(dblclick to edit)\\';color:'+t.faint+';}');
+}
+
+closeBtn.onclick = () => ipcRenderer.send('note-close', '${note.id}');
+content.addEventListener('dblclick', () => {
+  content.contentEditable = 'true';
+  content.classList.remove('readonly');
+  content.classList.add('editing');
+  content.focus();
+  const range = document.createRange();
+  range.selectNodeContents(content);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+});
+content.addEventListener('blur', () => {
+  content.contentEditable = 'false';
+  content.classList.add('readonly');
+  content.classList.remove('editing');
+  ipcRenderer.send('note-update', '${note.id}', content.innerText);
+});
+content.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); content.blur(); } });
+window.addEventListener('resize', () => ipcRenderer.send('note-resize', '${note.id}', window.innerWidth, window.innerHeight));
+document.addEventListener('wheel', (e) => {
+  if (e.ctrlKey) {
+    e.preventDefault();
+    opacity = Math.max(0.2, Math.min(1, opacity + (e.deltaY < 0 ? 0.05 : -0.05)));
+    ipcRenderer.send('note-opacity', '${note.id}', opacity);
+  } else if (e.shiftKey) {
+    e.preventDefault();
+    themeIdx = (themeIdx + (e.deltaY < 0 ? 1 : themes.length - 1)) % themes.length;
+    applyTheme(themes[themeIdx]);
+    ipcRenderer.send('note-theme', '${note.id}', themeIdx);
+  } else if (e.altKey) {
+    e.preventDefault();
+    fontSize = Math.max(9, Math.min(28, fontSize + (e.deltaY < 0 ? 1 : -1)));
+    content.style.fontSize = fontSize + 'px';
+    ipcRenderer.send('note-fontsize', '${note.id}', fontSize);
+  }
+}, { passive: false });
+document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' || e.key === '-' || e.key === '0')) e.preventDefault(); });
+</script></body></html>`;
+      win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+      if (note._popoutOpacity && note._popoutOpacity < 1) {
+        win.once('ready-to-show', () => { try { win.setOpacity(note._popoutOpacity); } catch(e) {} });
+      }
+      win.on('moved', () => {
+        const [x, y] = win.getPosition();
+        note._popoutPos = { x, y };
+        this.saveGlobalNotes();
+      });
+      win.on('resized', () => {
+        const [w, h] = win.getSize();
+        note._popoutSize = { w, h };
+        this.saveGlobalNotes();
+      });
+      win.on('closed', () => {
+        delete this._notePopouts[note.id];
+        note._popout = false;
+        this.saveGlobalNotes();
+        this.renderGlobalNotesArea();
+      });
+      const webContents = win.webContents;
+      webContents.on('did-finish-load', () => {
+        try { webContents.setVisualZoomLevelLimits(1, 1); } catch(e) {}
+        webContents.on('ipc-message', (event, channel, ...args) => {
+          if (channel === 'note-close') {
+            win.close();
+          } else if (channel === 'note-update') {
+            const [id, text] = args;
+            const n = this.globalNotes.find(n => String(n.id) === String(id));
+            if (n) { n.text = text; this.saveGlobalNotes(); }
+          } else if (channel === 'note-resize') {
+            const [id, w, h] = args;
+            note._popoutSize = { w, h };
+            this.saveGlobalNotes();
+          } else if (channel === 'note-opacity') {
+            const [id, op] = args;
+            note._popoutOpacity = op;
+            try { win.setOpacity(op); } catch(e) {}
+            this.saveGlobalNotes();
+          } else if (channel === 'note-theme') {
+            const [id, ti] = args;
+            note._popoutTheme = ti;
+            this.saveGlobalNotes();
+          } else if (channel === 'note-fontsize') {
+            const [id, fs] = args;
+            note._popoutFontSize = fs;
+            this.saveGlobalNotes();
+          }
+        });
+      });
+      this._notePopouts[note.id] = win;
+      note._popout = true;
+      this.saveGlobalNotes();
+    } catch (e) {
+      console.error('[FloatNote] popout failed:', e);
+      note._popout = false;
+      this.renderGlobalNotesArea();
+    }
+  }
+
+  _closeNotePopout(noteId) {
+    if (this._notePopouts[noteId] && !this._notePopouts[noteId].isDestroyed()) {
+      this._notePopouts[noteId].close();
+    }
+    delete this._notePopouts[noteId];
+  }
+
+  _syncNoteToPopout(noteId) {
+    const win = this._notePopouts[noteId] || this._notePopouts[String(noteId)] || this._notePopouts[Number(noteId)];
+    if (!win || win.isDestroyed()) return;
+    const note = this.globalNotes.find(n => String(n.id) === String(noteId));
+    if (!note) return;
+    try {
+      const escaped = (note.text || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+      win.webContents.executeJavaScript(`document.querySelector('.content').innerText='${escaped}'`);
+    } catch (e) {}
+  }
+
+  _closeAllNotePopouts() {
+    for (const id of Object.keys(this._notePopouts)) {
+      try { if (!this._notePopouts[id].isDestroyed()) this._notePopouts[id].close(); } catch (e) {}
+    }
+    this._notePopouts = {};
+  }
+
+  _restoreNotePopouts() {
+    if (!_isDesktop) return;
+    const notes = this.globalNotes.filter(n => n._popout);
+    if (notes.length === 0) return;
+    const tryRestore = () => {
+      try {
+        let remote;
+        try { remote = require('@electron/remote'); } catch(e) { remote = require('electron').remote; }
+        if (!remote || !remote.BrowserWindow) { console.warn('[FloatNote] @electron/remote not available, retrying...'); return false; }
+        for (const note of notes) this._openNotePopout(note);
+        this.renderGlobalNotesArea();
+        return true;
+      } catch (e) { console.warn('[FloatNote] restore popouts failed:', e); return false; }
+    };
+    if (!tryRestore()) setTimeout(tryRestore, 2000);
+  }
+
   async loadGlobalRules() {
     try {
       const globalRulesRelPath = '.obsidian/plugins/Regex-Css-Highlighter/global-rules.json';
@@ -34678,7 +35196,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         this.globalRules = this.mergeDuplicateRules(this.globalRules);
 
         if (this.globalRules.length !== originalLength || migrated) {
-          await this.saveGlobalRules(this.globalRules);
+          setTimeout(() => this.saveGlobalRules(this.globalRules), 3000);
         }
       } else {
         this.globalRules = [];
@@ -37691,6 +38209,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     styleEl.textContent = `.${cssScope} .remark-popup-content p{margin:0;}.${cssScope} .remark-popup-content ul,.${cssScope} .remark-popup-content ol{margin:0;padding-left:20px;}.${cssScope} .remark-popup-content li{margin:0;}.${cssScope} .remark-popup-content h1,.${cssScope} .remark-popup-content h2,.${cssScope} .remark-popup-content h3,.${cssScope} .remark-popup-content h4,.${cssScope} .remark-popup-content h5,.${cssScope} .remark-popup-content h6{margin:0;}.${cssScope} .remark-popup-content blockquote{margin:0;}.${cssScope} .remark-popup-content hr{margin:5px 0;}.${cssScope} .remark-popup-content table{border-collapse:separate;border-spacing:0;margin:8px 0;width:100%;border-radius:6px;overflow:hidden;border:1px solid var(--border-color);font-size:11px;}.${cssScope} .remark-popup-content th,.${cssScope} .remark-popup-content td{padding:5px 10px;text-align:left;border-bottom:1px solid var(--border-color);border-right:1px solid var(--border-color);}.${cssScope} .remark-popup-content th:last-child,.${cssScope} .remark-popup-content td:last-child{border-right:none;}.${cssScope} .remark-popup-content tr:last-child td{border-bottom:none;}.${cssScope} .remark-popup-content th{background:linear-gradient(180deg,var(--background-modifier-hover),var(--background-secondary));font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);}.${cssScope} .remark-popup-content tr:nth-child(even) td{background-color:rgba(0,0,0,0.03);}.${cssScope} .remark-popup-content tr:hover td{background-color:var(--background-modifier-hover);}.${cssScope} .remark-popup-content img{max-width:100%;height:auto;border-radius:4px;margin:4px 0;}.${cssScope} .remark-popup-content .internal-embed{max-width:100%;}.${cssScope} .remark-popup-content .internal-embed img{max-width:100%;height:auto;border-radius:4px;margin:4px 0;}`;
     container.appendChild(styleEl);
 
+
     if (plugin.settings?.showRelatedNotes !== false && ruleRegex) {
       const searchTerms = ruleRegex.split('|').map(s => s.trim()).filter(s => s.length > 0);
       if (searchTerms.length > 0) {
@@ -37718,30 +38237,20 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const relatedList = document.createElement('div');
           relatedList.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
           for (const note of relatedNotes.slice(0, 10)) {
-            const noteLink = document.createElement('a');
-            noteLink.className = 'related-note-link internal-link';
+            const noteLink = document.createElement('span');
+            noteLink.className = 'related-note-link';
             const nameWithoutExt = note.name.replace(/\.md$/, '');
             noteLink.textContent = nameWithoutExt;
             noteLink.title = note.path;
-            noteLink.dataset.href = note.path;
             noteLink.dataset.path = note.path;
             noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;';
             noteLink.addEventListener('mouseenter', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.5)'; });
             noteLink.addEventListener('mouseleave', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
-            noteLink.addEventListener('mousedown', (e) => {
-              if (e.button === 1) e.preventDefault();
-            });
             noteLink.addEventListener('click', (e) => {
+
               e.preventDefault();
               e.stopPropagation();
               plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
-            });
-            noteLink.addEventListener('auxclick', (e) => {
-              if (e.button === 1) {
-                e.preventDefault();
-                e.stopPropagation();
-                plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
-              }
             });
             relatedList.appendChild(noteLink);
           }
@@ -37757,28 +38266,19 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               for (const link of existingLinks) { shownPaths.add(link.dataset.path); }
               for (const note of relatedNotes) {
                 if (shownPaths.has(note.path)) continue;
-                const noteLink = document.createElement('a');
-                noteLink.className = 'related-note-link internal-link';
+                const noteLink = document.createElement('span');
+                noteLink.className = 'related-note-link';
                 const nameWithoutExt = note.name.replace(/\.md$/, '');
                 noteLink.textContent = nameWithoutExt;
                 noteLink.title = note.path;
-                noteLink.dataset.href = note.path;
                 noteLink.dataset.path = note.path;
                 noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;';
-                noteLink.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); });
                 noteLink.addEventListener('mouseenter', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.5)'; });
                 noteLink.addEventListener('mouseleave', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
                 noteLink.addEventListener('click', (e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
-                });
-                noteLink.addEventListener('auxclick', (e) => {
-                  if (e.button === 1) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
-                  }
                 });
                 relatedList.insertBefore(noteLink, moreTag);
               }
@@ -37836,11 +38336,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             contentWrap.style.cssText = 'flex:1;min-width:0;';
             const titleRow = document.createElement('div');
             titleRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:2px;';
-            const fileLink = document.createElement('a');
-            fileLink.className = 'internal-link';
+            const fileLink = document.createElement('span');
+            fileLink.className = 'related-highlight-link';
             fileLink.textContent = m.name;
             fileLink.title = m.path;
-            fileLink.dataset.href = m.path;
+            fileLink.dataset.path = m.path;
             fileLink.style.cssText = `color:hsl(${fh},50%,45%);cursor:pointer;text-decoration:none;white-space:nowrap;font-weight:600;font-size:10px;`;
             const jumpToHighlight = async () => {
               await plugin.app.workspace.openLinkText(m.path, '', true);
@@ -37860,6 +38360,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               }
             };
             fileLink.addEventListener('click', (e) => {
+
               e.preventDefault();
               e.stopPropagation();
               jumpToHighlight();
@@ -38894,7 +39395,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     } // end else (non-masonry)
 
     if (linksByFile.size === 0) {
-      container.innerHTML += '<span style="color: var(--text-muted)">' + t('remark.noContent') + '</span>';
+      const noContentEl = document.createElement('span');
+      noContentEl.style.cssText = 'color: var(--text-muted)';
+      noContentEl.textContent = t('remark.noContent');
+      container.appendChild(noContentEl);
     }
 
     const aiBtnContainer = document.createElement('div');
@@ -38904,7 +39408,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     aiAskBtn.className = 'remark-ai-ask-btn';
     aiAskBtn.textContent = '?';
     aiAskBtn.title = t('remark.aiAsk');
-    aiAskBtn.style.cssText = `font-weight:800;font-size:14px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #e0a01c, #460000, #e0a01c, #cb6a11);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(224, 160, 28, 0.8));background-color:rgba(224, 160, 28, 0.05);box-shadow:inset 0 0 0 1px rgba(224, 160, 28, 0.3), 0 0 15px rgba(70, 0, 0, 0.2);animation:hp-amber-shift 4s ease infinite;line-height:1;width:36px;height:36px;aspect-ratio:1/1;`;
+    aiAskBtn.style.cssText = `font-weight:800;font-size:11px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #e0a01c, #460000, #e0a01c, #cb6a11);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(224, 160, 28, 0.8));background-color:rgba(224, 160, 28, 0.05);box-shadow:inset 0 0 0 1px rgba(224, 160, 28, 0.3), 0 0 15px rgba(70, 0, 0, 0.2);animation:hp-amber-shift 4s ease infinite;line-height:1;width:26px;height:26px;aspect-ratio:1/1;`;
     const aiBtnStyle = document.createElement('style');
     aiBtnStyle.textContent = '@keyframes hp-amber-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }';
     container.appendChild(aiBtnStyle);
@@ -39021,7 +39525,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const aiGraphBtn = document.createElement('button');
     aiGraphBtn.textContent = '⬡';
     aiGraphBtn.title = t('remark.aiRelationGraph');
-    aiGraphBtn.style.cssText = `font-weight:800;font-size:13px;padding:2px 8px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1ce060, #004620, #1ce060, #6acb11);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 224, 96, 0.8));background-color:rgba(28, 224, 96, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 224, 96, 0.3), 0 0 15px rgba(0, 70, 32, 0.2);animation:hp-green-shift 4s ease infinite;line-height:1;margin-left:4px;width:36px;height:36px;aspect-ratio:1/1;`;
+    aiGraphBtn.style.cssText = `font-weight:800;font-size:10px;padding:2px 8px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1ce060, #004620, #1ce060, #6acb11);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 224, 96, 0.8));background-color:rgba(28, 224, 96, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 224, 96, 0.3), 0 0 15px rgba(0, 70, 32, 0.2);animation:hp-green-shift 4s ease infinite;line-height:1;margin-left:4px;width:26px;height:26px;aspect-ratio:1/1;`;
     const aiGraphBtnStyle = document.createElement('style');
     aiGraphBtnStyle.textContent = '@keyframes hp-green-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }';
     container.appendChild(aiGraphBtnStyle);
@@ -39669,7 +40173,7 @@ ${fullContext}`;
     addBtn.className = 'remark-add-btn';
     addBtn.textContent = '+';
     addBtn.title = t('remark.addRemark');
-    addBtn.style.cssText = `font-weight:800;font-size:14px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1CB5E0, #000046, #1CB5E0, #6a11cb);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 181, 224, 0.8));background-color:rgba(28, 181, 224, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 181, 224, 0.3), 0 0 15px rgba(0, 0, 70, 0.2);animation:hp-blue-shift 4s ease infinite;line-height:1;width:36px;height:36px;aspect-ratio:1/1;`;
+    addBtn.style.cssText = `font-weight:800;font-size:11px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1CB5E0, #000046, #1CB5E0, #6a11cb);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 181, 224, 0.8));background-color:rgba(28, 181, 224, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 181, 224, 0.3), 0 0 15px rgba(0, 0, 70, 0.2);animation:hp-blue-shift 4s ease infinite;line-height:1;width:26px;height:26px;aspect-ratio:1/1;`;
     const addBtnStyle = document.createElement('style');
     addBtnStyle.textContent = '@keyframes hp-blue-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }';
     container.appendChild(addBtnStyle);
@@ -39715,12 +40219,19 @@ ${fullContext}`;
   // 打开关键词独立窗口（可拖动，可打开多个）
   openKeywordWindow(keywordRegex, preservedRect) {
     const plugin = this;
-    // 查找规则
+
     const isGlobal = plugin.globalRules.some(r => r.regex === keywordRegex);
     const rule = isGlobal
       ? plugin.globalRules.find(r => r.regex === keywordRegex)
       : plugin.rules.find(r => r.regex === keywordRegex);
-    if (!rule || !rule.links || rule.links.length === 0) return;
+    const links = (rule && rule.links) ? rule.links : [];
+
+    if (!rule && links.length === 0) {
+      const hasGlobal = plugin.globalRules.some(r => r.regex === keywordRegex);
+      const hasLocal = plugin.rules.some(r => r.regex === keywordRegex);
+
+      if (!hasGlobal && !hasLocal) return;
+    }
 
     const popupSpacing = plugin.settings.popupSpacing !== undefined ? plugin.settings.popupSpacing : 10;
     const popupFontSize = plugin.settings.popupFontSize !== undefined ? plugin.settings.popupFontSize : 14;
@@ -39772,7 +40283,7 @@ ${fullContext}`;
     titleLeft.appendChild(titleText);
 
     // 来源数量 badge
-    const remarkCount = rule.links.filter(l => l.remark && l.remark.trim()).length;
+    const remarkCount = links.filter(l => l.remark && l.remark.trim()).length;
     const countBadge = document.createElement('span');
     countBadge.textContent = remarkCount;
     countBadge.style.cssText = `
@@ -39860,7 +40371,7 @@ ${fullContext}`;
     };
 
     const renderResult = plugin.renderRemarkContent(content, {
-      links: rule.links,
+      links: links,
       rule,
       ruleRegex: keywordRegex,
       isGlobal,
@@ -42334,9 +42845,10 @@ ${fullContext}`;
                   }, 200);
                 });
 
-                chip.addEventListener('click', (ce) => {
-                  ce.preventDefault();
-                  ce.stopPropagation();
+        chip.addEventListener('click', (ce) => {
+
+          ce.preventDefault();
+          ce.stopPropagation();
                   closePreview();
                   chip.style.transform = 'scale(1)';
                   chip.style.filter = '';
@@ -42561,6 +43073,7 @@ ${fullContext}`;
           // 点击弹窗外部关闭（keepOpen 或 remarkKeepOpen 时）
           let clickOutsideHandler = null;
           clickOutsideHandler = (e) => {
+
             if (e.target.closest('.remark-badge')) return;
             if (e.target.closest('.keyword-detail-window')) return;
             if (e.target.closest('.keyword-chip-preview')) return;

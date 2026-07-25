@@ -2,7 +2,199 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v1.9.9 (2026-07-19)
+## 🆕 v2.0.0 (2026-07-26)
+
+- **Related Highlights Tooltip Bilingual / 相关高亮提示双语** — Fully translated Related Highlights help tooltip to bilingual format (Display logic, Suggested usage, Remark style, etc.) / 相关高亮帮助提示完整双语翻译（显示逻辑、建议用法、备注样式等）
+- **Modal Initial Position Fix / 主面板初始位置修复** — Fixed main panel briefly appearing at top-left corner on first open by adding centered transform in constructor / 修复首次打开主面板时短暂出现在左上角，构造时添加居中transform
+- **Dark Theme Cursor Fix / 深色主题光标修复** — Added caret-color matching text color for floating notes in editing mode, fixing invisible cursor on dark color schemes / 添加与文本颜色匹配的caret-color，修复深色配色方案下光标不可见
+- **Note Undo Delete / 笔记误删恢复** — Deleted notes now show a 5-second pulse countdown button near the floating ball for undo recovery / 删除笔记后在悬浮球附近显示5秒脉冲倒计时按钮可恢复
+- **Sidebar Transform Fix / 侧边栏transform修复** — Properly clear transform CSS when moving modal to sidebar to prevent layout issues / 模态框移入侧边栏时正确清除transform防止布局异常
+
+## v1.9.9.17.5 (2026-07-26)
+
+- **Section Toggle Buttons / 区块折叠按钮** — Added ▽/▷ collapse toggle to Related Notes, Related Highlights, Keyword Remarks, Related Keywords, and AI Questions section headers; right-click to remember expand/collapse state / 在相关文档、相关高亮、关键词备注、关联词、AI提问标题前添加折叠按钮，右键可记住展开/折叠状态
+- **Related Highlights Help Icon / 相关高亮问号图标** — Added ❓ icon after "Related Highlights" header showing tips on display logic, usage suggestions, and remark style switching / "相关高亮"标题后添加问号图标，点击显示显示逻辑、建议用法、备注样式切换提示
+- **Related Highlights Match Remarks / 相关高亮匹配备注** — Search terms appearing in highlight comments/remarks now also trigger related highlights display / 搜索词出现在高亮备注中时也会显示相关高亮
+- **Keyword Window for No-Remark Keywords / 无备注关键词弹窗** — Clicking keywords without remarks now opens popup window showing related notes and highlights / 点击无备注关键词也能打开弹窗显示相关文档和相关高亮
+- **History Keywords Filter / 历史关键词过滤** — History keywords now only show rules-based keywords, default 10 items with expand button for more / 历史关键词仅显示规则中的关键词，默认10个，更多需展开
+- **AI Questions "+" Button Position / AI提问按钮位置** — Moved "+" button to title bar right side, consistent with Related Keywords layout / "+"按钮移至标题栏右侧，与关联词布局一致
+- **rule.links Safety Fix / rule.links安全修复** — Fixed TypeError when iterating rule.links that was undefined after delete operation / 修复rule.links被delete后迭代报错
+
+## v1.9.9.17.3 (2026-07-26)
+
+- **Related Highlight Keyword Style Fix / 相关高亮关键词样式修复** — Fixed keyword CSS style being applied to entire highlight entry instead of only matched keyword segments; created `_buildKeywordRanges` helper for precise text segmentation / 修复关键词CSS样式被应用到整段高亮条目而非仅匹配的关键词片段；新增_buildKeywordRanges辅助函数进行精确文本分段
+- **Related Highlight Unified Background / 相关高亮统一背景** — Added consistent `rgba(255,235,100,0.12)` background to all related highlight entries (both SG sentences and OB highlights) / 所有相关高亮条目（SG句子和OB高亮）统一添加淡黄色背景
+- **Mobile Panel Resize Fix / 手机端面板resize修复** — Fixed duplicate resize handles by removing independent mobile handle and adding touchstart/touchmove/touchend support to existing `setupModalResizeHandle`; enlarged handle to 28px on mobile / 修复重复resize按钮问题，删除独立手机端handle，在setupModalResizeHandle中添加touch支持，手机端handle放大到28px
+- **Mobile Sidebar Resize Handle Removal / 手机端侧边栏resize按钮移除** — Sidebar onOpen now removes modal-resize-handle from modalEl when panel enters sidebar / 侧边栏打开时移除面板中的resize handle
+- **Mobile Mini Note Click Fix / 手机端迷你笔记点击修复** — Fixed touchstart preventDefault blocking click event on mini notes; touchend now directly calls restoreCard when no drag detected / 修复touchstart的preventDefault阻止迷你笔记click事件，touchend中未拖动时直接调用restoreCard展开
+- **Mobile Inline Note Custom Resize / 手机端内嵌笔记自定义resize** — Replaced native CSS resize:both with custom 20px touch resize handle for better mobile usability / 替代原生CSS resize:both为20px自定义触摸resize handle，提升手机端操作体验
+- **Mobile Inline Note Collapse Button / 手机端内嵌笔记折叠按钮** — Added SVG collapse/mini button to inline note toolbar on mobile (equivalent to desktop middle-click) / 手机端内嵌笔记操作栏添加SVG折叠按钮（等同桌面端中键点击）
+- **Panel Lock State Fix / 面板锁定状态修复** — Removed desktop-only check from outside-click handler; locked panels now can only be closed via close button on all platforms / 移除外部点击handler的桌面端限制，锁定状态面板在所有平台只能通过关闭按钮关闭
+- **Middle-Click Link Fix / 中键链接修复** — Fixed middle-click on file links opening new window but not navigating to document; added metadataCache.getFirstLinkpathDest with fallback / 修复中键点击文件链接打开新窗口但未导航到文档的问题，添加metadataCache解析和fallback
+
+## v1.9.9.17 (2026-07-25)
+
+- **AI Graph Button Position Fix / AI关系图按钮位置修复** — Moved ⬡ button back to related keywords block header instead of AI question block / 将⬡按钮移回关联词标题栏，不再显示在AI提问块
+- **AI Question Block Collapse / AI提问块折叠** — Added ▽/▷ collapse toggle button in AI question block header / 在AI提问块标题栏添加折叠按钮，可折叠/展开内容
+- **No-Title Chip Removal / 无标题chip移除** — Removed residual no-title chip at bottom of keyword remarks block for AI-only groups / 移除关键词备注底部AI提问分组残留的无标题chip
+
+## v1.9.9.16 (2026-07-24)
+
+- **Masonry Mode Button in Remark Block / 瀑布流按钮移至备注块内** — Moved masonry toggle button from window header to inside the keyword remarks block; button only affects remarks content, not related notes/highlights / 瀑布流切换按钮从窗口标题栏移至关键词备注块内，仅作用于备注内容
+- **Auto Masonry Mode / 自动瀑布流模式** — New remarkMasonryAuto setting (default on): 1 remark → list, multiple → masonry; manual override via button / 新增自动瀑布流设置，1条备注→列表，多条→瀑布流，可通过按钮手动覆盖
+- **Remark & Keywords as Independent Blocks / 备注与关联词独立块** — Remark content wrapped as "关键词备注" block, keyword chips wrapped as "关联词" block, consistent with related notes/highlights style / 备注内容包裹为"关键词备注"独立块，关联词chips包裹为"关联词"独立块，与相关笔记/高亮样式一致
+- **AI Relation Graph in Keywords Block / AI关系图移入关联词块** — Graph section rendered inside keyword-chips-block below chips, collapsed by default with ▸/▾ toggle / 关系图渲染在关联词块内部chips下方，默认折叠，点击▸/▾展开
+- **AI Graph Persistence Fix / AI关系图持久化修复** — Fixed loadFileRulesFromPath dropping _mermaidGraph; existing graph now renders in kwBlock after switching keywords / 修复文件规则加载时丢失_mermaidGraph，切换关键词后已有关系图正确渲染
+- **AI Graph Max Tokens Setting / AI关系图Max Tokens设置** — New aiGraphMaxTokens setting (default 4096) in AI settings panel / AI设置面板新增Max Tokens设置项
+- **Exclude Related Highlights / 排除相关高亮** — excludedRelatedNotesCategories now also excludes related highlights, not just related notes / 排除相关笔记分组设置同时排除相关高亮
+- **Scroll Position Restore / 滚动位置恢复** — Panel preserves scroll position when toggling masonry mode / 面板切换瀑布流模式时保持滚动位置
+- **Unified aiBtnContainer Sticky / 统一?+按钮粘底** — Both keyword-detail-window and remark-custom-popup use position:sticky for aiBtnContainer; kwBlock inserted before aiBtnContainer / 两种弹窗统一使用sticky粘底，kwBlock插入在aiBtnContainer之前
+- **CodeMirror Import Fix / CodeMirror导入修复** — Added require('@codemirror/state') and require('@codemirror/view') for StateEffect, StateField, EditorView, Decoration / 添加CodeMirror 6依赖导入
+
+## v1.9.9.15 (2026-07-24)
+
+- **Related Keywords Chip Fix / 关联词chip修复** — Sentence length threshold no longer applies to related keywords in remark popup; all related keywords now display as compact keyword-chips instead of full-width sentence-chips / 句子长度阈值不再作用于备注弹窗底部的关联词，统一渲染为关键词chip
+- **Inline Note Action Bar Drag / 内嵌笔记操作栏拖动** — Action bar blank area now supports drag to move the note card; button clicks unaffected / 操作栏空白区域可拖动移动卡片，按钮点击不受影响
+- **Color Scheme Sync Fix / 配色方案同步修复** — Fixed `_syncNoteTheme` using wrong selectors (`.fn-text`→`.global-note-text`), color scheme changes in panel now correctly sync to inline notes / 修复配色方案切换时内嵌笔记颜色不同步的问题
+- **Related Notes → Related Files / 相关笔记改为相关文档** — Renamed "相关笔记" to "相关文档" (Related Files) with document count displayed after the title / "相关笔记"更名为"相关文档"，标题后显示文档数量
+- **Related File Name Truncation / 相关文档名称截断** — Long file names auto-truncate with ellipsis; no horizontal scrollbar in related files section / 长文件名自动截断显示省略号，不出现横向滚动条
+- **Settings Panel Drag / 设置面板拖拽** — Settings popup blank area supports drag to move position on both desktop and mobile; drag position preserved after MutationObserver reposition / 设置面板空白区域支持拖拽移动，拖动后位置不被重置
+- **Lookahead/Lookbehind Highlight Fix / lookahead规则高亮修复** — Removed `includes(_extractPlainText(term))` fallback in related highlights matching; regex like `意识(?!到|不)` no longer incorrectly matches "意识到"/"意识不" / 移除纯文本包含匹配fallback，lookahead规则不再错误匹配排除文本
+- **Regex Rule Chip Display / 正则词chip显示修复** — Added `_regexMatch` matching condition for selected text; regex rules like `bc|d` and `意识(?!到|不)` now correctly show chips when text is selected / 添加正则匹配条件，正则词关键词选中后正确显示chip
+- **Chinese Class Name Scheme Fix / 中文类名配色方案修复** — Class name regex changed from `[a-zA-Z0-9_-]+` to `[\w\u4e00-\u9fff-]+`; Chinese class names like `.蓝眼泪` now correctly show "Update" button instead of "Save as New" / 类名正则支持中文，中文类名配色方案按钮正确显示"更新"
+- **Inline Note Scroll Fix / 内嵌笔记滚动修复** — Card uses `overflow:hidden` with text area scrolling independently; timestamp fixed at bottom; no double scrollbar in edit mode / 卡片overflow:hidden，文本区域独立滚动，时间戳固定底部，编辑时无双滚动条
+- **Inline Note Edit Height Fix / 内嵌笔记编辑高度修复** — Card height locked before entering edit mode; `_floatSize` saves actual height instead of `'auto'`; height restored after restart / 编辑前锁定卡片高度，保存实际高度而非'auto'，重启后恢复正常高度
+
+## v1.9.9.14 (2026-07-23)
+
+- **Sentence Length Threshold / 句子长度阈值** — Added settings for Chinese character count (default 8) and English word count (default 3) to distinguish keyword rules from sentence rules; sentences displayed differently in panel / 新增中文字数（默认8）和英文词数（默认3）阈值设置，区分关键词与句子规则，句子在面板中以不同方式显示
+- **Remark Keyword Chips / 备注区域关键词chips** — Replaced pipe-separated keyword display with clickable chips; default shows first keyword, click to switch; related highlights follow active chip / 替代"|"分隔显示为可点击chips，默认显示第一个关键词，点击切换，相关高亮跟随当前chip
+- **SG Sentence Related Highlights / SG句子相关高亮** — Sentence rules shown as related highlights with source file name and jump-to-position; merged with OB highlights in same section, no separate display / 句子规则以相关高亮形式显示，带源文件名和跳转定位，与OB高亮合并在同一区域
+- **g/l Button / g/l按钮** — Added g/l button to floating ball action buttons for switching rules between global and file scope / 悬浮球操作按钮新增g/l按钮，在全局与文件规则间切换
+- **Unified c/i/g/l Buttons / 统一c/i/g/l按钮** — Simplified to plain text without border/background, vertically displayed below floating ball; unified desktop and mobile style / 简化为纯文本无背景边框，纵向挂在悬浮球下方，桌面端与手机端统一
+- **Desktop Click-to-Show Buttons / 桌面端点击显示按钮** — Click highlighted keyword directly shows c/i/g/l buttons without selecting text first / 点击高亮关键词直接显示按钮，无需先选中文本
+- **Mobile Button Display / 手机端按钮显示** — c/i/g/l buttons now shown on mobile when tapping highlighted keywords; removed desktop-only restriction / 手机端点击高亮关键词也显示c/i/g/l按钮，移除桌面端限制
+- **Cross-File Rule Matching / 跨文件规则匹配** — Selecting text now searches other files' rules via `_fileRulesData`, matching long sentences defined in different files / 选中文本时跨文件搜索规则，匹配其他文件中定义的长句
+- **i Button Keyword Support / i按钮关键词支持** — i button passes clicked keyword text to interlinear note input instead of requiring text selection / i按钮将点击的关键词文本传入行间注释输入，不再要求先选中文本
+- **Button Flash Fix / 按钮闪现修复** — Added `_keepRuleActionButtons` flag to prevent `selectionchange` from removing buttons immediately after click / 添加标记防止selectionchange在点击后立即移除按钮
+- **global-notes.json Auto-Repair / global-notes.json自动修复** — JSON parse failure now auto-truncates to longest valid prefix and saves; fixed `onunload` missing `defaultFnGroup` field causing concurrent write corruption / JSON解析失败时自动截断到最长合法前缀并保存；修复onunload缺少defaultFnGroup导致并发写入损坏
+
+## v1.9.9.13 (2026-07-22)
+
+- **Palette Button Scroll Switch / 调色盘按钮滚轮切换** — Scroll wheel on the color scheme palette button in inline notes and panel now directly switches color scheme with scheme name tooltip / 内嵌笔记和面板的调色盘按钮上滚轮可直接切换配色方案，显示方案名提示
+- **Shift+Scroll Theme Sync Fix / Shift+滚轮切换同步修复** — Fixed box-shadow, backdrop-filter, and texture layer not updating when switching color scheme via Shift+scroll on inline notes / 修复内嵌笔记Shift+滚轮切换方案时box-shadow、backdrop-filter、纹理层未更新的问题
+- **Exclude Related Notes Fix / 排除相关笔记功能修复** — Fixed `excludedRelatedNotesCategories` being stored but never consumed; related notes now correctly skip rules from excluded groups / 修复排除相关笔记分组只存不消费的bug，被排除分组的规则不再显示相关笔记
+- **Smart Save Button Logic / 保存按钮智能逻辑** — Save button shows "Update" when only class name or only property values changed; shows "Add as New Scheme" when both class name and values differ / 仅改类名或仅改属性值显示"更新"，类名和属性值都改显示"添加为新方案"
+- **i18n Translation / 国际化翻译** — Replaced ~90+ hardcoded Chinese strings with t() calls; added 70+ new translation keys (fn.*, kw.*, cmd.*, other.*, font.*); removed 25+ Chinese fallbacks / 替换约90+处硬编码中文为t()调用，新增70+翻译key，移除25+处中文fallback
+- **Cross-View Theme Sync / 跨视图配色同步** — Color scheme changes in panel/inline/popout now instantly sync to all other views via `_syncNoteTheme` / 面板/内嵌/独立窗口配色切换后即时同步到其他视图
+- **Panel Note Card Attributes / 面板笔记卡片属性** — Added `fn-panel-card` class and `data-note-id` attribute to panel note cards for reliable cross-view identification / 面板笔记卡片添加类名和data属性，确保跨视图识别
+- **Inline Right-Click Panel Sync / 内嵌右键面板同步** — Delete note, show/hide floating, move to group operations in inline right-click menu now instantly refresh panel / 内嵌笔记右键菜单中删除/显隐/移动分组操作后即时刷新面板
+
+## v1.9.9.12 (2026-07-22)
+
+- **Panel Remark Double-Click Fix / 面板备注双击编辑修复** — Added container-level dblclick event delegation in `renderRemarkContent` so all remark elements (including AI question entries and non-masonry remarks) respond to double-click editing, not just masonry card remarks / 在`renderRemarkContent`中添加container级dblclick事件委托，所有备注元素（含AI问题条目和非masonry备注）均可双击编辑
+- **Color Scheme Name Tooltip / 配色方案名提示** — Shift+scroll on floating notes now shows the scheme id as a temporary tooltip; works in both inline cards and popout windows / 悬浮笔记Shift+滚轮切换配色时显示方案名提示；内嵌卡片和独立窗口均支持
+- **Inline Note Tooltip Position Fix / 内嵌笔记tooltip定位修复** — Tooltip changed to `position:fixed` on `document.body` with `getBoundingClientRect` positioning, preventing accidental change of card `position:fixed` to `relative` which caused the note window to disappear / tooltip改为fixed定位挂载到body，避免误将卡片position改为relative导致窗口消失
+- **Inline Note Tooltip Cleanup / 内嵌笔记tooltip清理** — Tooltip stored on `card._schemeTip` to prevent duplicate creation on continuous scrolling; `card.remove()` overridden to auto-cleanup tooltip and timer when note closes / tip存储在card属性上避免连续滚动重复创建；覆写remove方法在关闭时自动清理tip和定时器
+
+## v1.9.9.11 (2026-07-22)
+
+- **Custom Schemes Migration / 自定义方案迁移** — Moved `customColorSchemes` from `global-notes.json` to `color-schemes.json`; old `{bg,text}` format converted to CSS rules; `sg-float-` prefix trimmed / 自定义配色从`global-notes.json`迁移到`color-schemes.json`；旧格式转为CSS规则；修剪`sg-float-`前缀
+- **Smart Save Button / 智能保存按钮** — Save button hidden when no changes; shows "更新" when editing existing scheme, "保存为新方案" when creating new; class name changes correctly update instead of creating duplicates / 无变化时隐藏；编辑已有方案显示"更新"，新建显示"保存为新方案"；类名变更时正确更新而非新增
+- **Unified Color Schemes / 统一配色方案** — New notes cycle through `colorSchemePresets` instead of hardcoded themes; removed `_panelThemes`, `_floatNoteThemes`, and popout `themes` arrays; all theme derivation now uses `schemeToTheme` from `colorSchemePresets` / 新建笔记循环使用配色方案预设；移除硬编码主题数组；所有主题推导统一使用`schemeToTheme`
+- **Close Button Enhancement / 关闭按钮增强** — Tooltip shows "单击关闭/中键点击删除"; middle-click deletes note from `globalNotes`; works in both inline and popout windows / tooltip显示操作提示；中键从globalNotes删除笔记；内嵌和独立窗口均支持
+- **Mobile Fixes / 手机端修复** — Color scheme popup now draggable via touch events; inline display button visible on mobile (previously desktop-only) / 配色弹窗支持触摸拖动；内嵌显示按钮在手机端可见
+- **Related Keywords Per-Section / 相关词按分组显示** — Related keyword chips now render per-rule section (before 3 buttons) instead of all merged at bottom / 相关词按关键词分组渲染在各自3按钮上方，而非全部堆在底部
+- **Remove + Button / 移除+按钮** — Removed "+" button from color scheme popup header / 移除配色弹窗右上角+按钮
+- **Bug Fixes / 错误修复** — Fixed `inputValue is not defined` in `applyZoom`; fixed `insertBefore` error when section not in DOM; middle-click delete no longer closes panel / 修复`applyZoom`中未定义变量；修复`insertBefore`错误；中键删除不再关闭面板
+
+## v1.9.9.10 (2026-07-21)
+
+- **Color Scheme CSS Format / 配色方案CSS格式** — Scheme data refactored from custom JSON (`{bg,text,glow,glass,texture}`) to standard CSS rules (`.scheme-id { background:...; color:...; box-shadow:...; }`); id extracted from class name; no class name = invalid / 配色方案数据从自定义JSON重构为标准CSS规则格式；id从类名提取；无类名视为无效
+- **Remove Scheme Grouping / 移除分组** — Removed `cat` field and grouped rendering; all 25 presets now display in a flat 5-column grid / 移除cat字段和分组渲染，25个预设平铺5列网格显示
+- **Trim Class Names / 修剪类名** — Shortened CSS class names from `.sg-float-vintage-01` to `.vintage-01` for cleaner editing / CSS类名从`.sg-float-vintage-01`修剪为`.vintage-01`
+- **Editable Scheme Code / 可编辑方案代码** — Read-only `<pre>` replaced with shared textarea; edits preview in real-time via `parseSchemeCss`; clicking a swatch shows its CSS rule / 只读`<pre>`替换为共用textarea；编辑时通过parseSchemeCss实时预览；点击色卡显示CSS规则
+- **Add Scheme Button / 添加方案按钮** — "CSS" toggle replaced with "+" button; clears textarea for new scheme input; "Save" button parses CSS and adds to grid / "CSS"切换按钮替换为"+"按钮；清空textarea等待输入；"保存"按钮解析CSS并添加到网格
+- **Middle-Click Delete / 中键删除方案** — Middle-click a swatch to delete its scheme; confirmation dialog with "don't ask again" checkbox (stored in localStorage) / 中键点击色卡删除方案；确认弹窗含"不再询问"复选框（存localStorage）
+- **Swatch Selection Border Fix / 色卡选中边框修复** — Used `selectedSwatch` variable to track selection instead of unreliable style attribute matching / 用selectedSwatch变量追踪选中状态，替代不可靠的style属性匹配
+- **Popout Palette Button Removed / 移除独立窗口配色按钮** — Removed non-functional palette button from popout window titlebar / 移除独立窗口标题栏中不工作的配色按钮
+- **Popout Texture z-index Fix / 独立窗口纹理z-index修复** — Changed texture layer z-index from -1 to 1; added z-index:2 to titlebar/content/timestamp for interaction / 纹理层z-index从-1改为1；titlebar/content/timestamp加z-index:2确保可交互
+- **Legacy Format Compatibility / 旧格式兼容** — `schemeToTheme` now handles both new CSS format and legacy `{bg,text}` format for backward compatibility / schemeToTheme兼容新CSS格式和旧{bg,text}格式
+- **Custom Schemes Migration / 自定义方案迁移** — 6 existing custom schemes auto-migrated from `{bg,text}` to CSS rule format / 6个现有自定义方案自动从{bg,text}迁移为CSS规则格式
+
+## v1.9.9.9 (2026-07-20)
+
+- **SVG Action Buttons / SVG操作按钮** — Replaced emoji (📌📋✕) with SVG vector icons for inline notes, panel notes, and popout windows; consistent 24px touch targets; hover highlight with subtle background; auto-adapts icon color to note theme (light/dark) / 内嵌笔记、面板笔记、独立窗口的emoji按钮替换为SVG矢量图标；统一24px点击区域；悬浮微妙高亮；图标颜色自适应笔记主题深浅
+- **Inline Note Action Bar / 内嵌笔记操作栏** — Top-positioned floating action bar with semi-transparent background and backdrop blur; hidden during editing; double-click anywhere on card to enter edit mode; min-height increased to 80px / 顶部悬浮操作栏，半透明背景+模糊；编辑时隐藏；双击卡片任意位置进入编辑；最小高度增至80px
+- **Panel Note Action Bar / 面板笔记操作栏** — Same SVG icon style as inline notes; top-positioned with theme-adaptive colors; added timestamp at bottom of each card / 与内嵌笔记一致的SVG图标样式；顶部悬浮，颜色自适应主题；每张卡片底部添加时间戳
+- **Popout Window Buttons / 独立窗口按钮** — SVG icons replace emoji in titlebar; always visible with theme-color background; removed blur effect for cleaner drag area / 标题栏SVG图标替代emoji；始终可见，使用主题色背景；移除模糊效果保持拖动区域清晰
+- **Default Group Display / 默认分组显示** — Right-click "全部"/"未分组"/custom groups to set as default; persisted via `defaultFnGroup`; auto-selects on panel open / 右键"全部"/"未分组"/自定义分组可设为默认显示；通过`defaultFnGroup`持久化；打开面板时自动选中
+- **Dynamic Masonry Columns / 动态瀑布流列数** — Panel note masonry layout now dynamically adjusts column count based on panel width (1 column per 160px); ResizeObserver for real-time updates / 面板笔记瀑布流根据面板宽度动态调整列数（每160px一列）；ResizeObserver实时更新
+- **JSON Data Safety / JSON数据安全** — Fixed global-notes.json corruption from double closing braces; auto-restore from backup on parse failure / 修复global-notes.json双重闭合花括号损坏；解析失败时自动从备份恢复
+
+- **Floating Note Data Safety / 悬浮笔记数据安全** — Added sync save on plugin unload, snapshot-based write to prevent race condition overwriting, backup to `.bak.json` before each write, auto-restore from backup when main file is empty / 插件卸载时同步保存数据，写入时使用快照防止竞态覆盖，每次写入前备份到`.bak.json`，主文件为空时自动从备份恢复
+- **Floating Note Inline Display / 悬浮笔记内嵌显示** — Inline notes auto-adjust height to show full text; min-width 200px, max-width 480px; scrollable when content overflows; timestamp hidden during editing / 内嵌笔记高度自适应显示全文；最小宽度200px，最大宽度480px；内容超出可滚动；编辑时隐藏时间戳
+- **Floating Note Preview / 悬浮笔记预览** — Switched from Markdown rendering to plain text to eliminate unwanted paragraph margins and properly display blank lines / 预览改用纯文本替代Markdown渲染，消除非手动添加的段落边距，空行正常显示
+- **Floating Note Edit Height / 悬浮笔记编辑高度** — Edit textarea auto-resizes based on content line count with minimum 80px height, fixing single-line-only issue after restart / 编辑textarea根据内容行数自适应高度（最低80px），修复重启后编辑高度仅一行的问题
+- **Panel Floating Notes Layout / 面板悬浮笔记布局** — Changed from fixed 2-column to 3-column masonry layout; action buttons (📌📋) shown on hover only, hidden on mouse leave; added copy button / 从固定两栏改为三栏瀑布流；操作按钮（📌📋）悬浮时显示、离开隐藏；添加复制按钮
+
+## v1.9.9.7 (2026-07-20)
+
+- **Floating Note Inline Display / 悬浮笔记内嵌显示** — Inline floating notes now support Ctrl+Shift+Alt+scroll wheel adjustments (opacity/theme/font size), matching popout window functionality / 内嵌悬浮笔记支持Ctrl/Shift/Alt+滚轮调整（透明度/主题/字号），与独立窗口一致
+- **Floating Note Popout Window / 悬浮笔记独立窗口** — Popout windows are always-on-top, no longer use parent window relationship to avoid activating Obsidian on focus; close button hides note (preserves data) instead of deleting; back button (↩) returns to inline display with preserved window size / 独立窗口始终置顶，移除父窗口关系避免聚焦时激活Obsidian；关闭按钮改为隐藏而非删除；返回按钮切回内嵌并保持窗口大小
+- **Floating Note Themes / 悬浮笔记配色** — Added 5 new color schemes (steel blue, crimson, gold, teal, mauve); increased background opacity for better readability; inline notes now use same theme colors as popout; custom color editor via right-click menu (replaces prompt() which is unsupported in Electron) / 新增5组配色（钢蓝/赤红/金黄/青绿/紫粉）；提高背景不透明度改善可读性；内嵌笔记使用与独立窗口相同的配色；右键菜单添加自定义配色编辑器（替代Electron不支持的prompt()）
+- **Floating Note Editing / 悬浮笔记编辑** — Double-click to edit places cursor at end of text instead of selecting all; edit area expands to fill card edges; popout window uses textarea overlay instead of contentEditable for reliable re-editing / 双击编辑时光标放在文本末尾而非选中全文；编辑区扩展到卡片边缘；独立窗口改用textarea覆盖替代contentEditable，修复再次双击无法编辑
+- **Floating Note Resize Fix / 悬浮笔记调整大小修复** — Card mousedown no longer intercepts browser native resize handle (bottom-right 16px zone) / 卡片mousedown不再拦截浏览器原生resize手柄（右下角16px区域）
+- **Floating Note Pin Button / 悬浮笔记📌按钮** — Panel notes have 📌 icon: left-click for inline display, middle-click for popout window; inline notes have 📌 button to switch to popout / 面板笔记📌图标：左键内嵌显示、中键独立窗口；内嵌笔记📌按钮切换到独立窗口
+- **Floating Note Copy Button / 悬浮笔记复制按钮** — Added copy button (📋) to inline notes (hover to show) and popout window bar / 内嵌笔记添加复制按钮（悬浮显示），独立窗口bar添加复制按钮
+- **Floating Note Timestamp / 悬浮笔记时间戳** — Each note shows creation timestamp at bottom (year/month/day hour:minute) / 每条笔记底部显示创建时间戳（年/月/日 时:分）
+- **Floating Note Markdown / 悬浮笔记Markdown** — Inline notes render text as Markdown using Obsidian's MarkdownRenderer / 内嵌笔记使用Obsidian的MarkdownRenderer渲染Markdown文本
+- **Floating Note Groups / 悬浮笔记分组** — Added note grouping in panel with default "归档/Archive" group; add/rename/delete groups via right-click; "Move to group" in note right-click menu; group chips use rounded style / 面板添加笔记分组功能，默认"归档"分组；右键添加/重命名/删除分组；笔记右键"移动到分组"；分组chip使用圆角样式
+- **Panel Right-Click Fix / 面板右键修复** — Right-clicking elements under keywords/css/floating notes chips now pins the chip to prevent auto-hide; mouseleave/mouseout excludes .menu targets / 右键点击keywords/css/悬浮笔记chip下的元素时固定chip防止自动隐藏；mouseleave/mouseout排除.menu目标
+- **New Note Defaults / 新笔记默认值** — New notes default to 180×140px size and cycle through color schemes / 新笔记默认180×140px大小，循环使用配色方案
+
+## v1.9.9.6 (2026-07-20)
+
+- **Floating Notes Chip Close Fix / 悬浮笔记Chip关闭修复** — Moved fnContainer from inside chipBar to after chipBar (`chipBar.after`), fixing mouseout event being intercepted by `.rch-top-chip-bar` check when leaving from bottom / 将fnContainer从chipBar内部移到chipBar外部，修复从下方离开时mouseout事件被chipBar检查拦截导致不自动关闭
+- **Floating Notes Chip Position Fix / 悬浮笔记Chip位置修复** — Added `chipBar.after(fnContainer)` position correction in updateDisplay, ensuring fnContainer always stays directly below chipBar after DOM rebuilds / 在updateDisplay中添加位置修正，确保DOM重建后fnContainer始终紧跟chipBar
+
+## v1.9.9.5 (2026-07-20)
+
+- **Keyword Bar Position & Visibility / 关键词栏位置与可见性** — keywordBar moved inside chipBar with `flex-basis:100%` for correct positioning below chips; only visible when style chip is active (checked via `data-active` attribute) / keywordBar移入chipBar内部用flex-basis:100%换行定位；仅在style chip激活时显示
+- **Chip Bar Background Removed / 移除chipBar背景** — Removed background from chipBar, keywordBar, and rules section for cleaner look / 移除chipBar、keywordBar、rules区域的背景色
+- **Chip Event Delegation Fix / Chip事件委托修复** — Added `e.target.closest('.rch-top-chip-bar')` guard in `mouseover`/`mouseout` handlers to prevent keywordBar button events from triggering `scheduleHide()` / 在事件委托中排除chipBar内部事件，防止关键词按钮触发收起
+- **Chip mouseleave Fix / Chip离开事件修复** — `mouseleave` on chip now checks `e.relatedTarget` — if mouse moves to another element inside chipBar (keywordBar, other chip), `scheduleHide()` is not triggered / chip的mouseleave检查relatedTarget，鼠标在chipBar内移动时不触发收起
+
+## v1.9.9.4 (2026-07-20)
+
+- **Keyword Switch Bar / 关键词切换栏** — Added keyword button bar below CSS chip bar when multiple rules match; default shows exact-match keyword's styles, click to switch other keywords' styles / 多规则匹配时在CSS chip bar下方显示关键词切换按钮，默认显示精确匹配关键词的样式，点击切换其他关键词样式
+- **Current Editing Rule Priority / 当前编辑规则优先级** — `currentEditingRule` now prioritizes exact match over first-in-array, then longest match / `currentEditingRule`优先精确匹配，其次最长匹配，不再取数组第一个
+- **Style Click State Update / 样式点击状态更新** — After clicking a style, `currentEditingRule` and `highlightMatchingRuleButtons` are now updated in all three branches (existing rule / global rule / new rule), fixing file rule group not appearing after applying style to global rule keyword / 样式点击后三个分支都更新`currentEditingRule`并调用`highlightMatchingRuleButtons`，修复全局规则点击其他样式后文件规则分组不显示
+- **Chip Event Delegation / Chip事件委托** — Changed `bindChip` from direct `mouseenter`/`mouseleave` to event delegation via `mouseover`/`mouseout` + `closest(selector)`, fixing collapsed groups after DOM rebuild from section clear/re-add / 改用事件委托替代直接绑定，修复DOM重建后鼠标移入内容区导致展开分组收起
+
+## v1.9.9.3 (2026-07-20)
+
+- **Regex Pipe Split Fix / 正则管道符分割修复** — Added `_splitRegexPipes()` function with bracket-depth awareness; replaced 31 occurrences of `regex.split('|')` to correctly handle `|` inside lookbehind/lookahead/capturing groups (e.g., `(?<!拉|欧)美国|United States` no longer splits incorrectly) / 新增`_splitRegexPipes()`括号深度感知分割函数，替换31处`regex.split('|')`，修复lookbehind等括号内含`|`时被错误拆分的问题
+- **Remove Group Double-Click / 移除分组双击操作** — Removed double-click on style group title (move to single-display) and double-click on collapsed tab (pin back to normal display) / 移除双击样式分组标题移动到单显区、双击标签钉回常显的操作
+- **Remove PinToNormalDisplay Menu / 移除钉回常显右键选项** — Removed "Pin to normal display" context menu option from collapsed category tabs / 移除折叠标签右键菜单中的"钉回常显区"选项
+
+## v1.9.9.2 (2026-07-20)
+
+- **Sidebar Panel Drag Fix / 侧边栏面板拖动修复** — Fixed title bar cursor and drag not being disabled when panel is in sidebar; changed `_inSidebar` from static const to dynamic `isInSidebar()` check using `_sidebarView.isVisible()`, and update cursor on sidebar open/close / 修复面板移入侧边栏后标题栏仍显示抓手指针且可拖动的问题，将静态_inSidebar改为动态isInSidebar()检测，侧边栏开关时更新cursor
+- **Keyword Click Group Auto-Switch / 关键词点击分组自动切换** — Removed `activeGlobalGroup` and `activeTabCategory` "don't override" logic; clicking a new keyword now automatically switches to the matching rule/style group instead of staying on the manually selected group / 移除activeGlobalGroup和activeTabCategory的"不覆盖"逻辑，点击新关键词时自动切换到匹配的规则/样式分组
+- **Panel Scroll Position Fix / 面板滚动位置修复** — Removed `scrollIntoView` after showing inline remarks; now preserves scroll position so top chip bar stays visible when keyword remarks are displayed / 移除备注显示后的scrollIntoView，改为保存恢复滚动位置，确保顶部chip栏不被滚出视口
+- **Global Notes Concurrent Write Fix / 全局笔记并发写入修复** — Added write lock to `saveGlobalNotes()` to prevent file corruption from overlapping async writes / 为saveGlobalNotes添加写入锁，防止并发异步写入导致文件损坏
+
+## v1.9.9.1 (2026-07-19)
+
+- **Ungrouped i18n Fix / 未分组国际化修复** — Keywords chip area "未分组" now uses `t()` function, correctly displaying "Ungrouped" in English mode / 关键词chip区域的"未分组"改用t()函数，英文模式下正确显示"Ungrouped"
+- **Keywords Group Default Name / 关键词分组默认名称** — English default name changed from "New Styles" to "new keywords group" for semantic accuracy / 英文默认名称从"New Styles"改为"new keywords group"，语义更准确
+- **CSS Group Default Name / CSS分组默认名称** — CSS chip "+" button now presets "new Styles group" as default group name / CSS chip"+"按钮添加分组时预设名称改为"new Styles group"
+- **Sidebar SG Icon Auto-Show / 侧边栏SG图标自动显示** — New install now automatically shows SG icon in right sidebar via `ensureSidebarView()` on layout ready / 新装插件时通过`ensureSidebarView()`自动在右侧面板显示SG图标
+- **Main Panel Default Size / 主面板默认尺寸** — Default main panel size changed from 1000×80vh to 800×500 for better initial display / 主面板默认尺寸从1000×80vh改为800×500
+- **Ribbon Icon SG / 左侧功能区图标SG** — Left ribbon icon changed from highlighter to swiftglossa-icon displaying "SG" text / 左侧功能区图标从highlighter改为swiftglossa-icon显示"SG"文字
+
+## v1.9.9 (2026-07-19)
 
 - **Floating Note Mobile Drag / 悬浮笔记手机拖动** — Added touchstart/touchmove/touchend handlers to global-note-card, enabling drag-to-move on mobile devices / 为global-note-card添加触摸事件处理，手机端可拖动悬浮笔记位置
 - **Remark Buttons Size Reduction / 备注按钮缩小** — Reduced remark popup action buttons (?、+、⬡) diameter from 36px to 26px on desktop for more compact layout / 桌面版备注弹窗操作按钮(?、+、⬡)直径从36px减至26px，布局更紧凑

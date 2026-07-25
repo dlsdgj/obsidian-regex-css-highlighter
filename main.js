@@ -1,8 +1,6 @@
-﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover, PluginSettingTab, ItemView, WorkspaceLeaf } = require("obsidian");
-const { Decoration, EditorView } = require("@codemirror/view");
-const { StateField, StateEffect } = require("@codemirror/state");
-
-const hlMarshmallowEffect = StateEffect.define();
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover, PluginSettingTab, ItemView, WorkspaceLeaf } = require('obsidian');
+const { StateEffect, StateField } = require('@codemirror/state');
+const { EditorView, Decoration } = require('@codemirror/view');
 const hlMarshmallowField = StateField.define({
   create() { return Decoration.none; },
   update(decorations, tr) {
@@ -14,6 +12,91 @@ const hlMarshmallowField = StateField.define({
   },
   provide: field => EditorView.decorations.from(field)
 });
+
+const _SVG_PIN = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>';
+const _SVG_PIN_OFF = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>';
+const _SVG_REMARK_HAS = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+const _SVG_REMARK_NO = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>';
+const _SVG_QUESTION = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+const _TOGGLE_DOWN = '▽';
+const _TOGGLE_RIGHT = '▷';
+const _createSectionToggle = (plugin, sectionKey, contentEl, leftGroupEl) => {
+  const toggle = document.createElement('span');
+  const isRemembered = plugin._sectionFoldRemembered[sectionKey];
+  const initialCollapsed = isRemembered ? !!plugin._sectionFoldState[sectionKey] : false;
+  toggle.textContent = initialCollapsed ? _TOGGLE_RIGHT : _TOGGLE_DOWN;
+  toggle.style.cssText = 'cursor:pointer;color:var(--text-muted);font-size:12px;margin-right:2px;flex-shrink:0;';
+  if (initialCollapsed) { contentEl.style.display = 'none'; }
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isCollapsed = contentEl.style.display === 'none';
+    contentEl.style.display = isCollapsed ? '' : 'none';
+    toggle.textContent = isCollapsed ? _TOGGLE_DOWN : _TOGGLE_RIGHT;
+    if (plugin._sectionFoldRemembered[sectionKey]) {
+      plugin._sectionFoldState[sectionKey] = !isCollapsed;
+    }
+  });
+  toggle.addEventListener('contextmenu', (cme) => {
+    cme.preventDefault(); cme.stopPropagation();
+    const menu = new (require('obsidian')).Menu();
+    menu.addItem((mi) => {
+      mi.setTitle(t('remark.rememberFold'));
+      mi.setChecked(!!plugin._sectionFoldRemembered[sectionKey]);
+      mi.onClick(() => {
+        plugin._sectionFoldRemembered[sectionKey] = !plugin._sectionFoldRemembered[sectionKey];
+        if (!plugin._sectionFoldRemembered[sectionKey]) {
+          delete plugin._sectionFoldState[sectionKey];
+        } else {
+          plugin._sectionFoldState[sectionKey] = contentEl.style.display === 'none';
+        }
+      });
+    });
+    menu.showAtMouseEvent(cme);
+  });
+  // 插入到leftGroupEl最前面（与标题在同一组，避免space-between导致标题居中）
+  if (leftGroupEl.firstChild) {
+    leftGroupEl.insertBefore(toggle, leftGroupEl.firstChild);
+  } else {
+    leftGroupEl.appendChild(toggle);
+  }
+  return toggle;
+};
+const _fmtRemarkTs = (ts) => { if (!ts) return ''; const d = new Date(ts); const pad = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const _appendRemarkTs = (container, ts) => { if (!ts) return; const el = document.createElement('span'); el.className = 'hl-remark-ts'; el.textContent = _fmtRemarkTs(ts); el.style.cssText = 'display:block;text-align:right;font-size:0.7em;opacity:0.4;margin-top:2px;user-select:none;'; container.appendChild(el); };
+
+function _splitRegexPipes(pattern) {
+  const parts = [];
+  let depth = 0;
+  let inClass = false;
+  let current = '';
+  for (let i = 0; i < pattern.length; i++) {
+    const ch = pattern[i];
+    if (ch === '\\' && i + 1 < pattern.length) {
+      current += ch + pattern[++i];
+      continue;
+    }
+    if (inClass) {
+      current += ch;
+      if (ch === ']') inClass = false;
+      continue;
+    }
+    if (ch === '[') {
+      inClass = true;
+      current += ch;
+      continue;
+    }
+    if (ch === '(') { depth++; current += ch; continue; }
+    if (ch === ')') { depth = Math.max(0, depth - 1); current += ch; continue; }
+    if (ch === '|' && depth === 0) {
+      parts.push(current);
+      current = '';
+      continue;
+    }
+    current += ch;
+  }
+  parts.push(current);
+  return parts;
+}
 
 function _extractPlainText(term) {
   try {
@@ -32,6 +115,55 @@ function _regexMatch(text, term) {
   } catch {
     return text.includes(_extractPlainText(term));
   }
+}
+
+// 统一构建文本中关键词匹配区间（用于相关高亮渲染）
+// 从所有规则中提取plainText，找到文本中的匹配，合并重叠区间
+function _buildKeywordRanges(text, allRules) {
+  const ranges = [];
+  for (const rule of allRules) {
+    if (rule.disabled) continue;
+    const parts = _splitRegexPipes(rule.regex);
+    const allSimple = parts.every(p => !/[.*+?^${}()[\]\\]/.test(p) && p.length >= 2);
+    if (!allSimple) continue;
+    for (const pt of parts) {
+      const trimmed = pt.trim();
+      if (!trimmed || trimmed.length < 2) continue;
+      let startIdx = 0;
+      while (true) {
+        const idx = text.indexOf(trimmed, startIdx);
+        if (idx === -1) break;
+        ranges.push({ start: idx, end: idx + trimmed.length, cssClass: rule.cssClass || '', regex: rule.regex });
+        startIdx = idx + trimmed.length;
+      }
+    }
+  }
+  if (ranges.length === 0) return [];
+  ranges.sort((a, b) => a.start - b.start || b.end - a.end);
+  const merged = [];
+  for (const r of ranges) {
+    if (merged.length > 0 && merged[merged.length-1].end >= r.start) {
+      const prev = merged[merged.length-1];
+      prev.end = Math.max(prev.end, r.end);
+      // 重叠时保留较短匹配的样式（更精确的关键词）
+    } else {
+      merged.push({ ...r });
+    }
+  }
+  return merged;
+}
+
+function _isSentenceRule(regex, settings) {
+  const plain = _extractPlainText(regex);
+  const cnThreshold = settings?.sentenceThresholdCN !== undefined ? settings.sentenceThresholdCN : 8;
+  const enThreshold = settings?.sentenceThresholdEN !== undefined ? settings.sentenceThresholdEN : 3;
+  const cnChars = (plain.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
+  if (cnChars >= cnThreshold) return true;
+  const enWords = (plain.match(/[a-zA-Z]+/g) || []).length;
+  if (enWords >= enThreshold && cnChars === 0) return true;
+  const totalLen = plain.length;
+  if (totalLen >= cnThreshold * 2 && cnChars === 0 && enWords === 0) return true;
+  return false;
 }
 
 // 直接将CSS规则追加到动态样式元素，确保新样式立即生效（无需重新读取文件）
@@ -57,6 +189,94 @@ document.head.appendChild(_counterStyle);
 // 跨平台文件操作工具：桌面端用 Node.js fs 模块（快速），手机端用 Obsidian Vault Adapter（兼容）
 const _isDesktop = typeof process !== 'undefined' && process.versions && !!process.versions.electron;
 let _remarkMasonryMode = false; // will be synced from settings on load
+let _remarkMasonryAuto = true;
+function _calcMasonry(links, plugin) {
+  if (plugin?.settings?.remarkMasonryAuto) {
+    return (links && links.length > 1);
+  }
+  return _remarkMasonryMode;
+}
+
+// 笔记误删恢复：在悬浮球附近显示5秒脉冲倒计时圆按钮
+function _showUndoDeletePulse(savedNote, plugin, source) {
+  // 移除已有的倒计时按钮
+  const existing = document.getElementById('undo-delete-pulse');
+  if (existing) existing.remove();
+  // 注入动画样式
+  if (!document.getElementById('undo-delete-pulse-style')) {
+    const s = document.createElement('style');
+    s.id = 'undo-delete-pulse-style';
+    s.textContent = '@keyframes undo-pulse-beat{0%{transform:scale(1.2)}100%{transform:scale(1)}}';
+    document.head.appendChild(s);
+  }
+  const btn = document.createElement('div');
+  btn.id = 'undo-delete-pulse';
+  btn.title = '↩ ' + (source === 'panel' ? t('fn.undoDelete') || '恢复笔记' : '');
+  btn.style.cssText = 'position:fixed;z-index:1300;cursor:pointer;transition:opacity 0.3s;';
+  const circle = document.createElement('div');
+  let remaining = 5;
+  const undoSize = _isDesktop ? 20 : 36;
+  circle.textContent = remaining;
+  circle.style.cssText = `width:${undoSize}px;height:${undoSize}px;border-radius:50%;background:rgba(216,90,48,0.9);color:#4A1B0C;display:flex;align-items:center;justify-content:center;font-size:${_isDesktop ? '10px' : '14px'};font-weight:600;animation:undo-pulse-beat 1s ease-out;box-shadow:0 4px 16px rgba(216,90,48,0.4);`;
+  btn.appendChild(circle);
+  // 定位到悬浮球附近
+  const ball = document.getElementById('regex-highlighter-floating-ball');
+  if (ball) {
+    const ballRect = ball.getBoundingClientRect();
+    btn.style.left = (ballRect.right + 6) + 'px';
+    btn.style.top = (ballRect.top + ballRect.height / 2 - undoSize / 2) + 'px';
+  } else {
+    btn.style.right = '20px';
+    btn.style.bottom = '80px';
+  }
+  document.body.appendChild(btn);
+  let restored = false;
+  btn.addEventListener('click', () => {
+    if (restored) return;
+    restored = true;
+    clearInterval(timer);
+    plugin.globalNotes.push(savedNote);
+    plugin.saveGlobalNotes();
+    btn.style.opacity = '0';
+    setTimeout(() => btn.remove(), 300);
+    if (source === 'panel') {
+      plugin.renderGlobalNotesArea();
+    }
+    plugin._renderFloatNotesInPanel?.();
+  });
+  const timer = setInterval(() => {
+    remaining--;
+    if (restored) return;
+    if (remaining <= 0) {
+      clearInterval(timer);
+      btn.style.opacity = '0';
+      setTimeout(() => btn.remove(), 300);
+      return;
+    }
+    circle.textContent = remaining;
+    circle.style.animation = 'none';
+    void circle.offsetWidth; // 触发reflow
+    circle.style.animation = 'undo-pulse-beat 1s ease-out';
+  }, 1000);
+}
+
+// 内嵌笔记删除：直接移除卡片，显示脉冲恢复按钮
+function _undoDeleteNote(card, note, plugin) {
+  const savedNote = JSON.parse(JSON.stringify(note));
+  plugin.globalNotes = plugin.globalNotes.filter(n => n.id !== note.id);
+  plugin.saveGlobalNotes();
+  plugin._closeNotePopout(note.id);
+  card.style.transform = 'scale(0.95)';
+  card.style.opacity = '0';
+  setTimeout(() => card.remove(), 200);
+  plugin._renderFloatNotesInPanel?.();
+  _showUndoDeletePulse(savedNote, plugin, 'inline');
+}
+
+// 面板笔记删除：直接移除条目，显示脉冲恢复按钮
+function _showPanelUndoDelete(card, deletedNote, plugin) {
+  _showUndoDeletePulse(deletedNote, plugin, 'panel');
+}
 const _nodeFs = _isDesktop ? require('fs') : null;
 const _nodePath = _isDesktop ? require('path') : null;
 const _CSS_REL_PATH = '.obsidian/plugins/Regex-Css-Highlighter/styles.css';
@@ -200,13 +420,17 @@ const i18n = {
     'main.openStyleCategories': '打开样式分组',
     'main.styleChipLabel': 'CSS',
     'main.rulesChipLabel': 'KEY WORDS',
-    'main.relatedNotes': '📎 相关笔记',
+    'main.relatedNotes': '📎 相关文档',
     'main.relatedHighlights': '🖍 相关高亮',
     'main.highlightDbReady': 'SwiftGlossa: 高亮数据库构建完成',
     'settings.showRelatedNotes': '显示相关笔记',
     'settings.showRelatedNotesDesc': '选中/点击关键词时在备注区域上方显示相关笔记链接',
     'settings.showRelatedHighlights': '显示相关高亮',
     'settings.showRelatedHighlightsDesc': '选中/点击关键词时显示匹配的Obsidian原生高亮文本',
+    'settings.sentenceThreshold': '句子长度阈值',
+    'settings.sentenceThresholdDesc': '超过此长度的规则视为"句子"，在面板中以相关高亮形式显示而非关键词chip',
+    'settings.sentenceThresholdCN': '中文字数',
+    'settings.sentenceThresholdEN': '英文词数',
     'settings.mobileRemarkInSidebar': '手机端备注在侧边栏显示',
     'main.addGroup': '添加分组',
     'main.getMoreStyles': '获取更多样式',
@@ -248,6 +472,8 @@ const i18n = {
     'main.hideInFloatingBall': '在悬浮球中隐藏',
     'main.modifyDisplayText': '修改显示文字',
     'main.newGroupName': '新分组名称',
+    'main.newGroup': '新样式分组',
+    'main.newRuleGroup': '新规则分组',
     'main.groupNameExists': '该分组名称已存在!',
     'main.groupNameEmpty': '分组名称不能为空!',
     'main.groupCreated': '新分组已创建',
@@ -335,6 +561,7 @@ const i18n = {
     'main.localRuleExists': '局部规则中已存在相同规则',
     'main.globalRuleExistsShort': '全局规则中已存在相同规则',
     'main.doubleClickToEditRemark': '双击编辑备注',
+    'main.doubleClickToEdit': '双击编辑',
     'main.noSearchText': '无搜索词',
     'main.noTitle': '无标题',
     'main.copyRemark': '复制备注',
@@ -505,6 +732,13 @@ const i18n = {
     'remark.aiBreakdownFailed': 'AI 拆解失败',
     'remark.aiBreakdownQuestion': '请AI拆解此问题',
     'remark.masonryMode': '瀑布流模式',
+    'remark.masonryAuto': '自动',
+    'remark.keywordRemarks': '📝 关键词备注',
+    'remark.relatedKeywords': '🔗 关联词',
+    'remark.aiQuestions': '🤖 AI 提问',
+    'remark.aiReplyPlaceholder': '回复AI...',
+    'remark.toggleFold': '折叠/展开',
+    'remark.rememberFold': '记住展开/折叠',
     'settings.aiSettings': 'AI设置',
     'settings.aiName': 'AI名称',
     'settings.aiApiUrl': 'API地址',
@@ -683,6 +917,10 @@ const i18n = {
     'main.batchModeDesc': '进入/退出批量管理模式，批量选择和移动样式',
     'main.batchManageStyles': '批量管理样式',
     'main.closePanel': '关闭面板',
+    'main.freezeMode': '冻结模式：不响应编辑器点击/选中',
+    'main.freezeModeOff': '取消冻结',
+    'main.keywordHistory': '历史关键词',
+    'main.clearHistory': '清空',
     'main.moveToSidebar': '移至侧边栏',
     'main.openMainPanelFirst': '请先打开主面板',
     'main.regexLabel': '正则表达式',
@@ -973,6 +1211,11 @@ const i18n = {
     'main.noMatchForCount': '无可计数的匹配',
     'main.countAdded': '已添加计数',
     'main.countRemoved': '已移除计数',
+    'main.switchToLocal': '切换为文件规则',
+    'main.switchToGlobal': '切换为全局规则',
+    'main.glBtnTip': '左键切换 | 中键移除',
+    'main.switchedToLocal': '已切换为文件规则',
+    'main.switchedToGlobal': '已切换为全局规则',
     'floating.openMainPanel': '打开主面板',
     'floating.formatReplace': '格式替换',
     'floating.addRemark': '添加备注',
@@ -989,6 +1232,7 @@ const i18n = {
     'floating.toggleFloatingBall': '显示/隐藏悬浮球',
     'floating.hideTextStyles': '隐藏/显示文本样式',
     'floating.addFloatNote': '添加悬浮笔记',
+    'floating.notePinInline': '左键：内嵌显示 | 中键：独立窗口',
     'floating.manageSnippets': '管理 CSS Snippets',
     'floating.alwaysModeDesc': '常显模式：悬浮球始终显示在屏幕上',
     'floating.followModeDesc': '跟随选中模式：选中文字时悬浮球出现在鼠标位置附近',
@@ -1058,6 +1302,104 @@ const i18n = {
     'main.ruleDeleted': '已删除规则',
     'main.ruleToggled': '规则状态已切换',
     'main.movedToLocalRule': '已移到文件规则',
+    'fn.all': '全部',
+    'fn.ungrouped': '未分组',
+    'fn.renameGroup': '重命名分组',
+    'fn.newGroupName': '新分组名称:',
+    'fn.deleteGroup': '删除分组',
+    'fn.cancelDefault': '取消默认显示',
+    'fn.setDefault': '设为默认显示',
+    'fn.addGroup': '添加分组',
+    'fn.newGroupNamePlaceholder': '新分组名称',
+    'fn.newGroupDefault': '新分组',
+    'fn.addNoteFromBall': '在悬浮球选项中添加笔记',
+    'fn.empty': '(空)',
+    'fn.deleteNote': '删除笔记',
+    'fn.showFloat': '显示悬浮',
+    'fn.hideFloat': '隐藏悬浮',
+    'fn.popoutWindow': '弹出为独立窗口',
+    'fn.collapseNote': '折叠 / 缩略',
+    'fn.moveToGroup': '移动到分组',
+    'fn.noGroup': '(无分组)',
+    'fn.copyContent': '复制内容',
+    'fn.closeBtnTip': '单击关闭/中键点击删除',
+    'fn.backToInline': '返回内嵌显示',
+    'fn.editNote': '编辑笔记',
+    'fn.colorScheme': '配色方案',
+    'fn.deleteScheme': '删除方案',
+    'fn.noConfirmDelete': '不再询问',
+    'fn.delete': '删除',
+    'fn.cancel': '取消',
+    'fn.update': '更新',
+    'fn.saveAsNew': '保存为新方案',
+    'fn.excludeRelated': '排除相关笔记',
+    'fn.excludeRelatedActive': '✓ 排除相关笔记',
+    'kw.currentFile': '当前文件',
+    'kw.global': '(全局)',
+    'kw.local': '(文件)',
+    'kw.leftClickDelete': '左键: 删除规则',
+    'kw.leftClickApply': '左键: 应用样式',
+    'kw.remarkLabel': '备注:',
+    'kw.remarkEmpty': '空',
+    'cmd.openMainPanel': '打开主窗口',
+    'cmd.mergeClipboard': '合并剪贴板与选中文本到高亮规则',
+    'cmd.randomHighlight': '随机高亮选中文本',
+    'cmd.removeHighlight': '移除选中文本的高亮样式',
+    'cmd.aiAssistant': 'AI助手',
+    'cmd.entityExtract': '实体提取',
+    'other.default': '默认',
+    'other.setDefault': '设为默认',
+    'other.aiLabel': '🤖 AI',
+    'other.youLabel': '👤 你',
+    'other.moreRelated': '+... 更多',
+    'other.imgNotFound': '[图片未找到: {path}]',
+    'other.aiFollowUp': '继续追问AI',
+    'other.aiFeedback': '将回答反馈给AI',
+    'other.promptDefault': '默认AI',
+    'other.headingH1': '一级标题',
+    'other.headingH2': '二级标题',
+    'other.headingH3': '三级标题',
+    'other.headingH4': '四级标题',
+    'other.headingH5': '五级标题',
+    'other.headingH6': '六级标题',
+    'other.titleStyle': '标题样式',
+    'other.pasteImgTip': 'Ctrl+V 粘贴图片 · Enter 确认',
+    'other.bold': '**加粗**',
+    'other.italic': '*斜体*',
+    'other.highlight': '==高亮==',
+    'other.strikethrough': '~~删除线~~',
+    'other.underline': '__下划线__',
+    'other.remarkUpdated': '全局规则备注已更新！',
+    'other.remarkUpdatedLocal': '当前文件规则备注已更新！',
+    'other.moveStyleFailed': '移动样式到分组失败: {err}',
+    'other.pinyinSaved': '拼音已保存，切换到阅读模式查看效果',
+    'other.selectTextFirst': '请先选中文本',
+    'other.aiFollowUpFailed': 'AI 追问失败: {err}',
+    'other.aiFeedbackFailed': 'AI 反馈失败: {err}',
+    'other.aiNoQuestion': 'AI 未返回有效问题',
+    'other.pasteImgFailed': '粘贴图片失败: {err}',
+    'other.cannotSaveRule': '无法确定当前文件路径，无法保存规则！',
+    'other.saveRemarkError': '保存备注时出错：{err}',
+    'other.invalidCssFormat': '请输入有效的CSS样式格式，例如：.my-class { color: red; }',
+    'other.addStyleFailed': '添加样式失败: {err}',
+    'other.categoryNotExist': '分类不存在，无法移动样式',
+    'other.invalidIndex': '索引无效，无法移动样式',
+    'other.saveOrderFailed': '保存样式顺序失败: {err}',
+    'other.dragSortError': '拖动排序时出错: {err}',
+    'other.regexCannotEmpty': '错误: 正则表达式不能为空',
+    'other.moveStyleFailed2': '移动样式失败: {err}',
+    'other.addTitleStyleFailed': '添加标题样式失败: {err}',
+    'other.cannotFindGrid': '无法找到源网格容器',
+    'other.crossCategoryMoveFailed': '跨分类移动失败: {err}',
+    'other.partialMergeRemark': '(当前备注: {remark})',
+    'other.partialMergeMsg': '检测到 {count} 条规则包含选中文本，是否要将备注合并到所有匹配的规则中？',
+    'other.mentionTo': '→ 提及',
+    'other.mentionedBy': '← 被提及',
+    'other.relatedKeyword': '【关联关键词{kw}】',
+    'font.searchFont': '搜索字体...',
+    'font.lineSpacing': '行间距:',
+    'font.leftMargin': '左边距:',
+    'font.rightMargin': '右边距:',
   },
   en: {
     'main.title': 'SwiftGlossa',
@@ -1072,13 +1414,17 @@ const i18n = {
     'main.openStyleCategories': 'Open Style Categories',
     'main.styleChipLabel': 'CSS',
     'main.rulesChipLabel': 'KEY WORDS',
-    'main.relatedNotes': '📎 Related Notes',
+    'main.relatedNotes': '📎 Related Files',
     'main.relatedHighlights': '🖍 Related Highlights',
     'main.highlightDbReady': 'SwiftGlossa: Highlight database built',
     'settings.showRelatedNotes': 'Show Related Notes',
     'settings.showRelatedNotesDesc': 'Show related note links above remarks when selecting/clicking a keyword',
     'settings.showRelatedHighlights': 'Show Related Highlights',
     'settings.showRelatedHighlightsDesc': 'Show matching Obsidian native highlights when selecting/clicking a keyword',
+    'settings.sentenceThreshold': 'Sentence Length Threshold',
+    'settings.sentenceThresholdDesc': 'Rules exceeding this length are treated as "sentences" and shown as related highlights instead of keyword chips',
+    'settings.sentenceThresholdCN': 'Chinese Chars',
+    'settings.sentenceThresholdEN': 'English Words',
     'settings.mobileRemarkInSidebar': 'Show remarks in sidebar on mobile',
     'main.addGroup': 'Add Group',
     'main.getMoreStyles': 'Get More Styles',
@@ -1120,6 +1466,8 @@ const i18n = {
     'main.hideInFloatingBall': 'Hide in Floating Ball',
     'main.modifyDisplayText': 'Modify Display Text',
     'main.newGroupName': 'New Group Name',
+    'main.newGroup': 'new Styles group',
+    'main.newRuleGroup': 'new Keywords group',
     'main.groupNameExists': 'Group name already exists!',
     'main.groupNameEmpty': 'Group name cannot be empty!',
     'main.groupCreated': 'New group created',
@@ -1207,6 +1555,7 @@ const i18n = {
     'main.localRuleExists': 'Same rule already exists in local rules',
     'main.globalRuleExistsShort': 'Same rule already exists in global rules',
     'main.doubleClickToEditRemark': 'Double-click to edit remark',
+    'main.doubleClickToEdit': 'Double-click to edit',
     'main.noSearchText': 'No search text',
     'main.noTitle': 'No title',
     'main.copyRemark': 'Copy remark',
@@ -1377,6 +1726,13 @@ const i18n = {
     'remark.aiBreakdownFailed': 'AI breakdown failed',
     'remark.aiBreakdownQuestion': 'Ask AI to break down this question',
     'remark.masonryMode': 'Masonry Mode',
+    'remark.masonryAuto': 'Auto',
+    'remark.keywordRemarks': '📝 Keyword Remarks',
+    'remark.relatedKeywords': '🔗 Related Keywords',
+    'remark.aiQuestions': '🤖 AI Questions',
+    'remark.aiReplyPlaceholder': 'Reply to AI...',
+    'remark.toggleFold': 'Fold/Expand',
+    'remark.rememberFold': 'Remember Fold State',
     'settings.aiSettings': 'AI Settings',
     'settings.aiName': 'AI Name',
     'settings.aiApiUrl': 'API URL',
@@ -1555,6 +1911,10 @@ const i18n = {
     'main.batchModeDesc': 'Enter/exit batch management mode for selecting and moving styles',
     'main.batchManageStyles': 'Batch Manage Styles',
     'main.closePanel': 'Close Panel',
+    'main.freezeMode': 'Freeze: ignore editor clicks/selections',
+    'main.freezeModeOff': 'Unfreeze',
+    'main.keywordHistory': 'Keyword History',
+    'main.clearHistory': 'Clear',
     'main.moveToSidebar': 'Move to Sidebar',
     'main.openMainPanelFirst': 'Please open the main panel first',
     'main.regexLabel': 'Regex',
@@ -1845,6 +2205,11 @@ const i18n = {
     'main.noMatchForCount': 'No matches to count',
     'main.countAdded': 'Count added',
     'main.countRemoved': 'Count removed',
+    'main.switchToLocal': 'Switch to File Rule',
+    'main.switchToGlobal': 'Switch to Global Rule',
+    'main.glBtnTip': 'Left-click: toggle | Middle-click: remove',
+    'main.switchedToLocal': 'Switched to file rule',
+    'main.switchedToGlobal': 'Switched to global rule',
     'floating.openMainPanel': 'Open Main Panel',
     'floating.formatReplace': 'Format Replace',
     'floating.addRemark': 'Add Remark',
@@ -1861,6 +2226,7 @@ const i18n = {
     'floating.toggleFloatingBall': 'Show/Hide Floating Ball',
     'floating.hideTextStyles': 'Hide/Show Text Styles',
     'floating.addFloatNote': 'Add Float Note',
+    'floating.notePinInline': 'Left click: Inline | Middle click: Popout',
     'floating.manageSnippets': 'Manage CSS Snippets',
     'floating.alwaysModeDesc': 'Always mode: Floating ball always visible on screen',
     'floating.followModeDesc': 'Follow selection mode: Floating ball appears near cursor when text is selected',
@@ -1930,12 +2296,110 @@ const i18n = {
     'main.ruleDeleted': 'Rule deleted',
     'main.ruleToggled': 'Rule toggled',
     'main.movedToLocalRule': 'Moved to local rule',
+    'fn.all': 'All',
+    'fn.ungrouped': 'Ungrouped',
+    'fn.renameGroup': 'Rename Group',
+    'fn.newGroupName': 'New group name:',
+    'fn.deleteGroup': 'Delete Group',
+    'fn.cancelDefault': 'Cancel Default Display',
+    'fn.setDefault': 'Set as Default Display',
+    'fn.addGroup': 'Add Group',
+    'fn.newGroupNamePlaceholder': 'New group name',
+    'fn.newGroupDefault': 'New Group',
+    'fn.addNoteFromBall': 'Add notes from floating ball options',
+    'fn.empty': '(empty)',
+    'fn.deleteNote': 'Delete Note',
+    'fn.showFloat': 'Show Floating',
+    'fn.hideFloat': 'Hide Floating',
+    'fn.popoutWindow': 'Pop Out as Window',
+    'fn.collapseNote': 'Collapse / Thumbnail',
+    'fn.moveToGroup': 'Move to Group',
+    'fn.noGroup': '(No Group)',
+    'fn.copyContent': 'Copy Content',
+    'fn.closeBtnTip': 'Click to close / Middle-click to delete',
+    'fn.backToInline': 'Back to Inline Display',
+    'fn.editNote': 'Edit Note',
+    'fn.colorScheme': 'Color Scheme',
+    'fn.deleteScheme': 'Delete Scheme',
+    'fn.noConfirmDelete': "Don't ask again",
+    'fn.delete': 'Delete',
+    'fn.cancel': 'Cancel',
+    'fn.update': 'Update',
+    'fn.saveAsNew': 'Save as New Scheme',
+    'fn.excludeRelated': 'Exclude Related Notes',
+    'fn.excludeRelatedActive': '✓ Exclude Related Notes',
+    'kw.currentFile': 'Current File',
+    'kw.global': '(Global)',
+    'kw.local': '(File)',
+    'kw.leftClickDelete': 'Left-click: Delete rule',
+    'kw.leftClickApply': 'Left-click: Apply style',
+    'kw.remarkLabel': 'Remark:',
+    'kw.remarkEmpty': 'Empty',
+    'cmd.openMainPanel': 'Open Main Panel',
+    'cmd.mergeClipboard': 'Merge Clipboard & Selection into Highlight Rule',
+    'cmd.randomHighlight': 'Random Highlight Selected Text',
+    'cmd.removeHighlight': 'Remove Highlight from Selected Text',
+    'cmd.aiAssistant': 'AI Assistant',
+    'cmd.entityExtract': 'Entity Extraction',
+    'other.default': 'Default',
+    'other.setDefault': 'Set as Default',
+    'other.aiLabel': '🤖 AI',
+    'other.youLabel': '👤 You',
+    'other.moreRelated': '+... more',
+    'other.imgNotFound': '[Image not found: {path}]',
+    'other.aiFollowUp': 'Follow up with AI',
+    'other.aiFeedback': 'Feedback to AI',
+    'other.promptDefault': 'Default AI',
+    'other.headingH1': 'Heading 1',
+    'other.headingH2': 'Heading 2',
+    'other.headingH3': 'Heading 3',
+    'other.headingH4': 'Heading 4',
+    'other.headingH5': 'Heading 5',
+    'other.headingH6': 'Heading 6',
+    'other.titleStyle': 'Heading Styles',
+    'other.pasteImgTip': 'Ctrl+V to paste image · Enter to confirm',
+    'other.bold': '**Bold**',
+    'other.italic': '*Italic*',
+    'other.highlight': '==Highlight==',
+    'other.strikethrough': '~~Strikethrough~~',
+    'other.underline': '__Underline__',
+    'other.remarkUpdated': 'Global rule remark updated!',
+    'other.remarkUpdatedLocal': 'Current file rule remark updated!',
+    'other.moveStyleFailed': 'Failed to move style to group: {err}',
+    'other.pinyinSaved': 'Pinyin saved, switch to reading mode to see effect',
+    'other.selectTextFirst': 'Please select text first',
+    'other.aiFollowUpFailed': 'AI follow-up failed: {err}',
+    'other.aiFeedbackFailed': 'AI feedback failed: {err}',
+    'other.aiNoQuestion': 'AI did not return a valid question',
+    'other.pasteImgFailed': 'Failed to paste image: {err}',
+    'other.cannotSaveRule': 'Cannot determine current file path, cannot save rule!',
+    'other.saveRemarkError': 'Error saving remark: {err}',
+    'other.invalidCssFormat': 'Please enter valid CSS format, e.g.: .my-class { color: red; }',
+    'other.addStyleFailed': 'Failed to add style: {err}',
+    'other.categoryNotExist': 'Category does not exist, cannot move style',
+    'other.invalidIndex': 'Invalid index, cannot move style',
+    'other.saveOrderFailed': 'Failed to save style order: {err}',
+    'other.dragSortError': 'Error during drag sort: {err}',
+    'other.regexCannotEmpty': 'Error: Regex cannot be empty',
+    'other.moveStyleFailed2': 'Failed to move style: {err}',
+    'other.addTitleStyleFailed': 'Failed to add heading style: {err}',
+    'other.cannotFindGrid': 'Cannot find source grid container',
+    'other.crossCategoryMoveFailed': 'Cross-category move failed: {err}',
+    'other.partialMergeRemark': '(Current remark: {remark})',
+    'other.partialMergeMsg': 'Detected {count} rules containing selected text. Merge remark into all matching rules?',
+    'other.mentionTo': '→ Mentions',
+    'other.mentionedBy': '← Mentioned by',
+    'other.relatedKeyword': '[Related keyword {kw}]',
+    'font.searchFont': 'Search fonts...',
+    'font.lineSpacing': 'Line Spacing:',
+    'font.leftMargin': 'Left Margin:',
+    'font.rightMargin': 'Right Margin:',
   }
 };
 
 function sortRegexByLength(regex) {
   if (!regex.includes('|')) return regex;
-  const parts = regex.split('|');
+  const parts = _splitRegexPipes(regex);
   if (parts.length <= 1) return regex;
   if (parts.some((p, i) => i > 0 && p.length > parts[i - 1].length)) {
     parts.sort((a, b) => b.length - a.length);
@@ -2315,7 +2779,7 @@ class AddRemarkModal extends Modal {
       
       if (fileName) {
         const fileNameEl = headerLeft.createEl('span');
-        fileNameEl.textContent = '📄 ' + fileName;
+        fileNameEl.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' + fileName;
         fileNameEl.style.cssText = `font-size:12px;font-weight:600;color:hsl(${fileHue},50%,35%);background:hsl(${fileHue},50%,90%);padding:2px 8px;border-radius:10px;flex-shrink:0;white-space:nowrap;`;
       }
       
@@ -2498,7 +2962,7 @@ class AddRemarkModal extends Modal {
     // 提示文字
     const hintEl = buttonContainer.createEl("span");
     hintEl.style.cssText = `font-size:11px;color:var(--text-muted);flex:1;`;
-    hintEl.textContent = 'Ctrl+V 粘贴图片 · Enter 确认';
+    hintEl.textContent = t('other.pasteImgTip');
     
     const cancelBtn = buttonContainer.createEl("button");
     cancelBtn.textContent = t('main.cancel');
@@ -2573,13 +3037,14 @@ class AddRemarkModal extends Modal {
   const resizeHandle = document.createElement('div');
   resizeHandle.className = "modal-resize-handle";
   resizeHandle.style.position = "fixed";
-  resizeHandle.style.width = "12px";
-  resizeHandle.style.height = "12px";
+  resizeHandle.style.width = _isDesktop ? "12px" : "28px";
+  resizeHandle.style.height = _isDesktop ? "12px" : "28px";
   resizeHandle.style.cursor = "nwse-resize";
   resizeHandle.style.zIndex = "10001";
   resizeHandle.style.background = "linear-gradient(135deg, transparent 50%, var(--text-muted) 50%)";
   resizeHandle.style.pointerEvents = "auto";
   resizeHandle.style.borderRadius = "0 0 8px 0";
+  if (!_isDesktop) resizeHandle.style.touchAction = "none";
   document.body.appendChild(resizeHandle);
     
     const updatePosition = () => {
@@ -2637,6 +3102,48 @@ class AddRemarkModal extends Modal {
     };
     
     resizeHandle.addEventListener("mousedown", onResizeMouseDown);
+  
+  // 手机端touch支持
+  resizeHandle.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    isResizing = true;
+    resizeStartX = touch.clientX;
+    resizeStartY = touch.clientY;
+    resizeStartWidth = modalEl.offsetWidth;
+    resizeStartHeight = modalEl.offsetHeight;
+    modalEl.style.maxHeight = 'none';
+    if (contentEl) contentEl.style.maxHeight = 'none';
+    e.preventDefault();
+    e.stopPropagation();
+  }, { passive: false });
+  const onResizeTouchMove = (e) => {
+    if (!isResizing) return;
+    const touch = e.touches[0];
+    const newWidth = Math.max(minWidth, Math.min(maxWidth, resizeStartWidth + (touch.clientX - resizeStartX)));
+    const newHeight = Math.max(300, resizeStartHeight + (touch.clientY - resizeStartY));
+    modalEl.style.width = `${newWidth}px`;
+    modalEl.style.maxWidth = `${newWidth}px`;
+    modalEl.style.height = `${newHeight}px`;
+    contentEl.style.width = "100%";
+    contentEl.style.maxWidth = "100%";
+    if (widthInput) widthInput.value = newWidth;
+  };
+  const onResizeTouchEnd = () => {
+    if (!isResizing) return;
+    isResizing = false;
+    const newWidth = modalEl.offsetWidth;
+    const newHeight = modalEl.offsetHeight;
+    if (modalInstance.plugin && modalInstance.plugin.settings) {
+      modalInstance.plugin.settings[widthSettingsKey] = newWidth;
+      if (options.heightSettingsKey) {
+        modalInstance.plugin.settings[options.heightSettingsKey] = newHeight;
+      }
+      modalInstance.plugin.saveData(modalInstance.plugin.settings);
+    }
+    updatePosition();
+  };
+  document.addEventListener('touchmove', onResizeTouchMove, { passive: true });
+  document.addEventListener('touchend', onResizeTouchEnd);
     
     this._remarkResizeHandle = resizeHandle;
     this._remarkResizeListeners = { mousemove: onResizeMouseMove, mouseup: onResizeMouseUp };
@@ -2749,12 +3256,12 @@ class FormatReplaceModal extends Modal {
 
     // 常用MD格式快捷按钮
     const quickPatterns = [
-      { label: '**加粗**', pattern: '\\*\\*(.+?)\\*\\*' },
-      { label: '*斜体*', pattern: '\\*(.+?)\\*' },
-      { label: '==高亮==', pattern: '==(.+?)==' },
+      { label: t('other.bold'), pattern: '\\*\\*(.+?)\\*\\*' },
+      { label: t('other.italic'), pattern: '\\*(.+?)\\*' },
+      { label: t('other.highlight'), pattern: '==(.+?)==' },
       { label: '`' + t('format.code') + '`', pattern: '`(.+?)`' },
-      { label: '~~删除线~~', pattern: '~~(.+?)~~' },
-      { label: '__下划线__', pattern: '__(.+?)__' },
+      { label: t('other.strikethrough'), pattern: '~~(.+?)~~' },
+      { label: t('other.underline'), pattern: '__(.+?)__' },
     ];
     
     const quickButtons = patternGroup.createDiv();
@@ -3251,13 +3758,14 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
   const resizeHandle = document.createElement('div');
   resizeHandle.className = "modal-resize-handle";
   resizeHandle.style.position = "fixed";
-  resizeHandle.style.width = "12px";
-  resizeHandle.style.height = "12px";
+  resizeHandle.style.width = _isDesktop ? "12px" : "28px";
+  resizeHandle.style.height = _isDesktop ? "12px" : "28px";
   resizeHandle.style.cursor = "nwse-resize";
   resizeHandle.style.zIndex = "10001";
   resizeHandle.style.background = "linear-gradient(135deg, transparent 50%, var(--text-muted) 50%)";
   resizeHandle.style.pointerEvents = "auto";
   resizeHandle.style.borderRadius = "0 0 8px 0";
+  if (!_isDesktop) resizeHandle.style.touchAction = "none";
   document.body.appendChild(resizeHandle);
   
   const updatePosition = () => {
@@ -3324,6 +3832,48 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
   };
   
   resizeHandle.addEventListener("mousedown", onResizeMouseDown);
+  
+  // 手机端touch支持
+  resizeHandle.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    isResizing = true;
+    resizeStartX = touch.clientX;
+    resizeStartY = touch.clientY;
+    resizeStartWidth = modalEl.offsetWidth;
+    resizeStartHeight = modalEl.offsetHeight;
+    modalEl.style.maxHeight = 'none';
+    if (contentEl) contentEl.style.maxHeight = 'none';
+    e.preventDefault();
+    e.stopPropagation();
+  }, { passive: false });
+  const onResizeTouchMove = (e) => {
+    if (!isResizing) return;
+    const touch = e.touches[0];
+    const newWidth = Math.max(minWidth, Math.min(maxWidth, resizeStartWidth + (touch.clientX - resizeStartX)));
+    const newHeight = Math.max(300, resizeStartHeight + (touch.clientY - resizeStartY));
+    modalEl.style.width = `${newWidth}px`;
+    modalEl.style.maxWidth = `${newWidth}px`;
+    modalEl.style.height = `${newHeight}px`;
+    contentEl.style.width = "100%";
+    contentEl.style.maxWidth = "100%";
+    if (widthInput) widthInput.value = newWidth;
+  };
+  const onResizeTouchEnd = () => {
+    if (!isResizing) return;
+    isResizing = false;
+    const newWidth = modalEl.offsetWidth;
+    const newHeight = modalEl.offsetHeight;
+    if (modalInstance.plugin && modalInstance.plugin.settings) {
+      modalInstance.plugin.settings[widthSettingsKey] = newWidth;
+      if (options.heightSettingsKey) {
+        modalInstance.plugin.settings[options.heightSettingsKey] = newHeight;
+      }
+      modalInstance.plugin.saveData(modalInstance.plugin.settings);
+    }
+    updatePosition();
+  };
+  document.addEventListener('touchmove', onResizeTouchMove, { passive: true });
+  document.addEventListener('touchend', onResizeTouchEnd);
   
   modalInstance._resizeHandle = resizeHandle;
   modalInstance._resizeUpdatePosition = updatePosition;
@@ -3578,13 +4128,14 @@ class StyleShowcaseModal extends Modal {
   const resizeHandle = document.createElement('div');
   resizeHandle.className = "modal-resize-handle";
   resizeHandle.style.position = "fixed";
-  resizeHandle.style.width = "12px";
-  resizeHandle.style.height = "12px";
+  resizeHandle.style.width = _isDesktop ? "12px" : "28px";
+  resizeHandle.style.height = _isDesktop ? "12px" : "28px";
   resizeHandle.style.cursor = "nwse-resize";
   resizeHandle.style.zIndex = "10001";
   resizeHandle.style.background = "linear-gradient(135deg, transparent 50%, var(--text-muted) 50%)";
   resizeHandle.style.pointerEvents = "auto";
   resizeHandle.style.borderRadius = "0 0 8px 0";
+  if (!_isDesktop) resizeHandle.style.touchAction = "none";
   document.body.appendChild(resizeHandle);
     
     const updatePosition = () => {
@@ -3637,6 +4188,48 @@ class StyleShowcaseModal extends Modal {
     };
     
     resizeHandle.addEventListener("mousedown", onResizeMouseDown);
+  
+  // 手机端touch支持
+  resizeHandle.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    isResizing = true;
+    resizeStartX = touch.clientX;
+    resizeStartY = touch.clientY;
+    resizeStartWidth = modalEl.offsetWidth;
+    resizeStartHeight = modalEl.offsetHeight;
+    modalEl.style.maxHeight = 'none';
+    if (contentEl) contentEl.style.maxHeight = 'none';
+    e.preventDefault();
+    e.stopPropagation();
+  }, { passive: false });
+  const onResizeTouchMove = (e) => {
+    if (!isResizing) return;
+    const touch = e.touches[0];
+    const newWidth = Math.max(minWidth, Math.min(maxWidth, resizeStartWidth + (touch.clientX - resizeStartX)));
+    const newHeight = Math.max(300, resizeStartHeight + (touch.clientY - resizeStartY));
+    modalEl.style.width = `${newWidth}px`;
+    modalEl.style.maxWidth = `${newWidth}px`;
+    modalEl.style.height = `${newHeight}px`;
+    contentEl.style.width = "100%";
+    contentEl.style.maxWidth = "100%";
+    if (widthInput) widthInput.value = newWidth;
+  };
+  const onResizeTouchEnd = () => {
+    if (!isResizing) return;
+    isResizing = false;
+    const newWidth = modalEl.offsetWidth;
+    const newHeight = modalEl.offsetHeight;
+    if (modalInstance.plugin && modalInstance.plugin.settings) {
+      modalInstance.plugin.settings[widthSettingsKey] = newWidth;
+      if (options.heightSettingsKey) {
+        modalInstance.plugin.settings[options.heightSettingsKey] = newHeight;
+      }
+      modalInstance.plugin.saveData(modalInstance.plugin.settings);
+    }
+    updatePosition();
+  };
+  document.addEventListener('touchmove', onResizeTouchMove, { passive: true });
+  document.addEventListener('touchend', onResizeTouchEnd);
     
     this._resizeHandle = resizeHandle;
     this._resizeUpdatePosition = updatePosition;
@@ -5615,7 +6208,7 @@ ${this.selectedText}
               return true;
             }
             if (rule.regex.includes('|')) {
-              const parts = rule.regex.split('|');
+              const parts = _splitRegexPipes(rule.regex);
               return parts.includes(entity.name);
             }
             try {
@@ -6040,7 +6633,7 @@ ${this.selectedText}
           if (!regex.includes("|") && !skipCompositeCheck) {
             ruleMap.forEach((rule, ruleRegex) => {
               if (ruleRegex.includes("|")) {
-                const entities = ruleRegex.split("|").map(e => e.trim());
+                const entities = _splitRegexPipes(ruleRegex).map(e => e.trim());
                 if (entities.includes(regex)) {
                   foundInCompositeRule = true;
                   compositeRule = rule;
@@ -6051,7 +6644,7 @@ ${this.selectedText}
           }
           
           if (foundInCompositeRule && compositeRule) {
-            const entities = compositeRuleRegex.split("|").map(e => e.trim());
+            const entities = _splitRegexPipes(compositeRuleRegex).map(e => e.trim());
             const otherEntities = entities.filter(e => e !== regex);
             const otherEntitiesInMap = otherEntities.filter(e => this.entityStyleMap.has(e));
             
@@ -7207,7 +7800,7 @@ ${currentCss}
       const selectedStyles = parseCssStyles(styleText);
       
       if (selectedStyles.length === 0) {
-        this.showError(modal.contentEl, "请输入有效的CSS样式格式，例如：.my-class { color: red; }");
+        this.showError(modal.contentEl, t('other.invalidCssFormat'));
         return;
       }
       
@@ -7258,7 +7851,7 @@ ${currentCss}
         
       } catch (error) {
         console.error('Error adding style:', error);
-        this.showError(modal.contentEl, "添加样式失败: " + error.message);
+        this.showError(modal.contentEl, t('other.addStyleFailed', {err: error.message}));
       }
     });
     
@@ -7390,7 +7983,7 @@ ${currentCss}
       if (!styleCategories || typeof styleCategories !== 'object' || 
           !styleCategories[draggedCategory] || !styleCategories[targetCategory]) {
         console.error('Invalid styleCategories or category not found');
-        this.showError(this.contentEl, '分类不存在，无法移动样式');
+        this.showError(this.contentEl, t('other.categoryNotExist'));
         return;
       }
       
@@ -7402,7 +7995,7 @@ ${currentCss}
       if (draggedIndex < 0 || draggedIndex >= sourceClassNames.length || 
           targetIndex < 0 || targetIndex >= targetClassNames.length) {
         console.error('Invalid index for sorting');
-        this.showError(this.contentEl, '索引无效，无法移动样式');
+        this.showError(this.contentEl, t('other.invalidIndex'));
         return;
       }
       
@@ -7468,7 +8061,7 @@ ${currentCss}
     } catch (error) {
       console.error('Error saving sorted styles:', error);
       // 添加错误提示
-      this.showError(this.contentEl, '保存样式顺序失败: ' + error.message);
+      this.showError(this.contentEl, t('other.saveOrderFailed', {err: error.message}));
     }
   }
   
@@ -7596,7 +8189,7 @@ class AddRegexRuleModal {
     this.modalEl = document.createElement('div');
     this.modalEl.className = 'rch-popup';
     this.modalEl.style.cssText = `
-      position:fixed;
+      position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
       background:rgba(var(--mono-rgb-0),0.75);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
       border:1px solid rgba(255,255,255,0.12);border-radius:12px;
       box-shadow:0 12px 40px rgba(0,0,0,0.35);z-index:1200;
@@ -7636,15 +8229,34 @@ class AddRegexRuleModal {
     
     // 手机端：阻止长按导致浏览器进入选中/卡死状态
     if (!_isDesktop) {
-      this.modalEl.style.touchAction = 'manipulation';
       this.modalEl.style.webkitTouchCallout = 'none';
       this.modalEl.style.userSelect = 'none';
       this.modalEl.style.webkitUserSelect = 'none';
       this._mobileStyleEl = document.createElement('style');
-      this._mobileStyleEl.textContent = '.rch-popup, .rch-popup *:not(input):not(textarea):not(.inline-remark-section):not(.inline-remark-section *) { touch-action:manipulation!important; -webkit-touch-callout:none!important; user-select:none!important; -webkit-user-select:none!important; }';
+      this._mobileStyleEl.textContent = '.rch-popup, .rch-popup *:not(input):not(textarea):not(.inline-remark-section):not(.inline-remark-section *):not(.modal-resize-handle) { touch-action:manipulation!important; -webkit-touch-callout:none!important; user-select:none!important; -webkit-user-select:none!important; } .modal-resize-handle { touch-action:none!important; }';
       document.head.appendChild(this._mobileStyleEl);
-      this._selectStartHandler = (e) => { e.preventDefault(); };
+      this._selectStartHandler = (e) => { if (e.target.closest('.modal-resize-handle')) return; e.preventDefault(); };
       this._contextMenuHandler = (e) => {
+        // 先检查是否是内嵌笔记的长按
+        const noteEl = e.target.closest('.global-note-card, .inline-note-card');
+        if (noteEl) {
+          e.preventDefault();
+          const noteId = noteEl.dataset.noteId;
+          if (noteId) {
+            const Menu = require('obsidian').Menu;
+            const menu = new Menu();
+            menu.addItem((mi) => {
+              mi.setTitle('折叠 / 缩略模式');
+              mi.setIcon('minimize');
+              mi.onClick(() => {
+                const evt = new MouseEvent('auxclick', { button: 1, bubbles: true });
+                noteEl.dispatchEvent(evt);
+              });
+            });
+            menu.showAtMouseEvent(e);
+          }
+          return;
+        }
         e.preventDefault();
         if (e.target?.closest?.('.rch-close-btn')) {
           this.close();
@@ -7664,12 +8276,14 @@ class AddRegexRuleModal {
       let _tapTime = 0;
       let _tapPos = null;
       this._mobileTouchStartHandler = (e) => {
+        if (e.target.closest('.modal-resize-handle')) return;
         const target = e.target.closest(_tapSelector);
         if (target) {
           e.preventDefault();
           _tapTarget = target;
           _tapTime = Date.now();
-          _tapPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+          const touch = e.touches ? e.touches[0] : e;
+          _tapPos = { x: touch.clientX, y: touch.clientY };
         }
       };
       this._mobileTouchEndHandler = (e) => {
@@ -7698,6 +8312,7 @@ class AddRegexRuleModal {
       this.modalEl.addEventListener('touchstart', this._mobileTouchStartHandler, { passive: false });
       this.modalEl.addEventListener('touchend', this._mobileTouchEndHandler);
       this.modalEl.addEventListener('touchmove', this._mobileTouchMoveHandler, { passive: true });
+
     }
 
     
@@ -7711,7 +8326,7 @@ class AddRegexRuleModal {
     
     this._outsideClickHandler = (e) => {
       if (!this._isOpen) return;
-      if (_isDesktop && this._locked) return;
+      if (this._locked) return; // 锁定状态（面板移动后）不通过外部点击关闭，只能通过关闭按钮关闭
       if (this._subModalOpen) return;
       if (this.modalEl.contains(e.target)) return;
       if (this.modalEl.parentElement !== document.body) return;
@@ -8323,7 +8938,7 @@ class AddRegexRuleModal {
       const selectedStyles = parseCssStyles(styleText);
       
       if (selectedStyles.length === 0) {
-        this.showError(modal.contentEl, "请输入有效的CSS样式格式，例如：.my-class { color: red; }");
+        this.showError(modal.contentEl, t('other.invalidCssFormat'));
         return;
       }
       
@@ -8381,7 +8996,7 @@ class AddRegexRuleModal {
         
       } catch (error) {
         console.error('Error adding style:', error);
-        this.showError(modal.contentEl, "添加样式失败: " + error.message);
+        this.showError(modal.contentEl, t('other.addStyleFailed', {err: error.message}));
       }
     });
     
@@ -8563,25 +9178,30 @@ class AddRegexRuleModal {
     contentEl.style.padding = "0 5px 5px 5px";
     contentEl.style.boxSizing = "border-box";
     
-    const defaultWidth = _isDesktop ? 1000 : Math.min(window.innerWidth - 20, 1000);
-    const savedWidth = _isDesktop ? (this.plugin.settings?.modalWidth || defaultWidth) : defaultWidth;
-    const userWidth = _isDesktop ? savedWidth : defaultWidth;
-    const savedHeight = _isDesktop ? this.plugin.settings?.modalHeight : null;
+    const defaultWidth = _isDesktop ? 800 : Math.min(window.innerWidth - 20, 800);
+    const defaultHeight = 500;
+    let savedWidth, savedHeight;
+    if (_isDesktop) {
+      savedWidth = this.plugin.settings?.modalWidth || defaultWidth;
+      savedHeight = this.plugin.settings?.modalHeight || defaultHeight;
+    } else {
+      savedWidth = this.plugin.settings?.addRemarkModalWidth || defaultWidth;
+      savedHeight = this.plugin.settings?.addRemarkModalHeight || defaultHeight;
+    }
+    const userWidth = savedWidth;
     
     contentEl.style.width = "100%";
     
     const _inSidebar = this.modalEl.parentElement && this.modalEl.parentElement !== document.body;
+    const isInSidebar = () => this.modalEl.parentElement && this.modalEl.parentElement !== document.body;
 
     if (!_inSidebar) {
       this.modalEl.style.width = `${userWidth}px`;
-      this.modalEl.style.maxWidth = '95vw';
+      this.modalEl.style.maxWidth = 'none';
       this.modalEl.style.minWidth = "0";
-      if (savedHeight) {
-        this.modalEl.style.height = `${savedHeight}px`;
-        this.modalEl.style.maxHeight = 'none';
-      } else {
-        this.modalEl.style.maxHeight = "80vh";
-      }
+      this.modalEl.style.height = `${savedHeight}px`;
+      this.modalEl.style.maxHeight = 'none';
+      this.modalEl.style.transform = 'none';
       
       const savedPosition = _isDesktop ? this.plugin.settings?.modalPosition : null;
       if (savedPosition && savedPosition.left !== undefined && savedPosition.top !== undefined) {
@@ -8591,14 +9211,17 @@ class AddRegexRuleModal {
         this.modalEl.style.top = `${Math.max(0, posTop)}px`;
       } else {
         this.modalEl.style.left = `${Math.max(0, (window.innerWidth - userWidth) / 2)}px`;
-        this.modalEl.style.top = `${Math.max(0, (window.innerHeight - (savedHeight || 600)) / 2)}px`;
+        this.modalEl.style.top = `${Math.max(0, (window.innerHeight - (savedHeight || defaultHeight)) / 2)}px`;
       }
     }
     
     // 创建标题栏（直接挂在modalEl上，不在contentEl滚动区域内）
     const titleBar = document.createElement('div');
     titleBar.className = 'rch-title-bar';
-    titleBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-shrink:0;padding:6px 8px;' + (_inSidebar ? 'cursor:default;' : 'cursor:grab;') + 'user-select:none;background:rgba(var(--mono-rgb-0),0.6);border-bottom:1px solid rgba(255,255,255,0.08);';
+    titleBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-shrink:0;padding:6px 8px;user-select:none;background:rgba(var(--mono-rgb-0),0.6);border-bottom:1px solid rgba(255,255,255,0.08);';
+    const updateTitleBarCursor = () => { titleBar.style.cursor = isInSidebar() ? 'default' : 'grab'; };
+    updateTitleBarCursor();
+    this._updateTitleBarCursor = updateTitleBarCursor;
     this.modalEl.insertBefore(titleBar, this.contentEl);
     
     // 拖动时显示的红色关闭按钮
@@ -8606,7 +9229,7 @@ class AddRegexRuleModal {
     dragCloseBtn.className = 'rch-close-btn';
     dragCloseBtn.textContent = '✕';
     dragCloseBtn.style.cssText = 'font-size:13px;cursor:pointer;color:var(--text-muted);font-weight:bold;display:inline;margin-left:6px;padding:0 4px;border-radius:3px;transition:all 0.15s;';
-    dragCloseBtn.title = t('main.closePanel') || '关闭面板';
+    dragCloseBtn.title = t('main.closePanel');
     dragCloseBtn.addEventListener('mouseenter', () => { dragCloseBtn.style.background = 'rgba(255,68,68,0.15)'; dragCloseBtn.style.color = '#ff4444'; });
     dragCloseBtn.addEventListener('mouseleave', () => {
       dragCloseBtn.style.background = '';
@@ -8622,7 +9245,7 @@ class AddRegexRuleModal {
     
     titleBar.addEventListener("mousedown", (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT' || e.target === dragCloseBtn) return;
-      if (_inSidebar) return;
+      if (isInSidebar()) return;
       isDragging = true;
       dragStartX = e.clientX;
       dragStartY = e.clientY;
@@ -8643,6 +9266,7 @@ class AddRegexRuleModal {
         this._locked = true;
         dragCloseBtn.style.color = '#ff4444';
         this._selectionChangeHandler = () => {
+          if (this._frozen) return;
           const selection = window.getSelection();
           if (selection && selection.toString().trim()) {
             const selectedText = selection.toString().trim();
@@ -8661,7 +9285,7 @@ class AddRegexRuleModal {
     this._dragMouseUpHandler = () => {
       if (isDragging) {
         isDragging = false;
-        titleBar.style.cursor = "grab";
+        titleBar.style.cursor = isInSidebar() ? "default" : "grab";
         if (_isDesktop) {
           const rect = this.modalEl.getBoundingClientRect();
           if (this.plugin) {
@@ -8679,7 +9303,7 @@ class AddRegexRuleModal {
     
     titleBar.addEventListener("touchstart", (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT' || e.target === dragCloseBtn) return;
-      if (_inSidebar) return;
+      if (isInSidebar()) return;
       const touch = e.touches[0];
       isDragging = true;
       dragStartX = touch.clientX;
@@ -8700,6 +9324,7 @@ class AddRegexRuleModal {
         this._locked = true;
         dragCloseBtn.style.color = '#ff4444';
         this._selectionChangeHandler = () => {
+          if (this._frozen) return;
           const selection = window.getSelection();
           if (selection && selection.toString().trim()) {
             const selectedText = selection.toString().trim();
@@ -8803,10 +9428,34 @@ class AddRegexRuleModal {
     titleRightBtns.style.cssText = 'display:flex;align-items:center;gap:6px;flex-shrink:0;';
     titleBar.appendChild(titleRightBtns);
 
+    // 冻结按钮
+    this._frozen = false;
+    const freezeBtn = document.createElement('span');
+    freezeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07"/></svg>';
+    freezeBtn.title = t('main.freezeMode');
+    freezeBtn.style.cssText = 'cursor:pointer;color:var(--text-muted);padding:0 4px;border-radius:3px;transition:all 0.15s;line-height:0;display:inline-flex;align-items:center;';
+    const updateFreezeBtn = () => {
+      if (this._frozen) {
+        freezeBtn.title = t('main.freezeModeOff');
+        freezeBtn.style.color = 'var(--interactive-accent)';
+        freezeBtn.style.background = 'rgba(var(--interactive-accent-rgb),0.15)';
+        freezeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+      } else {
+        freezeBtn.title = t('main.freezeMode');
+        freezeBtn.style.color = 'var(--text-muted)';
+        freezeBtn.style.background = '';
+        freezeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07"/></svg>';
+      }
+    };
+    freezeBtn.addEventListener('click', () => { this._frozen = !this._frozen; updateFreezeBtn(); });
+    freezeBtn.addEventListener('mouseenter', () => { if (!this._frozen) { freezeBtn.style.background = 'var(--background-modifier-hover)'; freezeBtn.style.color = 'var(--text-normal)'; } });
+    freezeBtn.addEventListener('mouseleave', () => { if (!this._frozen) { freezeBtn.style.background = ''; freezeBtn.style.color = 'var(--text-muted)'; } });
+    titleRightBtns.appendChild(freezeBtn);
+
     const sidebarBtn = document.createElement('span');
     sidebarBtn.textContent = '◧';
     sidebarBtn.style.cssText = 'font-size:14px;cursor:pointer;color:var(--text-muted);padding:0 4px;border-radius:3px;transition:all 0.15s;';
-    sidebarBtn.title = t('main.moveToSidebar') || '移至侧边栏';
+    sidebarBtn.title = t('main.moveToSidebar');
     sidebarBtn.addEventListener('mouseenter', () => { sidebarBtn.style.background = 'var(--background-modifier-hover)'; sidebarBtn.style.color = 'var(--text-normal)'; });
     sidebarBtn.addEventListener('mouseleave', () => { sidebarBtn.style.background = ''; sidebarBtn.style.color = 'var(--text-muted)'; });
     sidebarBtn.addEventListener('click', () => {
@@ -8828,7 +9477,7 @@ class AddRegexRuleModal {
     
     // Ctrl+滚轮调透明度，Alt+滚轮调宽度
     this.modalEl.addEventListener("wheel", (e) => {
-      if (_inSidebar) return;
+      if (isInSidebar()) return;
       if (e.ctrlKey) {
         e.preventDefault();
         const step = e.deltaY > 0 ? -5 : 5;
@@ -8893,7 +9542,7 @@ class AddRegexRuleModal {
       const matchingRule = this.plugin.rules.find(rule => {
         // 检查规则是否包含当前选定的文字（精确匹配或作为子项匹配）
         // 例如：选定"赵云"匹配"赵云|子龙"
-        const ruleParts = rule.regex.split('|');
+        const ruleParts = _splitRegexPipes(rule.regex);
         return ruleParts.includes(selectedText.trim()) || rule.regex.includes(selectedText.trim());
       });
       
@@ -9153,20 +9802,12 @@ class AddRegexRuleModal {
     // 高亮匹配的规则按钮和对应的CSS样式按钮
     this.highlightMatchingRuleButtons = () => {
       const inputValue = inputEl.value.trim();
+
       
-      // 如果chip未激活，不处理匹配高亮
-      const styleChip = this.contentEl.querySelector('.rch-style-chip');
-      const rulesChip = this.contentEl.querySelector('.rch-rules-chip');
-      const styleActive = styleChip && styleChip.dataset.active === 'true';
-      const rulesActive = rulesChip && rulesChip.dataset.active === 'true';
-      
-      // 获取所有历史规则按钮和CSS样式按钮
       const historyButtons = this.contentEl.querySelectorAll('.history-section [data-rule-regex]');
       const styleButtons = this.contentEl.querySelectorAll('.style-option, [data-category]');
-      // 筛选出有data-class属性的按钮
       const styleButtonsWithDataClass = Array.from(styleButtons).filter(button => button.hasAttribute('data-class'));
       
-      // 清除所有按钮的高亮样式
       const allRuleButtons = this.contentEl.querySelectorAll('[data-rule-regex]');
       allRuleButtons.forEach(button => {
         button.style.border = "0px solid transparent";
@@ -9175,18 +9816,15 @@ class AddRegexRuleModal {
         button.style.zIndex = "";
       });
       
-      // 清除所有CSS样式按钮的高亮样式
       styleButtonsWithDataClass.forEach(button => {
         button.style.border = "0px solid #ddd";
         button.style.transform = "scale(1)";
         button.style.boxShadow = "0 1px 2px rgba(0,0,0,0.1)";
       });
       
-      // 获取所有全局规则按钮
       const globalButtons = this.contentEl.querySelectorAll('.global-rules-section [data-rule-regex]');
 
-      // 规则处理（仅在rulesActive时执行）
-      if (rulesActive) {
+      {
 
       // 如果规则分组处于折叠状态，处理分组内规则按钮的显示
       if (this.plugin.settings?.isRuleGroupCollapsed !== false && inputValue) {
@@ -9199,20 +9837,16 @@ class AddRegexRuleModal {
           let hasMatch = false;
           gridButtons.forEach(btn => {
             const ruleRegex = btn.dataset.ruleRegex;
-            const ruleParts = ruleRegex.split('|');
+            const ruleParts = _splitRegexPipes(ruleRegex);
             const isMatching = ruleParts.includes(inputValue) || ruleRegex.includes(inputValue) || inputValue.includes(ruleRegex);
             if (isMatching) {
               btn.style.display = 'flex';
               hasMatch = true;
-            } else if (isUserActiveGroup) {
-              btn.style.display = 'flex';
             } else {
               btn.style.display = 'none';
             }
           });
-          if (currentActiveGroup && currentActiveGroup !== grp) {
-            // 用户已手动选择了其他分组，不覆盖显示状态
-          } else if (hasMatch || isUserActiveGroup) {
+          if (hasMatch) {
             grid.style.display = 'flex';
             const matchingChip = this.contentEl.querySelector(`.global-rules-section [data-group="${grp}"]`);
             if (matchingChip) {
@@ -9222,6 +9856,12 @@ class AddRegexRuleModal {
             }
           } else {
             grid.style.display = 'none';
+            const matchingChip = this.contentEl.querySelector(`.global-rules-section [data-group="${grp}"]`);
+            if (matchingChip) {
+              matchingChip.style.border = '1px solid var(--background-modifier-border)';
+              matchingChip.style.background = 'rgba(var(--mono-rgb-0),0.5)';
+              matchingChip.style.color = 'var(--text-muted)';
+            }
           }
         });
       } else if (this.plugin.settings?.isRuleGroupCollapsed !== false && !inputValue) {
@@ -9248,7 +9888,7 @@ class AddRegexRuleModal {
             const rule = globalRules.find(r => r.regex === ruleRegex && r.cssClass === ruleCssClass);
 
             if (rule) {
-              const ruleParts = rule.regex.split('|');
+              const ruleParts = _splitRegexPipes(rule.regex);
               const isMatching = ruleParts.includes(inputValue) || rule.regex.includes(inputValue) || inputValue.includes(rule.regex);
 
               if (isMatching) {
@@ -9305,7 +9945,7 @@ class AddRegexRuleModal {
             const rule = currentRules.find(r => r.regex === ruleRegex && r.cssClass === ruleCssClass);
 
             if (rule) {
-              const ruleParts = rule.regex.split('|');
+              const ruleParts = _splitRegexPipes(rule.regex);
               const isMatching = ruleParts.includes(inputValue) || rule.regex.includes(inputValue) || inputValue.includes(rule.regex);
 
               if (isMatching) {
@@ -9348,32 +9988,94 @@ class AddRegexRuleModal {
         }
       }
 
-      } // end if (rulesActive)
+      } // end rules block
 
 
       
       // 如果输入框为空，不高亮任何按钮
-      if (!inputValue) return;
+      if (!inputValue) {
+        this._activeKeywordRegex = null;
+        if (this._keywordBar) { this._keywordBar.innerHTML = ''; this._keywordBar.style.display = 'none'; }
+        if (this._sentenceBar) { this._sentenceBar.innerHTML = ''; this._sentenceBar.style.display = 'none'; }
+        return;
+      }
       
       // 查找匹配的规则（包括当前文件规则和全局规则）
       const allRules = [
-        ...this.plugin.rules,
-        ...(Array.isArray(this.plugin.globalRules) ? this.plugin.globalRules : [])
+        ...this.plugin.rules.map(r => ({ ...r, _sourceFile: r._sourceFile || this.plugin.currentFilePath || '' })),
+        ...(Array.isArray(this.plugin.globalRules) ? this.plugin.globalRules.map(r => ({ ...r, _sourceFile: r._sourceFile || this.plugin.currentFilePath || '' })) : [])
       ];
+      // 跨文件搜索：加入其他文件的规则
+      if (this.plugin._fileRulesData) {
+        for (const [fp, entry] of Object.entries(this.plugin._fileRulesData)) {
+          if (fp === this.plugin.currentFilePath) continue;
+          if (!entry?.rules) continue;
+          for (const r of entry.rules) {
+            if (!allRules.some(ar => ar.regex === r.regex && ar.cssClass === r.cssClass)) {
+              allRules.push({ ...r, _sourceFile: fp });
+            }
+          }
+        }
+      }
       
       const matchingRules = allRules.filter(rule => {
-        // 检查规则是否包含当前输入值（精确匹配或作为子项匹配）
-        const ruleParts = rule.regex.split('|');
-        return ruleParts.includes(inputValue) || rule.regex.includes(inputValue) || inputValue.includes(rule.regex);
+        const ruleParts = _splitRegexPipes(rule.regex);
+        return ruleParts.includes(inputValue) || rule.regex.includes(inputValue) || inputValue.includes(rule.regex) || _regexMatch(inputValue, rule.regex);
       });
+      
+      const keywordRules = matchingRules.filter(r => !_isSentenceRule(r.regex, this.plugin.settings));
+      const sentenceRules = matchingRules.filter(r => _isSentenceRule(r.regex, this.plugin.settings));
+      
+      // 关键词按钮栏：多个匹配规则时显示关键词切换按钮（仅关键词，不含句子）
+      const keywordBar = this._keywordBar;
+      if (keywordBar) {
+        keywordBar.innerHTML = '';
+        const styleChipActive = this.contentEl.querySelector('.rch-style-chip[data-active="true"]');
+        if (keywordRules.length > 1 && styleChipActive) {
+          keywordBar.style.display = 'flex';
+          const uniqueRegexes = [...new Set(keywordRules.map(r => r.regex))];
+          if (!this._activeKeywordRegex || !uniqueRegexes.includes(this._activeKeywordRegex)) {
+            const exactMatch = uniqueRegexes.find(rx => {
+              const parts = _splitRegexPipes(rx);
+              return parts.includes(inputValue) || rx === inputValue;
+            });
+            this._activeKeywordRegex = exactMatch || uniqueRegexes.reduce((a, b) => a.length >= b.length ? a : b);
+          }
+          uniqueRegexes.forEach(rx => {
+            const btn = document.createElement('span');
+            const displayText = _splitRegexPipes(rx).find(p => inputValue.includes(p) || p.includes(inputValue)) || rx;
+            btn.textContent = displayText;
+            btn.className = 'rch-keyword-btn';
+            const isActive = rx === this._activeKeywordRegex;
+            btn.style.cssText = `display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;cursor:pointer;user-select:none;transition:all 0.15s ease;white-space:nowrap;border:1px solid ${isActive ? 'var(--interactive-accent)' : 'var(--background-modifier-border)'};background:${isActive ? 'var(--interactive-accent)' : 'rgba(var(--mono-rgb-0),0.4)'};color:${isActive ? '#fff' : 'var(--text-muted)'};`;
+            btn.addEventListener('click', () => {
+              this._activeKeywordRegex = rx;
+              this.highlightMatchingRuleButtons();
+            });
+            keywordBar.appendChild(btn);
+          });
+        } else {
+          keywordBar.style.display = 'none';
+          this._activeKeywordRegex = keywordRules.length === 1 ? keywordRules[0].regex : null;
+        }
+      }
+      
+      // 句子规则不在顶部chipBar显示，由相关高亮区域处理
+      if (this._sentenceBar) { this._sentenceBar.innerHTML = ''; this._sentenceBar.style.display = 'none'; }
+      // 存储句子规则供相关高亮区域使用
+      this.plugin._pendingSentenceRules = sentenceRules.length > 0 ? sentenceRules : null;
+      
+      // 根据激活的关键词过滤匹配规则
+      const activeKeywordRegex = this._activeKeywordRegex;
+      const filteredRules = activeKeywordRegex && matchingRules.length > 1
+        ? matchingRules.filter(r => r.regex === activeKeywordRegex)
+        : matchingRules;
       
       // 收集所有匹配的CSS类，避免重复查找
       const matchingCssClasses = new Set();
       
-      // 高亮匹配的规则按钮，并设置当前编辑规则
-      matchingRules.forEach((matchingRule, index) => {
-        // 高亮规则按钮（包括历史规则按钮和全局规则按钮）
-        // 使用 CSS.escape 来转义特殊字符，避免选择器解析错误
+      // 高亮所有匹配规则的按钮（规则按钮始终全部显示）
+      matchingRules.forEach((matchingRule) => {
         let matchingButton = null;
         try {
           const escapedRegex = CSS.escape(matchingRule.regex);
@@ -9382,7 +10084,30 @@ class AddRegexRuleModal {
             `[data-rule-regex="${escapedRegex}"][data-rule-css-class="${escapedCssClass}"]`
           );
         } catch (e) {
-          // 如果 CSS.escape 失败，使用遍历方式查找
+          const allButtons = this.contentEl.querySelectorAll('[data-rule-regex]');
+          for (const btn of allButtons) {
+            if (btn.dataset.ruleRegex === matchingRule.regex && 
+                btn.dataset.ruleCssClass === matchingRule.cssClass) {
+              matchingButton = btn;
+              break;
+            }
+          }
+        }
+        if (matchingButton) {
+          matchingButton.style.border = "2px solid var(--interactive-accent)";
+        }
+      });
+      
+      // 高亮过滤后规则的分组激活和CSS类收集
+      filteredRules.forEach((matchingRule, index) => {
+        let matchingButton = null;
+        try {
+          const escapedRegex = CSS.escape(matchingRule.regex);
+          const escapedCssClass = CSS.escape(matchingRule.cssClass);
+          matchingButton = this.contentEl.querySelector(
+            `[data-rule-regex="${escapedRegex}"][data-rule-css-class="${escapedCssClass}"]`
+          );
+        } catch (e) {
           const allButtons = this.contentEl.querySelectorAll('[data-rule-regex]');
           for (const btn of allButtons) {
             if (btn.dataset.ruleRegex === matchingRule.regex && 
@@ -9394,7 +10119,6 @@ class AddRegexRuleModal {
         }
         
         if (matchingButton) {
-          matchingButton.style.border = "2px solid var(--interactive-accent)";
           const groupContainer = matchingButton.closest('[data-rule-group]');
           if (groupContainer) {
             const grp = groupContainer.getAttribute('data-rule-group');
@@ -9414,34 +10138,34 @@ class AddRegexRuleModal {
           }
         }
         
-        // 收集匹配的CSS类
         matchingCssClasses.add(matchingRule.cssClass);
         
-        // 设置当前编辑规则（只设置第一个匹配的规则）
-        if (index === 0) {
-          // 检查是否是全局规则
+        // 设置当前编辑规则（优先精确匹配，其次最长匹配）
+        if (!this.currentEditingRule) {
+          const exactMatch = matchingRules.find(r => {
+            const parts = _splitRegexPipes(r.regex);
+            return parts.includes(inputValue) || r.regex === inputValue;
+          });
+          const bestRule = exactMatch || matchingRules.reduce((best, r) =>
+            r.regex.length > best.regex.length ? r : best, matchingRules[0]);
           const isGlobal = this.plugin.globalRules && this.plugin.globalRules.some(rule => 
-            rule.regex === matchingRule.regex && rule.cssClass === matchingRule.cssClass
+            rule.regex === bestRule.regex && rule.cssClass === bestRule.cssClass
           );
-          
-          // 找到规则的索引
           const ruleIndex = isGlobal 
             ? this.plugin.globalRules.findIndex(rule => 
-                rule.regex === matchingRule.regex && rule.cssClass === matchingRule.cssClass
+                rule.regex === bestRule.regex && rule.cssClass === bestRule.cssClass
               )
             : this.plugin.rules.findIndex(rule => 
-                rule.regex === matchingRule.regex && rule.cssClass === matchingRule.cssClass
+                rule.regex === bestRule.regex && rule.cssClass === bestRule.cssClass
               );
           
-          // 只有在没有已设置的 currentEditingRule 时才设置
-          // 这样可以防止用户点击规则按钮后，匹配逻辑覆盖用户的选择
-          if (ruleIndex !== -1 && !this.currentEditingRule) {
+          if (ruleIndex !== -1) {
             this.currentEditingRule = {
               index: ruleIndex,
-              regex: matchingRule.regex,
-              cssClass: matchingRule.cssClass,
+              regex: bestRule.regex,
+              cssClass: bestRule.cssClass,
               isGlobal: isGlobal,
-              remark: matchingRule.remark || ""
+              remark: bestRule.remark || ""
             };
             if (this._refreshUpdateChip) this._refreshUpdateChip();
           }
@@ -9451,9 +10175,7 @@ class AddRegexRuleModal {
       // 如果没有匹配的CSS类，直接返回
       if (matchingCssClasses.size === 0) return;
       
-      // 如果样式chip未激活，跳过样式按钮匹配
-      if (!styleActive) return;
-      
+
       // 查找所有分组容器
       const categoryContainers = this.contentEl.querySelectorAll('[data-category]');
       
@@ -9493,8 +10215,8 @@ class AddRegexRuleModal {
           const currentCategory = categoryContainer.getAttribute('data-category');
           const isSingleDisplay = this.plugin && this.plugin.collapsedCategories && this.plugin.collapsedCategories[currentCategory];
           
-          // 如果分组处于隐藏状态，自动展开它（但用户已手动切换到其他分组时不覆盖）
-          if (wasHidden && !(activeTabCategory && activeTabCategory !== currentCategory)) {
+          // 如果分组处于隐藏状态，自动展开它
+          if (wasHidden) {
             if (isSingleDisplay) {
               // 单显分组：将容器移到 tabContentContainer 展示，不修改 collapsedCategories
               // 先折叠之前展开的标签内容
@@ -9753,7 +10475,7 @@ class AddRegexRuleModal {
               
               if (rule && inputValue) {
                 // 检查规则是否包含当前输入值（精确匹配或作为子项匹配）
-                const ruleParts = rule.regex.split('|');
+                const ruleParts = _splitRegexPipes(rule.regex);
                 const isMatching = ruleParts.includes(inputValue) || rule.regex.includes(inputValue) || inputValue.includes(rule.regex);
                 
                 if (isMatching) {
@@ -9985,7 +10707,7 @@ class AddRegexRuleModal {
         categoryTitle.style.cssText = 'display:inline-block;padding:3px 10px;border-radius:14px;font-size:12px;cursor:grab;user-select:none;transition:all 0.15s ease;white-space:nowrap;flex-shrink:0;align-self:center;position:relative;border:1px solid var(--interactive-accent);background:var(--interactive-accent);color:#fff;';
 
         const groupFloatBtn = document.createElement('span');
-        groupFloatBtn.textContent = '📌';
+        groupFloatBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>';
         groupFloatBtn.draggable = false;
         groupFloatBtn.style.cssText = `
           position: absolute;
@@ -10122,113 +10844,7 @@ class AddRegexRuleModal {
           categoryTitle.style.cursor = 'grab';
         });
         
-        // 添加双击事件监听器 - 移动到单显区
-        categoryTitle.addEventListener("dblclick", () => {
-          // 双击常显分组 → 移动到单显区
-          // 隐藏分组
-          categoryContainer.style.display = 'none';
-          categoryTitle.style.background = 'var(--background-modifier-hover)';
-          categoryTitle.title = t('main.dblClickMoveToSingle');
-          
-          // 创建标签（如果不存在）
-          let existingTab = collapsedCategoriesContainer.querySelector(`[data-category="${category}"]`);
-          
-          if (!existingTab) {
-            const tab = collapsedCategoriesContainer.createEl('span', { text: category });
-            tab.className = 'rch-group-chip collapsed-category-reopen-btn';
-            tab.style.cssText = 'display:inline-block;padding:3px 10px;border-radius:14px;font-size:12px;cursor:pointer;user-select:none;transition:all 0.15s ease;white-space:nowrap;position:relative;border:1px solid var(--background-modifier-border);background:rgba(var(--mono-rgb-0),0.5);color:var(--text-muted);';
-            tab.setAttribute('data-category', category);
-            tab.title = t('main.clickToExpand') + `: ${category}`;
-            
 
-            // 绝对定位悬浮图标（鼠标悬停时显示，与常显分组一致）
-            const tabFloatBtn = document.createElement('span');
-            tabFloatBtn.textContent = '📌';
-            tabFloatBtn.draggable = false;
-            tabFloatBtn.style.cssText = `
-              position: absolute;
-              top: -6px;
-              right: -2px;
-              font-size: 9px;
-              cursor: pointer;
-              opacity: 0;
-              transition: opacity 0.2s;
-              background: var(--background-primary);
-              border-radius: 50%;
-              padding: 0px 1px;
-              z-index: 101;
-              line-height: 1;
-              ${!_isDesktop ? 'display:none;' : ''}
-            `;
-            tabFloatBtn.title = t('floating.floatThisGroup');
-            tabFloatBtn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              if (this.plugin && typeof this.plugin.floatButtonData === 'object') {
-                if (!this.plugin.floatButtonData.floatingBallGroupOptions) {
-                  this.plugin.floatButtonData.floatingBallGroupOptions = [];
-                }
-                if (!this.plugin.floatButtonData.floatingBallGroupOptions.includes(category)) {
-                  this.plugin.floatButtonData.floatingBallGroupOptions.push(category);
-                }
-                this.plugin.saveFloatButtonData();
-                this.plugin.renderFloatingOptionButtons();
-                new Notice(t('main.floatEnabled'));
-              }
-            });
-            tabFloatBtn.addEventListener('mousedown', (e) => {
-              e.stopPropagation();
-            });
-            tab.addEventListener('mouseenter', () => {
-              tabFloatBtn.style.opacity = '1';
-            });
-            tab.addEventListener('mouseleave', () => {
-              tabFloatBtn.style.opacity = '0';
-            });
-            tab.appendChild(tabFloatBtn);
-            
-            tab.addEventListener('dragover', (e) => {
-              e.preventDefault();
-              e.dataTransfer.dropEffect = 'move';
-              tab.style.outline = '2px solid var(--interactive-accent)';
-              tab.style.outlineOffset = '1px';
-            });
-            tab.addEventListener('dragleave', () => {
-              tab.style.outline = '';
-              tab.style.outlineOffset = '';
-            });
-            tab.addEventListener('drop', async (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              tab.style.outline = '';
-              tab.style.outlineOffset = '';
-              try {
-                const dragData = e.dataTransfer.getData('text/plain');
-                if (!dragData) return;
-                const data = JSON.parse(dragData);
-                if (data.selectedClassNames && data.selectedClassNames.length > 0) {
-                  await this.moveStyleToCategory(data.category, data.selectedClassNames, category);
-                } else if (data.category !== undefined && data.index !== undefined) {
-                  await this.moveStyleToCategory(data.category, data.index, category);
-                }
-              } catch (error) {
-                console.error('Error during tab drop:', error);
-              }
-            });
-
-          }
-          
-          // 保存状态到插件实例
-          if (this.plugin) {
-            this.plugin.settings = this.plugin.settings || {};
-            this.plugin.settings.collapsedCategories = this.plugin.settings.collapsedCategories || {};
-            this.plugin.settings.collapsedCategories[category] = true;
-            this.plugin.collapsedCategories = this.plugin.settings.collapsedCategories;
-            
-            this.plugin.saveData(this.plugin.settings);
-          }
-        });
-        
         // 添加右键菜单
         categoryTitle.addEventListener("contextmenu", (e) => {
           e.preventDefault();
@@ -10535,7 +11151,7 @@ class AddRegexRuleModal {
           styleOption.className = 'style-option';
           
           const floatPinBtn = document.createElement('span');
-          floatPinBtn.textContent = '📌';
+          floatPinBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>';
           floatPinBtn.style.cssText = `
             position: absolute;
             top: -8px;
@@ -10677,7 +11293,7 @@ class AddRegexRuleModal {
               
             } catch (error) {
               console.error('Error during drag and drop:', error);
-              this.showError(this.contentEl, '拖动排序时出错: ' + error.message);
+              this.showError(this.contentEl, t('other.dragSortError', {err: error.message}));
             }
           });
           
@@ -10776,6 +11392,11 @@ class AddRegexRuleModal {
                 
                 this.showSuccessMessage(t('main.ruleReapplied') + ` "${currentRegexValue}" ` + t('main.styleClass') + ` .${className}`);
                 
+                const newRuleIndex = this.plugin.rules.findIndex(r => r.regex === currentRegexValue && r.cssClass === className);
+                if (newRuleIndex !== -1) {
+                  this.currentEditingRule = { index: newRuleIndex, regex: currentRegexValue, cssClass: className, isGlobal: false, remark: this.remark || "" };
+                }
+                
                 this.clearHistorySection();
                 this.clearGlobalRulesSection();
                 this.clearRemarkSection();
@@ -10791,6 +11412,10 @@ class AddRegexRuleModal {
                 }
                 
                 this.plugin.checkAndApplyHighlights();
+                
+                if (typeof this.highlightMatchingRuleButtons === 'function') {
+                  this.highlightMatchingRuleButtons();
+                }
               }
             } else if (existingGlobalRule) {
               // 全局规则已存在，更新全局规则
@@ -10800,6 +11425,11 @@ class AddRegexRuleModal {
                 
                 this.showSuccessMessage(t('main.globalRuleUpdated') + ` "${currentRegexValue}" ` + t('main.styleClass') + ` .${className}`);
                 
+                const newGlobalIdx = this.plugin.globalRules.findIndex(r => r.regex === currentRegexValue && r.cssClass === className);
+                if (newGlobalIdx !== -1) {
+                  this.currentEditingRule = { index: newGlobalIdx, regex: currentRegexValue, cssClass: className, isGlobal: true, remark: existingGlobalRule.remark || "" };
+                }
+                
                 this.clearHistorySection();
                 this.clearGlobalRulesSection();
                 this.clearRemarkSection();
@@ -10815,6 +11445,10 @@ class AddRegexRuleModal {
                 }
                 
                 this.plugin.checkAndApplyHighlights();
+                
+                if (typeof this.highlightMatchingRuleButtons === 'function') {
+                  this.highlightMatchingRuleButtons();
+                }
               }
             } else {
               // 规则不存在，添加它
@@ -10825,6 +11459,17 @@ class AddRegexRuleModal {
                 const message = t('main.ruleStyleApplied') + ` "${currentRegexValue}" ` + t('main.styleClass') + ` .${className}`;
                 this.showSuccessMessage(message);
                 
+                const newRuleIndex = this.plugin.rules.findIndex(r => r.regex === currentRegexValue && r.cssClass === className);
+                if (newRuleIndex !== -1) {
+                  this.currentEditingRule = {
+                    index: newRuleIndex,
+                    regex: currentRegexValue,
+                    cssClass: className,
+                    isGlobal: false,
+                    remark: this.remark || ""
+                  };
+                }
+                
                 this.clearHistorySection();
                 this.clearGlobalRulesSection();
                 this.clearRemarkSection();
@@ -10840,9 +11485,13 @@ class AddRegexRuleModal {
                 }
                 
                 this.plugin.checkAndApplyHighlights();
+                
+                if (typeof this.highlightMatchingRuleButtons === 'function') {
+                  this.highlightMatchingRuleButtons();
+                }
               } else {
                 if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] ERROR: 正则表达式不能为空 (path 1 - original click, existingRule=false), wasLongPress:', wasLongPress, 'isMultiSelectMode:', this.isMultiSelectMode, 'regexValue:', currentRegexValue);
-                this.showErrorMessage(styleOption, '错误: 正则表达式不能为空');
+                this.showErrorMessage(styleOption, t('other.regexCannotEmpty'));
               }
             }
           });
@@ -10886,7 +11535,7 @@ class AddRegexRuleModal {
                 }
               } else {
                 if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] ERROR: 正则表达式不能为空 (path 2 - middle click), regexValue:', currentRegexValue);
-                this.showErrorMessage(styleOption, '错误: 正则表达式不能为空');
+                this.showErrorMessage(styleOption, t('other.regexCannotEmpty'));
               }
             }
           });
@@ -10931,7 +11580,7 @@ class AddRegexRuleModal {
                 }
               } else {
                 if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] ERROR: 正则表达式不能为空 (path 3 - auxclick middle), regexValue:', currentRegexValue);
-                this.showErrorMessage(styleOption, '错误: 正则表达式不能为空');
+                this.showErrorMessage(styleOption, t('other.regexCannotEmpty'));
               }
             }
           });
@@ -11148,7 +11797,7 @@ class AddRegexRuleModal {
                       }
                     } catch (error) {
                       console.error('Error moving style to category:', error);
-                      this.showErrorMessage(clone, '移动样式失败: ' + error.message);
+                      this.showErrorMessage(clone, t('other.moveStyleFailed2', {err: error.message}));
                     }
                     
                     // 关闭菜单
@@ -11615,7 +12264,7 @@ class AddRegexRuleModal {
                     this.showSuccessMessage(t('main.styleAddedAsHeading') + ` ${heading.text}`);
                   } catch (error) {
                     console.error('Error adding heading style:', error);
-                    this.showErrorMessage(styleOption, '添加标题样式失败: ' + error.message);
+                    this.showErrorMessage(styleOption, t('other.addTitleStyleFailed', {err: error.message}));
                   }
                   
                   // 关闭菜单
@@ -11888,7 +12537,7 @@ class AddRegexRuleModal {
                     this.showSuccessMessage(t('main.styleMovedToGroup') + ` "${category}"`);
                   } catch (error) {
                     console.error('Error moving style to category:', error);
-                    this.showErrorMessage(styleOption, '移动样式失败: ' + error.message);
+                    this.showErrorMessage(styleOption, t('other.moveStyleFailed2', {err: error.message}));
                   }
 
                   // 关闭菜单
@@ -12018,7 +12667,7 @@ class AddRegexRuleModal {
             floatPinBtn.style.opacity = '1';
             
             // 根据规则状态显示不同的提示
-            const action = existingRule ? '左键: 删除规则' : '左键: 应用样式';
+            const action = existingRule ? t('kw.leftClickDelete') : t('kw.leftClickApply');
             styleOption.title = `${action} | ` + t('main.longPressMultiSelect') + ` | ` + t('main.middleClickGlobal') + `\nCSS: ${styleInfo.class}`;
           });
           
@@ -12091,7 +12740,7 @@ class AddRegexRuleModal {
           
           // 添加悬浮图标
           const tabFloatBtn = document.createElement('span');
-          tabFloatBtn.textContent = '📌';
+          tabFloatBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>';
           tabFloatBtn.draggable = false;
           tabFloatBtn.style.cssText = `
             position: absolute;
@@ -12171,8 +12820,8 @@ class AddRegexRuleModal {
           
           // 查找所有匹配的规则
           const matchingRules = [...currentRules, ...globalRules].filter(rule => {
-            const ruleParts = rule.regex.split('|');
-            return ruleParts.some(part => inputValue.includes(part) || part.includes(inputValue));
+            const ruleParts = _splitRegexPipes(rule.regex);
+            return ruleParts.some(part => inputValue.includes(part) || part.includes(inputValue)) || _regexMatch(inputValue, rule.regex);
           });
           
           // 创建匹配的CSS类集合
@@ -12284,8 +12933,8 @@ class AddRegexRuleModal {
         
         // 查找所有匹配的规则
         const matchingRules = [...currentRules, ...globalRules].filter(rule => {
-          const ruleParts = rule.regex.split('|');
-          return ruleParts.some(part => inputValue.includes(part) || part.includes(inputValue));
+          const ruleParts = _splitRegexPipes(rule.regex);
+          return ruleParts.some(part => inputValue.includes(part) || part.includes(inputValue)) || _regexMatch(inputValue, rule.regex);
         });
         
         // 创建匹配的CSS类集合
@@ -12486,7 +13135,7 @@ class AddRegexRuleModal {
 
           const chipBar = contentEl.createDiv();
           chipBar.className = 'rch-top-chip-bar';
-          chipBar.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;position:sticky;top:0;z-index:10;background:var(--background-secondary);padding:4px 0;';
+          chipBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;position:sticky;top:0;z-index:10;padding:4px 0;margin-bottom:4px;';
           
           const styleChip = chipBar.createEl('span');
           styleChip.className = 'rch-top-chip rch-style-chip';
@@ -12511,7 +13160,17 @@ class AddRegexRuleModal {
           const rulesContent = [rulesEl].filter(Boolean);
           const fnContainer = document.createElement('div');
           fnContainer.className = 'float-note-chip-content';
-          fnContainer.style.display = 'none';
+          fnContainer.style.cssText = 'display:none;flex-basis:100%;margin-top:4px;';
+          
+          const keywordBar = document.createElement('div');
+          keywordBar.className = 'rch-keyword-bar';
+          keywordBar.style.cssText = 'display:none;flex-wrap:wrap;gap:4px;padding:4px 6px;flex-basis:100%;';
+          this._keywordBar = keywordBar;
+          
+          const sentenceBar = document.createElement('div');
+          sentenceBar.className = 'rch-sentence-bar';
+          sentenceBar.style.cssText = 'display:none;flex-basis:100%;margin-top:4px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:6px;background:rgba(var(--mono-rgb-0),0.15);';
+          this._sentenceBar = sentenceBar;
           
           styleContent.forEach(el => { el.style.display = 'none'; });
           rulesContent.forEach(el => { el.style.display = 'none'; });
@@ -12519,27 +13178,549 @@ class AddRegexRuleModal {
           const getStyleContent = () => contentEl.querySelectorAll('.rch-style-container, .heading-styles-section');
           const getRulesContent = () => contentEl.querySelectorAll('.global-rules-section');
 
+          let fnActiveGroup = '__all__';
+          {
+            const _dg = (this.plugin.noteGroups || []).find(g => g._default);
+            if (_dg) fnActiveGroup = _dg.name;
+            else if (this.plugin._defaultFnGroup) fnActiveGroup = this.plugin._defaultFnGroup;
+          }
+          const _panelThemes = [];
+          const panelSchemePresets = this.plugin.colorSchemePresets || [];
+          function getNoteTheme(n) { if (n._customTheme) return n._customTheme; const s = panelSchemePresets.find(p => p.id === n._colorScheme); if (s) { const t = panelSchemeToTheme(s); if (t) return t; } return panelSchemePresets.length ? panelSchemeToTheme(panelSchemePresets[0]) : {bg:'rgba(40,40,40,0.92)',border:'rgba(255,255,255,0.15)',text:'#e0e0e0',faint:'rgba(255,255,255,0.25)'}; }
+          function parseSchemeCss(css) {
+            const bm = css.match(/\{([^}]*)\}/);
+            if (!bm) return null;
+            const props = {};
+            bm[1].split(';').forEach(seg => { const ci = seg.indexOf(':'); if (ci < 0) return; const n = seg.substring(0,ci).trim().toLowerCase(); const v = seg.substring(ci+1).trim(); if (n && v) props[n] = v; });
+            const bg = props.background || props['background-color'] || '';
+            const text = props.color || '';
+            if (!bg || !text) return null;
+            return {bg, text, shadow: props['box-shadow'] || '', backdropFilter: props['backdrop-filter'] || '', textureBg: props['background-image'] || ''};
+          }
+          function panelSchemeToTheme(s) {
+            let p;
+            if (s.css) { p = parseSchemeCss(s.css); }
+            else if (s.bg && s.text) { p = {bg:s.bg, text:s.text, shadow:s.shadow||'', backdropFilter:s.backdropFilter||'', textureBg:s.textureBg||''}; }
+            else return null;
+            if (!p) return null;
+            const opMatch = p.bg.match(/[\d.]+\)$/);
+            const bOp = opMatch ? parseFloat(opMatch[0]) * 0.5 : 0.3;
+            const t = {bg:p.bg, border:p.bg.replace(/[\d.]+\)$/,bOp.toFixed(2)+')'), text:p.text, faint:p.text.replace(/[\d.]+\)$/,'0.4)')};
+            if (p.shadow) t.shadow = p.shadow;
+            if (p.backdropFilter) t.backdropFilter = p.backdropFilter;
+            if (p.textureBg) t.textureBg = p.textureBg;
+            return t;
+          }
+          function panelParseCss(css) {
+            let p=css; const bm=css.match(/\{([^}]*)\}/); if(bm) p=bm[1];
+            const bgM=p.match(/background\s*:\s*([^;]+)/);
+            const cM=p.match(/(?<![a-z-])color\s*:\s*([^;]+)/i);
+            if(!bgM||!cM) return null;
+            return {bg:bgM[1].trim(), text:cM[1].trim()};
+          }
           const renderFloatNotesInPanel = () => {
+            this.plugin._renderFloatNotesInPanel = renderFloatNotesInPanel;
+            fnContainer.querySelectorAll('[data-ro]').forEach(el => { if(el._ro) el._ro.disconnect(); });
             fnContainer.innerHTML = '';
             const notes = this.plugin.globalNotes || [];
-            if (notes.length === 0) {
-              fnContainer.innerHTML = '<div style="font-size:11px;color:var(--text-faint);padding:4px 8px;">No floating notes yet. Add via floating ball menu.</div>';
+            const groups = this.plugin.noteGroups || [];
+            const groupBar = document.createElement('div');
+            groupBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;';
+            const allChip = document.createElement('span');
+            allChip.textContent = t('fn.all');
+            allChip.style.cssText = `font-size:10px;padding:2px 8px;cursor:pointer;border-radius:10px;border:1px solid var(--background-modifier-border);user-select:none;${fnActiveGroup === '__all__' ? 'background:var(--interactive-accent);color:var(--text-on-accent);' : ''}`;
+            allChip.addEventListener('click', () => { fnActiveGroup = '__all__'; renderFloatNotesInPanel(); });
+            allChip.addEventListener('contextmenu', (e) => {
+              e.preventDefault();
+              const m = new Menu();
+              m.addItem((item) => {
+                item.setTitle(this.plugin._defaultFnGroup === '__all__' ? t('fn.cancelDefault') : t('fn.setDefault'));
+                item.setIcon(this.plugin._defaultFnGroup === '__all__' ? 'eye-off' : 'star');
+                item.onClick(() => {
+                  groups.forEach(gr => { gr._default = false; });
+                  if (this.plugin._defaultFnGroup === '__all__') {
+                    this.plugin._defaultFnGroup = null;
+                    fnActiveGroup = '__all__';
+                  } else {
+                    this.plugin._defaultFnGroup = '__all__';
+                    fnActiveGroup = '__all__';
+                  }
+                  this.plugin.saveGlobalNotes();
+                  renderFloatNotesInPanel();
+                });
+              });
+              m.showAtMouseEvent(e);
+            });
+            groupBar.appendChild(allChip);
+            const ungroupedChip = document.createElement('span');
+            ungroupedChip.textContent = t('fn.ungrouped');
+            ungroupedChip.style.cssText = `font-size:10px;padding:2px 8px;cursor:pointer;border-radius:10px;border:1px solid var(--background-modifier-border);user-select:none;${fnActiveGroup === '__ungrouped__' ? 'background:var(--interactive-accent);color:var(--text-on-accent);' : ''}`;
+            ungroupedChip.addEventListener('click', () => { fnActiveGroup = '__ungrouped__'; renderFloatNotesInPanel(); });
+            ungroupedChip.addEventListener('contextmenu', (e) => {
+              e.preventDefault();
+              const m = new Menu();
+              m.addItem((item) => {
+                item.setTitle(this.plugin._defaultFnGroup === '__ungrouped__' ? t('fn.cancelDefault') : t('fn.setDefault'));
+                item.setIcon(this.plugin._defaultFnGroup === '__ungrouped__' ? 'eye-off' : 'star');
+                item.onClick(() => {
+                  groups.forEach(gr => { gr._default = false; });
+                  if (this.plugin._defaultFnGroup === '__ungrouped__') {
+                    this.plugin._defaultFnGroup = null;
+                    fnActiveGroup = '__ungrouped__';
+                  } else {
+                    this.plugin._defaultFnGroup = '__ungrouped__';
+                    fnActiveGroup = '__ungrouped__';
+                  }
+                  this.plugin.saveGlobalNotes();
+                  renderFloatNotesInPanel();
+                });
+              });
+              m.showAtMouseEvent(e);
+            });
+            groupBar.appendChild(ungroupedChip);
+            for (const g of groups) {
+              const gChip = document.createElement('span');
+              gChip.textContent = g.name;
+              gChip.style.cssText = `font-size:10px;padding:2px 8px;cursor:pointer;border-radius:10px;border:1px solid var(--background-modifier-border);user-select:none;${fnActiveGroup === g.name ? 'background:var(--interactive-accent);color:var(--text-on-accent);' : ''}`;
+              gChip.addEventListener('click', () => { fnActiveGroup = g.name; renderFloatNotesInPanel(); });
+              gChip.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                const m = new Menu();
+                m.addItem((item) => { item.setTitle(t('fn.renameGroup')); item.setIcon('pencil'); item.onClick(() => {
+                  const newName = prompt(t('fn.newGroupName'), g.name);
+                  if (newName && newName.trim() && newName.trim() !== g.name) {
+                    const oldName = g.name;
+                    g.name = newName.trim();
+                    notes.filter(n => n._group === oldName).forEach(n => n._group = g.name);
+                    if (fnActiveGroup === oldName) fnActiveGroup = g.name;
+                    this.plugin.saveGlobalNotes();
+                    renderFloatNotesInPanel();
+                  }
+                }); });
+                m.addItem((item) => { item.setTitle(t('fn.deleteGroup')); item.setIcon('trash'); item.onClick(() => {
+                  notes.filter(n => n._group === g.name).forEach(n => { delete n._group; });
+                  groups.splice(groups.indexOf(g), 1);
+                  if (fnActiveGroup === g.name) fnActiveGroup = '__all__';
+                  this.plugin.saveGlobalNotes();
+                  renderFloatNotesInPanel();
+                }); });
+                m.addItem((item) => {
+                  item.setTitle(g._default ? t('fn.cancelDefault') : t('fn.setDefault'));
+                  item.setIcon(g._default ? 'eye-off' : 'star');
+                  item.onClick(() => {
+                    groups.forEach(gr => { gr._default = false; });
+                    this.plugin._defaultFnGroup = null;
+                    g._default = !g._default;
+                    if (g._default) fnActiveGroup = g.name;
+                    this.plugin.saveGlobalNotes();
+                    renderFloatNotesInPanel();
+                  });
+                });
+                m.showAtMouseEvent(e);
+              });
+              groupBar.appendChild(gChip);
+            }
+            const addGroupChip = document.createElement('span');
+            addGroupChip.textContent = '+';
+            addGroupChip.title = t('fn.addGroup');
+            addGroupChip.style.cssText = 'font-size:10px;padding:2px 8px;cursor:pointer;border-radius:10px;border:1px dashed var(--background-modifier-border);user-select:none;';
+            addGroupChip.addEventListener('click', async () => {
+              try {
+                const modal = new InputModal(
+                  this.app,
+                  t('fn.addGroup'),
+                  t('fn.newGroupNamePlaceholder'),
+                  t('fn.newGroupDefault'),
+                  async (name) => {
+                    if (name && name.trim()) {
+                      if (!groups.find(g => g.name === name.trim())) {
+                        groups.push({ name: name.trim() });
+                        this.plugin.saveGlobalNotes();
+                        renderFloatNotesInPanel();
+                      }
+                    }
+                  }
+                );
+                modal.open();
+              } catch(e) {}
+            });
+            groupBar.appendChild(addGroupChip);
+            fnContainer.appendChild(groupBar);
+            let filtered;
+            if (fnActiveGroup === '__all__') filtered = notes;
+            else if (fnActiveGroup === '__ungrouped__') filtered = notes.filter(n => !n._group);
+            else filtered = notes.filter(n => n._group === fnActiveGroup);
+            if (filtered.length === 0) {
+              fnContainer.innerHTML += '<div style="font-size:11px;color:var(--text-faint);padding:4px 8px;">' + t('fn.addNoteFromBall') + '</div>';
               return;
             }
             const masonry = document.createElement('div');
-            masonry.style.cssText = 'column-count:2;column-gap:6px;';
-            for (const note of notes) {
+            masonry.dataset.ro = '1';
+            masonry.style.cssText = 'column-gap:6px;';
+            const updateColumns = () => {
+              const w = contentEl.offsetWidth || 300;
+              const cols = Math.max(1, Math.floor(w / 160));
+              masonry.style.columnCount = cols;
+            };
+            updateColumns();
+            const ro = new ResizeObserver(updateColumns);
+            ro.observe(contentEl);
+            masonry._ro = ro;
+            for (const note of filtered) {
+              const pt = getNoteTheme(note);
               const card = document.createElement('div');
-              card.style.cssText = 'break-inside:avoid;margin-bottom:4px;padding:4px 6px;background:rgba(168,213,162,0.15);border:1px solid rgba(168,213,162,0.3);font-size:11px;color:var(--text-normal);white-space:pre-wrap;word-break:break-word;cursor:pointer;';
-              card.textContent = note.text || '(空)';
-              if (!note.text) card.style.color = 'var(--text-faint)';
-              card.addEventListener('dblclick', () => {
+              card.className = 'fn-panel-card';
+              card.dataset.noteId = note.id;
+              card.style.cssText = `break-inside:avoid;margin-bottom:4px;padding:4px 6px;background:${pt.bg};border:1px solid ${pt.border};font-size:11px;color:${pt.text};white-space:pre-wrap;word-break:break-word;cursor:pointer;position:relative;min-height:22px;${pt.shadow?'box-shadow:'+pt.shadow+';':''}${pt.backdropFilter?'backdrop-filter:'+pt.backdropFilter+';-webkit-backdrop-filter:'+pt.backdropFilter+';':''}`;
+              if (pt.textureBg) { const tl=document.createElement('div');tl.className='fn-texture';tl.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;background-image:'+pt.textureBg+';mix-blend-mode:overlay;border-radius:inherit;z-index:0;';card.appendChild(tl); }
+              const btnBar = document.createElement('div');
+              btnBar.style.cssText = `display:flex;gap:0;position:absolute;top:0;left:0;right:0;z-index:2;align-items:center;justify-content:space-between;padding:2px 2px;opacity:0;transition:opacity 0.15s;pointer-events:none;background:rgba(128,128,128,0.12);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);border-radius:0 0 4px 4px;color:${pt.text};`;
+              card.addEventListener('mouseenter', () => { btnBar.style.opacity = '1'; btnBar.style.pointerEvents = 'auto'; });
+              card.addEventListener('mouseleave', () => { btnBar.style.opacity = '0'; btnBar.style.pointerEvents = 'none'; });
+              const btnBarLeft = document.createElement('div');
+              btnBarLeft.style.cssText = 'display:flex;align-items:center;gap:0;';
+              const pinIcon = document.createElement('span');
+                pinIcon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
+                pinIcon.title = t('floating.notePinInline');
+                pinIcon.style.cssText = 'cursor:pointer;display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;transition:background 0.1s;';
+                pinIcon.addEventListener('mouseenter', () => { pinIcon.style.background = 'rgba(0,0,0,0.06)'; });
+                pinIcon.addEventListener('mouseleave', () => { pinIcon.style.background = 'transparent'; });
+                pinIcon.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  note._hidden = false;
+                  this.plugin.saveGlobalNotes();
+                  this.plugin.renderGlobalNotesArea();
+                  renderFloatNotesInPanel();
+                });
+                if (_isDesktop) {
+                  pinIcon.addEventListener('mousedown', (e) => {
+                    if (e.button === 1) { e.stopPropagation(); e.preventDefault(); }
+                  });
+                  pinIcon.addEventListener('auxclick', (e) => {
+                    if (e.button === 1) {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      this.plugin._openNotePopout(note);
+                      renderFloatNotesInPanel();
+                    }
+                  });
+                }
+                btnBarLeft.appendChild(pinIcon);
+              const copyBtn = document.createElement('span');
+              copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+              copyBtn.title = t('fn.copyContent');
+              copyBtn.style.cssText = 'cursor:pointer;display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;transition:background 0.1s;';
+              copyBtn.addEventListener('mouseenter', () => { copyBtn.style.background = 'rgba(0,0,0,0.06)'; });
+              copyBtn.addEventListener('mouseleave', () => { copyBtn.style.background = 'transparent'; });
+              copyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(note.text || '').then(() => {
+                  copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>';
+                  setTimeout(() => { copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'; }, 800);
+                });
+              });
+              btnBarLeft.appendChild(copyBtn);
+              const panelPaletteBtn = document.createElement('span');
+              panelPaletteBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.7 1.6-1.6 0-.4-.1-.8-.4-1.1-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2c3 0 5-2.2 5-5C23 5.6 18 2 12 2z"/><circle cx="7.5" cy="10.5" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="7" r="1.5" fill="currentColor" stroke="none"/><circle cx="16.5" cy="10.5" r="1.5" fill="currentColor" stroke="none"/></svg>';
+              panelPaletteBtn.title = t('fn.colorScheme');
+              panelPaletteBtn.style.cssText = 'cursor:pointer;display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;transition:background 0.1s;';
+              panelPaletteBtn.addEventListener('mouseenter', () => { panelPaletteBtn.style.background = 'rgba(0,0,0,0.06)'; });
+              panelPaletteBtn.addEventListener('mouseleave', () => { panelPaletteBtn.style.background = 'transparent'; });
+              panelPaletteBtn.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const schemes = panelSchemePresets;
+                if (!schemes.length) return;
+                let idx = note._colorScheme ? schemes.findIndex(s => s.id === note._colorScheme) : 0;
+                if (idx < 0) idx = 0;
+                idx = (idx + (e.deltaY < 0 ? 1 : schemes.length - 1)) % schemes.length;
+                const scheme = schemes[idx];
+                const theme = panelSchemeToTheme(scheme);
+                if (!theme) return;
+                note._customTheme = theme;
+                note._colorScheme = scheme.id;
+                delete note._customCss;
+                this.plugin.saveGlobalNotes();
+                const noteCard = card;
+                const cardText = noteCard.querySelector('span');
+                const cardTs = noteCard.querySelector('div');
+                noteCard.style.background = theme.bg;
+                noteCard.style.borderColor = theme.border;
+                noteCard.style.color = theme.text;
+                if (cardText) cardText.style.color = theme.text;
+                if (cardTs) cardTs.style.color = theme.faint;
+                if (theme.shadow) noteCard.style.boxShadow = theme.shadow; else noteCard.style.boxShadow = '';
+                if (theme.backdropFilter) { noteCard.style.backdropFilter = theme.backdropFilter; noteCard.style.webkitBackdropFilter = theme.backdropFilter; } else { noteCard.style.backdropFilter = ''; noteCard.style.webkitBackdropFilter = ''; }
+                const texEl = noteCard.querySelector('.fn-texture');
+                if (theme.textureBg && !texEl) { const tl=document.createElement('div');tl.className='fn-texture';tl.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;background-image:'+theme.textureBg+';mix-blend-mode:overlay;border-radius:inherit;z-index:0;';noteCard.appendChild(tl); }
+                else if (!theme.textureBg && texEl) texEl.remove();
+                else if (theme.textureBg && texEl) texEl.style.backgroundImage = theme.textureBg;
+                if (!panelPaletteBtn._schemeTip) { panelPaletteBtn._schemeTip = document.createElement('div'); panelPaletteBtn._schemeTip.className = 'scheme-tip'; panelPaletteBtn._schemeTip.style.cssText = 'position:fixed;background:rgba(0,0,0,0.7);color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;pointer-events:none;z-index:9999;white-space:nowrap;transition:opacity 0.3s;'; document.body.appendChild(panelPaletteBtn._schemeTip); }
+                const br = panelPaletteBtn.getBoundingClientRect();
+                panelPaletteBtn._schemeTip.style.top = (br.top - 22) + 'px';
+                panelPaletteBtn._schemeTip.style.left = br.left + 'px';
+                panelPaletteBtn._schemeTip.textContent = scheme.id;
+                panelPaletteBtn._schemeTip.style.opacity = '1';
+                clearTimeout(panelPaletteBtn._schemeTipTimer);
+                panelPaletteBtn._schemeTipTimer = setTimeout(() => { if (panelPaletteBtn._schemeTip) panelPaletteBtn._schemeTip.style.opacity = '0'; }, 1200);
+                this.plugin._syncNoteTheme(note.id, 'panel');
+              }, { passive: false });
+              panelPaletteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                console.log('[Panel] paletteBtn clicked, presets:', this.plugin.colorSchemePresets?.length);
+                const ex = document.querySelector('.color-scheme-popup');
+                if (ex) { ex.remove(); return; }
+                const noteCard = card;
+                const cardText = noteCard.querySelector('span');
+                const cardTs = noteCard.querySelector('div');
+                let curTheme = getNoteTheme(note);
+                const popup = document.createElement('div');
+                popup.className = 'color-scheme-popup';
+                popup.style.cssText = 'position:fixed;z-index:10000;background:rgba(var(--mono-rgb-0),0.75);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border:none;border-radius:12px;padding:0;min-width:320px;max-width:380px;max-height:75vh;overflow:hidden;display:flex;flex-direction:column;font-size:12px;color:var(--text-normal);box-shadow:0 12px 40px rgba(0,0,0,0.35);';
+                const btnRect = panelPaletteBtn.getBoundingClientRect();
+                popup.style.top = Math.min(btnRect.bottom + 4, window.innerHeight - 300) + 'px';
+                popup.style.left = Math.min(Math.max(btnRect.left - 260, 8), window.innerWidth - 390) + 'px';
+                const header = document.createElement('div');
+                header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 10px;cursor:move;user-select:none;-webkit-user-select:none;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;';
+                const title = document.createElement('span');
+                title.style.cssText = 'font-weight:bold;font-size:13px;';
+                title.textContent = t('fn.colorScheme');
+                header.appendChild(title);
+                popup.appendChild(header);
+                let pDrag=false,pDragX=0,pDragY=0,pStartX=0,pStartY=0;
+                header.addEventListener('mousedown',(e)=>{pDrag=true;pDragX=e.clientX;pDragY=e.clientY;const r=popup.getBoundingClientRect();pStartX=r.left;pStartY=r.top;e.preventDefault();});
+                document.addEventListener('mousemove',(e)=>{if(!pDrag)return;popup.style.left=(pStartX+e.clientX-pDragX)+'px';popup.style.top=(pStartY+e.clientY-pDragY)+'px';});
+                document.addEventListener('mouseup',()=>{pDrag=false;});
+                header.addEventListener('touchstart',(e)=>{const t=e.touches[0];pDrag=true;pDragX=t.clientX;pDragY=t.clientY;const r=popup.getBoundingClientRect();pStartX=r.left;pStartY=r.top;e.preventDefault();},{passive:false});
+                document.addEventListener('touchmove',(e)=>{if(!pDrag)return;const t=e.touches[0];popup.style.left=(pStartX+t.clientX-pDragX)+'px';popup.style.top=(pStartY+t.clientY-pDragY)+'px';e.preventDefault();},{passive:false});
+                document.addEventListener('touchend',()=>{pDrag=false;});
+                const scrollBody = document.createElement('div');
+                scrollBody.style.cssText = 'overflow-y:auto;padding:8px 10px;flex:1;';
+                const allSchemes = [...panelSchemePresets];
+
+                const grid = document.createElement('div');
+                grid.style.cssText = 'display:grid;grid-template-columns:repeat(5,1fr);gap:5px;';
+                let selectedSwatch = null;
+                allSchemes.forEach(scheme => {
+                  const swatch = document.createElement('div');
+                  const isSel = note._colorScheme === scheme.id;
+                  swatch.dataset.schemeId = scheme.id;
+                  swatch.style.cssText = 'background:'+(parseSchemeCss(scheme.css)?.bg||'')+';color:'+(parseSchemeCss(scheme.css)?.text||'')+';border-radius:4px;padding:4px;cursor:pointer;text-align:center;font-size:9px;height:32px;display:flex;align-items:center;justify-content:center;border:2px solid '+(isSel?'var(--interactive-accent)':'transparent')+';transition:border-color 0.1s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+                  if (isSel) selectedSwatch = swatch;
+                  swatch.textContent = scheme.id;
+                  swatch.addEventListener('mouseenter', () => {
+                    const theme = panelSchemeToTheme(scheme);
+                    if(!theme)return;
+                    noteCard.style.background = theme.bg;
+                    noteCard.style.borderColor = theme.border;
+                    noteCard.style.color = theme.text;
+                    if (cardText) cardText.style.color = theme.text;
+                    if (cardTs) cardTs.style.color = theme.faint;
+                    if (theme.shadow) noteCard.style.boxShadow = theme.shadow; else noteCard.style.boxShadow = '';
+                    if (theme.backdropFilter) { noteCard.style.backdropFilter = theme.backdropFilter; noteCard.style.webkitBackdropFilter = theme.backdropFilter; } else { noteCard.style.backdropFilter = ''; noteCard.style.webkitBackdropFilter = ''; }
+                    const texEl = noteCard.querySelector('.fn-texture');
+                    if (theme.textureBg && !texEl) { const tl=document.createElement('div');tl.className='fn-texture';tl.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;background-image:'+theme.textureBg+';mix-blend-mode:overlay;border-radius:inherit;z-index:0;';noteCard.appendChild(tl); }
+                    else if (!theme.textureBg && texEl) texEl.remove();
+                    else if (theme.textureBg && texEl) texEl.style.backgroundImage = theme.textureBg;
+                  });
+                  swatch.addEventListener('mouseleave', () => {
+                    noteCard.style.background = curTheme.bg;
+                    noteCard.style.borderColor = curTheme.border;
+                    noteCard.style.color = curTheme.text;
+                    if (cardText) cardText.style.color = curTheme.text;
+                    if (cardTs) cardTs.style.color = curTheme.faint;
+                    if (curTheme.shadow) noteCard.style.boxShadow = curTheme.shadow; else noteCard.style.boxShadow = '';
+                    if (curTheme.backdropFilter) { noteCard.style.backdropFilter = curTheme.backdropFilter; noteCard.style.webkitBackdropFilter = curTheme.backdropFilter; } else { noteCard.style.backdropFilter = ''; noteCard.style.webkitBackdropFilter = ''; }
+                    const texEl = noteCard.querySelector('.fn-texture');
+                    if (curTheme.textureBg && !texEl) { const tl=document.createElement('div');tl.className='fn-texture';tl.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;background-image:'+curTheme.textureBg+';mix-blend-mode:overlay;border-radius:inherit;z-index:0;';noteCard.appendChild(tl); }
+                    else if (!curTheme.textureBg && texEl) texEl.remove();
+                    else if (curTheme.textureBg && texEl) texEl.style.backgroundImage = curTheme.textureBg;
+                  });
+                  swatch.addEventListener('click', () => {
+                    const theme = panelSchemeToTheme(scheme);
+                    if(!theme)return;
+                    note._customTheme = theme;
+                    note._colorScheme = scheme.id;
+                    delete note._customCss;
+                    this.plugin.saveGlobalNotes();
+                    curTheme = theme;
+                    noteCard.style.background = theme.bg;
+                    noteCard.style.borderColor = theme.border;
+                    noteCard.style.color = theme.text;
+                    if (cardText) cardText.style.color = theme.text;
+                    if (cardTs) cardTs.style.color = theme.faint;
+                    if (theme.shadow) noteCard.style.boxShadow = theme.shadow; else noteCard.style.boxShadow = '';
+                    if (theme.backdropFilter) { noteCard.style.backdropFilter = theme.backdropFilter; noteCard.style.webkitBackdropFilter = theme.backdropFilter; } else { noteCard.style.backdropFilter = ''; noteCard.style.webkitBackdropFilter = ''; }
+                    const texEl2 = noteCard.querySelector('.fn-texture');
+                    if (theme.textureBg && !texEl2) { const tl=document.createElement('div');tl.className='fn-texture';tl.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;background-image:'+theme.textureBg+';mix-blend-mode:overlay;border-radius:inherit;z-index:0;';noteCard.appendChild(tl); }
+                    else if (!theme.textureBg && texEl2) texEl2.remove();
+                    else if (theme.textureBg && texEl2) texEl2.style.backgroundImage = theme.textureBg;
+                    cssTextarea.value = scheme.css || '';
+                    originalCss = (scheme.css || '').trim();
+                    cssSection.style.display='block';
+                    updateSaveBtn();
+                    if (selectedSwatch) selectedSwatch.style.borderColor = 'transparent';
+                    swatch.style.borderColor = 'var(--interactive-accent)';
+                    selectedSwatch = swatch;
+                    this.plugin._syncNoteTheme(note.id, 'panel');
+                  });
+                  swatch.addEventListener('mousedown', (e) => {
+                    if (e.button !== 1) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const doDelete = () => {
+                      const idx = this.plugin.colorSchemePresets.findIndex(s => s.id === scheme.id);
+                      if (idx >= 0) { this.plugin.colorSchemePresets.splice(idx, 1); this.plugin.saveColorSchemes(); }
+                      swatch.remove();
+                      if (selectedSwatch === swatch) selectedSwatch = null;
+                    };
+                    if (localStorage.getItem('sg-scheme-no-confirm-delete') === '1') { doDelete(); return; }
+                    const confirmEl = document.createElement('div');
+                    confirmEl.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:12px;';
+                    confirmEl.innerHTML = '<div style="background:var(--background-primary);padding:12px 16px;border-radius:8px;text-align:center;font-size:12px;"><div style="margin-bottom:8px;">'+t('fn.deleteScheme')+' '+scheme.id+'？</div><label style="font-size:10px;color:var(--text-faint);display:flex;align-items:center;gap:4px;justify-content:center;margin-bottom:8px;"><input type="checkbox" id="sg-no-confirm"> '+t('fn.noConfirmDelete')+'</label><div style="display:flex;gap:8px;justify-content:center;"><button id="sg-del-yes" style="padding:4px 12px;cursor:pointer;font-size:11px;background:var(--interactive-accent);color:var(--text-on-accent);border:none;border-radius:3px;">'+t('fn.delete')+'</button><button id="sg-del-no" style="padding:4px 12px;cursor:pointer;font-size:11px;border:1px solid var(--background-modifier-border);background:transparent;color:var(--text-normal);border-radius:3px;">'+t('fn.cancel')+'</button></div></div>';
+                    popup.appendChild(confirmEl);
+                    confirmEl.querySelector('#sg-del-yes').onclick = () => { if (confirmEl.querySelector('#sg-no-confirm').checked) localStorage.setItem('sg-scheme-no-confirm-delete','1'); doDelete(); confirmEl.remove(); };
+                    confirmEl.querySelector('#sg-del-no').onclick = () => confirmEl.remove();
+                  });
+                  grid.appendChild(swatch);
+                });
+                scrollBody.appendChild(grid);
+                const cssSection = document.createElement('div');
+                cssSection.style.cssText = 'display:none;margin-top:8px;border-top:1px solid var(--background-modifier-border);padding-top:8px;';
+                const cssTextarea = document.createElement('textarea');
+                cssTextarea.style.cssText = 'width:100%;height:80px;font-size:11px;font-family:monospace;padding:6px;border:1px solid var(--background-modifier-border);background:var(--background-secondary);color:var(--text-normal);border-radius:4px;resize:vertical;box-sizing:border-box;';
+                cssTextarea.placeholder = '.my-scheme { background: rgba(...); color: rgba(...); }';
+                cssSection.appendChild(cssTextarea);
+                const saveBtn = document.createElement('button');
+                saveBtn.style.cssText = 'padding:3px 10px;cursor:pointer;font-size:11px;background:var(--interactive-accent);color:var(--text-on-accent);border:none;border-radius:3px;margin-top:6px;display:none;';
+                let originalCss = '';
+                const updateSaveBtn = () => {
+                  const cur = cssTextarea.value.trim();
+                  if (!cur || cur === originalCss) { saveBtn.style.display = 'none'; return; }
+                  const curId = cur.match(/\.([\w\u4e00-\u9fff-]+)/)?.[1];
+                  const origId = originalCss.match(/\.([\w\u4e00-\u9fff-]+)/)?.[1];
+                  const curProps = cur.replace(/\.[\w\u4e00-\u9fff-]+/, '').trim();
+                  const origProps = originalCss.replace(/\.[\w\u4e00-\u9fff-]+/, '').trim();
+                  const isUpdate = originalCss && (curId === origId || curProps === origProps);
+                  saveBtn.textContent = isUpdate ? t('fn.update') : t('fn.saveAsNew');
+                  saveBtn.style.display = '';
+                };
+                saveBtn.addEventListener('click', () => {
+                  const cls = cssTextarea.value.match(/\.([\w\u4e00-\u9fff-]+)/);
+                  if (!cls) return;
+                  const id = cls[1];
+                  const parsed = parseSchemeCss(cssTextarea.value);
+                  if (!parsed) return;
+                  const theme = panelSchemeToTheme(parsed);
+                  if(!theme)return;
+                  note._customTheme = theme;
+                  note._colorScheme = id;
+                  note._customCss = cssTextarea.value;
+                  if (!this.plugin.colorSchemePresets) this.plugin.colorSchemePresets = [];
+                  const origId = originalCss.match(/\.([\w\u4e00-\u9fff-]+)/)?.[1];
+                  if (origId && originalCss) {
+                    const existIdx = this.plugin.colorSchemePresets.findIndex(s => s.id === origId);
+                    if (existIdx >= 0) { this.plugin.colorSchemePresets[existIdx] = {id, css:cssTextarea.value}; }
+                    else { this.plugin.colorSchemePresets.push({id, css:cssTextarea.value}); }
+                  } else {
+                    const existIdx = this.plugin.colorSchemePresets.findIndex(s => s.id === id);
+                    if (existIdx >= 0) { this.plugin.colorSchemePresets[existIdx].css = cssTextarea.value; }
+                    else { this.plugin.colorSchemePresets.push({id, css:cssTextarea.value}); }
+                  }
+                  this.plugin.saveColorSchemes();
+                  this.plugin.saveGlobalNotes();
+                  curTheme = theme;
+                  originalCss = cssTextarea.value.trim();
+                  const oldSwatch = origId && origId !== id ? grid.querySelector('[data-scheme-id="'+origId+'"]') : null;
+                  if (oldSwatch) { oldSwatch.dataset.schemeId = id; oldSwatch.textContent = id; oldSwatch.style.background = parsed.bg; oldSwatch.style.color = parsed.text; }
+                  const existSwatch = grid.querySelector('[data-scheme-id="'+id+'"]');
+                  if (existSwatch && !oldSwatch) { existSwatch.style.background = parsed.bg; existSwatch.style.color = parsed.text; }
+                  else if (!existSwatch && !oldSwatch) {
+                    const ns = document.createElement('div');
+                    ns.dataset.schemeId = id;
+                    ns.style.cssText = 'background:'+parsed.bg+';color:'+parsed.text+';border-radius:4px;padding:4px;cursor:pointer;text-align:center;font-size:9px;height:32px;display:flex;align-items:center;justify-content:center;border:2px solid var(--interactive-accent);transition:border-color 0.1s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+                    ns.textContent = id;
+                    ns.addEventListener('click', () => { cssTextarea.value = cssTextarea.value; if(selectedSwatch)selectedSwatch.style.borderColor='transparent'; ns.style.borderColor='var(--interactive-accent)'; selectedSwatch=ns; });
+                    grid.appendChild(ns);
+                  }
+                  if (selectedSwatch) selectedSwatch.style.borderColor = 'transparent';
+                  updateSaveBtn();
+                  this.plugin._syncNoteTheme(note.id, 'panel');
+                });
+                cssSection.appendChild(saveBtn);
+
+                scrollBody.appendChild(cssSection);
+                const curScheme = allSchemes.find(s => s.id === note._colorScheme);
+                if (curScheme) { cssTextarea.value = curScheme.css || ''; originalCss = (curScheme.css || '').trim(); cssSection.style.display='block'; }
+                cssTextarea.addEventListener('input', () => {
+                  updateSaveBtn();
+                  const p = parseSchemeCss(cssTextarea.value);
+                  if (p) {
+                    const theme = panelSchemeToTheme(p);
+                    if(!theme)return;
+                    noteCard.style.background = theme.bg; noteCard.style.color = theme.text;
+                    if (cardText) cardText.style.color = theme.text;
+                    if (cardTs) cardTs.style.color = theme.faint;
+                    if (theme.shadow) noteCard.style.boxShadow = theme.shadow; else noteCard.style.boxShadow = '';
+                    if (theme.backdropFilter) { noteCard.style.backdropFilter = theme.backdropFilter; noteCard.style.webkitBackdropFilter = theme.backdropFilter; } else { noteCard.style.backdropFilter = ''; noteCard.style.webkitBackdropFilter = ''; }
+                    const texEl = noteCard.querySelector('.fn-texture');
+                    if (theme.textureBg && !texEl) { const tl=document.createElement('div');tl.className='fn-texture';tl.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;background-image:'+theme.textureBg+';mix-blend-mode:overlay;border-radius:inherit;z-index:0;';noteCard.appendChild(tl); }
+                    else if (!theme.textureBg && texEl) texEl.remove();
+                    else if (theme.textureBg && texEl) texEl.style.backgroundImage = theme.textureBg;
+                  }
+                });
+                popup.appendChild(scrollBody);
+                const closeOnOutside = (ev) => {
+                  if (!popup.contains(ev.target) && ev.target !== panelPaletteBtn) {
+                    popup.remove();
+                    document.removeEventListener('mousedown', closeOnOutside);
+                  }
+                };
+                setTimeout(() => document.addEventListener('mousedown', closeOnOutside), 0);
+                document.body.appendChild(popup);
+              });
+              btnBarLeft.appendChild(panelPaletteBtn);
+              btnBar.appendChild(btnBarLeft);
+              card.appendChild(btnBar);
+              const cardText = document.createElement('span');
+              cardText.style.cssText = 'display:block;';
+              if (note.text) {
+                const plugin = this.plugin;
+                let panelToggleHandler;
+                panelToggleHandler = async (newText) => {
+                  note.text = newText;
+                  await plugin.saveGlobalNotes();
+                  plugin.renderNoteText(cardText, newText, { onToggle: panelToggleHandler, noteId: note.id });
+                  plugin._syncNoteToPopout(note.id);
+                };
+                this.plugin.renderNoteText(cardText, note.text, { onToggle: panelToggleHandler, noteId: note.id });
+              } else {
+                cardText.textContent = t('fn.empty');
+                cardText.style.color = pt.faint;
+              }
+              card.appendChild(cardText);
+              const cardTs = document.createElement('div');
+              cardTs.style.cssText = `font-size:8px;color:${pt.faint};text-align:right;margin-top:2px;user-select:none;`;
+              const ts = note._createdAt || note.id;
+              cardTs.textContent = ts ? new Date(ts).toLocaleString('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+              card.appendChild(cardTs);
+              card.addEventListener('dblclick', (e) => {
+                if (e.target.closest('.note-action-bar') || e.target.closest('span[style]')) return;
+                if (e.target.tagName === 'SPAN' && e.target.style.cursor === 'pointer') return;
+                e.preventDefault();
                 const input = document.createElement('textarea');
                 input.value = note.text;
-                input.style.cssText = 'font-size:11px;border:none;background:transparent;color:var(--text-normal);outline:none;width:100%;min-height:30px;resize:vertical;padding:0;box-sizing:border-box;';
-                card.textContent = '';
+                const lineCount = (note.text || '').split('\n').length;
+                const minH = Math.max(card.offsetHeight, lineCount * 16 + 12);
+                input.style.cssText = `font-size:11px;border:none;background:transparent;color:${pt.text};outline:none;width:100%;min-height:${minH}px;resize:none;padding:0;box-sizing:border-box;overflow-y:auto;line-height:1.5;scrollbar-width:thin;scrollbar-color:rgba(128,128,128,0.25) transparent;`;
+        const autoResize = () => { input.style.height = 'auto'; const newH = input.scrollHeight; const cardInner = card.clientHeight - 12; input.style.height = Math.min(newH, cardInner) + 'px'; };
+                input.addEventListener('input', autoResize);
+                cardText.style.display = 'none';
+                btnBar.style.display = 'none';
                 card.appendChild(input);
                 input.focus();
+                setTimeout(autoResize, 0);
                 input.addEventListener('blur', () => {
                   note.text = input.value;
                   this.plugin.saveGlobalNotes();
@@ -12548,13 +13729,30 @@ class AddRegexRuleModal {
                 });
                 input.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { ev.preventDefault(); input.blur(); } });
               });
-              card.addEventListener('contextmenu', (e) => {
+
+      card.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
+                cancelHide();
+                pinnedChip = floatNoteChip;
+                updateDisplay();
                 const menu = new Menu();
-                menu.addItem((item) => { item.setTitle('删除笔记'); item.setIcon('trash'); item.onClick(() => { this.plugin.globalNotes = this.plugin.globalNotes.filter(n => n.id !== note.id); this.plugin.saveGlobalNotes(); this.plugin.renderGlobalNotesArea(); renderFloatNotesInPanel(); }); });
-                menu.addItem((item) => { item.setTitle(note._hidden ? '显示悬浮' : '隐藏悬浮'); item.setIcon(note._hidden ? 'eye' : 'eye-off'); item.onClick(() => { note._hidden = !note._hidden; this.plugin.saveGlobalNotes(); this.plugin.renderGlobalNotesArea(); renderFloatNotesInPanel(); }); });
+                menu.addItem((item) => { item.setTitle(t('fn.deleteNote')); item.setIcon('trash'); item.onClick(() => { const deletedNote = JSON.parse(JSON.stringify(note)); this.plugin.globalNotes = this.plugin.globalNotes.filter(n => n.id !== note.id); this.plugin.saveGlobalNotes(); this.plugin.renderGlobalNotesArea(); renderFloatNotesInPanel(); _showPanelUndoDelete(card, deletedNote, this.plugin); }); });
+                menu.addItem((item) => { item.setTitle(note._hidden ? t('fn.showFloat') : t('fn.hideFloat')); item.setIcon(note._hidden ? 'eye' : 'eye-off'); item.onClick(() => { note._hidden = !note._hidden; this.plugin.saveGlobalNotes(); this.plugin.renderGlobalNotesArea(); renderFloatNotesInPanel(); }); });
                 if (_isDesktop) {
-                  menu.addItem((item) => { item.setTitle('弹出为独立窗口'); item.setIcon('pop-out'); item.onClick(() => { this.plugin._openNotePopout(note); renderFloatNotesInPanel(); }); });
+                  menu.addItem((item) => { item.setTitle(t('fn.popoutWindow')); item.setIcon('pop-out'); item.onClick(() => { this.plugin._openNotePopout(note); renderFloatNotesInPanel(); }); });
+                }
+                const noteGroups = this.plugin.noteGroups || [];
+                if (noteGroups.length > 0) {
+                  menu.addItem((item) => {
+                    item.setTitle(t('fn.moveToGroup'));
+                    const sub = item.setSubmenu && item.setSubmenu() || null;
+                    if (sub) {
+                      noteGroups.forEach(g => {
+                        sub.addItem((si) => { si.setTitle(g.name + (note._group === g.name ? ' ✓' : '')); si.onClick(() => { note._group = g.name; this.plugin.saveGlobalNotes(); renderFloatNotesInPanel(); }); });
+                      });
+                      sub.addItem((si) => { si.setTitle(t('fn.noGroup')); si.onClick(() => { delete note._group; this.plugin.saveGlobalNotes(); renderFloatNotesInPanel(); }); });
+                    }
+                  });
                 }
                 menu.showAtMouseEvent(e);
               });
@@ -12573,10 +13771,12 @@ class AddRegexRuleModal {
               curStyle.forEach(el => { el.style.display = ''; });
               curRules.forEach(el => { el.style.display = 'none'; });
               fnContainer.style.display = 'none';
+              if (keywordBar.children.length > 0) keywordBar.style.display = 'flex';
             } else if (activeChip === rulesChip) {
               curRules.forEach(el => { el.style.display = ''; });
               curStyle.forEach(el => { el.style.display = 'none'; });
               fnContainer.style.display = 'none';
+              keywordBar.style.display = 'none';
             } else if (activeChip === floatNoteChip) {
               if (fnWasHidden) renderFloatNotesInPanel();
               if (fnContainer.previousElementSibling !== chipBar) {
@@ -12585,10 +13785,12 @@ class AddRegexRuleModal {
               fnContainer.style.display = '';
               curStyle.forEach(el => { el.style.display = 'none'; });
               curRules.forEach(el => { el.style.display = 'none'; });
+              keywordBar.style.display = 'none';
             } else {
               curStyle.forEach(el => { el.style.display = 'none'; });
               curRules.forEach(el => { el.style.display = 'none'; });
               fnContainer.style.display = 'none';
+              keywordBar.style.display = 'none';
             }
             const updateChipStyle = (chip, isActive) => {
               chip.style.borderColor = isActive ? 'var(--interactive-accent)' : 'var(--background-modifier-border)';
@@ -12599,17 +13801,14 @@ class AddRegexRuleModal {
             updateChipStyle(rulesChip, activeChip === rulesChip);
             updateChipStyle(floatNoteChip, activeChip === floatNoteChip);
             if (activeChip && inputEl.value.trim()) {
-              requestAnimationFrame(() => {
-                if (typeof this.highlightMatchingRuleButtons === 'function') {
-                  this.highlightMatchingRuleButtons();
-                }
-              });
+              this.highlightMatchingRuleButtons();
             }
           };
           
           const scheduleHide = () => {
             clearTimeout(hideTimer);
             hideTimer = setTimeout(() => {
+              if (document.querySelector('.menu:not(.is-closed)')) { scheduleHide(); return; }
               hoveredChip = null;
               updateDisplay();
             }, 150);
@@ -12619,25 +13818,50 @@ class AddRegexRuleModal {
             clearTimeout(hideTimer);
           };
 
-          const bindChip = (chip, contentEls) => {
+          const bindChip = (chip, selector) => {
             chip.addEventListener('mouseenter', () => { cancelHide(); hoveredChip = chip; updateDisplay(); });
-            chip.addEventListener('mouseleave', () => { scheduleHide(); });
+            chip.addEventListener('mouseleave', (e) => {
+              if (e.relatedTarget && e.relatedTarget.closest('.rch-top-chip-bar')) return;
+              if (e.relatedTarget && e.relatedTarget.closest('.menu')) return;
+              scheduleHide();
+            });
             chip.addEventListener('click', () => {
               cancelHide();
               if (pinnedChip === chip) { pinnedChip = null; if (hoveredChip === chip) hoveredChip = null; }
               else { pinnedChip = chip; }
               updateDisplay();
             });
-            for (const el of contentEls) {
-              if (!el) continue;
-              el.addEventListener('mouseenter', () => { cancelHide(); hoveredChip = chip; updateDisplay(); }, { signal: abSig });
-              el.addEventListener('mouseleave', () => { hoveredChip = null; scheduleHide(); }, { signal: abSig });
-            }
+            contentEl.addEventListener('mouseover', (e) => {
+              if (e.target.closest('.rch-top-chip-bar')) return;
+              if (e.target.closest(selector)) {
+                cancelHide();
+                if (hoveredChip !== chip) {
+                  hoveredChip = chip;
+                  updateDisplay();
+                }
+              }
+            }, { signal: abSig });
+            contentEl.addEventListener('mouseout', (e) => {
+              if (e.target.closest('.rch-top-chip-bar')) return;
+              if (e.target.closest('.menu')) return;
+              if (e.target.closest(selector) && (!e.relatedTarget || !e.relatedTarget.closest(selector))) {
+                hoveredChip = null;
+                scheduleHide();
+              }
+            }, { signal: abSig });
           };
 
-          bindChip(styleChip, styleContent);
-          bindChip(rulesChip, rulesContent);
-          bindChip(floatNoteChip, [fnContainer]);
+          bindChip(styleChip, '.rch-style-container, .heading-styles-section');
+          bindChip(rulesChip, '.global-rules-section');
+          bindChip(floatNoteChip, '.float-note-chip-content');
+          contentEl.addEventListener('contextmenu', () => {
+            const cur = hoveredChip || pinnedChip;
+            if (cur && !pinnedChip) { pinnedChip = cur; updateDisplay(); }
+          }, { signal: abSig });
+          
+          chipBar.appendChild(keywordBar);
+          chipBar.appendChild(sentenceBar);
+
           
           const insertBefore = styleEl || rulesEl;
           if (insertBefore && insertBefore.parentNode === contentEl) {
@@ -12645,14 +13869,16 @@ class AddRegexRuleModal {
           } else {
             contentEl.appendChild(chipBar);
           }
-          
           chipBar.after(fnContainer);
 
           
           const remarkSections = contentEl.querySelectorAll('.inline-remark-section, .inline-related-notes-section, .inline-related-highlights-section');
           remarkSections.forEach(s => { contentEl.appendChild(s); });
         }
-        
+
+        // 渲染历史关键词区块
+        this._renderKeywordHistory();
+
         if (this.plugin.settings?.enableDebugLog) console.timeEnd('[主面板] onOpen总耗时');
       });
     });
@@ -12668,6 +13894,7 @@ class AddRegexRuleModal {
           const anchorNode = selection.anchorNode;
           if (anchorNode && !this.modalEl.contains(anchorNode)) {
             this.regexInput.setValue(selectedText);
+
             if (this.highlightMatchingRuleButtons) this.highlightMatchingRuleButtons();
             if (this.showInlineRemarkForRegex) this.showInlineRemarkForRegex(selectedText);
           }
@@ -12849,63 +14076,7 @@ class AddRegexRuleModal {
       }
     });
     
-    // 标签双击 → 钉回常显
-    collapsedCategoriesContainer.addEventListener('dblclick', (e) => {
-      const tab = e.target.closest('.collapsed-category-reopen-btn');
-      if (!tab) return;
-      
-      const category = tab.getAttribute('data-category');
-      
-      // 如果当前标签是展开状态，先折叠内容
-      if (activeTabCategory === category) {
-        const categoryContainer = tabContentContainer.querySelector(`[data-category="${category}"]`);
-        if (categoryContainer) {
-          // 恢复分组标题显示
-          const catTitle = categoryContainer.querySelector('.rch-group-chip');
-          if (catTitle) catTitle.style.display = '';
-          categoryContainer.style.display = 'flex';
-          mainContainer.appendChild(categoryContainer);
-        }
-        tabContentContainer.style.display = 'none';
-        activeTabCategory = null;
-        if (this.plugin) {
-          this.plugin.settings.activeTabCategory = null;
-          this.plugin.saveData(this.plugin.settings);
-        }
-      } else {
-        // 分组在 mainContainer 中隐藏，改为显示
-        const categoryContainer = mainContainer.querySelector(`[data-category="${category}"]`);
-        if (categoryContainer) {
-          categoryContainer.style.display = 'flex';
-        }
-      }
-      
-      // 更新分类标题视觉效果
-      const categoryContainer = mainContainer.querySelector(`[data-category="${category}"]`);
-      if (categoryContainer) {
-        const categoryTitle = categoryContainer.querySelector('.rch-group-chip');
-        if (categoryTitle) {
-          categoryTitle.style.background = 'var(--interactive-accent)';
-          categoryTitle.style.color = '#fff';
-          categoryTitle.style.borderColor = 'var(--interactive-accent)';
-          categoryTitle.title = t('main.dblClickMoveToSingle');
-        }
-      }
-      
-      // 移除标签
-      tab.remove();
-      
-      // 更新插件的折叠状态
-      if (this.plugin) {
-        this.plugin.settings = this.plugin.settings || {};
-        this.plugin.settings.collapsedCategories = this.plugin.settings.collapsedCategories || {};
-        delete this.plugin.settings.collapsedCategories[category];
-        this.plugin.collapsedCategories = this.plugin.settings.collapsedCategories;
-        
-        this.plugin.saveData(this.plugin.settings);
-      }
-    });
-    
+
     // 标签右键 → 钉回常显
     collapsedCategoriesContainer.addEventListener('contextmenu', (e) => {
       const tab = e.target.closest('.collapsed-category-reopen-btn');
@@ -12916,58 +14087,6 @@ class AddRegexRuleModal {
       
       const menu = new Menu();
 
-      // 固定到常显区
-      menu.addItem((item) => {
-        item.setTitle(t('main.pinToNormalDisplay')).onClick(() => {
-          // 如果当前标签是展开状态，先折叠内容
-          if (activeTabCategory === category) {
-            const categoryContainer = tabContentContainer.querySelector(`[data-category="${category}"]`);
-            if (categoryContainer) {
-              // 恢复分组标题显示
-              const catTitle = categoryContainer.querySelector('.rch-group-chip');
-              if (catTitle) catTitle.style.display = '';
-              categoryContainer.style.display = 'flex';
-              mainContainer.appendChild(categoryContainer);
-            }
-            tabContentContainer.style.display = 'none';
-            activeTabCategory = null;
-            if (this.plugin) {
-              this.plugin.settings.activeTabCategory = null;
-              this.plugin.saveData(this.plugin.settings);
-            }
-          } else {
-            const categoryContainer = mainContainer.querySelector(`[data-category="${category}"]`);
-            if (categoryContainer) {
-              categoryContainer.style.display = 'flex';
-            }
-          }
-          
-          // 更新分类标题视觉效果
-          const categoryContainer = mainContainer.querySelector(`[data-category="${category}"]`);
-          if (categoryContainer) {
-            const categoryTitle = categoryContainer.querySelector('.rch-group-chip');
-            if (categoryTitle) {
-              categoryTitle.style.background = 'var(--interactive-accent)';
-              categoryTitle.style.color = '#fff';
-              categoryTitle.style.borderColor = 'var(--interactive-accent)';
-              categoryTitle.title = t('main.dblClickMoveToSingle');
-            }
-          }
-          
-          // 移除标签
-          tab.remove();
-          
-          // 更新插件的折叠状态
-          if (this.plugin) {
-            this.plugin.settings = this.plugin.settings || {};
-            this.plugin.settings.collapsedCategories = this.plugin.settings.collapsedCategories || {};
-            delete this.plugin.settings.collapsedCategories[category];
-            this.plugin.collapsedCategories = this.plugin.settings.collapsedCategories;
-            
-            this.plugin.saveData(this.plugin.settings);
-          }
-        });
-      });
 
       // 重命名选项
       menu.addItem((item) => {
@@ -13205,8 +14324,8 @@ class AddRegexRuleModal {
     settingsBar.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 8px;min-height:28px;';
     
     const gearIcon = settingsBar.createEl('span');
-    gearIcon.textContent = '⚙️';
-    gearIcon.style.cssText = 'font-size:14px;flex-shrink:0;cursor:default;user-select:none;';
+    gearIcon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+    gearIcon.style.cssText = 'flex-shrink:0;cursor:default;user-select:none;display:inline-flex;align-items:center;';
     
 
     
@@ -13232,9 +14351,11 @@ class AddRegexRuleModal {
     const chipDataMap = new Map();
     
     let settingsPopupObserver = null;
+    let spDragMoved = false;
     
     const repositionSettingsPopup = () => {
       if (!settingsPopup || !settingsBar) return;
+      if (spDragMoved) return;
       const barRect = settingsBar.getBoundingClientRect();
       const popupHeight = settingsPopup.offsetHeight;
       const availableAbove = barRect.top - 10;
@@ -13283,6 +14404,13 @@ class AddRegexRuleModal {
         }
         const popupParent = document.querySelector('.app-container') || document.body;
         popupParent.appendChild(settingsPopup);
+        let spDrag=false,spDragX=0,spDragY=0,spStartX=0,spStartY=0;
+        settingsPopup.addEventListener('mousedown',(e)=>{if(e.target.closest('input,button,textarea,select,a,.setting-item,.clickable-icon'))return;spDrag=true;spDragMoved=false;spDragX=e.clientX;spDragY=e.clientY;const r=settingsPopup.getBoundingClientRect();spStartX=r.left;spStartY=r.top;e.preventDefault();});
+        document.addEventListener('mousemove',(e)=>{if(!spDrag)return;spDragMoved=true;settingsPopup.style.left=(spStartX+e.clientX-spDragX)+'px';settingsPopup.style.top=(spStartY+e.clientY-spDragY)+'px';});
+        document.addEventListener('mouseup',()=>{spDrag=false;});
+        settingsPopup.addEventListener('touchstart',(e)=>{if(e.target.closest('input,button,textarea,select,a,.setting-item,.clickable-icon'))return;const tc=e.touches[0];spDrag=true;spDragMoved=false;spDragX=tc.clientX;spDragY=tc.clientY;const r=settingsPopup.getBoundingClientRect();spStartX=r.left;spStartY=r.top;e.preventDefault();},{passive:false});
+        document.addEventListener('touchmove',(e)=>{if(!spDrag)return;spDragMoved=true;const tc=e.touches[0];settingsPopup.style.left=(spStartX+tc.clientX-spDragX)+'px';settingsPopup.style.top=(spStartY+tc.clientY-spDragY)+'px';e.preventDefault();},{passive:false});
+        document.addEventListener('touchend',()=>{spDrag=false;});
         
         settingsPopup.addEventListener('mouseenter', () => {
           if (settingsPopupCloseTimer) { clearTimeout(settingsPopupCloseTimer); settingsPopupCloseTimer = null; }
@@ -13553,7 +14681,7 @@ class AddRegexRuleModal {
     const defaultPreviewTextCNInput = defaultPreviewTextCNRow.createEl("input");
     defaultPreviewTextCNInput.type = "text";
     defaultPreviewTextCNInput.value = this.plugin.settings?.defaultPreviewTextCN || '';
-    defaultPreviewTextCNInput.placeholder = '示例';
+    defaultPreviewTextCNInput.placeholder = t('settings.defaultPreviewTextCN');
     defaultPreviewTextCNInput.style.width = "120px";
     defaultPreviewTextCNInput.style.padding = "4px 8px";
     defaultPreviewTextCNInput.style.border = "1px solid var(--background-modifier-border)";
@@ -13811,6 +14939,64 @@ class AddRegexRuleModal {
       this.plugin.settings.showRelatedHighlights = e.target.checked;
       await this.plugin.saveData(this.plugin.settings);
     });
+
+    const sentenceThresholdRow = displayContent.createDiv();
+    sentenceThresholdRow.style.display = "flex";
+    sentenceThresholdRow.style.alignItems = "center";
+    sentenceThresholdRow.style.marginBottom = "5px";
+    sentenceThresholdRow.style.flexWrap = "wrap";
+    sentenceThresholdRow.style.gap = "8px";
+
+    const sentenceThresholdLabel = sentenceThresholdRow.createEl("span");
+    sentenceThresholdLabel.textContent = t('settings.sentenceThreshold') + ": ";
+    sentenceThresholdLabel.style.fontSize = "14px";
+    sentenceThresholdLabel.style.fontWeight = "600";
+
+    const sentenceThresholdHint = sentenceThresholdRow.createEl("span");
+    sentenceThresholdHint.textContent = t('settings.sentenceThresholdDesc');
+    sentenceThresholdHint.style.fontSize = "12px";
+    sentenceThresholdHint.style.color = "var(--text-muted)";
+    sentenceThresholdHint.style.width = "100%";
+
+    const cnLabel = sentenceThresholdRow.createEl("span");
+    cnLabel.textContent = t('settings.sentenceThresholdCN') + ": ";
+    cnLabel.style.fontSize = "13px";
+
+    const cnInput = sentenceThresholdRow.createEl("input");
+    cnInput.type = "number";
+    cnInput.value = this.plugin.settings?.sentenceThresholdCN !== undefined ? this.plugin.settings.sentenceThresholdCN : 8;
+    cnInput.min = "1";
+    cnInput.max = "100";
+    cnInput.style.width = "60px";
+    cnInput.style.padding = "3px 6px";
+    cnInput.style.fontSize = "13px";
+    cnInput.style.border = "1px solid var(--background-modifier-border)";
+    cnInput.style.borderRadius = "4px";
+
+    const enLabel = sentenceThresholdRow.createEl("span");
+    enLabel.textContent = t('settings.sentenceThresholdEN') + ": ";
+    enLabel.style.fontSize = "13px";
+    enLabel.style.marginLeft = "8px";
+
+    const enInput = sentenceThresholdRow.createEl("input");
+    enInput.type = "number";
+    enInput.value = this.plugin.settings?.sentenceThresholdEN !== undefined ? this.plugin.settings.sentenceThresholdEN : 3;
+    enInput.min = "1";
+    enInput.max = "100";
+    enInput.style.width = "60px";
+    enInput.style.padding = "3px 6px";
+    enInput.style.fontSize = "13px";
+    enInput.style.border = "1px solid var(--background-modifier-border)";
+    enInput.style.borderRadius = "4px";
+
+    const saveThreshold = async () => {
+      if (!this.plugin.settings) this.plugin.settings = {};
+      this.plugin.settings.sentenceThresholdCN = parseInt(cnInput.value) || 8;
+      this.plugin.settings.sentenceThresholdEN = parseInt(enInput.value) || 3;
+      await this.plugin.saveData(this.plugin.settings);
+    };
+    cnInput.addEventListener("change", saveThreshold);
+    enInput.addEventListener("change", saveThreshold);
 
 
     // 添加标题设置分类
@@ -14185,7 +15371,7 @@ class AddRegexRuleModal {
     const fontSizeInput = fontSizeSettingRow.createEl("input");
     fontSizeInput.type = "number";
     fontSizeInput.value = this.plugin.settings?.popupFontSize !== undefined ? this.plugin.settings.popupFontSize : 14;
-    fontSizeInput.min = "12";
+    fontSizeInput.min = "1";
     fontSizeInput.max = "24";
     fontSizeInput.step = "1";
     fontSizeInput.style.width = "80px";
@@ -15060,7 +16246,7 @@ class AddRegexRuleModal {
           : this.plugin.settings.aiModel;
           
         this.plugin.settings.aiConfigs.push({
-          name: "默认AI",
+          name: t('other.promptDefault'),
           model: modelName,
           base_url: this.plugin.settings.apiUrl || "https://api.openai.com/v1/chat/completions",
           apiKey: this.plugin.settings.apiKey || "",
@@ -15338,6 +16524,27 @@ class AddRegexRuleModal {
       aiEditContainer.style.display = "none";
     });
 
+
+    // AI关系图 maxTokens 设置
+    const aiGraphMaxTokensRow = aiOutline.content.createDiv();
+    aiGraphMaxTokensRow.style.display = 'flex';
+    aiGraphMaxTokensRow.style.alignItems = 'center';
+    aiGraphMaxTokensRow.style.marginBottom = '8px';
+    const aiGraphMaxTokensLabel = aiGraphMaxTokensRow.createEl('span', { text: 'AI关系图 Max Tokens: ' });
+    aiGraphMaxTokensLabel.style.fontSize = '13px';
+    aiGraphMaxTokensLabel.style.minWidth = '160px';
+    const aiGraphMaxTokensInput = aiGraphMaxTokensRow.createEl('input');
+    aiGraphMaxTokensInput.type = 'number';
+    aiGraphMaxTokensInput.value = String(this.plugin.settings?.aiGraphMaxTokens || 4096);
+    aiGraphMaxTokensInput.style.width = '80px';
+    aiGraphMaxTokensInput.style.padding = '4px';
+    aiGraphMaxTokensInput.style.border = '1px solid var(--background-modifier-border)';
+    aiGraphMaxTokensInput.style.borderRadius = '4px';
+    aiGraphMaxTokensInput.addEventListener('change', async () => {
+      const val = parseInt(aiGraphMaxTokensInput.value) || 4096;
+      this.plugin.settings.aiGraphMaxTokens = val;
+      await this.plugin.saveData(this.plugin.settings);
+    });
 
     // 添加拼音样式设置区域
     const pinyinOutline = createOutlineSection(settingsContainer, t('settings.pinyinStyle'), { isCollapsed: true, wide: true });
@@ -15757,7 +16964,7 @@ class AddRegexRuleModal {
             localChipName = words.length > 3 ? words.slice(0, 3).join(' ') + '…' : rawName;
           }
         } else {
-          localChipName = '当前文件';
+          localChipName = t('kw.currentFile');
         }
       }
 
@@ -15783,7 +16990,7 @@ class AddRegexRuleModal {
           ctxMenu.className = 'rch-context-menu';
           ctxMenu.style.cssText = `position:fixed;top:${e.clientY}px;left:${e.clientX}px;background:var(--background-primary);border:1px solid var(--border-color);border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.15);z-index:10000;padding:4px 0;min-width:120px;`;
           const delOpt = document.createElement('div');
-          delOpt.textContent = t('context.deleteGroup') || '删除分组';
+          delOpt.textContent = t('context.deleteGroup');
           delOpt.style.cssText = 'padding:8px 16px;cursor:pointer;font-size:14px;color:var(--text-normal);';
           delOpt.addEventListener('mouseenter', () => { delOpt.style.background = 'var(--background-modifier-hover)'; });
           delOpt.addEventListener('mouseleave', () => { delOpt.style.background = 'transparent'; });
@@ -15805,7 +17012,7 @@ class AddRegexRuleModal {
             document.body.removeChild(ctxMenu);
           });
           const renameOpt = document.createElement('div');
-          renameOpt.textContent = t('context.renameGroup') || '重命名';
+          renameOpt.textContent = t('context.renameGroup');
           renameOpt.style.cssText = 'padding:8px 16px;cursor:pointer;font-size:14px;color:var(--text-normal);';
           renameOpt.addEventListener('mouseenter', () => { renameOpt.style.background = 'var(--background-modifier-hover)'; });
           renameOpt.addEventListener('mouseleave', () => { renameOpt.style.background = 'transparent'; });
@@ -15814,7 +17021,7 @@ class AddRegexRuleModal {
             try {
               const modal = new InputModal(
                 this.app,
-                t('context.renameGroup') || '重命名',
+                t('context.renameGroup'),
                 t('main.newGroupName'),
                 grp,
                 async (newName) => {
@@ -15851,7 +17058,7 @@ class AddRegexRuleModal {
           ctxMenu.appendChild(renameOpt);
           const excludeRelatedOpt = document.createElement('div');
           const isExcluded = (this.plugin.settings?.excludedRelatedNotesCategories || []).includes(grp);
-          excludeRelatedOpt.textContent = isExcluded ? '✓ 排除相关笔记' : '排除相关笔记';
+          excludeRelatedOpt.textContent = isExcluded ? t('fn.excludeRelatedActive') : t('fn.excludeRelated');
           excludeRelatedOpt.style.cssText = 'padding:8px 16px;cursor:pointer;font-size:14px;color:' + (isExcluded ? 'var(--text-accent)' : 'var(--text-normal)') + ';';
           excludeRelatedOpt.addEventListener('mouseenter', () => { excludeRelatedOpt.style.background = 'var(--background-modifier-hover)'; });
           excludeRelatedOpt.addEventListener('mouseleave', () => { excludeRelatedOpt.style.background = 'transparent'; });
@@ -15933,7 +17140,7 @@ class AddRegexRuleModal {
         groupGrids[grp] = groupGrid;
       }
       if (hasUngrouped) {
-        const chip = globalChipsRow.createEl('span', { text: '未分组' });
+        const chip = globalChipsRow.createEl('span', { text: t('settings.snippetUngrouped') });
         chip.className = 'rch-group-chip rch-global-group-chip';
         chip.setAttribute('data-group', '__ungrouped__');
         chip.style.cssText = 'display:inline-block;padding:3px 10px;border-radius:14px;font-size:12px;cursor:pointer;user-select:none;transition:all 0.15s ease;white-space:nowrap;border:1px solid var(--background-modifier-border);background:rgba(var(--mono-rgb-0),0.5);color:var(--text-muted);';
@@ -16034,7 +17241,7 @@ class AddRegexRuleModal {
             this.app,
             t('main.addGroup'),
             t('main.newGroupName'),
-            t('main.newGroup'),
+            t('main.newRuleGroup'),
             async (newGroupName) => {
               try {
                 const trimmedName = newGroupName.trim();
@@ -16101,7 +17308,7 @@ class AddRegexRuleModal {
               let hasMatch = false;
               gridButtons.forEach(btn => {
                 const ruleRegex = btn.dataset.ruleRegex;
-                const ruleParts = ruleRegex.split('|');
+                const ruleParts = _splitRegexPipes(ruleRegex);
                 const isMatching = ruleParts.includes(inputValue) || ruleRegex.includes(inputValue) || inputValue.includes(ruleRegex);
                 if (isMatching) {
                   btn.style.display = 'flex';
@@ -16318,7 +17525,7 @@ class AddRegexRuleModal {
           globalButton.style.border = "1px dashed #999";
         }
         
-        let tooltipText = (isLocal ? (t('main.localRule') || '文件规则') : t('main.globalRule')) + `\n` + t('main.regex') + `: ${rule.regex}\n` + t('main.styleClass') + `: .${rule.cssClass}\n` + t('main.clickToEdit');
+        let tooltipText = (isLocal ? t('main.localRule') : t('main.globalRule')) + `\n` + t('main.regex') + `: ${rule.regex}\n` + t('main.styleClass') + `: .${rule.cssClass}\n` + t('main.clickToEdit');
         tooltipText += `\n` + t('main.status') + `: ${isDisabled ? t('main.disabled') : t('main.enabled')}`;
 
         globalButton.setAttribute("title", tooltipText);
@@ -16484,7 +17691,7 @@ class AddRegexRuleModal {
             const groupNames = Object.keys(currentGroups).filter(g => g !== '__ungrouped__');
             if (groupNames.length > 0) {
               const moveToGroupOption = document.createElement('div');
-              moveToGroupOption.textContent = t('context.moveToGroup') || '移动到分组';
+              moveToGroupOption.textContent = t('context.moveToGroup');
               moveToGroupOption.style.cssText = 'padding:8px 16px;cursor:pointer;font-size:14px;color:var(--text-normal);position:relative;';
               moveToGroupOption.addEventListener('mouseenter', () => {
                 moveToGroupOption.style.background = 'var(--background-modifier-hover)';
@@ -16652,7 +17859,7 @@ class AddRegexRuleModal {
             const groupNames = Object.keys(currentGroups).filter(g => g !== '__ungrouped__');
             if (groupNames.length > 0 || isLocal || !isLocal) {
               const moveToGroupOption = document.createElement('div');
-              moveToGroupOption.textContent = t('context.moveToGroup') || '移动到分组';
+              moveToGroupOption.textContent = t('context.moveToGroup');
               moveToGroupOption.style.cssText = `
                 padding: 8px 16px;
                 cursor: pointer;
@@ -16717,7 +17924,7 @@ class AddRegexRuleModal {
                   submenu.appendChild(gItem);
                 }
                 const ungroupItem = document.createElement('div');
-                ungroupItem.textContent = '未分组';
+                ungroupItem.textContent = t('settings.snippetUngrouped');
                 ungroupItem.style.cssText = 'padding:6px 16px;cursor:pointer;font-size:13px;color:var(--text-muted);border-top:1px solid var(--background-modifier-border);margin-top:2px;';
                 ungroupItem.addEventListener('mouseenter', () => { ungroupItem.style.background = 'var(--background-modifier-hover)'; });
                 ungroupItem.addEventListener('mouseleave', () => { ungroupItem.style.background = 'transparent'; });
@@ -16967,7 +18174,7 @@ class AddRegexRuleModal {
     headingTitle.style.pointerEvents = "none";
 
     // 从插件设置中读取折叠状态（持久化），优先使用设置中的值
-    this.plugin.isHeadingStylesCollapsed = this.plugin.settings.isHeadingStylesCollapsed ?? this.plugin.isHeadingStylesCollapsed ?? false;
+    this.plugin.isHeadingStylesCollapsed = (this.plugin.settings && this.plugin.settings.isHeadingStylesCollapsed) ?? this.plugin.isHeadingStylesCollapsed ?? false;
     let isHeadingCollapsed = this.plugin.isHeadingStylesCollapsed;
 
     // 创建说明文本，只在展开时显示
@@ -17039,7 +18246,7 @@ class AddRegexRuleModal {
     
     // "当前"标签 - 始终在最前面
     const currentTab = presetBar.createEl('span');
-    currentTab.textContent = t('heading.currentGroup') || '当前';
+    currentTab.textContent = t('heading.currentGroup');
     currentTab.style.cssText = `
       display: inline-block;
       padding: 2px 8px;
@@ -17054,7 +18261,7 @@ class AddRegexRuleModal {
     
     // 保存当前风格按钮
     const savePresetBtn = presetBar.createEl('button');
-    savePresetBtn.textContent = t('heading.saveCurrentStyle') || '保存当前风格';
+    savePresetBtn.textContent = t('heading.saveCurrentStyle');
     savePresetBtn.style.cssText = `
       padding: 3px 8px;
       font-size: 12px;
@@ -17072,7 +18279,7 @@ class AddRegexRuleModal {
     
     const saveInput = saveInputContainer.createEl('input');
     saveInput.type = 'text';
-    saveInput.placeholder = t('heading.presetName') || '输入风格名称';
+    saveInput.placeholder = t('heading.presetName');
     saveInput.style.cssText = `
       width: 120px;
       padding: 3px 6px;
@@ -17121,14 +18328,14 @@ class AddRegexRuleModal {
     const doSavePreset = async () => {
       const name = saveInput.value.trim();
       if (!name) {
-        new Notice(t('main.groupNameEmpty') || '名称不能为空');
+        new Notice(t('main.groupNameEmpty'));
         return;
       }
       if (!this.plugin.settings.headingStylePresets) {
         this.plugin.settings.headingStylePresets = {};
       }
       if (this.plugin.settings.headingStylePresets[name]) {
-        new Notice(t('main.groupNameExists') || '名称已存在');
+        new Notice(t('main.groupNameExists'));
         return;
       }
       // 保存当前所有标题样式到预设
@@ -17155,7 +18362,7 @@ class AddRegexRuleModal {
       await this.plugin.saveData(this.plugin.settings);
       saveInputContainer.style.display = 'none';
       savePresetBtn.style.display = '';
-      new Notice(t('heading.presetSaved') || '风格已保存');
+      new Notice(t('heading.presetSaved'));
       this.clearHeadingStylesSection();
       this.addHeadingStylesSection(this.contentEl, name);
     };
@@ -17225,7 +18432,7 @@ class AddRegexRuleModal {
           await this.plugin.injectCSSContent();
         }
         this.plugin.checkAndApplyHighlights();
-        new Notice(t('heading.presetApplied') || '风格已应用');
+        new Notice(t('heading.presetApplied'));
         this.clearHeadingStylesSection();
         this.addHeadingStylesSection(this.contentEl, presetName);
       });
@@ -17235,10 +18442,10 @@ class AddRegexRuleModal {
         e.preventDefault();
         const menu = new Menu();
         menu.addItem((item) => {
-          item.setTitle(t('context.deleteGroup') || '删除').setIcon('trash').onClick(async () => {
+          item.setTitle(t('context.deleteGroup')).setIcon('trash').onClick(async () => {
             delete this.plugin.settings.headingStylePresets[presetName];
             await this.plugin.saveData(this.plugin.settings);
-            new Notice(t('heading.presetDeleted') || '风格已删除');
+            new Notice(t('heading.presetDeleted'));
             this.clearHeadingStylesSection();
             this.addHeadingStylesSection(this.contentEl);
           });
@@ -17283,7 +18490,7 @@ class AddRegexRuleModal {
       // 预设模式下，在最前面添加一个"应用"按钮
       if (presetData && activePresetTab) {
         const groupApplyBtn = headingList.createEl('button');
-        groupApplyBtn.textContent = t('heading.applyGroup') || '应用';
+        groupApplyBtn.textContent = t('heading.applyGroup');
         groupApplyBtn.style.cssText = `
           padding: 4px 12px;
           font-size: 12px;
@@ -17310,7 +18517,7 @@ class AddRegexRuleModal {
             await this.plugin.injectCSSContent();
           }
           this.plugin.checkAndApplyHighlights();
-          new Notice(t('heading.presetApplied') || '风格已应用');
+          new Notice(t('heading.presetApplied'));
           this.clearHeadingStylesSection();
           this.addHeadingStylesSection(this.contentEl, activePresetTab);
         });
@@ -17328,8 +18535,8 @@ class AddRegexRuleModal {
       }
       
       const headingLevelMap = {
-        '1': '一级标题', '2': '二级标题', '3': '三级标题',
-        '4': '四级标题', '5': '五级标题', '6': '六级标题'
+        '1': t('other.headingH1'), '2': t('other.headingH2'), '3': t('other.headingH3'),
+        '4': t('other.headingH4'), '5': t('other.headingH5'), '6': t('other.headingH6')
       };
       
       classNames.forEach(className => {
@@ -17615,7 +18822,14 @@ class AddRegexRuleModal {
     if (existing) existing.remove();
     const existingHl = this.contentEl.querySelector('.inline-related-highlights-section');
     if (existingHl) existingHl.remove();
-    const searchTerms = searchText.split('|').map(s => s.trim()).filter(s => s.length > 0);
+    const _excludedGroups = plugin.settings?.excludedRelatedNotesCategories || [];
+    const _groups = plugin.config?.globalRuleGroups || {};
+    if (_excludedGroups.length > 0) {
+      for (const _grp in _groups) {
+        if (_excludedGroups.includes(_grp) && _groups[_grp].includes(searchText)) return;
+      }
+    }
+    const searchTerms = _splitRegexPipes(searchText).map(s => s.trim()).filter(s => s.length > 0);
     if (searchTerms.length === 0) return;
     const allFiles = plugin.app.vault.getFiles();
     const mdFiles = allFiles.filter(f => f.extension === 'md');
@@ -17637,8 +18851,8 @@ class AddRegexRuleModal {
     const headerRow = document.createElement('div');
     headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
     const titleDiv = document.createElement('div');
-    titleDiv.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
-    titleDiv.textContent = t('main.relatedNotes');
+    titleDiv.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;display:flex;align-items:center;gap:2px;';
+    titleDiv.textContent = t('main.relatedNotes') + ' ' + relatedNotes.length;
     headerRow.appendChild(titleDiv);
     const closeBtn = document.createElement('span');
     closeBtn.textContent = '✕';
@@ -17647,7 +18861,9 @@ class AddRegexRuleModal {
     headerRow.appendChild(closeBtn);
     section.appendChild(headerRow);
     const relatedList = document.createElement('div');
-    relatedList.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+    relatedList.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;overflow:hidden;';
+    // 添加折叠按钮
+    _createSectionToggle(plugin, 'relatedNotes_sidebar', relatedList, titleDiv);
     for (const note of relatedNotes.slice(0, 10)) {
       const noteLink = document.createElement('span');
       noteLink.className = 'related-note-link';
@@ -17655,7 +18871,7 @@ class AddRegexRuleModal {
       noteLink.textContent = nameWithoutExt;
       noteLink.title = note.path;
       noteLink.dataset.path = note.path;
-      noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;';
+      noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;max-width:100%;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;';
       noteLink.addEventListener('mouseenter', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.5)'; });
       noteLink.addEventListener('mouseleave', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
       noteLink.addEventListener('click', (e) => {
@@ -17684,7 +18900,7 @@ class AddRegexRuleModal {
           noteLink.textContent = nameWithoutExt;
           noteLink.title = note.path;
           noteLink.dataset.path = note.path;
-          noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;';
+          noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;max-width:100%;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;';
           noteLink.addEventListener('mouseenter', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.5)'; });
           noteLink.addEventListener('mouseleave', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
           noteLink.addEventListener('click', (e) => {
@@ -17702,19 +18918,26 @@ class AddRegexRuleModal {
     this.contentEl.appendChild(section);
   }
 
-  async _showRelatedHighlights(searchText) {
+  async _showRelatedHighlights(searchText, sgRules, parentEl) {
     const plugin = this.plugin;
-    const existing = this.contentEl.querySelector('.inline-related-highlights-section');
+    const container = parentEl || this.contentEl;
+    const existing = container.querySelector('.inline-related-highlights-section');
     if (existing) existing.remove();
-    const searchTerms = searchText.split('|').map(s => s.trim()).filter(s => s.length > 0);
-    if (searchTerms.length === 0) return;
+    const searchTerms = _splitRegexPipes(searchText).map(s => s.trim()).filter(s => s.length > 0);
+    const sgSentences = (sgRules && sgRules.length > 0) ? sgRules : (this.plugin._pendingSentenceRules || []);
+    if (searchTerms.length === 0 && sgSentences.length === 0) return;
     const matches = [];
     if (plugin._highlightDbReady && plugin._highlightDb.length > 0) {
       for (const entry of plugin._highlightDb) {
         const isMatch = searchTerms.some(term =>
-          _regexMatch(entry.text, term) || entry.text.includes(_extractPlainText(term))
+          _regexMatch(entry.text, term)
         );
-        if (isMatch) {
+        // 同时匹配高亮备注
+        const isRemarkMatch = !isMatch && searchTerms.some(term => {
+          const remark = plugin._getHighlightRemark(entry.path, entry.text) || '';
+          return remark && remark.includes(term);
+        });
+        if (isMatch || isRemarkMatch) {
           matches.push({ text: entry.text, path: entry.path, name: entry.name });
         }
       }
@@ -17732,16 +18955,22 @@ class AddRegexRuleModal {
             const hlText = m[1].trim();
             if (!hlText || hlText.includes('base64,') || hlText.startsWith('![') || hlText.startsWith('data:')) continue;
             const isMatch = searchTerms.some(term =>
-              _regexMatch(hlText, term) || hlText.includes(_extractPlainText(term))
+              _regexMatch(hlText, term)
             );
-            if (isMatch) {
+            // 同时匹配高亮备注
+            const isRemarkMatch = !isMatch && searchTerms.some(term => {
+              const remark = plugin._getHighlightRemark(f.path, hlText) || '';
+              return remark && remark.includes(term);
+            });
+            if (isMatch || isRemarkMatch) {
               matches.push({ text: hlText, path: f.path, name: f.name.replace(/\.md$/, '') });
             }
           }
         } catch (err) {}
       }
     }
-    if (matches.length === 0) return;
+    if (matches.length === 0 && sgSentences.length === 0) return;
+    const totalCount = matches.length + sgSentences.length;
     const section = document.createElement('div');
     section.className = 'inline-related-highlights-section';
     section.style.cssText = 'margin-top:4px;padding:8px;border:1px solid var(--background-modifier-border);border-radius:8px;background:var(--background-secondary);user-select:text;-webkit-user-select:text;';
@@ -17749,8 +18978,31 @@ class AddRegexRuleModal {
     headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
     const titleDiv = document.createElement('div');
     titleDiv.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
-    titleDiv.textContent = t('main.relatedHighlights') + ' (' + matches.length + ')';
+    titleDiv.textContent = t('main.relatedHighlights') + ' (' + totalCount + ')';
     headerRow.appendChild(titleDiv);
+    // 问号图标：显示相关高亮说明
+    const hlHelpIcon = document.createElement('span');
+    hlHelpIcon.innerHTML = _SVG_QUESTION;
+    hlHelpIcon.title = '';
+    hlHelpIcon.style.cssText = 'cursor:help;opacity:0.4;display:inline-flex;align-items:center;margin-left:2px;transition:opacity 0.15s;';
+    hlHelpIcon.addEventListener('mouseenter', () => { hlHelpIcon.style.opacity = '0.8'; });
+    hlHelpIcon.addEventListener('mouseleave', () => { hlHelpIcon.style.opacity = '0.4'; });
+    hlHelpIcon.addEventListener('click', (he) => {
+      he.preventDefault(); he.stopPropagation();
+      const existingTip = section.querySelector('.hl-help-tip');
+      if (existingTip) { existingTip.remove(); return; }
+      const tip = document.createElement('div');
+      tip.className = 'hl-help-tip';
+      tip.style.cssText = 'font-size:11px;color:var(--text-muted);line-height:1.5;padding:6px 8px;margin-top:4px;border-radius:6px;background:rgba(var(--mono-rgb-0),0.1);border:1px dashed var(--background-modifier-border);';
+      tip.innerHTML = '<div style="font-weight:600;margin-bottom:4px;">相关高亮 / Related Highlights</div>' +
+        '<div style="margin-bottom:3px;">▸ 显示逻辑 / Display logic：根据关键词规则匹配文档中的 <mark style="background:rgba(255,200,0,0.5);padding:0 2px;">==高亮==</mark> 文本和句子规则，同时匹配高亮备注中包含搜索词的条目 / Matches keyword rules against highlighted text and sentence rules, also matches highlights whose remarks contain the search term</div>' +
+        '<div style="margin-bottom:3px;">▸ 建议用法 / Suggested usage：给高亮添加评论/记号以加深记忆，当选中文本时，高亮中没有提及但评论中提及的词也会匹配并显示对应高亮 / Add comments/markers to highlights for deeper memory; when selecting text, terms mentioned only in remarks will also match and show related highlights</div>' +
+        '<div style="margin-bottom:3px;">▸ 备注样式 / Remark style：Shift+滚轮切换5种气泡样式 / Shift+Scroll to switch 5 bubble styles</div>' +
+        '<div style="margin-bottom:3px;">▸ 双击备注可直接编辑 / Double-click remark to edit</div>' +
+        '<div>▸ 点击高亮中的关键词可打开详情弹窗 / Click keyword in highlight to open detail popup</div>';
+      headerRow.after(tip);
+    });
+    headerRow.appendChild(hlHelpIcon);
     const closeBtn = document.createElement('span');
     closeBtn.textContent = '✕';
     closeBtn.style.cssText = 'cursor:pointer;font-size:14px;color:var(--text-muted);padding:0 4px;flex-shrink:0;';
@@ -17760,6 +19012,189 @@ class AddRegexRuleModal {
     const hlHues = [210, 30, 150, 340, 270, 60, 180, 90, 120, 0];
     const hlList = document.createElement('div');
     hlList.style.cssText = 'display:flex;flex-direction:column;gap:3px;';
+    // 注入气泡样式
+    if (!document.getElementById('hl-bubble-styles')) {
+      const bubbleStyle = document.createElement('style');
+      bubbleStyle.id = 'hl-bubble-styles';
+      bubbleStyle.textContent = `.hl-bubble-0{position:relative;background:rgba(230,236,244,0.92);border-radius:14px;padding:10px 14px;margin-top:10px;max-width:92%}.hl-bubble-0::before{content:"";position:absolute;top:-8px;left:24px;width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:8px solid rgba(230,236,244,0.92)}.hl-bubble-0 .hl-remark-text{font-size:0.94em;line-height:1.6;color:rgba(30,40,55,0.92)}.hl-bubble-1{display:flex;flex-direction:column;gap:0;padding:0}.hl-bubble-1 .hl-remark-text{position:relative;align-self:flex-end;max-width:82%;background:rgba(120,170,220,0.90);border-radius:14px 4px 14px 14px;padding:8px 12px;color:rgba(255,255,255,0.96);font-size:0.93em;line-height:1.6}.hl-bubble-2{position:relative;background:rgba(255,224,200,0.90);border-radius:22px 16px 24px 14px;padding:10px 14px;margin-top:12px;max-width:90%}.hl-bubble-2::before{content:"";position:absolute;top:-7px;left:22px;width:16px;height:16px;background:rgba(255,224,200,0.90);border-radius:60% 40% 50% 50%;transform:rotate(20deg)}.hl-bubble-2 .hl-remark-text{font-size:0.94em;line-height:1.6;color:rgba(80,46,20,0.92)}.hl-bubble-3{position:relative;background:rgba(255,244,200,0.92);border-radius:16px 18px 16px 4px;padding:10px 14px;margin-top:12px;max-width:88%;transform:rotate(-1.5deg);box-shadow:2px 3px 6px rgba(0,0,0,0.10)}.hl-bubble-3::before{content:"";position:absolute;top:-6px;left:20px;width:14px;height:14px;background:rgba(255,244,200,0.92);clip-path:polygon(0% 100%,100% 100%,30% 0%);transform:rotate(-8deg)}.hl-bubble-3 .hl-remark-text{font-size:0.94em;line-height:1.6;color:rgba(70,54,14,0.92)}.hl-bubble-4{position:relative;background:rgba(210,236,224,0.92);border-radius:20px;padding:10px 14px;margin-top:14px;max-width:90%}.hl-bubble-4::before{content:"";position:absolute;top:-10px;left:26px;width:20px;height:14px;background:rgba(210,236,224,0.92);border-radius:50% 50% 50% 10%;transform:rotate(-25deg)}.hl-bubble-4 .hl-remark-text{font-size:0.94em;line-height:1.6;color:rgba(20,60,42,0.92)}`;
+      document.head.appendChild(bubbleStyle);
+    }
+    const _attachBubbleWheel = (el, rPath, rText) => {
+      el.dataset.remarkPath = rPath;
+      el.dataset.remarkText = rText;
+      el.addEventListener('wheel', (we) => {
+        if (!we.shiftKey) return;
+        we.preventDefault(); we.stopPropagation();
+        const cur = parseInt(el.className.match(/hl-bubble-(\d+)/)?.[1] || '0');
+        const next = (cur + (we.deltaY > 0 ? 1 : 4)) % 5;
+        el.className = 'hl-remark-display hl-bubble-' + next;
+        plugin._setHighlightBubbleStyle(rPath, rText, next);
+      }, { passive: false });
+      el.addEventListener('dblclick', (de) => {
+        de.stopPropagation(); de.preventDefault();
+        const oldVal = plugin._getHighlightRemark(rPath, rText);
+        const textNode = el.querySelector('.hl-remark-text');
+        if (!textNode) return;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = oldVal;
+        input.style.cssText = 'width:100%;padding:2px 4px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);font-size:0.9em;box-sizing:border-box;outline:none;';
+        textNode.replaceWith(input);
+        input.focus(); input.select();
+        const save = () => {
+          const val = input.value.trim();
+          plugin._setHighlightRemark(rPath, rText, val);
+          if (val) {
+            const newText = document.createElement('span');
+            newText.className = 'hl-remark-text';
+            newText.textContent = val.split('\n')[0];
+            input.replaceWith(newText);
+            const oldTs = el.querySelector('.hl-remark-ts');
+            if (oldTs) oldTs.remove();
+            _appendRemarkTs(el, Date.now());
+          } else {
+            el.remove();
+          }
+        };
+        input.addEventListener('blur', save);
+        input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { const newText = document.createElement('span'); newText.className = 'hl-remark-text'; newText.textContent = oldVal.split('\n')[0]; input.replaceWith(newText); } });
+      });
+    };
+    // SG句子高亮：应用了CSS样式的长句，排在OB高亮前面
+    const sgFileIdx = { value: 0 };
+    const sgFileMap = new Map();
+    for (const sr of sgSentences) {
+      const srPath = sr._sourceFile || (sr.links && sr.links.length > 0 ? sr.links[0].filePath : '') || '';
+      const srName = srPath ? srPath.split('/').pop().replace(/\.md$/, '') : '';
+      if (srPath && !sgFileMap.has(srPath)) { sgFileMap.set(srPath, sgFileIdx.value); sgFileIdx.value++; }
+      const sgHue = sgFileMap.has(srPath) ? hlHues[sgFileMap.get(srPath) % hlHues.length] : 210;
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:stretch;gap:0;font-size:11px;background:rgba(255,235,100,0.12);border-radius:3px;margin-bottom:1px;';
+      const contentWrap = document.createElement('div');
+      contentWrap.style.cssText = 'flex:1;min-width:0;';
+      if (srName) {
+        const titleRow = document.createElement('div');
+        titleRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:2px;';
+        const fileLink = document.createElement('span');
+        fileLink.className = 'related-highlight-link';
+        fileLink.textContent = srName;
+        fileLink.title = srPath;
+        fileLink.dataset.path = srPath;
+        fileLink.style.cssText = `color:var(--interactive-accent);cursor:pointer;text-decoration:none;white-space:nowrap;font-weight:600;font-size:10px;`;
+        const sgPlainText = _extractPlainText(sr.regex);
+        const jumpToSg = async () => {
+          await plugin.app.workspace.openLinkText(srPath, '', true);
+          await new Promise(r => setTimeout(r, 300));
+          // 强制刷新高亮渲染
+          plugin.rulesVersion++;
+          plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+          const view = plugin.app.workspace.getActiveViewOfType(require('obsidian').MarkdownView);
+          if (view && view.editor) {
+            const firstSentence = sgPlainText.split(/[。！？.!?\n]/)[0] || sgPlainText.substring(0, 30);
+            const content = view.editor.getValue();
+            const idx = content.indexOf(firstSentence);
+            if (idx !== -1) {
+              const before = content.substring(0, idx);
+              const line = before.split('\n').length - 1;
+              const ch = before.split('\n').pop().length;
+              view.editor.setCursor({ line, ch });
+              view.editor.scrollIntoView({ from: { line, ch }, to: { line, ch: ch + firstSentence.length } });
+            }
+          }
+        };
+        fileLink.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); jumpToSg(); });
+        titleRow.appendChild(fileLink);
+        contentWrap.appendChild(titleRow);
+      }
+      const textSpan = document.createElement('span');
+      textSpan.className = 'highlight-regex-text';
+      textSpan.style.cssText = 'display:inline;word-break:break-all;user-select:text;-webkit-user-select:text;';
+      // 在句子文本中高亮匹配的关键词（仅关键词部分应用样式）
+      const srFullText = _extractPlainText(sr.regex);
+      const _allRules = [...plugin.rules, ...(Array.isArray(plugin.globalRules) ? plugin.globalRules : [])];
+      const kwRanges = _buildKeywordRanges(srFullText, _allRules);
+      if (kwRanges.length > 0) {
+        let lastEnd = 0;
+        for (const seg of kwRanges) {
+          if (seg.start > lastEnd) {
+            textSpan.appendChild(document.createTextNode(srFullText.substring(lastEnd, seg.start)));
+          }
+          const kwSpan = document.createElement('span');
+          kwSpan.className = (seg.cssClass || '') + ' highlight-regex-text';
+          kwSpan.style.cssText = 'cursor:pointer;';
+          kwSpan.textContent = srFullText.substring(seg.start, seg.end);
+          kwSpan.dataset.ruleRegex = seg.regex;
+          kwSpan.addEventListener('click', (ce) => { ce.stopPropagation(); plugin.openKeywordWindow(seg.regex); });
+          textSpan.appendChild(kwSpan);
+          lastEnd = seg.end;
+        }
+        if (lastEnd < srFullText.length) {
+          textSpan.appendChild(document.createTextNode(srFullText.substring(lastEnd)));
+        }
+      } else {
+        textSpan.textContent = srFullText;
+      }
+      const srPlainText = srFullText;
+      const srRemark = plugin._getHighlightRemark(srPath, srPlainText) || sr.remark || '';
+      if (srRemark) textSpan.title = srRemark;
+      contentWrap.appendChild(textSpan);
+      // SG句子备注按钮
+      const createRemarkBtn = (currentRemark) => {
+        const btn = document.createElement('span');
+        btn.innerHTML = !!currentRemark ? _SVG_REMARK_HAS : _SVG_REMARK_NO;
+        btn.title = currentRemark || '';
+        btn.style.cssText = 'cursor:pointer;margin-left:4px;opacity:0.5;transition:opacity 0.15s ease;flex-shrink:0;display:inline-flex;align-items:center;';
+        btn.addEventListener('mouseenter', () => { btn.style.opacity = '1'; });
+        btn.addEventListener('mouseleave', () => { btn.style.opacity = '0.5'; });
+        btn.addEventListener('click', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = plugin._getHighlightRemark(srPath, srPlainText) || sr.remark || '';
+          input.style.cssText = 'font-size:10px;width:100%;margin-top:2px;padding:1px 4px;border:1px solid var(--background-modifier-border);border-radius:3px;background:var(--background-primary);color:var(--text-normal);';
+          btn.replaceWith(input);
+          input.focus();
+          input.select();
+          const save = () => {
+            const val = input.value.trim();
+            plugin._setHighlightRemark(srPath, srPlainText, val);
+            if (val) { sr.remark = val; } else if (sr.remark) { sr.remark = ''; }
+            const newBtn = createRemarkBtn(val);
+            input.replaceWith(newBtn);
+            const existingRemark = contentWrap.querySelector('.hl-remark-display');
+            if (existingRemark) existingRemark.remove();
+            if (val) {
+              const remarkSpan = document.createElement('div');
+              remarkSpan.className = 'hl-remark-display hl-bubble-' + plugin._getHighlightBubbleStyle(srPath, srPlainText);
+              const rText = document.createElement('span');
+              rText.className = 'hl-remark-text';
+              rText.textContent = val.split('\n')[0];
+              remarkSpan.appendChild(rText);
+              _appendRemarkTs(remarkSpan, Date.now());
+              _attachBubbleWheel(remarkSpan, srPath, srPlainText);
+              contentWrap.appendChild(remarkSpan);
+            }
+          };
+          input.addEventListener('blur', save);
+          input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { input.value = currentRemark; input.blur(); } });
+        });
+        return btn;
+      };
+      textSpan.appendChild(createRemarkBtn(srRemark));
+      if (srRemark) {
+        const remarkSpan = document.createElement('div');
+        remarkSpan.className = 'hl-remark-display hl-bubble-' + plugin._getHighlightBubbleStyle(srPath, srPlainText);
+        const rText = document.createElement('span');
+        rText.className = 'hl-remark-text';
+        rText.textContent = srRemark.split('\n')[0];
+        remarkSpan.appendChild(rText);
+        _appendRemarkTs(remarkSpan, plugin._getHighlightRemarkTimestamp(srPath, srPlainText));
+        _attachBubbleWheel(remarkSpan, srPath, srPlainText);
+        contentWrap.appendChild(remarkSpan);
+      }
+      row.appendChild(contentWrap);
+      hlList.appendChild(row);
+    }
     const seen = new Set();
     const limit = 30;
     let count = 0;
@@ -17774,9 +19209,7 @@ class AddRegexRuleModal {
       if (!hlFileMap.has(match.path)) { hlFileMap.set(match.path, hlFileIdx); hlFileIdx++; }
       const fh = hlHues[hlFileMap.get(match.path) % hlHues.length];
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:stretch;gap:0;font-size:11px;';
-      const bar = document.createElement('span');
-      bar.style.cssText = `width:3px;border-radius:2px;flex-shrink:0;background:hsl(${fh},50%,50%);margin-right:6px;`;
+      row.style.cssText = 'display:flex;align-items:stretch;gap:0;font-size:11px;background:rgba(255,235,100,0.12);border-radius:3px;margin-bottom:1px;';
       const contentWrap = document.createElement('div');
       contentWrap.style.cssText = 'flex:1;min-width:0;';
       const titleRow = document.createElement('div');
@@ -17812,40 +19245,173 @@ class AddRegexRuleModal {
       titleRow.appendChild(fileLink);
       contentWrap.appendChild(titleRow);
       const hlSpan = document.createElement('span');
-      hlSpan.style.cssText = 'background:rgba(255,235,100,0.25);padding:1px 4px;border-radius:3px;display:block;';
-      let highlighted = false;
+      hlSpan.style.cssText = 'padding:1px 4px;border-radius:3px;display:block;background:rgba(255,235,100,0.12);';
+      // 统一使用 _buildKeywordRanges 查找关键词匹配区间
+      const _allRules = [...plugin.rules, ...(Array.isArray(plugin.globalRules) ? plugin.globalRules : [])];
+      const kwRanges = _buildKeywordRanges(match.text, _allRules);
+      // 检查完整正则匹配的规则（用于点击打开弹窗）
+      const _matchedRule = _allRules.find(r => _regexMatch(match.text, r.regex));
+      // 渲染文本：统一方式，关键词片段应用样式，搜索词用黄色mark
+      // 合并关键词区间和搜索词区间进行统一渲染
+      const allRanges = [...kwRanges.map(r => ({ ...r, isKeyword: true }))];
       for (const term of searchTerms) {
         const plainTerm = _extractPlainText(term);
-        const parts = match.text.split(plainTerm);
-        if (parts.length > 1) {
-          hlSpan.textContent = '';
-          for (let i = 0; i < parts.length; i++) {
-            if (parts[i]) hlSpan.appendChild(document.createTextNode(parts[i]));
-            if (i < parts.length - 1) {
-              const mark = document.createElement('mark');
-              mark.textContent = plainTerm;
-              mark.style.cssText = 'background:rgba(255,200,0,0.5);color:inherit;padding:0 1px;border-radius:2px;';
-              hlSpan.appendChild(mark);
-            }
-          }
-          highlighted = true;
-          break;
+        if (!plainTerm) continue;
+        let si = 0;
+        while (true) {
+          const idx = match.text.indexOf(plainTerm, si);
+          if (idx === -1) break;
+          allRanges.push({ start: idx, end: idx + plainTerm.length, isKeyword: false });
+          si = idx + plainTerm.length;
         }
       }
-      if (!highlighted) hlSpan.textContent = match.text;
+      allRanges.sort((a, b) => a.start - b.start || b.end - a.end);
+      const renderedRanges = [];
+      for (const r of allRanges) {
+        if (renderedRanges.length > 0 && renderedRanges[renderedRanges.length-1].end >= r.start) {
+          const prev = renderedRanges[renderedRanges.length-1];
+          // 关键词优先，搜索词不覆盖关键词区间
+          if (prev.isKeyword || r.isKeyword) {
+            prev.end = Math.max(prev.end, r.end);
+            if (r.isKeyword && !prev.isKeyword) { prev.isKeyword = true; prev.cssClass = r.cssClass; prev.regex = r.regex; }
+          } else {
+            prev.end = Math.max(prev.end, r.end);
+          }
+        } else {
+          renderedRanges.push({ ...r });
+        }
+      }
+      if (renderedRanges.length > 0) {
+        let lastEnd = 0;
+        for (const seg of renderedRanges) {
+          if (seg.start > lastEnd) {
+            hlSpan.appendChild(document.createTextNode(match.text.substring(lastEnd, seg.start)));
+          }
+          if (seg.isKeyword) {
+            const kwSpan = document.createElement('span');
+            kwSpan.className = (seg.cssClass || '') + ' highlight-regex-text';
+            kwSpan.style.cssText = 'cursor:pointer;';
+            kwSpan.textContent = match.text.substring(seg.start, seg.end);
+            if (seg.regex) {
+              kwSpan.dataset.ruleRegex = seg.regex;
+              kwSpan.addEventListener('click', (ce) => { ce.stopPropagation(); plugin.openKeywordWindow(seg.regex); });
+            }
+            hlSpan.appendChild(kwSpan);
+          } else {
+            const mark = document.createElement('mark');
+            mark.textContent = match.text.substring(seg.start, seg.end);
+            mark.style.cssText = 'background:rgba(255,200,0,0.5);color:inherit;padding:0 1px;border-radius:2px;';
+            hlSpan.appendChild(mark);
+          }
+          lastEnd = seg.end;
+        }
+        if (lastEnd < match.text.length) {
+          hlSpan.appendChild(document.createTextNode(match.text.substring(lastEnd)));
+        }
+      } else {
+        hlSpan.textContent = match.text;
+      }
       contentWrap.appendChild(hlSpan);
-      row.appendChild(bar);
+      // 关键词规则匹配时，点击打开弹窗（仅在无分段关键词样式时，即纯文本不匹配任何规则plainText时）
+      if (_matchedRule && kwRanges.length === 0) {
+        hlSpan.addEventListener('click', (ce) => {
+          ce.preventDefault(); ce.stopPropagation();
+          const existingPopup = document.querySelector('.remark-custom-popup');
+          if (existingPopup) existingPopup.remove();
+          const popup = document.createElement('div');
+          popup.classList.add('remark-custom-popup');
+          popup.dataset.ruleRegex = _matchedRule.regex;
+          popup.dataset.ruleSource = plugin.globalRules?.includes(_matchedRule) ? 'global' : 'local';
+          popup.style.cssText = 'position:fixed;z-index:1200;padding:10px;width:500px;max-width:90vw;min-width:200px;max-height:80vh;overflow-y:auto;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.25);font-size:13px;color:var(--text-normal);';
+          const rect = hlSpan.getBoundingClientRect();
+          popup.style.left = Math.min(rect.left, window.innerWidth - 520) + 'px';
+          popup.style.top = Math.max(10, rect.bottom + 6) + 'px';
+          const isG = plugin.globalRules?.includes(_matchedRule);
+          plugin.renderRemarkContent(popup, {
+            links: _matchedRule.links || [],
+            rule: _matchedRule,
+            ruleRegex: _matchedRule.regex,
+            isGlobal: isG,
+            ruleSource: isG ? 'global' : 'local',
+            targetEl: hlSpan,
+            keepOpenRef: { val: true },
+            onRefresh: () => { const p = popup.parentNode; if (p) p.removeChild(popup); hlSpan.click(); },
+            onReposition: () => {},
+            onDirty: () => {},
+            cssScope: 'remark-custom-popup'
+          });
+          document.body.appendChild(popup);
+          const closePopup = (e) => { if (!popup.contains(e.target)) { popup.remove(); document.removeEventListener('mousedown', closePopup, true); } };
+          setTimeout(() => document.addEventListener('mousedown', closePopup, true), 100);
+        });
+      }
+      // OB高亮备注按钮
+      const hlRemark = plugin._getHighlightRemark(match.path, match.text);
+      const createObRemarkBtn = (currentRemark) => {
+        const btn = document.createElement('span');
+        btn.innerHTML = !!currentRemark ? _SVG_REMARK_HAS : _SVG_REMARK_NO;
+        btn.title = currentRemark || '';
+        btn.style.cssText = 'cursor:pointer;margin-left:4px;opacity:0.5;transition:opacity 0.15s ease;flex-shrink:0;display:inline-flex;align-items:center;';
+        btn.addEventListener('mouseenter', () => { btn.style.opacity = '1'; });
+        btn.addEventListener('mouseleave', () => { btn.style.opacity = '0.5'; });
+        btn.addEventListener('click', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = plugin._getHighlightRemark(match.path, match.text) || '';
+          input.style.cssText = 'font-size:10px;width:100%;margin-top:2px;padding:1px 4px;border:1px solid var(--background-modifier-border);border-radius:3px;background:var(--background-primary);color:var(--text-normal);';
+          btn.replaceWith(input);
+          input.focus();
+          input.select();
+          const save = () => {
+            const val = input.value.trim();
+            plugin._setHighlightRemark(match.path, match.text, val);
+            const newBtn = createObRemarkBtn(val);
+            input.replaceWith(newBtn);
+            const existingRemark = contentWrap.querySelector('.hl-remark-display');
+            if (existingRemark) existingRemark.remove();
+            if (val) {
+              const remarkSpan = document.createElement('div');
+              remarkSpan.className = 'hl-remark-display hl-bubble-' + plugin._getHighlightBubbleStyle(match.path, match.text);
+              const rText = document.createElement('span');
+              rText.className = 'hl-remark-text';
+              rText.textContent = val.split('\n')[0];
+              remarkSpan.appendChild(rText);
+              _appendRemarkTs(remarkSpan, Date.now());
+              _attachBubbleWheel(remarkSpan, match.path, match.text);
+              contentWrap.appendChild(remarkSpan);
+            }
+          };
+          input.addEventListener('blur', save);
+          input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { input.value = currentRemark; input.blur(); } });
+        });
+        return btn;
+      };
+      hlSpan.appendChild(createObRemarkBtn(hlRemark));
+      if (hlRemark) {
+        const remarkSpan = document.createElement('div');
+        remarkSpan.className = 'hl-remark-display hl-bubble-' + plugin._getHighlightBubbleStyle(match.path, match.text);
+        const rText = document.createElement('span');
+        rText.className = 'hl-remark-text';
+        rText.textContent = hlRemark.split('\n')[0];
+        remarkSpan.appendChild(rText);
+        _appendRemarkTs(remarkSpan, plugin._getHighlightRemarkTimestamp(match.path, match.text));
+        _attachBubbleWheel(remarkSpan, match.path, match.text);
+        contentWrap.appendChild(remarkSpan);
+      }
       row.appendChild(contentWrap);
       hlList.appendChild(row);
     }
     if (matches.length > limit) {
       const moreRow = document.createElement('div');
       moreRow.style.cssText = 'font-size:10px;color:var(--text-muted);padding:2px 4px;text-align:center;';
-      moreRow.textContent = `+${matches.length - limit} 更多`;
+      moreRow.textContent = `+${matches.length - limit}`;
       hlList.appendChild(moreRow);
     }
     section.appendChild(hlList);
-    this.contentEl.appendChild(section);
+    // 添加折叠按钮
+    _createSectionToggle(plugin, 'relatedHighlights_sidebar', hlList, titleDiv);
+    container.appendChild(section);
   }
 
   showInlineRemarkForRegex(regex) {
@@ -17868,9 +19434,8 @@ class AddRegexRuleModal {
       ...(Array.isArray(plugin.rules) ? plugin.rules : [])
     ];
     const matchingRules = allRules.filter(r => {
-      const ruleParts = r.regex.split('|');
-      return ruleParts.includes(regex) || r.regex.includes(regex) || regex.includes(r.regex);
-
+      const ruleParts = _splitRegexPipes(r.regex);
+      return ruleParts.includes(regex) || regex.includes(r.regex) || _regexMatch(regex, r.regex);
     });
     if (matchingRules.length === 0) {
       const existing = this.contentEl.querySelector('.inline-remark-section');
@@ -17880,7 +19445,11 @@ class AddRegexRuleModal {
         this._showRelatedNotesOnly(regex);
       }
       if (plugin.settings?.showRelatedHighlights !== false && regex) {
-        this._showRelatedHighlights(regex);
+        const _exclGrps = plugin.settings?.excludedRelatedNotesCategories || [];
+        const _grps = plugin.config?.globalRuleGroups || {};
+        let _hlExcl = false;
+        if (_exclGrps.length > 0) { for (const _g in _grps) { if (_exclGrps.includes(_g) && _grps[_g].includes(regex)) { _hlExcl = true; break; } } }
+        if (!_hlExcl) this._showRelatedHighlights(regex);
       }
       return;
     }
@@ -17894,13 +19463,131 @@ class AddRegexRuleModal {
     this._showInlineRemarkForRules(ruleId, matchingRules);
   }
 
+  _renderKeywordHistory() {
+    const plugin = this.plugin;
+    const historyKeywords = plugin._keywordHistory || [];
+    // 仅显示规则中的关键词
+    const allRuleRegexes = new Set([
+      ...(plugin.globalRules || []).map(r => r.regex),
+      ...(plugin.rules || []).map(r => r.regex)
+    ]);
+    const ruleKeywords = historyKeywords.filter(kw => allRuleRegexes.has(kw));
+    if (ruleKeywords.length > 0) {
+      let historySection = this._historySectionEl;
+      if (!historySection || !this.contentEl.contains(historySection)) {
+        historySection = document.createElement('div');
+        historySection.className = 'keyword-history-section';
+        historySection.style.cssText = 'margin-bottom:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:8px;background:var(--background-secondary);';
+        this._historySectionEl = historySection;
+        this.contentEl.prepend(historySection);
+      } else {
+        historySection.innerHTML = '';
+      }
+
+      const historyHeaderRow = document.createElement('div');
+      historyHeaderRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;';
+
+      const historyHeaderLeft = document.createElement('div');
+      historyHeaderLeft.style.cssText = 'display:flex;align-items:center;gap:4px;cursor:pointer;';
+      const historyCollapsed = { value: false };
+      const historyToggle = document.createElement('span');
+      historyToggle.textContent = _TOGGLE_DOWN;
+      historyToggle.style.cssText = 'cursor:pointer;color:var(--text-muted);font-size:12px;';
+      const historyTitle = document.createElement('span');
+      historyTitle.textContent = t('main.keywordHistory');
+      historyTitle.style.cssText = 'font-size:12px;font-weight:500;color:var(--text-muted);';
+      historyHeaderLeft.appendChild(historyToggle);
+      historyHeaderLeft.appendChild(historyTitle);
+
+      const clearBtn = document.createElement('span');
+      clearBtn.textContent = t('main.clearHistory');
+      clearBtn.style.cssText = 'font-size:10px;cursor:pointer;color:var(--text-faint);padding:2px 6px;border-radius:4px;';
+      clearBtn.addEventListener('mouseenter', () => { clearBtn.style.color = 'var(--text-muted)'; });
+      clearBtn.addEventListener('mouseleave', () => { clearBtn.style.color = 'var(--text-faint)'; });
+
+      const chipRow = document.createElement('div');
+      chipRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+
+      clearBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        plugin._keywordHistory = [];
+        plugin._scheduleSaveKeywordHistory();
+        chipRow.innerHTML = '';
+      });
+
+      historyHeaderRow.appendChild(historyHeaderLeft);
+      historyHeaderRow.appendChild(clearBtn);
+      historySection.appendChild(historyHeaderRow);
+
+      const HISTORY_LIMIT = 10;
+      const limitedKeywords = ruleKeywords.slice(0, HISTORY_LIMIT);
+      const remainingKeywords = ruleKeywords.slice(HISTORY_LIMIT);
+
+      const createChip = (kw) => {
+        const chip = document.createElement('span');
+        const displayText = _splitRegexPipes(kw).find(p => p.length <= 20) || kw.substring(0, 20);
+        chip.textContent = displayText;
+        // 获取关键词对应的cssClass以应用样式
+        const kwRule = plugin.globalRules.find(r => r.regex === kw) || plugin.rules.find(r => r.regex === kw);
+        chip.style.cssText = 'display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;cursor:pointer;user-select:none;white-space:nowrap;border:1px solid var(--background-modifier-border);background:rgba(var(--mono-rgb-0),0.3);color:var(--text-muted);max-width:100px;overflow:hidden;text-overflow:ellipsis;';
+        if (kwRule?.cssClass) { chip.className = kwRule.cssClass + ' highlight-regex-text'; chip.style.borderColor = 'transparent'; }
+        chip.addEventListener('click', () => {
+          if (this.regexInput) this.regexInput.setValue(kw);
+          if (this.showInlineRemarkForRegex) this.showInlineRemarkForRegex(kw);
+        });
+        return chip;
+      };
+
+      limitedKeywords.forEach((kw) => {
+        chipRow.appendChild(createChip(kw));
+      });
+
+      // 更多按钮
+      let moreTag = null;
+      let expanded = false;
+      if (remainingKeywords.length > 0) {
+        moreTag = document.createElement('span');
+        moreTag.textContent = `+${remainingKeywords.length}`;
+        moreTag.style.cssText = 'font-size:10px;color:var(--text-muted);padding:2px 6px;cursor:pointer;border-radius:8px;border:1px dashed var(--background-modifier-border);';
+        moreTag.addEventListener('click', () => {
+          if (expanded) return;
+          expanded = true;
+          remainingKeywords.forEach((kw) => {
+            chipRow.insertBefore(createChip(kw), moreTag);
+          });
+          moreTag.remove();
+        });
+        chipRow.appendChild(moreTag);
+      }
+
+      historySection.appendChild(chipRow);
+
+      historyHeaderLeft.addEventListener('click', () => {
+        historyCollapsed.value = !historyCollapsed.value;
+        historyToggle.textContent = historyCollapsed.value ? _TOGGLE_RIGHT : _TOGGLE_DOWN;
+        chipRow.style.display = historyCollapsed.value ? 'none' : 'flex';
+      });
+    } else {
+      if (this._historySectionEl && this.contentEl.contains(this._historySectionEl)) {
+        this._historySectionEl.remove();
+        this._historySectionEl = null;
+      }
+    }
+  }
+
   _showInlineRemarkForRules(ruleId, rules) {
+    const _savedScroll = this.contentEl.scrollTop;
+
+    // 渲染历史关键词区块
+    this._renderKeywordHistory();
+
     const existingSection = this.contentEl.querySelector('.inline-remark-section');
     if (existingSection) existingSection.remove();
+    const existingHl = this.contentEl.querySelector('.inline-related-highlights-section');
+    if (existingHl) existingHl.remove();
     this._inlineRemarkRuleId = ruleId;
-    const plugin = this.plugin;
-    const popupSpacing = plugin?.settings?.popupSpacing !== undefined ? plugin.settings.popupSpacing : 10;
-    const popupFontSize = plugin?.settings?.popupFontSize !== undefined ? plugin.settings.popupFontSize : 14;
+    const popupSpacing = this.plugin?.settings?.popupSpacing !== undefined ? this.plugin.settings.popupSpacing : 10;
+    const popupFontSize = this.plugin?.settings?.popupFontSize !== undefined ? this.plugin.settings.popupFontSize : 14;
 
     const section = document.createElement('div');
     section.className = 'inline-remark-section';
@@ -17908,52 +19595,100 @@ class AddRegexRuleModal {
 
     const headerRow = document.createElement('div');
     headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
-    const titleDiv = document.createElement('div');
-    titleDiv.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
-    titleDiv.textContent = rules.map(r => r.regex).join(' | ');
-    headerRow.appendChild(titleDiv);
+
+
     const closeBtn = document.createElement('span');
     closeBtn.textContent = '✕';
     closeBtn.style.cssText = 'cursor:pointer;font-size:14px;color:var(--text-muted);padding:0 4px;flex-shrink:0;';
     closeBtn.addEventListener('click', () => {
       section.remove();
+      const hlS = this.contentEl.querySelector('.inline-related-highlights-section');
+      if (hlS) hlS.remove();
       this._inlineRemarkRuleId = null;
     });
     headerRow.appendChild(closeBtn);
     section.appendChild(headerRow);
 
-    const _remarkMasonryMode = plugin.settings?.remarkMasonryMode !== undefined ? plugin.settings.remarkMasonryMode : true;
+    // 关键词 chips：替代"|"分隔，点击切换备注和相关高亮
+    const keywordRules = rules.filter(r => !_isSentenceRule(r.regex, this.plugin.settings));
+    const sentenceRules = this.plugin._pendingSentenceRules || [];
+    const allKeywords = [...new Set(keywordRules.map(r => r.regex))];
+    const activeIdx = { value: 0 };
 
-    for (let ri = 0; ri < rules.length; ri++) {
-      const rule = rules[ri];
-      const isGlobal = plugin.globalRules?.some(r => r.regex === rule.regex && r.cssClass === rule.cssClass);
+    if (allKeywords.length > 1) {
+      const kwChipRow = document.createElement('div');
+      kwChipRow.className = 'remark-kw-chips';
+      kwChipRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;';
+      allKeywords.forEach((rx, i) => {
+        const chip = document.createElement('span');
+        const displayText = _splitRegexPipes(rx).find(p => p.length <= 20) || rx.substring(0, 20);
+        chip.textContent = displayText;
+        chip.className = 'remark-kw-chip';
+        const isActive = i === 0;
+        chip.style.cssText = `display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;cursor:pointer;user-select:none;transition:all 0.15s ease;white-space:nowrap;border:1px solid ${isActive ? 'var(--interactive-accent)' : 'var(--background-modifier-border)'};background:${isActive ? 'var(--interactive-accent)' : 'rgba(var(--mono-rgb-0),0.3)'};color:${isActive ? '#fff' : 'var(--text-muted)'};max-width:100px;overflow:hidden;text-overflow:ellipsis;`;
+        chip.addEventListener('click', () => {
+          activeIdx.value = i;
+          renderActiveRule(i);
+        });
+        chip.addEventListener('dblclick', (de) => {
+          de.preventDefault(); de.stopPropagation();
+          const existingWin = document.querySelector(`.keyword-detail-window[data-keyword="${CSS.escape(rx)}"]`);
+          if (existingWin) { existingWin.remove(); } else { this.plugin.openKeywordWindow(rx); }
+        });
+        kwChipRow.appendChild(chip);
+      });
+      section.appendChild(kwChipRow);
+    }
 
-      if (rules.length > 1 && ri > 0) {
-        const divider = document.createElement('div');
-        divider.style.cssText = 'border-top:2px solid var(--background-modifier-border);margin:8px 0;';
-        section.appendChild(divider);
-      }
-      if (rules.length > 1) {
-        const ruleHeader = document.createElement('div');
-        ruleHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-accent);margin-bottom:4px;';
-        ruleHeader.textContent = rule.regex + (isGlobal ? ' (全局)' : ' (文件)');
-        section.appendChild(ruleHeader);
-      }
+
+    const keywordIndex = this.plugin.buildKeywordIndex();
+    const backlinkIndex = this.plugin.buildBacklinkIndex(keywordIndex);
+
+    // 内容容器：只显示当前激活关键词的备注
+    const remarkContainer = document.createElement('div');
+    remarkContainer.className = 'remark-content-container';
+    // 双击备注容器标题区域打开关键词弹窗
+    remarkContainer.addEventListener('dblclick', (de) => {
+      const activeRegex = allKeywords.length > 0 ? allKeywords[activeIdx.value] : rules[0]?.regex;
+      if (!activeRegex) return;
+      de.preventDefault(); de.stopPropagation();
+      const existingWin = document.querySelector(`.keyword-detail-window[data-keyword="${CSS.escape(activeRegex)}"]`);
+      if (existingWin) { existingWin.remove(); } else { this.plugin.openKeywordWindow(activeRegex); }
+    });
+    section.appendChild(remarkContainer);
+
+    const renderActiveRule = (kwIdx) => {
+      // 更新 chips 激活状态
+      const chips = section.querySelectorAll('.remark-kw-chip');
+      chips.forEach((c, i) => {
+        const isActive = i === kwIdx;
+        c.style.border = `1px solid ${isActive ? 'var(--interactive-accent)' : 'var(--background-modifier-border)'}`;
+        c.style.background = isActive ? 'var(--interactive-accent)' : 'rgba(var(--mono-rgb-0),0.3)';
+        c.style.color = isActive ? '#fff' : 'var(--text-muted)';
+      });
+
+      // 清空备注内容
+      remarkContainer.innerHTML = '';
+
+      const activeRegex = allKeywords.length > 0 ? allKeywords[kwIdx] : rules[0]?.regex;
+      const activeRule = rules.find(r => r.regex === activeRegex) || rules[0];
+      if (!activeRule) return;
+      const isGlobal = this.plugin.globalRules?.some(r => r.regex === activeRule.regex && r.cssClass === activeRule.cssClass);
 
       const contentContainer = document.createElement('div');
-      contentContainer.style.cssText = `padding:${popupSpacing}px;font-size:${popupFontSize}px;line-height:${plugin?.settings?.popupLineHeight !== undefined ? plugin.settings.popupLineHeight : 1.5};`;
-      section.appendChild(contentContainer);
+      contentContainer.style.cssText = `padding:${popupSpacing}px;font-size:${popupFontSize}px;line-height:${this.plugin?.settings?.popupLineHeight !== undefined ? this.plugin.settings.popupLineHeight : 1.5};`;
+      remarkContainer.appendChild(contentContainer);
 
-      const ruleIdForRefresh = isGlobal ? rule.regex + '-' + rule.cssClass : 'history-' + rule.regex + '-' + rule.cssClass;
-      plugin.renderRemarkContent(contentContainer, {
-      links: rule.links,
-        rule,
-        ruleRegex: rule.regex,
+      const ruleIdForRefresh = isGlobal ? activeRule.regex + '-' + activeRule.cssClass : 'history-' + activeRule.regex + '-' + activeRule.cssClass;
+      const lastRenderResult = this.plugin.renderRemarkContent(contentContainer, {
+        links: activeRule.links,
+        rule: activeRule,
+        ruleRegex: activeRule.regex,
         isGlobal,
         ruleSource: isGlobal ? 'global' : 'local',
         popupSpacing,
         popupFontSize,
-        popupLineHeight: plugin.settings.popupLineHeight !== undefined ? plugin.settings.popupLineHeight : 1.5,
+        popupLineHeight: this.plugin.settings.popupLineHeight !== undefined ? this.plugin.settings.popupLineHeight : 1.5,
         onRefresh: () => { this._showInlineRemarkForRules(ruleId, rules); },
         onReposition: null,
         onDirty: null,
@@ -17967,19 +19702,16 @@ class AddRegexRuleModal {
         showImageRender: true,
         showFromFileRuleDelete: true,
         cssScope: 'inline-remark-section',
-        masonry: _remarkMasonryMode
+        masonry: _calcMasonry(activeRule.links, this.plugin)
       });
-    }
 
-    const keywordIndex = plugin.buildKeywordIndex();
-    const backlinkIndex = plugin.buildBacklinkIndex(keywordIndex);
-    const allRelatedKeywords = new Map();
-    for (const rule of rules) {
+      // 关键词反向链接 chips
+      const ruleRelatedKws = new Map();
       const mentionedKeywords = [];
-      const currentRule = plugin.globalRules.find(r => r.regex === rule.regex) || plugin.rules.find(r => r.regex === rule.regex);
+      const currentRule = this.plugin.globalRules.find(r => r.regex === activeRule.regex) || this.plugin.rules.find(r => r.regex === activeRule.regex);
       if (currentRule && currentRule.links) {
         const sortedKws = [...keywordIndex.values()]
-          .filter(k => k.plainTexts && k.plainTexts.length > 0 && k.regex !== rule.regex)
+          .filter(k => k.plainTexts && k.plainTexts.length > 0 && k.regex !== activeRule.regex)
           .sort((a, b) => Math.max(...b.plainTexts.map(p => p.length)) - Math.max(...a.plainTexts.map(p => p.length)));
         for (const link of currentRule.links) {
           const remarkText = link.remark || '';
@@ -17992,63 +19724,79 @@ class AddRegexRuleModal {
           }
         }
       }
-      const mentionedBy = backlinkIndex.get(rule.regex) || [];
+      const mentionedBy = backlinkIndex.get(activeRule.regex) || [];
       for (const kw of mentionedKeywords) {
-        if (!allRelatedKeywords.has(kw.regex)) allRelatedKeywords.set(kw.regex, { regex: kw.regex, cssClass: kw.cssClass, relation: 'mention' });
+        if (!ruleRelatedKws.has(kw.regex)) ruleRelatedKws.set(kw.regex, { regex: kw.regex, cssClass: kw.cssClass, relation: 'mention' });
       }
       for (const bl of mentionedBy) {
-        if (!allRelatedKeywords.has(bl.sourceRegex)) {
-          const sourceRule = plugin.globalRules.find(r => r.regex === bl.sourceRegex) || plugin.rules.find(r => r.regex === bl.sourceRegex);
-          allRelatedKeywords.set(bl.sourceRegex, { regex: bl.sourceRegex, cssClass: sourceRule?.cssClass || '', relation: 'mentionedBy' });
+        if (!ruleRelatedKws.has(bl.sourceRegex)) {
+          const sourceRule = this.plugin.globalRules.find(r => r.regex === bl.sourceRegex) || this.plugin.rules.find(r => r.regex === bl.sourceRegex);
+          ruleRelatedKws.set(bl.sourceRegex, { regex: bl.sourceRegex, cssClass: sourceRule?.cssClass || '', relation: 'mentionedBy' });
         }
       }
-    }
 
-    if (allRelatedKeywords.size > 0) {
-      const chipsBar = document.createElement('div');
-      chipsBar.className = 'keyword-chips-bar';
-      chipsBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;background:transparent;border-top:1px solid rgba(255,255,255,0.08);flex-shrink:0;';
+      if (ruleRelatedKws.size > 0) {
+        const kwBlock = document.createElement('div');
+        kwBlock.className = 'keyword-chips-block';
+        kwBlock.style.cssText = 'margin-bottom:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:6px;background:rgba(var(--mono-rgb-0),0.15);';
+        const kwBlockHeader = document.createElement('div');
+        kwBlockHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:4px;';
+        const kwBlockHeaderLeft = document.createElement('div');
+        kwBlockHeaderLeft.style.cssText = 'display:flex;align-items:center;gap:4px;';
+        const kwBlockTitle = document.createElement('span');
+        kwBlockTitle.textContent = t('remark.relatedKeywords');
+        kwBlockHeaderLeft.appendChild(kwBlockTitle);
+        kwBlockHeader.appendChild(kwBlockHeaderLeft);
+        if (lastRenderResult?.aiGraphBtn) kwBlockHeader.appendChild(lastRenderResult.aiGraphBtn);
+        kwBlock.appendChild(kwBlockHeader);
+        const chipsBar = document.createElement('div');
+        chipsBar.className = 'keyword-chips-bar';
+        chipsBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;flex-shrink:0;';
+        for (const [kwRegex, info] of ruleRelatedKws) {
 
-      const chipsLabel = document.createElement('span');
-      chipsLabel.textContent = '🔗';
-      chipsLabel.style.cssText = 'font-size:11px;color:var(--text-muted);margin-right:2px;align-self:center;';
-      chipsBar.appendChild(chipsLabel);
-
-      for (const [kwRegex, info] of allRelatedKeywords) {
-        const chip = document.createElement('span');
-        chip.className = 'keyword-chip';
-        chip.title = (info.relation === 'mention' ? t('main.keywordMentions') : t('main.keywordMentionedBy')) + ' ' + kwRegex;
-        chip.style.cssText = 'display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(var(--mono-rgb-0),0.3);transition:all 0.15s ease;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-
-        const chipLabel = document.createElement('span');
-        chipLabel.textContent = (info.relation === 'mention' ? '→ ' : '← ') + kwRegex;
-        if (info.cssClass) {
-          chipLabel.className = info.cssClass + ' highlight-regex-text';
-          chip.style.borderColor = 'transparent';
-        } else {
-          chipLabel.style.cssText = 'font-weight:500;color:var(--text-normal);';
+          const chip = document.createElement('span');
+          chip.className = 'keyword-chip';
+          chip.title = (info.relation === 'mention' ? t('main.keywordMentions') : t('main.keywordMentionedBy')) + ' ' + kwRegex;
+          chip.style.cssText = 'display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(var(--mono-rgb-0),0.3);transition:all 0.15s ease;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+          const chipLabel = document.createElement('span');
+          chipLabel.textContent = (info.relation === 'mention' ? '→ ' : '← ') + kwRegex;
+          if (info.cssClass) { chipLabel.className = info.cssClass + ' highlight-regex-text'; chip.style.borderColor = 'transparent'; }
+          else { chipLabel.style.cssText = 'font-weight:500;color:var(--text-normal);'; }
+          chip.appendChild(chipLabel);
+          chip.addEventListener('click', (ce) => { ce.preventDefault(); ce.stopPropagation(); const existingWin = document.querySelector(`.keyword-detail-window[data-keyword="${CSS.escape(kwRegex)}"]`); if (existingWin) { existingWin.remove(); } else { this.plugin.openKeywordWindow(kwRegex); } });
+          chipsBar.appendChild(chip);
         }
-        chip.appendChild(chipLabel);
-
-        chip.addEventListener('click', (ce) => {
-
-          ce.preventDefault();
-          ce.stopPropagation();
-          const existingWin = document.querySelector(`.keyword-detail-window[data-keyword="${CSS.escape(kwRegex)}"]`);
-          if (existingWin) {
-            existingWin.remove();
+        kwBlock.appendChild(chipsBar);
+        // 添加折叠按钮
+        _createSectionToggle(this.plugin, 'relatedKeywords_sidebar', chipsBar, kwBlockHeaderLeft);
+        if (lastRenderResult?._existingMermaidGraph && lastRenderResult?._renderGraphSection) lastRenderResult._renderGraphSection(lastRenderResult._existingMermaidGraph, undefined, kwBlock);
+        if (lastRenderResult?.aiBtnContainer && lastRenderResult.container.contains(lastRenderResult.aiBtnContainer)) lastRenderResult.container.insertBefore(kwBlock, lastRenderResult.aiBtnContainer);
+        else contentContainer.appendChild(kwBlock);
+        // 插入 AI 提问块到关联词下方
+        if (lastRenderResult?.aiQuestionBlock) {
+          if (kwBlock.parentNode) {
+            kwBlock.after(lastRenderResult.aiQuestionBlock);
           } else {
-            plugin.openKeywordWindow(kwRegex);
+            if (lastRenderResult?.aiBtnContainer && lastRenderResult.container.contains(lastRenderResult.aiBtnContainer)) lastRenderResult.container.insertBefore(lastRenderResult.aiQuestionBlock, lastRenderResult.aiBtnContainer);
+            else contentContainer.appendChild(lastRenderResult.aiQuestionBlock);
           }
-        });
-
-        chipsBar.appendChild(chip);
+        }
       }
 
-      section.appendChild(chipsBar);
-    }
+      // 即使没有关联词，也要插入 AI 提问块
+      if (ruleRelatedKws.size === 0 && lastRenderResult?.aiQuestionBlock) {
+        if (lastRenderResult?.aiBtnContainer && lastRenderResult.container.contains(lastRenderResult.aiBtnContainer)) lastRenderResult.container.insertBefore(lastRenderResult.aiQuestionBlock, lastRenderResult.aiBtnContainer);
+        else contentContainer.appendChild(lastRenderResult.aiQuestionBlock);
+      }
+
+
+    };
 
     this.contentEl.appendChild(section);
+
+    // 渲染第一个关键词
+    renderActiveRule(0);
+
     const chipBar = this.contentEl.querySelector('.rch-top-chip-bar');
     const chipContents = this.contentEl.querySelectorAll('.rch-style-container, .global-rules-section, .heading-styles-section');
     chipContents.forEach(el => {
@@ -18061,10 +19809,13 @@ class AddRegexRuleModal {
       if (firstContent) {
         this.contentEl.insertBefore(chipBar, firstContent);
       }
+      const fnC = this.contentEl.querySelector('.float-note-chip-content');
+      if (fnC) chipBar.after(fnC);
     }
 
+    const savedScrollTop = this.contentEl.scrollTop || _savedScroll;
     requestAnimationFrame(() => {
-      section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      this.contentEl.scrollTop = savedScrollTop;
     });
   }
 
@@ -18232,7 +19983,7 @@ class AddRegexRuleModal {
               const rule = currentRules.find(r => r.regex === ruleRegex && r.cssClass === ruleCssClass);
               
               if (rule) {
-                const ruleParts = rule.regex.split('|');
+                const ruleParts = _splitRegexPipes(rule.regex);
                 const isMatching = ruleParts.includes(inputValue) || rule.regex.includes(inputValue) || inputValue.includes(rule.regex);
                 
                 if (isMatching) {
@@ -18340,7 +20091,7 @@ class AddRegexRuleModal {
               const rule = currentRules.find(r => r.regex === ruleRegex && r.cssClass === ruleCssClass);
               
               if (rule) {
-                const ruleParts = rule.regex.split('|');
+                const ruleParts = _splitRegexPipes(rule.regex);
                 const isMatching = ruleParts.includes(inputValue) || rule.regex.includes(inputValue) || inputValue.includes(rule.regex);
                 
                 if (isMatching) {
@@ -18744,7 +20495,7 @@ class AddRegexRuleModal {
     // 兼容旧版本：清理没有类名但包含历史记录标题的容器
     const oldContainers = this.contentEl.querySelectorAll('div[style*="border: 1px solid #ddd"]');
     oldContainers.forEach(container => {
-      if (container.textContent.includes('当前文件的高亮规则')) {
+      if (container.textContent.includes(t('main.currentRules'))) {
         container.remove();
       }
     });
@@ -18758,7 +20509,7 @@ class AddRegexRuleModal {
     // 兼容旧版本：清理没有类名但包含全局规则标题的容器
     const oldContainers = this.contentEl.querySelectorAll('div[style*="border: 1px solid #ddd"]');
     oldContainers.forEach(container => {
-      if (container.textContent.includes('全局高亮规则')) {
+      if (container.textContent.includes(t('main.globalRules'))) {
         container.remove();
       }
     });
@@ -19015,7 +20766,7 @@ class AddRegexRuleModal {
       if (!styleCategories || typeof styleCategories !== 'object' || 
           !styleCategories[draggedCategory] || !styleCategories[targetCategory]) {
         console.error('Invalid styleCategories or category not found');
-        this.showError(this.contentEl, '分类不存在，无法移动样式');
+        this.showError(this.contentEl, t('other.categoryNotExist'));
         return;
       }
       
@@ -19027,7 +20778,7 @@ class AddRegexRuleModal {
       if (draggedIndex < 0 || draggedIndex >= sourceClassNames.length || 
           targetIndex < 0 || targetIndex >= targetClassNames.length) {
         console.error('Invalid index for sorting');
-        this.showError(this.contentEl, '索引无效，无法移动样式');
+        this.showError(this.contentEl, t('other.invalidIndex'));
         return;
       }
       
@@ -19093,7 +20844,7 @@ class AddRegexRuleModal {
     } catch (error) {
       console.error('Error saving sorted styles:', error);
       // 添加错误提示
-      this.showError(this.contentEl, '保存样式顺序失败: ' + error.message);
+      this.showError(this.contentEl, t('other.saveOrderFailed', {err: error.message}));
     }
   }
   
@@ -19944,12 +21695,12 @@ class AddRegexRuleModal {
                 this.plugin.globalRules[ruleIndex].links.push(linkEntry);
               }
               await this.plugin.saveGlobalRules(this.plugin.globalRules);
-              this.showSuccessMessage('全局规则备注已更新！');
+              this.showSuccessMessage(t('other.remarkUpdated'));
             }
           } else {
             // 当前文件规则
             if (!this.plugin.currentFilePath) {
-              alert('无法确定当前文件路径，无法保存规则！');
+              alert(t('other.cannotSaveRule'));
               return;
             }
             
@@ -19963,7 +21714,7 @@ class AddRegexRuleModal {
               await this.plugin.saveFileRules(this.plugin.currentFilePath, this.plugin.rules);
               
 
-              this.showSuccessMessage('当前文件规则备注已更新！');
+              this.showSuccessMessage(t('other.remarkUpdatedLocal'));
             }
           }
           
@@ -19987,7 +21738,7 @@ class AddRegexRuleModal {
           this.plugin.refreshCurrentView();
         } catch (error) {
           console.error('Error saving remark:', error);
-          alert('保存备注时出错：' + error.message);
+          alert(t('other.saveRemarkError', {err: error.message}));
         }
       },
       this.plugin, // 传递plugin对象
@@ -20051,7 +21802,7 @@ class AddRegexRuleModal {
       btn.style.position = 'relative';
       btn.appendChild(checkbox);
       const pin = btn.querySelector('span[style*="position: absolute"]');
-      if (pin && pin.textContent === '📌') pin.style.display = 'none';
+      if (pin && pin.querySelector('svg')) pin.style.display = 'none';
     });
     if (this._updateBatchBtn) this._updateBatchBtn();
   }
@@ -20069,7 +21820,7 @@ class AddRegexRuleModal {
     this.modalEl.querySelectorAll('.batch-checkbox').forEach(cb => cb.remove());
     this.modalEl.querySelectorAll('.style-option').forEach(btn => {
       const pin = btn.querySelector('span[style*="position: absolute"]');
-      if (pin && pin.textContent === '📌') pin.style.display = '';
+      if (pin && pin.querySelector('svg')) pin.style.display = '';
     });
     if (this._updateBatchBtn) this._updateBatchBtn();
   }
@@ -20321,7 +22072,7 @@ class AddRegexRuleModal {
       this.onOpen();
     } catch (error) {
       console.error('Error moving style to category:', error);
-      new Notice('移动样式到分组失败: ' + error.message);
+      new Notice(t('other.moveStyleFailed', { err: error.message }));
     }
   }
 
@@ -20515,7 +22266,7 @@ class AddRegexRuleModal {
           
           if (!sourceGrid) {
             console.error('Source grid not found');
-            this.showError(this.contentEl, '无法找到源网格容器');
+            this.showError(this.contentEl, t('other.cannotFindGrid'));
             return;
           }
           
@@ -20788,13 +22539,13 @@ class AddRegexRuleModal {
           
         } catch (domError) {
           console.error('DOM manipulation error during cross-category move:', domError);
-          this.showError(this.contentEl, '跨分类移动失败: ' + domError.message);
+          this.showError(this.contentEl, t('other.crossCategoryMoveFailed', {err: domError.message}));
         }
       }
       
     } catch (error) {
       console.error('Error during drag and drop:', error);
-      this.showError(this.contentEl, '拖动排序时出错: ' + error.message);
+      this.showError(this.contentEl, t('other.dragSortError', {err: error.message}));
     }
   }
 
@@ -20931,7 +22682,7 @@ class AddRegexRuleModal {
   onClose() {
 
     this._locked = false;
-    if (this._rulesUpdateHandler) {
+    if (this._rulesUpdateHandler && this.plugin.rulesUpdateEmitter) {
       this.plugin.rulesUpdateEmitter.removeEventListener('update', this._rulesUpdateHandler);
       this._rulesUpdateHandler = null;
     }
@@ -21019,6 +22770,7 @@ class AddRegexRuleModal {
           this.modalEl.style.position = 'relative';
           this.modalEl.style.left = '';
           this.modalEl.style.top = '';
+          this.modalEl.style.transform = '';
           this.modalEl.style.width = '100%';
           this.modalEl.style.height = '100%';
           this.modalEl.style.maxHeight = 'none';
@@ -21099,7 +22851,7 @@ class SwiftGlossaSidebarView extends ItemView {
 
   getViewType() { return SWIFTGLOSSA_SIDEBAR_VIEW_TYPE; }
   getDisplayText() { return 'SwiftGlossa'; }
-  getIcon() { return 'palette'; }
+  getIcon() { return 'swiftglossa-icon'; }
   isVisible() {
     const rect = this.containerEl.getBoundingClientRect();
     return rect.width > 0 && rect.height > 0;
@@ -21123,7 +22875,7 @@ class SwiftGlossaSidebarView extends ItemView {
     }
 
     if (!modal || !modal.modalEl) {
-      container.createEl('div', { text: t('main.openMainPanelFirst') || '请先打开主面板' });
+      container.createEl('div', { text: t('main.openMainPanelFirst') });
       return;
     }
 
@@ -21133,7 +22885,7 @@ class SwiftGlossaSidebarView extends ItemView {
       this._savedParent = null;
     }
     this._savedStyles = {};
-    const propsToSave = ['position','left','top','width','height','maxHeight','minWidth','maxWidth','borderRadius','zIndex','opacity','boxShadow','background','backdropFilter','webkitBackdropFilter','border'];
+    const propsToSave = ['position','left','top','transform','width','height','maxHeight','minWidth','maxWidth','borderRadius','zIndex','opacity','boxShadow','background','backdropFilter','webkitBackdropFilter','border'];
     for (const prop of propsToSave) {
       this._savedStyles[prop] = modal.modalEl.style[prop];
     }
@@ -21141,6 +22893,7 @@ class SwiftGlossaSidebarView extends ItemView {
     modal.modalEl.style.position = 'relative';
     modal.modalEl.style.left = '';
     modal.modalEl.style.top = '';
+    modal.modalEl.style.transform = '';
     modal.modalEl.style.width = '100%';
     modal.modalEl.style.height = '100%';
     modal.modalEl.style.maxHeight = 'none';
@@ -21157,6 +22910,7 @@ class SwiftGlossaSidebarView extends ItemView {
 
     container.appendChild(modal.modalEl);
 
+    if (modal._updateTitleBarCursor) modal._updateTitleBarCursor();
     const sidebarBtn = modal.modalEl.querySelector('.rch-title-bar .rch-close-btn')?.previousElementSibling;
     const closeBtn = modal.modalEl.querySelector('.rch-title-bar .rch-close-btn');
     if (sidebarBtn) sidebarBtn.style.display = 'none';
@@ -21167,6 +22921,9 @@ class SwiftGlossaSidebarView extends ItemView {
       document.body.removeChild(modal._resizeHandle);
       modal._resizeHandle = null;
     }
+    // 移除手机端resize handle（侧边栏不需要）
+    const mobileResizeHandle = modal.modalEl.querySelector('.modal-resize-handle');
+    if (mobileResizeHandle) mobileResizeHandle.remove();
     if (modal._resizeUpdatePosition) {
       window.removeEventListener("resize", modal._resizeUpdatePosition);
       modal._resizeUpdatePosition = null;
@@ -21184,6 +22941,7 @@ class SwiftGlossaSidebarView extends ItemView {
 
     this._sidebarSelectionHandler = () => {
       if (!this.isVisible()) return;
+      if (this._sidebarModal?._frozen) return;
       const modal = this._sidebarModal;
       if (!modal || !modal.regexInput) return;
       const selection = window.getSelection();
@@ -21192,8 +22950,10 @@ class SwiftGlossaSidebarView extends ItemView {
         const anchorNode = selection.anchorNode;
         if (anchorNode && !modal.modalEl.contains(anchorNode)) {
           modal.regexInput.setValue(selectedText);
+
           if (modal.highlightMatchingRuleButtons) modal.highlightMatchingRuleButtons();
           if (modal.showInlineRemarkForRegex) modal.showInlineRemarkForRegex(selectedText);
+          this.plugin._addKeywordHistory(selectedText);
         }
       }
     };
@@ -21201,6 +22961,7 @@ class SwiftGlossaSidebarView extends ItemView {
 
     this._sidebarClickHandler = (e) => {
       if (!this.isVisible()) return;
+      if (this._sidebarModal?._frozen) return;
       if (!(e.target instanceof Element)) return;
       const modal = this._sidebarModal;
       if (!modal || !modal.regexInput) return;
@@ -21210,8 +22971,10 @@ class SwiftGlossaSidebarView extends ItemView {
       const ruleRegex = highlightEl.dataset?.ruleRegex || highlightEl.dataset?.remark;
       if (ruleRegex) {
         modal.regexInput.setValue(ruleRegex);
+
         if (modal.highlightMatchingRuleButtons) modal.highlightMatchingRuleButtons();
         if (modal.showInlineRemarkForRegex) modal.showInlineRemarkForRegex(ruleRegex);
+        this.plugin._addKeywordHistory(ruleRegex);
       }
     };
     document.addEventListener('click', this._sidebarClickHandler, true);
@@ -21280,6 +23043,8 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     const { MarkdownView, Notice } = require('obsidian');
     
     this.registerView(SWIFTGLOSSA_SIDEBAR_VIEW_TYPE, (leaf) => new SwiftGlossaSidebarView(leaf, this));
+    const { addIcon } = require('obsidian');
+    addIcon('swiftglossa-icon', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="68" text-anchor="middle" font-size="52" font-weight="bold" font-family="sans-serif" fill="currentColor">SG</text></svg>');
     
     this.countedRegexes = new Set();
 
@@ -21344,9 +23109,13 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       showRemarkBadge: true,
       showRelatedNotes: true,
       showRelatedHighlights: true,
+      sentenceThresholdCN: 8,
+      sentenceThresholdEN: 3,
 
 
       remarkMasonryMode: false,
+      remarkMasonryAuto: true,
+      aiGraphMaxTokens: 4096,
       remarkBadgeThreshold: 2,
       defaultPreviewTextCN: '',
       defaultPreviewTextEN: '',
@@ -21446,6 +23215,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
 
     _currentLang = this.settings.language || 'en';
     _remarkMasonryMode = this.settings.remarkMasonryMode || false;
+    _remarkMasonryAuto = this.settings.remarkMasonryAuto !== false;
     
     this.hoverStylesCache = new Map();
     
@@ -21505,12 +23275,14 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       this.loadStyleCategories(),
       this.loadGlobalRules(),
       this.loadGlobalRuleGroups(),
-      this.loadGlobalNotes()
+      this.loadGlobalNotes(),
+      this.loadColorSchemes()
     ]);
     
     this._preloadPinyinData();
     this._preloadInterlinearNoteData();
     
+    await this._cleanupPseudoElementCategories();
     await this.syncStylesToCategories();
     
 
@@ -21667,6 +23439,23 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     // 初始化备注提示符(n)
     this.initRemarkBadge();
     
+    // 桌面端：点击高亮文本时显示 c/i/g/l 按钮
+    if (_isDesktop) {
+      this.registerDomEvent(document, 'click', (e) => {
+        if (!(e.target instanceof Element)) return;
+        const highlightEl = e.target.closest('.highlight-tooltip-text, .highlight-regex-text');
+        if (!highlightEl) return;
+        const clickedRegex = highlightEl.dataset?.ruleRegex;
+        if (!clickedRegex) return;
+        const floatingBall = document.getElementById('regex-highlighter-floating-ball');
+        if (floatingBall) {
+          this._keepRuleActionButtons = true;
+          this._showRuleActionButtons(floatingBall, clickedRegex);
+          setTimeout(() => { this._keepRuleActionButtons = false; }, 500);
+        }
+      });
+    }
+    
     // 监听文件切换事件
     this.registerEvent(
       this.app.workspace.on('active-leaf-change', (leaf) => {
@@ -21805,7 +23594,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     // 注册命令和快捷键
     this.addCommand({
       id: "add-regex-highlight-rule",
-      name: "打开主窗口",
+      name: t('cmd.openMainPanel'),
       callback: () => {
 
         new AddRegexRuleModal(this.app, this).open();
@@ -21821,7 +23610,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     // 注册合并剪贴板与选中文本的快捷键命令
     this.addCommand({
       id: "merge-clipboard-with-selected-rule",
-      name: "合并剪贴板与选中文本到高亮规则",
+      name: t('cmd.mergeClipboard'),
       callback: async () => {
         await this.mergeClipboardWithSelectedRule();
       },
@@ -21836,7 +23625,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     // 注册随机高亮快捷键命令
     this.addCommand({
       id: "random-highlight-selected-text",
-      name: "随机高亮选中文本",
+      name: t('cmd.randomHighlight'),
       callback: async () => {
         await this.randomHighlightSelectedText();
       },
@@ -21851,7 +23640,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     // 注册移除选中文本样式快捷键命令
     this.addCommand({
       id: "remove-selected-text-style",
-      name: "移除选中文本的高亮样式",
+      name: t('cmd.removeHighlight'),
       callback: async () => {
         await this.removeSelectedTextStyle();
       },
@@ -21874,7 +23663,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     this.createFloatingBall();
     
     // 左侧功能区按钮：打开主面板（悬浮球隐藏后可通过此按钮打开）
-    this.addRibbonIcon('highlighter', 'SwiftGlossa', () => {
+    this.addRibbonIcon('swiftglossa-icon', 'SwiftGlossa', () => {
       new AddRegexRuleModal(this.app, this).open();
     });
     
@@ -21898,10 +23687,83 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     // 注册插件设置页（提示用户设置在主面板底部）
     this.addSettingTab(new RegexHighlightSettingTab(this.app, this));
     
+    // 新装插件时在右侧面板显示SG图标
+    this.app.workspace.onLayoutReady(() => {
+      this.ensureSidebarView();
+    });
+    
     this._highlightDb = [];
     this._highlightDbReady = false;
-    setTimeout(() => { this._buildHighlightDb(); }, 30000);
-    
+    this._highlightDbFileStats = {};
+    this._highlightDbSaveTimer = null;
+    this._highlightRemarks = {};
+    this._highlightRemarksTimer = null;
+    this._highlightBubbleStyles = {};
+    this._highlightRemarkTimestamps = {};
+    this._keywordHistory = [];
+    this._keywordHistoryTimer = null;
+    this._sectionFoldRemembered = {}; // section key -> true (remember fold) / false
+    this._sectionFoldState = {}; // section key -> true (collapsed) / false (expanded)
+
+    (async () => {
+      await this._loadHighlightRemarks();
+      await this._loadKeywordHistory();
+      const loaded = await this._loadHighlightDb();
+      if (loaded) {
+        setTimeout(() => { this._incrementalUpdateHighlightDb(); }, 30000);
+      } else {
+        setTimeout(() => { this._buildHighlightDb(); }, 30000);
+      }
+    })();
+
+    this.registerEvent(this.app.vault.on('modify', (file) => {
+      if (!file || file.extension !== 'md') return;
+      if (this._highlightDbSaveTimer) clearTimeout(this._highlightDbSaveTimer);
+      this._highlightDbSaveTimer = setTimeout(() => {
+        this._updateHighlightDbForFile(file.path);
+        this._highlightDbSaveTimer = null;
+      }, 2000);
+    }));
+
+    this.registerEvent(this.app.vault.on('delete', (file) => {
+      if (!file || file.extension !== 'md') return;
+      this._highlightDb = this._highlightDb.filter(e => e.path !== file.path);
+      delete this._highlightDbFileStats[file.path];
+      this._saveHighlightDb();
+      // 清理该文件的高亮备注
+      const prefix = file.path + '::';
+      for (const key of Object.keys(this._highlightRemarks)) {
+        if (key.startsWith(prefix)) delete this._highlightRemarks[key];
+      }
+      for (const key of Object.keys(this._highlightBubbleStyles)) {
+        if (key.startsWith(prefix)) delete this._highlightBubbleStyles[key];
+      }
+      this._scheduleSaveHighlightRemarks();
+    }));
+
+    this.registerEvent(this.app.vault.on('rename', (file, oldPath) => {
+      if (!file || file.extension !== 'md') return;
+      this._highlightDb = this._highlightDb.filter(e => e.path !== oldPath);
+      delete this._highlightDbFileStats[oldPath];
+      this._updateHighlightDbForFile(file.path);
+      // 迁移该文件的高亮备注
+      const oldPrefix = oldPath + '::';
+      const newPrefix = file.path + '::';
+      for (const key of Object.keys(this._highlightRemarks)) {
+        if (key.startsWith(oldPrefix)) {
+          this._highlightRemarks[newPrefix + key.substring(oldPrefix.length)] = this._highlightRemarks[key];
+          delete this._highlightRemarks[key];
+        }
+      }
+      for (const key of Object.keys(this._highlightBubbleStyles)) {
+        if (key.startsWith(oldPrefix)) {
+          this._highlightBubbleStyles[newPrefix + key.substring(oldPrefix.length)] = this._highlightBubbleStyles[key];
+          delete this._highlightBubbleStyles[key];
+        }
+      }
+      this._scheduleSaveHighlightRemarks();
+    }));
+
   }
   
 
@@ -22098,7 +23960,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     // 搜索框
     const searchBox = modal.contentEl.createDiv();
     searchBox.style.cssText = 'margin-bottom: 8px; padding: 0 8px;';
-    const searchInput = searchBox.createEl('input', { type: 'text', placeholder: '搜索字体...' });
+    const searchInput = searchBox.createEl('input', { type: 'text', placeholder: t('font.searchFont') });
     searchInput.style.cssText = `
       width: 100%; padding: 8px 12px; border-radius: 6px;
       border: 1px solid var(--background-modifier-border);
@@ -22392,9 +24254,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       return input;
     };
 
-    createSettingRow('行间距:', '如 1.8 或 28px', 'customLineHeight', '', 0.1);
-    createSettingRow('左边距:', '如 40px 或 5%', 'customLeftMargin', '', 4);
-    createSettingRow('右边距:', '如 40px 或 5%', 'customRightMargin', '', 4);
+    createSettingRow(t('font.lineSpacing'), 'e.g. 1.8 or 28px', 'customLineHeight', '', 0.1);
+    createSettingRow(t('font.leftMargin'), 'e.g. 40px or 5%', 'customLeftMargin', '', 4);
+    createSettingRow(t('font.rightMargin'), 'e.g. 40px or 5%', 'customRightMargin', '', 4);
 
     // 提示信息
     const hint = modal.contentEl.createDiv();
@@ -22669,8 +24531,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             item.addEventListener('click', async () => { menu.remove(); await action(); });
             menu.appendChild(item);
           };
-          mkItem(t('settings.snippetRenameGroup') || '重命名分组', async () => {
-            const newName = await this._promptInput(t('settings.snippetRenameGroup') || '重命名分组', gName);
+          mkItem(t('settings.snippetRenameGroup'), async () => {
+            const newName = await this._promptInput(t('settings.snippetRenameGroup'), gName);
             if (newName && newName !== gName) {
               snippetGroups[newName] = snippetGroups[gName];
               delete snippetGroups[gName];
@@ -22684,7 +24546,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               renderContent();
             }
           });
-          mkItem(t('context.deleteGroup') || '删除分组', async () => {
+          mkItem(t('context.deleteGroup'), async () => {
             delete snippetGroups[gName];
             const idx = snippetGroupOrder.indexOf(gName);
             if (idx !== -1) snippetGroupOrder.splice(idx, 1);
@@ -22756,7 +24618,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         collapseIcon.style.cssText = 'font-size:10px;color:var(--text-muted);cursor:pointer;';
 
         const groupLabel = groupHeader.createEl('span');
-        groupLabel.textContent = (t('settings.snippetUngrouped') || '未分组') + ' (' + ungrouped.length + ')';
+        groupLabel.textContent = t('settings.snippetUngrouped') + ' (' + ungrouped.length + ')';
         groupLabel.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;';
 
         const chipsContainer = groupEl.createDiv();
@@ -22850,13 +24712,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       const menu = document.createElement('div');
       menu.style.cssText = `position:fixed;left:${e.clientX}px;top:${e.clientY}px;background:rgba(var(--mono-rgb-0),0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--background-modifier-border);border-radius:6px;padding:4px 0;z-index:10001;box-shadow:0 4px 16px rgba(0,0,0,0.25);min-width:120px;`;
       const addGroupItem = document.createElement('div');
-      addGroupItem.textContent = t('settings.snippetAddGroup') || '添加分组';
+      addGroupItem.textContent = t('settings.snippetAddGroup');
       addGroupItem.style.cssText = 'padding:6px 16px;cursor:pointer;font-size:13px;color:var(--text-normal);';
       addGroupItem.addEventListener('mouseenter', () => { addGroupItem.style.background = 'var(--background-modifier-hover)'; });
       addGroupItem.addEventListener('mouseleave', () => { addGroupItem.style.background = 'transparent'; });
       addGroupItem.addEventListener('click', async () => {
         menu.remove();
-        const groupName = await this._promptInput(t('settings.snippetAddGroup') || '添加分组', '');
+        const groupName = await this._promptInput(t('settings.snippetAddGroup'), 'new Styles group');
         if (groupName && !snippetGroups[groupName]) {
           snippetGroups[groupName] = [];
           snippetGroupOrder.push(groupName);
@@ -22891,7 +24753,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       lbl.style.cssText = 'font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text-normal);';
       const input = dialog.createEl('input', { type: 'text' });
       input.value = defaultValue;
-      input.placeholder = t('settings.snippetGroupName') || '分组名称';
+      input.placeholder = t('settings.snippetGroupName');
       input.style.cssText = 'width:100%;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);margin-bottom:10px;';
       const btnRow = dialog.createDiv();
       btnRow.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;';
@@ -22975,7 +24837,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             try { content = await this.app.vault.adapter.read('.obsidian/snippets/' + snippetName + '.js'); } catch(e2) {}
           }
           await navigator.clipboard.writeText(content);
-          new Notice(t('settings.snippetCopied') || '已复制');
+          new Notice(t('settings.snippetCopied'));
         } catch(e) { new Notice('Copy failed'); }
       });
 
@@ -23018,7 +24880,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         } catch(e) { new Notice('Read failed'); }
       });
 
-      mkItem(t('settings.snippetEditExternal') || '编辑(外部程序打开)', async () => {
+      mkItem(t('settings.snippetEditExternal'), async () => {
         try {
           const snippetsDir = _nodePath.join(this.app.vault.adapter.basePath, '.obsidian', 'snippets');
           let filePath = _nodePath.join(snippetsDir, snippetName + '.css');
@@ -23046,7 +24908,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       const groupNames = snippetGroupOrder.filter(g => g !== currentGroup && snippetGroups[g]);
       if (groupNames.length > 0) {
         const moveItem = document.createElement('div');
-        moveItem.textContent = (t('settings.snippetMoveToGroup') || '移入分组') + ' ▸';
+        moveItem.textContent = t('settings.snippetMoveToGroup') + ' ▸';
         moveItem.style.cssText = 'padding:6px 16px;cursor:pointer;font-size:13px;color:var(--text-normal);position:relative;';
         moveItem.addEventListener('mouseenter', () => { moveItem.style.background = 'var(--background-modifier-hover)'; });
         moveItem.addEventListener('mouseleave', () => { moveItem.style.background = 'transparent'; });
@@ -23077,7 +24939,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
 
       if (currentGroup) {
-        mkItem(t('settings.snippetRemoveFromGroup') || '移出分组', async () => {
+        mkItem(t('settings.snippetRemoveFromGroup'), async () => {
           const snippetGroups = this.settings.snippetGroups || {};
           for (const members of Object.values(snippetGroups)) {
             const idx = members.indexOf(snippetName);
@@ -23487,13 +25349,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         const textSpan = document.createElement('span');
         textSpan.textContent = label;
         textSpan.style.cssText = 'flex: 1; white-space: nowrap;';
-        
+
         const isFloating = this.floatButtonData.floatingBallOptions && this.floatButtonData.floatingBallOptions.includes(optionId);
         const pinBtn = document.createElement('span');
-        pinBtn.textContent = isFloating ? '📍' : '📌';
+        pinBtn.innerHTML = isFloating ? _SVG_PIN_OFF : _SVG_PIN;
         pinBtn.style.marginLeft = '8px';
         pinBtn.style.cursor = 'pointer';
-        pinBtn.style.fontSize = '0.85em';
         if (!_isDesktop) pinBtn.style.display = 'none';
         pinBtn.title = isFloating ? t('floating.cancelFloat') : t('floating.floatDisplay');
         pinBtn.onclick = async (e) => {
@@ -23504,11 +25365,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const idx = this.floatButtonData.floatingBallOptions.indexOf(optionId);
           if (idx >= 0) {
             this.floatButtonData.floatingBallOptions.splice(idx, 1);
-            pinBtn.textContent = '📌';
+            pinBtn.innerHTML = _SVG_PIN;
             pinBtn.title = t('floating.floatDisplay');
           } else {
             this.floatButtonData.floatingBallOptions.push(optionId);
-            pinBtn.textContent = '📍';
+            pinBtn.innerHTML = _SVG_PIN_OFF;
             pinBtn.title = t('floating.cancelFloat');
           }
           await this.saveFloatButtonData();
@@ -23729,12 +25590,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         // 查找匹配的规则
         const globalRuleIndex = this.globalRules.findIndex(rule => {
-          const ruleParts = rule.regex.split('|');
+          const ruleParts = _splitRegexPipes(rule.regex);
           return ruleParts.some(p => textMatchesRegex(selectedText, p)) || textMatchesRegex(selectedText, rule.regex);
         });
         
         const fileRuleIndex = this.rules ? this.rules.findIndex(rule => {
-          const ruleParts = rule.regex.split('|');
+          const ruleParts = _splitRegexPipes(rule.regex);
           return ruleParts.some(p => textMatchesRegex(selectedText, p)) || textMatchesRegex(selectedText, rule.regex);
         }) : -1;
         
@@ -23746,7 +25607,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         // 移除全局规则中的匹配
         if (globalRuleIndex !== -1) {
           const rule = this.globalRules[globalRuleIndex];
-          const ruleParts = rule.regex.split('|');
+          const ruleParts = _splitRegexPipes(rule.regex);
           if (ruleParts.length > 1 && ruleParts.some(p => textMatchesRegex(selectedText, p))) {
             const newParts = ruleParts.filter(p => !textMatchesRegex(selectedText, p));
             if (newParts.length > 0) {
@@ -23777,7 +25638,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           if (currentFilePath) {
             const rule = this.rules[fileRuleIndex];
-            const ruleParts = rule.regex.split('|');
+            const ruleParts = _splitRegexPipes(rule.regex);
             if (ruleParts.length > 1 && ruleParts.some(p => textMatchesRegex(selectedText, p))) {
               const newParts = ruleParts.filter(p => !textMatchesRegex(selectedText, p));
               if (newParts.length > 0) {
@@ -23823,10 +25684,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       
       const isPinyinFloating = this.floatButtonData.floatingBallOptions && this.floatButtonData.floatingBallOptions.includes('pinyin');
       const pinyinPinBtn = document.createElement('span');
-      pinyinPinBtn.textContent = isPinyinFloating ? '📍' : '📌';
+      pinyinPinBtn.innerHTML = isPinyinFloating ? _SVG_PIN_OFF : _SVG_PIN;
       pinyinPinBtn.style.marginLeft = '8px';
       pinyinPinBtn.style.cursor = 'pointer';
-      pinyinPinBtn.style.fontSize = '0.85em';
       if (!_isDesktop) pinyinPinBtn.style.display = 'none';
       pinyinPinBtn.title = isPinyinFloating ? t('floating.cancelFloat') : t('floating.floatDisplay');
       pinyinPinBtn.onclick = async (e) => {
@@ -23837,11 +25697,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         const idx = this.floatButtonData.floatingBallOptions.indexOf('pinyin');
         if (idx >= 0) {
           this.floatButtonData.floatingBallOptions.splice(idx, 1);
-          pinyinPinBtn.textContent = '📌';
+          pinyinPinBtn.innerHTML = _SVG_PIN;
           pinyinPinBtn.title = t('floating.floatDisplay');
         } else {
           this.floatButtonData.floatingBallOptions.push('pinyin');
-          pinyinPinBtn.textContent = '📍';
+          pinyinPinBtn.innerHTML = _SVG_PIN_OFF;
           pinyinPinBtn.title = t('floating.cancelFloat');
         }
         await this.saveFloatButtonData();
@@ -23883,13 +25743,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         const textSpan = document.createElement('span');
         textSpan.textContent = label;
         textSpan.style.cssText = 'flex: 1; white-space: nowrap;';
-        
+
         const isFloating = this.floatButtonData.floatingBallOptions && this.floatButtonData.floatingBallOptions.includes(optionId);
         const pinBtn = document.createElement('span');
-        pinBtn.textContent = isFloating ? '📍' : '📌';
+        pinBtn.innerHTML = isFloating ? _SVG_PIN_OFF : _SVG_PIN;
         pinBtn.style.marginLeft = '8px';
         pinBtn.style.cursor = 'pointer';
-        pinBtn.style.fontSize = '0.85em';
         if (!_isDesktop) pinBtn.style.display = 'none';
         pinBtn.title = isFloating ? t('floating.cancelFloat') : t('floating.floatDisplay');
         pinBtn.onclick = async (e) => {
@@ -23900,11 +25759,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const idx = this.floatButtonData.floatingBallOptions.indexOf(optionId);
           if (idx >= 0) {
             this.floatButtonData.floatingBallOptions.splice(idx, 1);
-            pinBtn.textContent = '📌';
+            pinBtn.innerHTML = _SVG_PIN;
             pinBtn.title = t('floating.floatDisplay');
           } else {
             this.floatButtonData.floatingBallOptions.push(optionId);
-            pinBtn.textContent = '📍';
+            pinBtn.innerHTML = _SVG_PIN_OFF;
             pinBtn.title = t('floating.cancelFloat');
           }
           await this.saveFloatButtonData();
@@ -24211,7 +26070,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       const addFloatNoteOption = createMenuOptionWithFloat('addFloatNote', t('floating.addFloatNote'), () => {
         const mx = this.lastMouseX || (window.innerWidth - 80);
         const my = this.lastMouseY || 200;
-        const note = { id: Date.now(), text: '', collapsed: false, _inPanel: false, _hidden: false, _floatPos: { left: Math.min(mx, window.innerWidth - 180) + 'px', top: Math.min(my, window.innerHeight - 80) + 'px' } };
+        const note = { id: Date.now(), text: '', collapsed: false, _inPanel: false, _hidden: false, _createdAt: Date.now(), _floatPos: { left: Math.min(mx, window.innerWidth - 220) + 'px', top: Math.min(my, window.innerHeight - 80) + 'px' }, _floatSize: { width: '220px', height: 'auto' }, _colorScheme: (this.colorSchemePresets || [])[this.globalNotes.length % (this.colorSchemePresets || []).length]?.id || '' };
         this.globalNotes.push(note);
         this.saveGlobalNotes();
         this.renderGlobalNotesArea();
@@ -24243,10 +26102,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         const isGroupFloating = this.floatButtonData.floatingBallGroupOptions && this.floatButtonData.floatingBallGroupOptions.includes(groupName);
         const groupPinBtn = document.createElement('span');
-        groupPinBtn.textContent = isGroupFloating ? '📍' : '📌';
+        groupPinBtn.innerHTML = isGroupFloating ? _SVG_PIN_OFF : _SVG_PIN;
         groupPinBtn.style.marginLeft = '8px';
         groupPinBtn.style.cursor = 'pointer';
-        groupPinBtn.style.fontSize = '0.85em';
         groupPinBtn.title = isGroupFloating ? t('floating.cancelFloat') : t('floating.floatDisplay');
         groupPinBtn.onclick = async (e) => {
           e.stopPropagation();
@@ -24260,11 +26118,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             if (this.floatButtonData[positionsKey]) {
               delete this.floatButtonData[positionsKey][`group_${groupName}`];
             }
-            groupPinBtn.textContent = '📌';
+            groupPinBtn.innerHTML = _SVG_PIN;
             groupPinBtn.title = t('floating.floatDisplay');
           } else {
             this.floatButtonData.floatingBallGroupOptions.push(groupName);
-            groupPinBtn.textContent = '📍';
+            groupPinBtn.innerHTML = _SVG_PIN_OFF;
             groupPinBtn.title = t('floating.cancelFloat');
           }
           await this.saveFloatButtonData();
@@ -24274,12 +26132,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         // 从悬浮球移除按钮
         const groupRemoveBtn = document.createElement('span');
-        groupRemoveBtn.textContent = '🗑️';
+        groupRemoveBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
         groupRemoveBtn.title = t('main.removeFromFloatingBall');
         groupRemoveBtn.style.cssText = `
           margin-right: 8px;
           cursor: pointer;
-          font-size: 0.85em;
           opacity: 0.5;
           transition: opacity 0.2s ease;
         `;
@@ -24539,7 +26396,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             
             // 添加悬浮显示按钮
             const floatBtn = document.createElement('span');
-            floatBtn.textContent = '📌';
+            floatBtn.innerHTML = _SVG_PIN;
             floatBtn.style.cssText = `
               position: absolute;
               top: -2px;
@@ -24790,6 +26647,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const { MarkdownView } = require('obsidian');
     
     const handleSelectionChange = () => {
+      if (this._keepRuleActionButtons) return;
       const activeLeaf = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (!activeLeaf) {
         this._removeRuleActionButtons();
@@ -24798,6 +26656,17 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       const selectedText = this.getSelectedText().trim();
       if (!selectedText) {
         this._removeRuleActionButtons();
+        return;
+      }
+      // 优先从DOM高亮元素获取ruleRegex
+      const sel = window.getSelection();
+      let domRegex = null;
+      if (sel && sel.anchorNode) {
+        const hlEl = (sel.anchorNode instanceof Element ? sel.anchorNode : sel.anchorNode.parentElement)?.closest('.highlight-regex-text, .highlight-tooltip-text');
+        if (hlEl?.dataset?.ruleRegex) domRegex = hlEl.dataset.ruleRegex;
+      }
+      if (domRegex) {
+        this._showRuleActionButtons(floatingBall, domRegex);
         return;
       }
       const globalRule = this.globalRules.find(rule => textMatchesRegex(selectedText, rule.regex));
@@ -24951,6 +26820,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (this.isMouseDown) {
         return;
       }
+      if (this._keepRuleActionButtons) return;
       
       const activeLeaf = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (activeLeaf) {
@@ -25014,10 +26884,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     floatingBall.style.top = `${y}px`;
     floatingBall.style.display = 'flex';
     
-    // 桌面端：选中文本为规则文本时，在悬浮球旁显示 c、i 按钮
-    if (_isDesktop) {
-      this._showRuleActionButtons(floatingBall);
-    }
+    // 选中文本为规则文本时，在悬浮球旁显示 c、i、g/l 按钮
+    this._showRuleActionButtons(floatingBall);
   }
   
   _removeRuleActionButtons() {
@@ -25029,306 +26897,187 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     }
   }
   
-  _showRuleActionButtons(floatingBall) {
+  _showRuleActionButtons(floatingBall, clickedRegex) {
     this._removeRuleActionButtons();
     
-    const selectedText = this.getSelectedText().trim();
-    if (!selectedText) return;
+    let selectedText = '';
+    let globalRule = null;
+    let fileRule = null;
+    let matchedRule = null;
     
-    const globalRule = this.globalRules.find(rule => textMatchesRegex(selectedText, rule.regex));
-    const fileRule = this.rules ? this.rules.find(rule => textMatchesRegex(selectedText, rule.regex)) : null;
-    const matchedRule = globalRule || fileRule;
-    if (!matchedRule) return;
+    if (clickedRegex) {
+      globalRule = this.globalRules.find(rule => rule.regex === clickedRegex);
+      fileRule = this.rules ? this.rules.find(rule => rule.regex === clickedRegex) : null;
+      matchedRule = globalRule || fileRule;
+      if (matchedRule) selectedText = _extractPlainText(matchedRule.regex);
+    }
+    
+    if (!matchedRule) {
+      // 优先从DOM高亮元素获取ruleRegex
+      const sel = window.getSelection();
+      if (sel && sel.anchorNode) {
+        const hlEl = (sel.anchorNode instanceof Element ? sel.anchorNode : sel.anchorNode.parentElement)?.closest('.highlight-regex-text, .highlight-tooltip-text');
+        if (hlEl?.dataset?.ruleRegex) {
+          clickedRegex = hlEl.dataset.ruleRegex;
+          globalRule = this.globalRules.find(rule => rule.regex === clickedRegex);
+          fileRule = this.rules ? this.rules.find(rule => rule.regex === clickedRegex) : null;
+          matchedRule = globalRule || fileRule;
+          if (matchedRule) selectedText = _extractPlainText(matchedRule.regex);
+        }
+      }
+    }
+    
+    if (!matchedRule) {
+      selectedText = this.getSelectedText().trim();
+      if (!selectedText) return;
+      const matchRule = (rules) => {
+        if (!rules) return null;
+        return rules.find(rule => {
+          if (textMatchesRegex(selectedText, rule.regex)) return true;
+          try { if (new RegExp(rule.regex).test(selectedText)) return true; } catch {}
+          const plain = _extractPlainText(rule.regex);
+          if (plain && (selectedText.includes(plain) || plain.includes(selectedText))) return true;
+          const parts = _splitRegexPipes(rule.regex);
+          if (parts.some(p => p === selectedText || selectedText.includes(p) || p.includes(selectedText))) return true;
+          return false;
+        });
+      };
+      globalRule = matchRule(this.globalRules);
+      fileRule = matchRule(this.rules);
+      matchedRule = globalRule || fileRule;
+      // 跨文件搜索：匹配其他文件规则中的长句
+      if (!matchedRule && this._fileRulesData) {
+        for (const [fp, entry] of Object.entries(this._fileRulesData)) {
+          if (fp === this.currentFilePath) continue;
+          if (!entry?.rules) continue;
+          const crossRule = matchRule(entry.rules);
+          if (crossRule) {
+            matchedRule = { ...crossRule, _sourceFile: fp };
+            fileRule = matchedRule;
+            break;
+          }
+        }
+      }
+      if (!matchedRule) return;
+    }
     
     const ruleRegex = matchedRule.regex;
     const isCounted = this.countedRegexes.has(ruleRegex);
+    const isCurrentlyGlobal = !!globalRule;
     
     const container = document.createElement('div');
     container.id = 'rule-action-buttons';
-    container.style.cssText = `
-      position: fixed;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      z-index: 9998;
+    container.style.cssText = `position:fixed;display:flex;flex-direction:column;gap:2px;z-index:9998;`;
+    
+    if (floatingBall) {
+      const ballRect = floatingBall.getBoundingClientRect();
+      const isRightSide = ballRect.left > window.innerWidth / 2;
+      if (isRightSide) {
+        container.style.right = `${window.innerWidth - ballRect.left - 4}px`;
+        container.style.left = 'auto';
+      } else {
+        container.style.left = `${ballRect.left}px`;
+      }
+      container.style.top = `${ballRect.bottom + 4}px`;
+    }
+    
+    const btnStyle = (active) => `
+      font-size:11px;font-weight:bold;cursor:pointer;user-select:none;
+      color:${active ? 'var(--interactive-accent)' : 'var(--text-muted)'};
+      padding:1px 4px;text-align:center;
     `;
     
-    const ballRect = floatingBall.getBoundingClientRect();
-    const isRightSide = ballRect.left > window.innerWidth / 2;
-    if (isRightSide) {
-      container.style.right = `${window.innerWidth - ballRect.left + 8}px`;
-      container.style.left = 'auto';
-    } else {
-      container.style.left = `${ballRect.right + 8}px`;
-    }
-    container.style.top = `${ballRect.top}px`;
-    
-    const btnFuncStyle = `cursor:pointer;user-select:none;transition:all 0.15s ease;`;
-    const btnBaseStyle = `
-      width:28px;height:28px;border-radius:6px;
-      display:flex;align-items:center;justify-content:center;
-      font-size:14px;font-weight:bold;
-    ` + btnFuncStyle;
-    
-    const applyBtnCustomStyle = (btn, btnId, defaultText, defaultStyle) => {
-      const custom = this.floatButtonData?.ruleActionBtnStyles?.[btnId];
-      if (custom) {
-        if (custom.label) btn.textContent = custom.label;
-        if (custom.styleClass) {
-          btn.classList.add(`rule-action-style-${custom.styleClass}`);
-          this.applyRuleActionBtnStyleRules(custom.styleClass);
-          btn.style.cssText = btnFuncStyle;
-        }
-        if (custom.cssText) btn.style.cssText = btnBaseStyle + custom.cssText;
-      }
-    };
-    
-    const showBtnContextMenu = (e, btn, btnId, defaultText, defaultStyle) => {
-      e.preventDefault();
-      e.stopPropagation();
+    const clearTimer = () => {
       if (this._ruleActionButtonsTimeout) {
         clearTimeout(this._ruleActionButtonsTimeout);
         this._ruleActionButtonsTimeout = null;
       }
-      
-      const existingMenu = document.querySelector('.rule-action-context-menu');
-      if (existingMenu) existingMenu.remove();
-      
-      const menu = document.createElement('div');
-      menu.className = 'rule-action-context-menu';
-      menu.style.cssText = `
-        position:fixed;top:${e.clientY}px;left:${e.clientX}px;
-        background:var(--background-primary);
-        border:2px solid var(--background-modifier-border);
-        border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,0.2);
-        z-index:10001;padding:4px 0;min-width:120px;
-      `;
-      
-      const createItem = (text, onClick) => {
-        const item = document.createElement('div');
-        item.textContent = text;
-        item.style.cssText = `
-          padding:8px 16px;cursor:pointer;font-size:13px;
-          color:var(--text-normal);transition:background 0.1s;
-        `;
-        item.addEventListener('mouseenter', () => { item.style.background = 'var(--background-modifier-hover)'; });
-        item.addEventListener('mouseleave', () => { item.style.background = 'transparent'; });
-        item.addEventListener('click', () => { onClick(); menu.remove(); });
-        return item;
-      };
-      
-      menu.appendChild(createItem(t('main.edit'), () => {
-        const { Modal } = require('obsidian');
-        const modal = new Modal(this.app);
-        modal.titleEl.textContent = t('floating.editTitle');
-        modal.contentEl.addClass('input-modal');
-        
-        const custom = this.floatButtonData?.ruleActionBtnStyles?.[btnId] || {};
-        
-        const labelDiv = modal.contentEl.createDiv();
-        labelDiv.style.marginBottom = '12px';
-        const labelName = labelDiv.createEl('label');
-        labelName.textContent = t('floating.displayTextLabel') + ': ';
-        labelName.style.cssText = 'display:block;margin-bottom:4px;font-weight:bold;';
-        const labelInput = labelDiv.createEl('input');
-        labelInput.type = 'text';
-        labelInput.placeholder = defaultText;
-        labelInput.value = custom.label || '';
-        labelInput.style.cssText = 'width:100%;padding:8px;border:1px solid var(--background-modifier-border);border-radius:4px;';
-        
-        const styleDiv = modal.contentEl.createDiv();
-        styleDiv.style.marginBottom = '12px';
-        const styleName = styleDiv.createEl('label');
-        styleName.textContent = t('floating.styleClassNameLabel') + ': ';
-        styleName.style.cssText = 'display:block;margin-bottom:4px;font-weight:bold;';
-        const styleHint = styleDiv.createEl('span');
-        styleHint.textContent = t('floating.styleClassHint');
-        styleHint.style.cssText = 'font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;';
-        const styleInput = styleDiv.createEl('input');
-        styleInput.type = 'text';
-        styleInput.placeholder = t('floating.inputCssClass');
-        styleInput.value = custom.styleClass || '';
-        styleInput.style.cssText = 'width:100%;padding:8px;border:1px solid var(--background-modifier-border);border-radius:4px;';
-        
-        const cssDiv = modal.contentEl.createDiv();
-        cssDiv.style.marginBottom = '16px';
-        const cssName = cssDiv.createEl('label');
-        cssName.textContent = 'CSS: ';
-        cssName.style.cssText = 'display:block;margin-bottom:4px;font-weight:bold;';
-        const cssHint = cssDiv.createEl('span');
-        cssHint.textContent = 'e.g. color:red;width:36px;height:36px;';
-        cssHint.style.cssText = 'font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;';
-        const cssInput = cssDiv.createEl('input');
-        cssInput.type = 'text';
-        cssInput.value = custom.cssText || '';
-        cssInput.style.cssText = 'width:100%;padding:8px;border:1px solid var(--background-modifier-border);border-radius:4px;font-size:12px;';
-        
-        const btnContainer = modal.contentEl.createEl('div');
-        btnContainer.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;';
-        const cancelBtn = btnContainer.createEl('button');
-        cancelBtn.textContent = t('main.cancel');
-        cancelBtn.style.padding = '6px 16px';
-        cancelBtn.addEventListener('click', () => modal.close());
-        const confirmBtn = btnContainer.createEl('button');
-        confirmBtn.textContent = t('main.confirm');
-        confirmBtn.style.cssText = 'padding:6px 16px;background:var(--interactive-accent);color:#fff;border:none;border-radius:4px;cursor:pointer;';
-        
-        confirmBtn.addEventListener('click', async () => {
-          if (!this.floatButtonData.ruleActionBtnStyles) {
-            this.floatButtonData.ruleActionBtnStyles = {};
-          }
-          const newCustom = {
-            label: labelInput.value.trim(),
-            styleClass: styleInput.value.trim(),
-            cssText: cssInput.value.trim()
-          };
-          if (!newCustom.label && !newCustom.styleClass && !newCustom.cssText) {
-            delete this.floatButtonData.ruleActionBtnStyles[btnId];
-          } else {
-            this.floatButtonData.ruleActionBtnStyles[btnId] = newCustom;
-          }
-          await this.saveFloatButtonData();
-          this._removeRuleActionButtons();
-          new Notice(t('main.floatOptionUpdated'));
-          modal.close();
-        });
-        
-        setTimeout(() => labelInput.focus(), 100);
-        modal.open();
-      }));
-      
-      menu.appendChild(createItem(t('main.resetToDefault'), async () => {
-        if (this.floatButtonData?.ruleActionBtnStyles?.[btnId]) {
-          delete this.floatButtonData.ruleActionBtnStyles[btnId];
-          await this.saveFloatButtonData();
-          this._removeRuleActionButtons();
-          new Notice(t('main.floatOptionUpdated'));
-        }
-      }));
-      
-      document.body.appendChild(menu);
-      
-      const menuRect = menu.getBoundingClientRect();
-      if (e.clientX + menuRect.width > window.innerWidth) {
-        menu.style.left = `${window.innerWidth - menuRect.width - 8}px`;
-      }
-      if (e.clientY + menuRect.height > window.innerHeight) {
-        menu.style.top = `${window.innerHeight - menuRect.height - 8}px`;
-      }
-      
-      const closeMenu = (ce) => {
-        if (!menu.contains(ce.target)) {
-          menu.remove();
-          document.removeEventListener('click', closeMenu);
-          this._scheduleRuleActionButtonsTimeout();
-        }
-      };
-      setTimeout(() => document.addEventListener('click', closeMenu), 0);
     };
     
     // c 按钮
-    const cBtn = document.createElement('div');
+    const cBtn = document.createElement('span');
     cBtn.textContent = 'c';
     cBtn.title = isCounted ? t('main.removeCount') : t('main.addCount');
-    const cDefaultStyle = btnBaseStyle + (isCounted
-      ? `color:var(--text-accent);background:var(--background-modifier-hover);border:2px solid var(--text-accent);`
-      : `color:var(--text-normal);background:var(--background-secondary);border:2px solid var(--background-modifier-border);`);
-    cBtn.style.cssText = cDefaultStyle;
-    applyBtnCustomStyle(cBtn, 'c', 'c', cDefaultStyle);
-    
-    cBtn.addEventListener('mouseenter', () => {
-      cBtn.style.color = 'var(--text-accent)';
-      cBtn.style.background = 'var(--background-modifier-hover)';
-      cBtn.style.borderColor = 'var(--text-accent)';
-      if (this._ruleActionButtonsTimeout) {
-        clearTimeout(this._ruleActionButtonsTimeout);
-        this._ruleActionButtonsTimeout = null;
-      }
-    });
-    cBtn.addEventListener('mouseleave', () => {
-      const custom = this.floatButtonData?.ruleActionBtnStyles?.['c'];
-      if (custom?.styleClass || custom?.cssText) {
-        if (custom?.styleClass) cBtn.style.cssText = btnFuncStyle;
-        if (custom?.cssText) cBtn.style.cssText = btnBaseStyle + custom.cssText;
-      } else {
-        if (this.countedRegexes.has(ruleRegex)) {
-          cBtn.style.color = 'var(--text-accent)';
-          cBtn.style.background = 'var(--background-modifier-hover)';
-          cBtn.style.borderColor = 'var(--text-accent)';
-        } else {
-          cBtn.style.color = 'var(--text-normal)';
-          cBtn.style.background = 'var(--background-secondary)';
-          cBtn.style.borderColor = 'var(--background-modifier-border)';
-        }
-      }
-      this._scheduleRuleActionButtonsTimeout();
-    });
-    
+    cBtn.style.cssText = btnStyle(isCounted);
+    cBtn.addEventListener('mouseenter', () => { cBtn.style.color = 'var(--interactive-accent)'; clearTimer(); });
+    cBtn.addEventListener('mouseleave', () => { cBtn.style.cssText = btnStyle(this.countedRegexes.has(ruleRegex)); this._scheduleRuleActionButtonsTimeout(); });
     cBtn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      if (this.countedRegexes.has(ruleRegex)) {
-        this.countedRegexes.delete(ruleRegex);
-        new Notice(t('main.countRemoved'));
-      } else {
-        this.countedRegexes.add(ruleRegex);
-        new Notice(t('main.countAdded'));
-      }
-      this.rulesVersion++;
-      this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
-      this.refreshCurrentView();
-      this.saveCountedRegexes();
-      this._removeRuleActionButtons();
+      e.stopPropagation(); e.preventDefault();
+      if (this.countedRegexes.has(ruleRegex)) { this.countedRegexes.delete(ruleRegex); new Notice(t('main.countRemoved')); }
+      else { this.countedRegexes.add(ruleRegex); new Notice(t('main.countAdded')); }
+      this.rulesVersion++; this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+      this.refreshCurrentView(); this.saveCountedRegexes(); this._removeRuleActionButtons();
     });
-    
-    cBtn.oncontextmenu = (e) => showBtnContextMenu(e, cBtn, 'c', 'c', cDefaultStyle);
-    
     container.appendChild(cBtn);
     
     // i 按钮
-    const iBtn = document.createElement('div');
+    const iBtn = document.createElement('span');
     iBtn.textContent = 'i';
     iBtn.title = t('floating.interlinearNote');
-    const iDefaultStyle = btnBaseStyle + `
-      color:var(--text-normal);background:var(--background-secondary);border:2px solid var(--background-modifier-border);
-    `;
-    iBtn.style.cssText = iDefaultStyle;
-    applyBtnCustomStyle(iBtn, 'i', 'i', iDefaultStyle);
-    
-    iBtn.addEventListener('mouseenter', () => {
-      iBtn.style.color = 'var(--text-accent)';
-      iBtn.style.background = 'var(--background-modifier-hover)';
-      iBtn.style.borderColor = 'var(--text-accent)';
-      if (this._ruleActionButtonsTimeout) {
-        clearTimeout(this._ruleActionButtonsTimeout);
-        this._ruleActionButtonsTimeout = null;
-      }
-    });
-    iBtn.addEventListener('mouseleave', () => {
-      const custom = this.floatButtonData?.ruleActionBtnStyles?.['i'];
-      if (custom?.styleClass || custom?.cssText) {
-        if (custom?.styleClass) iBtn.style.cssText = btnFuncStyle;
-        if (custom?.cssText) iBtn.style.cssText = btnBaseStyle + custom.cssText;
-      } else {
-        iBtn.style.color = 'var(--text-normal)';
-        iBtn.style.background = 'var(--background-secondary)';
-        iBtn.style.borderColor = 'var(--background-modifier-border)';
-      }
-      this._scheduleRuleActionButtonsTimeout();
-    });
-    
+    iBtn.style.cssText = btnStyle(false);
+    iBtn.addEventListener('mouseenter', () => { iBtn.style.color = 'var(--interactive-accent)'; clearTimer(); });
+    iBtn.addEventListener('mouseleave', () => { iBtn.style.cssText = btnStyle(false); this._scheduleRuleActionButtonsTimeout(); });
     iBtn.addEventListener('click', async (e) => {
+      e.stopPropagation(); e.preventDefault();
+      this._removeRuleActionButtons();
+      this.showInterlinearNoteInput(selectedText);
+    });
+    container.appendChild(iBtn);
+    
+    // g/l 按钮
+    const glBtn = document.createElement('span');
+    glBtn.textContent = isCurrentlyGlobal ? 'g' : 'l';
+    glBtn.title = t('main.glBtnTip');
+    glBtn.style.cssText = btnStyle(isCurrentlyGlobal);
+    glBtn.addEventListener('mouseenter', () => { glBtn.style.color = 'var(--interactive-accent)'; clearTimer(); });
+    glBtn.addEventListener('mouseleave', () => { glBtn.style.cssText = btnStyle(isCurrentlyGlobal); this._scheduleRuleActionButtonsTimeout(); });
+    glBtn.addEventListener('click', async (e) => {
+      e.stopPropagation(); e.preventDefault();
+      this._removeRuleActionButtons();
+      const cssClass = matchedRule.cssClass;
+      const regex = matchedRule.regex;
+      const remark = matchedRule.remark || '';
+      const links = matchedRule.links ? [...matchedRule.links] : [];
+      if (isCurrentlyGlobal) {
+        const gi = this.globalRules.findIndex(r => r.regex === regex && r.cssClass === cssClass);
+        if (gi !== -1) this.globalRules.splice(gi, 1);
+        if (!this.rules) this.rules = [];
+        this.rules.push({ regex, cssClass, remark, links });
+        new Notice(t('main.switchedToLocal'));
+      } else {
+        const fi = this.rules ? this.rules.findIndex(r => r.regex === regex && r.cssClass === cssClass) : -1;
+        if (fi !== -1) this.rules.splice(fi, 1);
+        this.globalRules.push({ regex, cssClass, remark, links });
+        new Notice(t('main.switchedToGlobal'));
+      }
+      this.rulesVersion++; this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+      this.refreshCurrentView();
+      this.saveFileRules(this.currentFilePath, this.rules);
+      this.saveGlobalRules(this.globalRules);
+    });
+    // 中键点击移除规则
+    glBtn.addEventListener('auxclick', async (e) => {
+      if (e.button !== 1) return;
       e.stopPropagation();
       e.preventDefault();
+      const cssClass = matchedRule.cssClass;
+      const regex = matchedRule.regex;
+      if (isCurrentlyGlobal) {
+        const gi = this.globalRules.findIndex(r => r.regex === regex && r.cssClass === cssClass);
+        if (gi !== -1) this.globalRules.splice(gi, 1);
+        await this.saveGlobalRules(this.globalRules, true);
+      } else {
+        const fi = this.rules ? this.rules.findIndex(r => r.regex === regex && r.cssClass === cssClass) : -1;
+        if (fi !== -1) this.rules.splice(fi, 1);
+        await this.saveFileRules(this.currentFilePath, this.rules, true);
+      }
+      this.rulesVersion++; this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+      this.refreshCurrentView();
       this._removeRuleActionButtons();
-      this.showInterlinearNoteInput();
     });
+    container.appendChild(glBtn);
     
-    iBtn.oncontextmenu = (e) => showBtnContextMenu(e, iBtn, 'i', 'i', iDefaultStyle);
-    
-    container.appendChild(iBtn);
     document.body.appendChild(container);
-    
     this._scheduleRuleActionButtonsTimeout();
   }
   
@@ -25487,7 +27236,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       addFloatNote: () => {
         const mx = this.lastMouseX || (window.innerWidth - 80);
         const my = this.lastMouseY || 200;
-        const note = { id: Date.now(), text: '', collapsed: false, _inPanel: false, _hidden: false, _floatPos: { left: Math.min(mx, window.innerWidth - 180) + 'px', top: Math.min(my, window.innerHeight - 80) + 'px' } };
+        const note = { id: Date.now(), text: '', collapsed: false, _inPanel: false, _hidden: false, _createdAt: Date.now(), _floatPos: { left: Math.min(mx, window.innerWidth - 220) + 'px', top: Math.min(my, window.innerHeight - 80) + 'px' }, _floatSize: { width: '220px', height: 'auto' }, _colorScheme: (this.colorSchemePresets || [])[this.globalNotes.length % (this.colorSchemePresets || []).length]?.id || '' };
         this.globalNotes.push(note);
         this.saveGlobalNotes();
         this.renderGlobalNotesArea();
@@ -25671,12 +27420,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         
         // 查找匹配的规则
         const globalRuleIndex = this.globalRules.findIndex(rule => {
-          const ruleParts = rule.regex.split('|');
+          const ruleParts = _splitRegexPipes(rule.regex);
           return ruleParts.some(p => textMatchesRegex(selectedText, p)) || textMatchesRegex(selectedText, rule.regex);
         });
         
         const fileRuleIndex = this.rules ? this.rules.findIndex(rule => {
-          const ruleParts = rule.regex.split('|');
+          const ruleParts = _splitRegexPipes(rule.regex);
           return ruleParts.some(p => textMatchesRegex(selectedText, p)) || textMatchesRegex(selectedText, rule.regex);
         }) : -1;
         
@@ -25688,7 +27437,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         // 移除全局规则中的匹配
         if (globalRuleIndex !== -1) {
           const rule = this.globalRules[globalRuleIndex];
-          const ruleParts = rule.regex.split('|');
+          const ruleParts = _splitRegexPipes(rule.regex);
           if (ruleParts.length > 1 && ruleParts.some(p => textMatchesRegex(selectedText, p))) {
             // 多部分规则，只移除匹配的部分
             const newParts = ruleParts.filter(p => !textMatchesRegex(selectedText, p));
@@ -25721,7 +27470,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           
           if (currentFilePath) {
             const rule = this.rules[fileRuleIndex];
-            const ruleParts = rule.regex.split('|');
+            const ruleParts = _splitRegexPipes(rule.regex);
             if (ruleParts.length > 1 && ruleParts.some(p => textMatchesRegex(selectedText, p))) {
               // 多部分规则，只移除匹配的部分
               const newParts = ruleParts.filter(p => !textMatchesRegex(selectedText, p));
@@ -26175,7 +27924,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             styleButton.appendChild(styleExample);
             
             const floatBtn = document.createElement('span');
-            floatBtn.textContent = '📌';
+            floatBtn.innerHTML = _SVG_PIN;
             floatBtn.style.cssText = `
               position: absolute;
               top: -2px;
@@ -28857,7 +30606,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     
     // 不修改文档内容，只保存拼音数据
     // 拼音会在阅读模式下通过JavaScript动态显示
-    new (require('obsidian').Notice)('拼音已保存，切换到阅读模式查看效果');
+    new (require('obsidian').Notice)(t('other.pinyinSaved'));
   }
   
   // 在阅读模式下应用拼音显示
@@ -29287,9 +31036,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     this.refreshCurrentView();
   }
 
-  async showInterlinearNoteInput() {
+  async showInterlinearNoteInput(textOverride) {
     const { Notice } = require('obsidian');
-    const selectedText = this.getSelectedText();
+    const selectedText = textOverride || this.getSelectedText();
     if (!selectedText || !selectedText.trim()) {
       new Notice(t('main.selectText'));
       return;
@@ -29478,7 +31227,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const { Notice } = require('obsidian');
     const selectedText = this.getSelectedText();
     if (!selectedText || !selectedText.trim()) {
-      new Notice('请先选中文本');
+      new Notice(t('other.selectTextFirst'));
       return;
     }
     const data = await this.loadInterlinearNoteData();
@@ -29561,6 +31310,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       crossFS.writeSync(this.app.vault, filePath, JSON.stringify(this.floatButtonData, null, 2));
     } catch (e) {
       console.error('保存悬浮按钮数据失败:', e);
+    }
+
+    try {
+      const gnPath = '.obsidian/plugins/Regex-Css-Highlighter/global-notes.json';
+      crossFS.writeSync(this.app.vault, gnPath, JSON.stringify({ notes: this.globalNotes, groups: this.noteGroups, defaultFnGroup: this._defaultFnGroup || null }));
+    } catch (e) {
+      console.error('保存悬浮笔记数据失败:', e);
     }
 
     // 移除悬浮球
@@ -29763,7 +31519,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       try {
         const command = this.addCommand({
           id: commandId,
-          name: 'AI助手',
+          name: t('cmd.aiAssistant'),
           callback: () => {
             this.aiAssistant();
           },
@@ -29793,7 +31549,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       try {
         const command = this.addCommand({
           id: commandId,
-          name: '实体提取',
+          name: t('cmd.entityExtract'),
           callback: () => {
             this.extractEntities();
           },
@@ -31324,7 +33080,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             }
             
             // 使用emoji和颜色区分用户输入
-            this.responseEl.value = `👤 ` + t('ai.user') + `: ${userPrompt}\n\n🤖 AI: `;
+            this.responseEl.value = `👤 ` + t('ai.user') + `: ${userPrompt}\n\n` + t('other.aiLabel') + `: `;
             this.responseContent = this.responseEl.value;
             this.updatePreview();
           }
@@ -31449,7 +33205,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 显示用户输入（如果是第一条消息或当前没有AI回复）
           if (this.conversationHistory.length === 1 || !this.responseContent) {
             // 使用emoji和颜色区分用户输入，只显示原始用户消息
-            this.responseEl.value = `👤 ` + t('ai.user') + `: ${userMessage}\n\n🤖 AI: `;
+            this.responseEl.value = `👤 ` + t('ai.user') + `: ${userMessage}\n\n` + t('other.aiLabel') + `: `;
             this.responseContent = this.responseEl.value;
             this.updatePreview();
           }
@@ -32944,7 +34700,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               
               // 设为默认按钮
               const defaultButton = actionsCell.createEl('button', {
-                text: this.plugin.settings.defaultPromptId === template.id ? '默认' : '设为默认'
+                text: this.plugin.settings.defaultPromptId === template.id ? t('other.default') : t('other.setDefault')
               });
               defaultButton.style.padding = '4px 8px';
               defaultButton.style.fontSize = '12px';
@@ -33429,8 +35185,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 this.titleEl.textContent = t('main.partialMatchDetected');
                 
                 // 构建消息内容
-                const ruleList = partialMatchingRules.map(rule => `${rule.regex}${rule.remark ? ` (当前备注: ${rule.remark})` : ''}`).join('\n');
-                const message = `检测到 ${partialMatchingRules.length} 条规则包含选中文本 "${selectedText}"：\n${ruleList}\n\n是否要将备注合并到所有匹配的规则中？`;
+                const ruleList = partialMatchingRules.map(rule => `${rule.regex}${rule.remark ? ` ${t('other.partialMergeRemark', {remark: rule.remark})}` : ''}`).join('\n');
+                const message = t('other.partialMergeMsg', {count: partialMatchingRules.length}) + `\n${ruleList}`;
                 
                 // 添加消息内容
                 contentEl.createEl('p', { text: message });
@@ -33686,7 +35442,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           editBtn.style.borderRadius = '3px';
           editBtn.style.cursor = 'pointer';
           // 添加remark提示，总是显示备注字段
-          editBtn.setAttribute('title', `备注: ${rule.remark || '空'}`);
+          editBtn.setAttribute('title', `${t('kw.remarkLabel')} ${rule.remark || t('kw.remarkEmpty')}`);
           
           editBtn.addEventListener('click', () => {
             modal.editRule(index);
@@ -33703,7 +35459,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           deleteBtn.style.borderRadius = '3px';
           deleteBtn.style.cursor = 'pointer';
           // 添加remark提示，总是显示备注字段
-          deleteBtn.setAttribute('title', `备注: ${rule.remark || '空'}`);
+          deleteBtn.setAttribute('title', `${t('kw.remarkLabel')} ${rule.remark || t('kw.remarkEmpty')}`);
           
           deleteBtn.addEventListener('click', () => {
             modal.deleteRule(index);
@@ -33869,7 +35625,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           editBtn.style.borderRadius = '3px';
           editBtn.style.cursor = 'pointer';
           // 添加remark提示，总是显示备注字段
-          editBtn.setAttribute('title', `备注: ${rule.remark || '空'}`);
+          editBtn.setAttribute('title', `${t('kw.remarkLabel')} ${rule.remark || t('kw.remarkEmpty')}`);
           
           editBtn.addEventListener('click', () => {
             modal.editRule(index);
@@ -33886,7 +35642,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           deleteBtn.style.borderRadius = '3px';
           deleteBtn.style.cursor = 'pointer';
           // 添加remark提示，总是显示备注字段
-          deleteBtn.setAttribute('title', `备注: ${rule.remark || '空'}`);
+          deleteBtn.setAttribute('title', `${t('kw.remarkLabel')} ${rule.remark || t('kw.remarkEmpty')}`);
           
           deleteBtn.addEventListener('click', () => {
             modal.deleteRule(index);
@@ -33957,12 +35713,49 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     }
   }
 
+  async _cleanupPseudoElementCategories() {
+    const categoriesRelPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
+    const categories = styleCategories || {};
+    let changed = false;
+    const pseudoPattern = /::(before|after|first-line|first-letter|selection|placeholder)|:(hover|focus|active|visited|link|focus-within|focus-visible|checked|disabled|not|nth|first-child|last-child)/;
+    const keyframesPattern = /@keyframes|^\d|;\s*\d|}\s*\d|^\s*\d/;
+    for (const [groupName, items] of Object.entries(categories)) {
+      if (!Array.isArray(items)) continue;
+      const cleaned = items.filter(item => {
+        if (typeof item !== 'string') return false;
+        if (pseudoPattern.test(item)) return false;
+        if (keyframesPattern.test(item)) return false;
+        if (item.includes('\n') || item.includes(';') || item.includes('}')) return false;
+        return true;
+      });
+      if (cleaned.length !== items.length) {
+        categories[groupName] = cleaned;
+        changed = true;
+      }
+    }
+    for (const groupName of Object.keys(categories)) {
+      if (groupName === t('main.newGroup') && Array.isArray(categories[groupName]) && categories[groupName].length === 0) {
+        delete categories[groupName];
+        changed = true;
+      }
+    }
+    if (changed) {
+      styleCategories = categories;
+      if (!this.config) this.config = {};
+      this.config.styleCategories = styleCategories;
+      try {
+        await crossFS.write(this.app.vault, categoriesRelPath, JSON.stringify(categories, null, 2));
+      } catch (e) {}
+    }
+  }
+
   async _buildHighlightDb() {
     try {
       const allFiles = this.app.vault.getFiles();
       const mdFiles = allFiles.filter(f => f.extension === 'md');
       const highlightRegex = /==([^=\n]{1,200})==/g;
       const db = [];
+      const fileStats = {};
       for (const f of mdFiles) {
         try {
           const content = await this.app.vault.cachedRead(f);
@@ -33975,14 +35768,378 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               db.push({ text: hlText, path: f.path, name: f.name.replace(/\.md$/, '') });
             }
           }
+          try { fileStats[f.path] = f.stat.mtime; } catch(e) {}
         } catch (err) {}
       }
       this._highlightDb = db;
       this._highlightDbReady = true;
+      this._highlightDbFileStats = fileStats;
+      this._saveHighlightDb();
       const { Notice } = require('obsidian');
       new Notice(t('main.highlightDbReady') + ' (' + db.length + ')');
     } catch (err) {
       console.error('构建高亮数据库失败:', err);
+    }
+  }
+
+  async _saveHighlightDb() {
+    try {
+      const data = {
+        version: 1,
+        builtAt: Date.now(),
+        entries: this._highlightDb,
+        fileStats: this._highlightDbFileStats || {}
+      };
+      await crossFS.write(this.app.vault, '.obsidian/plugins/Regex-Css-Highlighter/highlight-db.json', JSON.stringify(data));
+    } catch (err) {
+      console.error('保存高亮数据库失败:', err);
+    }
+  }
+
+  async _loadHighlightRemarks() {
+    try {
+      const content = await crossFS.read(this.app.vault, '.obsidian/plugins/Regex-Css-Highlighter/highlight-remarks.json');
+      const data = JSON.parse(content);
+      if (data && typeof data === 'object') {
+        if (data._remarks && data._bubbleStyles) {
+          this._highlightRemarks = data._remarks;
+          this._highlightBubbleStyles = data._bubbleStyles;
+          this._highlightRemarkTimestamps = data._timestamps || {};
+        } else {
+          this._highlightRemarks = data;
+        }
+      }
+    } catch (err) {
+      this._highlightRemarks = {};
+    }
+  }
+
+  async _saveHighlightRemarks() {
+    try {
+      await crossFS.write(this.app.vault, '.obsidian/plugins/Regex-Css-Highlighter/highlight-remarks.json', JSON.stringify({ _remarks: this._highlightRemarks, _bubbleStyles: this._highlightBubbleStyles, _timestamps: this._highlightRemarkTimestamps }));
+    } catch (err) {
+      console.error('保存高亮备注失败:', err);
+    }
+  }
+
+  _scheduleSaveHighlightRemarks() {
+    if (this._highlightRemarksTimer) clearTimeout(this._highlightRemarksTimer);
+    this._highlightRemarksTimer = setTimeout(() => {
+      this._saveHighlightRemarks();
+      this._highlightRemarksTimer = null;
+    }, 500);
+  }
+
+  async _loadKeywordHistory() {
+    try {
+      const content = await crossFS.read(this.app.vault, '.obsidian/plugins/Regex-Css-Highlighter/keyword-history.json');
+      const data = JSON.parse(content);
+      if (Array.isArray(data)) {
+        this._keywordHistory = data;
+      }
+    } catch (err) {
+      this._keywordHistory = [];
+    }
+  }
+
+  async _saveKeywordHistory() {
+    try {
+      await crossFS.write(this.app.vault, '.obsidian/plugins/Regex-Css-Highlighter/keyword-history.json', JSON.stringify(this._keywordHistory));
+    } catch (err) {
+      console.error('保存关键词历史失败:', err);
+    }
+  }
+
+  _scheduleSaveKeywordHistory() {
+    if (this._keywordHistoryTimer) clearTimeout(this._keywordHistoryTimer);
+    this._keywordHistoryTimer = setTimeout(() => {
+      this._saveKeywordHistory();
+      this._keywordHistoryTimer = null;
+    }, 500);
+  }
+
+  _addKeywordHistory(keyword) {
+    if (!keyword || !keyword.trim()) return;
+    const idx = this._keywordHistory.indexOf(keyword);
+    if (idx !== -1) {
+      this._keywordHistory.splice(idx, 1);
+    }
+    this._keywordHistory.unshift(keyword);
+    if (this._keywordHistory.length > 100) {
+      this._keywordHistory = this._keywordHistory.slice(0, 100);
+    }
+    this._scheduleSaveKeywordHistory();
+  }
+
+  // 备注迁移：构建全部规则的迁移计划
+  async _buildAllRemarksMigrationPlan() {
+    const plugin = this;
+    const items = [];
+    const fileHues = [210, 30, 150, 340, 270, 60, 180, 90];
+    const globalFilePaths = [...new Set(plugin.globalRules.flatMap(r => (r.links || []).map(l => l.filePath || '').filter(f => f.trim())))];
+    const hueMap = new Map();
+    globalFilePaths.forEach((fp, i) => hueMap.set(fp, fileHues[i % fileHues.length]));
+
+    const _scanLinks = async (links, ruleRegex, ruleSource, sourceFilePath) => {
+      for (const link of (links || [])) {
+        if (!link.filePath || !link.filePath.trim()) continue;
+        if (!link.remark || !link.remark.trim()) continue;
+        if (link._aiQuestion) continue;
+
+        const fp = link.filePath;
+        const fileName = fp.split('/').pop().replace(/\.md$/, '');
+        const remark = link.remark.trim();
+        if (!hueMap.has(fp)) hueMap.set(fp, fileHues[hueMap.size % fileHues.length]);
+        const hue = hueMap.get(fp);
+
+        let fileContent = null;
+        try {
+          const file = plugin.app.vault.getAbstractFileByPath(fp);
+          if (file) fileContent = await plugin.app.vault.read(file);
+        } catch (e) { /* 文件不存在 */ }
+
+        if (fileContent !== null) {
+          const normalizedRemark = remark.replace(/\s+/g, '');
+          const normalizedContent = fileContent.replace(/\s+/g, '');
+          if (normalizedContent.includes(normalizedRemark)) {
+            const rawIdx = fileContent.indexOf(remark);
+            if (rawIdx !== -1) {
+              const before = fileContent.substring(Math.max(0, rawIdx - 2), rawIdx);
+              const after = fileContent.substring(rawIdx + remark.length, rawIdx + remark.length + 2);
+              if (before === '==' && after === '==') {
+                continue; // 已高亮，跳过
+              }
+            }
+            items.push({ action: 'highlight', remark, filePath: fp, fileName, hue, link, ruleRegex, ruleSource, sourceFilePath });
+            continue;
+          }
+        }
+        items.push({ action: 'ref', remark, filePath: fp, fileName, hue, link, ruleRegex, ruleSource, sourceFilePath });
+      }
+    };
+
+    // 扫描全局规则
+    for (const rule of plugin.globalRules) {
+      await _scanLinks(rule.links, rule.regex, 'global', '');
+    }
+    // 扫描文件规则
+    for (const [fp, entry] of Object.entries(plugin._fileRulesData || {})) {
+      if (!entry?.rules) continue;
+      for (const rule of entry.rules) {
+        await _scanLinks(rule.links, rule.regex, 'file', fp);
+      }
+    }
+    return { items };
+  }
+
+  // 备注迁移：执行全部规则的迁移
+  async _executeAllRemarksMigration(plan) {
+    const plugin = this;
+    const { items } = plan;
+
+    // 1. 备份
+    try {
+      const backupDir = '.obsidian/plugins/Regex-Css-Highlighter/backup';
+      const backupExists = plugin.app.vault.getAbstractFileByPath(backupDir);
+      if (!backupExists) await plugin.app.vault.createFolder(backupDir);
+      const ts = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+      try {
+        const grPath = '.obsidian/plugins/Regex-Css-Highlighter/global-rules.json';
+        const grFile = plugin.app.vault.getAbstractFileByPath(grPath);
+        if (grFile) {
+          const grContent = await plugin.app.vault.read(grFile);
+          await plugin.app.vault.create(backupDir + '/global-rules-' + ts + '.json', grContent);
+        }
+      } catch (e) { console.warn('[Migrate] backup global-rules failed:', e); }
+      try {
+        const frPath = '.obsidian/plugins/Regex-Css-Highlighter/data/file-rules.json';
+        const frFile = plugin.app.vault.getAbstractFileByPath(frPath);
+        if (frFile) {
+          const frContent = await plugin.app.vault.read(frFile);
+          await plugin.app.vault.create(backupDir + '/file-rules-' + ts + '.json', frContent);
+        }
+      } catch (e) { console.warn('[Migrate] backup file-rules failed:', e); }
+    } catch (e) { console.warn('[Migrate] backup failed:', e); }
+
+    // 2. 按文件分组处理高亮操作
+    const highlightByFile = new Map();
+    for (const item of items) {
+      if (item.action !== 'highlight') continue;
+      if (!highlightByFile.has(item.filePath)) highlightByFile.set(item.filePath, []);
+      highlightByFile.get(item.filePath).push(item);
+    }
+
+    for (const [fp, hlItems] of highlightByFile) {
+      try {
+        const file = plugin.app.vault.getAbstractFileByPath(fp);
+        if (!file) continue;
+        let content = await plugin.app.vault.read(file);
+        const sortedItems = [...hlItems].sort((a, b) => {
+          const ia = content.lastIndexOf(a.remark);
+          const ib = content.lastIndexOf(b.remark);
+          return ib - ia;
+        });
+        for (const item of sortedItems) {
+          const idx = content.lastIndexOf(item.remark);
+          if (idx === -1) continue;
+          content = content.substring(0, idx) + '==' + item.remark + '==' + content.substring(idx + item.remark.length);
+        }
+        await plugin.app.vault.modify(file, content);
+      } catch (e) { console.warn('[Migrate] highlight file failed:', fp, e); }
+    }
+
+    // 3. 修改规则数据
+    // 全局规则
+    for (const rule of plugin.globalRules) {
+      if (!rule.links) continue;
+      const ruleItems = items.filter(it => it.ruleRegex === rule.regex && it.ruleSource === 'global');
+      for (const item of ruleItems) {
+        if (item.action === 'highlight') {
+          const idx = rule.links.indexOf(item.link);
+          if (idx !== -1) rule.links.splice(idx, 1);
+        } else if (item.action === 'ref') {
+          const fileName = item.filePath.split('/').pop().replace(/\.md$/, '');
+          if (fileName) item.link.remark = '[[' + fileName + ']]' + item.link.remark;
+          delete item.link.filePath;
+          delete item.link.searchText;
+        }
+      }
+      // 清理剩余 link 的 filePath/searchText
+      for (const link of rule.links) {
+        if (link.filePath !== undefined) delete link.filePath;
+        if (link.searchText !== undefined) delete link.searchText;
+      }
+      if (rule.links.length === 0) delete rule.links;
+    }
+    await plugin.saveGlobalRules(plugin.globalRules, true);
+
+    // 文件规则
+    let fileRulesDirty = false;
+    for (const [fp, entry] of Object.entries(plugin._fileRulesData || {})) {
+      if (!entry?.rules) continue;
+      for (const rule of entry.rules) {
+        if (!rule.links) continue;
+        const ruleItems = items.filter(it => it.ruleRegex === rule.regex && it.ruleSource === 'file' && it.sourceFilePath === fp);
+        for (const item of ruleItems) {
+          if (item.action === 'highlight') {
+            const idx = rule.links.indexOf(item.link);
+            if (idx !== -1) rule.links.splice(idx, 1);
+          } else if (item.action === 'ref') {
+            const fileName = item.filePath.split('/').pop().replace(/\.md$/, '');
+            if (fileName) item.link.remark = '[[' + fileName + ']]' + item.link.remark;
+            delete item.link.filePath;
+            delete item.link.searchText;
+          }
+        }
+        for (const link of rule.links) {
+          if (link.filePath !== undefined) delete link.filePath;
+          if (link.searchText !== undefined) delete link.searchText;
+        }
+        if (rule.links.length === 0) delete rule.links;
+        fileRulesDirty = true;
+      }
+    }
+    if (fileRulesDirty) plugin._scheduleFileRulesWrite();
+  }
+
+  _getHighlightRemark(path, text) {
+    const key = path + '::' + text;
+    return this._highlightRemarks[key] || '';
+  }
+
+  _getHighlightRemarkTimestamp(path, text) {
+    const key = path + '::' + text;
+    const ts = this._highlightRemarkTimestamps[key];
+    return ts || 0;
+  }
+
+  _setHighlightRemark(path, text, remark) {
+    const key = path + '::' + text;
+    if (remark && remark.trim()) {
+      this._highlightRemarks[key] = remark;
+      this._highlightRemarkTimestamps[key] = Date.now();
+    } else {
+      delete this._highlightRemarks[key];
+      delete this._highlightRemarkTimestamps[key];
+    }
+    this._scheduleSaveHighlightRemarks();
+  }
+
+  _getHighlightBubbleStyle(path, text) {
+    const key = path + '::' + text;
+    return this._highlightBubbleStyles[key] ?? 0;
+  }
+
+  _setHighlightBubbleStyle(path, text, styleIdx) {
+    const key = path + '::' + text;
+    if (styleIdx > 0) {
+      this._highlightBubbleStyles[key] = styleIdx;
+    } else {
+      delete this._highlightBubbleStyles[key];
+    }
+    this._scheduleSaveHighlightRemarks();
+  }
+
+  async _loadHighlightDb() {
+    try {
+      const content = await crossFS.read(this.app.vault, '.obsidian/plugins/Regex-Css-Highlighter/highlight-db.json');
+      const data = JSON.parse(content);
+      if (data && data.version === 1 && Array.isArray(data.entries)) {
+        this._highlightDb = data.entries;
+        this._highlightDbFileStats = data.fileStats || {};
+        this._highlightDbReady = true;
+        return true;
+      }
+    } catch (err) {}
+    return false;
+  }
+
+  async _updateHighlightDbForFile(filePath) {
+    try {
+      const file = this.app.vault.getAbstractFileByPath(filePath);
+      if (!file || file.extension !== 'md') return;
+      const content = await this.app.vault.cachedRead(file);
+      const highlightRegex = /==([^=\n]{1,200})==/g;
+      const newEntries = [];
+      if (content) {
+        highlightRegex.lastIndex = 0;
+        let m;
+        while ((m = highlightRegex.exec(content)) !== null) {
+          const hlText = m[1].trim();
+          if (hlText && !hlText.includes('base64,') && !hlText.startsWith('![') && !hlText.startsWith('data:')) {
+            newEntries.push({ text: hlText, path: filePath, name: file.name.replace(/\.md$/, '') });
+          }
+        }
+      }
+      this._highlightDb = this._highlightDb.filter(e => e.path !== filePath).concat(newEntries);
+      try { this._highlightDbFileStats[filePath] = file.stat.mtime; } catch(e) {}
+      this._highlightDbReady = true;
+      this._saveHighlightDb();
+    } catch (err) {
+      console.error('增量更新高亮数据库失败:', err);
+    }
+  }
+
+  async _incrementalUpdateHighlightDb() {
+    try {
+      const allFiles = this.app.vault.getFiles();
+      const mdFiles = allFiles.filter(f => f.extension === 'md');
+      const currentPaths = new Set(mdFiles.map(f => f.path));
+      const stats = this._highlightDbFileStats || {};
+      const removedPaths = Object.keys(stats).filter(p => !currentPaths.has(p));
+      for (const p of removedPaths) {
+        this._highlightDb = this._highlightDb.filter(e => e.path !== p);
+        delete stats[p];
+      }
+      for (const f of mdFiles) {
+        const oldMtime = stats[f.path];
+        const newMtime = f.stat ? f.stat.mtime : undefined;
+        if (oldMtime === undefined || newMtime === undefined || oldMtime !== newMtime) {
+          await this._updateHighlightDbForFile(f.path);
+        }
+      }
+    } catch (err) {
+      console.error('增量更新高亮数据库失败:', err);
     }
   }
 
@@ -34027,12 +36184,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       const cssContent = _cachedCssContent || await crossFS.read(this.app.vault, cssRelPath);
       if (!_cachedCssContent) _cachedCssContent = cssContent;
       
-      const cssRuleRegex = /\.([^{]+)\s*\{([^}]+)\}/g;
+      const cssRuleRegex = /\.([a-zA-Z0-9_\-\u4e00-\u9fff]+)\s*\{([^}]+)\}/g;
       const cssClasses = new Set();
       this.cssStyles = new Map();
       let ruleMatch;
       while ((ruleMatch = cssRuleRegex.exec(cssContent)) !== null) {
         const className = ruleMatch[1].trim();
+        if (className.includes('::') || className.includes(':hover') || className.includes(':focus') || className.includes(':active') || className.includes(':visited') || className.includes(':before') || className.includes(':after')) continue;
         const styles = ruleMatch[2].trim();
         cssClasses.add(className);
         this.cssStyles.set(className, styles);
@@ -34148,6 +36306,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   cacheHoverStyles(forceRefresh) {
     if (!forceRefresh && this._hoverStylesCacheReady) return;
     this._hoverStylesCacheReady = true;
+    if (!this.hoverStylesCache) this.hoverStylesCache = new Map();
     try {
       this.hoverStylesCache.clear();
       
@@ -34758,29 +36917,188 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   
 
   
+  async loadColorSchemes() {
+    const _grainBg = "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")";
+    const _gridBg = "repeating-linear-gradient(0deg,transparent,transparent 19px,rgba(128,128,128,0.08) 19px,rgba(128,128,128,0.08) 20px),repeating-linear-gradient(90deg,transparent,transparent 19px,rgba(128,128,128,0.08) 19px,rgba(128,128,128,0.08) 20px)";
+    const _linesBg = "repeating-linear-gradient(0deg,transparent,transparent 23px,rgba(128,128,128,0.1) 23px,rgba(128,128,128,0.1) 24px)";
+    const _defaultSchemes = [
+      {id:'vintage-01',css:'.vintage-01 { background: rgba(224,204,168,0.90); color: rgba(70,50,30,0.92); background-image: '+_grainBg+'; }'},
+      {id:'vintage-02',css:'.vintage-02 { background: rgba(198,176,140,0.86); color: rgba(56,40,24,0.92); background-image: '+_grainBg+'; }'},
+      {id:'vintage-03',css:'.vintage-03 { background: rgba(52,40,28,0.90); color: rgba(216,196,160,0.90); background-image: '+_grainBg+'; }'},
+      {id:'vintage-04',css:'.vintage-04 { background: rgba(210,188,150,0.82); color: rgba(64,46,28,0.90); background-image: '+_grainBg+'; }'},
+      {id:'vintage-05',css:'.vintage-05 { background: rgba(60,46,34,0.85); color: rgba(206,184,148,0.88); background-image: '+_grainBg+'; }'},
+      {id:'urgent-01',css:'.urgent-01 { background: rgba(180,30,30,0.88); color: rgba(255,246,240,0.96); box-shadow: 0 4px 20px rgba(255,246,240,0.35); }'},
+      {id:'urgent-02',css:'.urgent-02 { background: rgba(210,130,20,0.86); color: rgba(30,20,10,0.94); box-shadow: 0 4px 20px rgba(30,20,10,0.30); }'},
+      {id:'urgent-03',css:'.urgent-03 { background: rgba(20,20,24,0.94); color: rgba(255,214,60,0.94); box-shadow: 0 4px 20px rgba(255,214,60,0.35); }'},
+      {id:'urgent-04',css:'.urgent-04 { background: rgba(255,246,230,0.92); color: rgba(160,24,24,0.94); }'},
+      {id:'urgent-05',css:'.urgent-05 { background: rgba(46,20,20,0.90); color: rgba(250,200,180,0.92); box-shadow: 0 4px 20px rgba(250,200,180,0.35); }'},
+      {id:'cyber-01',css:'.cyber-01 { background: rgba(10,14,24,0.90); color: rgba(0,224,210,0.90); box-shadow: 0 4px 20px rgba(0,224,210,0.32); }'},
+      {id:'cyber-02',css:'.cyber-02 { background: rgba(16,10,26,0.90); color: rgba(214,60,220,0.90); box-shadow: 0 4px 20px rgba(214,60,220,0.32); }'},
+      {id:'cyber-03',css:'.cyber-03 { background: rgba(8,18,16,0.90); color: rgba(80,240,140,0.90); box-shadow: 0 4px 20px rgba(80,240,140,0.32); }'},
+      {id:'cyber-04',css:'.cyber-04 { background: rgba(18,8,14,0.90); color: rgba(255,90,130,0.90); box-shadow: 0 4px 20px rgba(255,90,130,0.32); }'},
+      {id:'cyber-05',css:'.cyber-05 { background: rgba(6,10,20,0.92); color: rgba(120,170,255,0.90); box-shadow: 0 4px 20px rgba(120,170,255,0.32); }'},
+      {id:'season-spring',css:'.season-spring { background: rgba(214,236,200,0.90); color: rgba(40,70,30,0.90); }'},
+      {id:'season-jade',css:'.season-jade { background: rgba(196,226,214,0.90); color: rgba(24,62,48,0.90); }'},
+      {id:'season-sky',css:'.season-sky { background: rgba(210,230,246,0.90); color: rgba(28,56,82,0.90); backdrop-filter: blur(8px); }'},
+      {id:'season-autumn',css:'.season-autumn { background: rgba(238,200,150,0.90); color: rgba(80,46,16,0.90); background-image: '+_grainBg+'; }'},
+      {id:'season-winter',css:'.season-winter { background: rgba(224,230,236,0.88); color: rgba(40,50,60,0.90); backdrop-filter: blur(8px); }'},
+      {id:'mood-question',css:'.mood-question { background: rgba(230,220,250,0.90); color: rgba(58,38,90,0.90); backdrop-filter: blur(8px); }'},
+      {id:'mood-idea',css:'.mood-idea { background: rgba(255,244,200,0.90); color: rgba(90,70,10,0.90); }'},
+      {id:'mood-todo',css:'.mood-todo { background: rgba(200,232,250,0.90); color: rgba(20,60,88,0.90); backdrop-filter: blur(8px); }'},
+      {id:'mood-resolved',css:'.mood-resolved { background: rgba(206,236,210,0.85); color: rgba(30,70,34,0.88); }'},
+      {id:'mood-doubt',css:'.mood-doubt { background: rgba(250,214,214,0.90); color: rgba(90,30,30,0.90); }'}
+    ];
+    try {
+      const relPath = '.obsidian/plugins/Regex-Css-Highlighter/color-schemes.json';
+      let content = null;
+      try { content = await crossFS.read(this.app.vault, relPath); } catch (e) {}
+      if (content && content.trim()) {
+        const data = JSON.parse(content);
+        this.colorSchemePresets = Array.isArray(data) ? data : (data.schemes || _defaultSchemes);
+      } else {
+        this.colorSchemePresets = _defaultSchemes;
+        await crossFS.write(this.app.vault, relPath, JSON.stringify({schemes:_defaultSchemes}, null, 2));
+      }
+    } catch (e) {
+      console.warn('[FloatNote] loadColorSchemes failed, using defaults:', e);
+      this.colorSchemePresets = _defaultSchemes;
+    }
+  }
+
+  async saveColorSchemes() {
+    try {
+      const relPath = '.obsidian/plugins/Regex-Css-Highlighter/color-schemes.json';
+      await crossFS.write(this.app.vault, relPath, JSON.stringify({schemes:this.colorSchemePresets}, null, 2));
+    } catch (e) {
+      console.warn('[FloatNote] saveColorSchemes failed:', e);
+    }
+  }
+
   // 加载全局规则
   async loadGlobalNotes() {
     try {
       const relPath = '.obsidian/plugins/Regex-Css-Highlighter/global-notes.json';
+      const backupPath = '.obsidian/plugins/Regex-Css-Highlighter/global-notes.bak.json';
       let content = null;
       try { content = await crossFS.read(this.app.vault, relPath); } catch (e) {}
-      if (content) {
-        this.globalNotes = JSON.parse(content);
+      if (!content || !content.trim()) {
+        try { content = await crossFS.read(this.app.vault, backupPath); } catch (e) {}
+        if (content && content.trim()) console.warn('[FloatNote] 主文件为空，从备份恢复');
+      }
+      if (content && content.trim()) {
+        let data;
+        try {
+          data = JSON.parse(content);
+        } catch (parseErr) {
+          const trimmed = content.trimEnd();
+          for (let len = trimmed.length; len > 0; len--) {
+            try {
+              data = JSON.parse(trimmed.substring(0, len));
+              console.warn('[FloatNote] JSON自动修复: 截断位置', len, '(原长度', trimmed.length, ')');
+              const relPath2 = '.obsidian/plugins/Regex-Css-Highlighter/global-notes.json';
+              await crossFS.write(this.app.vault, relPath2, trimmed.substring(0, len));
+              break;
+            } catch (e) {}
+          }
+          if (!data) throw parseErr;
+        }
+        if (Array.isArray(data)) {
+          this.globalNotes = data;
+        } else {
+          this.globalNotes = data.notes || [];
+          this.noteGroups = data.groups || [];
+          this._defaultFnGroup = data.defaultFnGroup || null;
+        }
       } else {
-        this.globalNotes = [];
+        this.globalNotes = [{ id: Date.now().toString(), text: '悬浮笔记操作方式 / Floating Note Controls：\n• Shift + 滚轮 → 切换配色 / Shift+Scroll → Change color scheme\n• Ctrl + 滚轮 → 调整透明度 / Ctrl+Scroll → Adjust opacity\n• Alt + 滚轮 → 调整字号 / Alt+Scroll → Adjust font size\n• 双击 → 编辑内容 / Double-click → Edit content\n• 点击调色盘按钮 → 选择配色方案 / Click palette button → Choose color scheme\n\n添加笔记：在悬浮球选项中点击"+"按钮\nAdd notes: Click the "+" button in the floating ball options', _createdAt: Date.now(), _hidden: true }];
+      }
+      if (!this.noteGroups || this.noteGroups.length === 0) {
+        this.noteGroups = [];
       }
     } catch (error) {
       console.error('Error loading global notes:', error);
-      this.globalNotes = [];
+      this.globalNotes = [{ id: Date.now().toString(), text: '悬浮笔记操作方式 / Floating Note Controls：\n• Shift + 滚轮 → 切换配色 / Shift+Scroll → Change color scheme\n• Ctrl + 滚轮 → 调整透明度 / Ctrl+Scroll → Adjust opacity\n• Alt + 滚轮 → 调整字号 / Alt+Scroll → Adjust font size\n• 双击 → 编辑内容 / Double-click → Edit content\n• 点击调色盘按钮 → 选择配色方案 / Click palette button → Choose color scheme\n\n添加笔记：在悬浮球选项中点击"+"按钮\nAdd notes: Click the "+" button in the floating ball options', _createdAt: Date.now(), _hidden: true }];
+      this.noteGroups = [];
     }
   }
 
   async saveGlobalNotes() {
-    try {
-      const relPath = '.obsidian/plugins/Regex-Css-Highlighter/global-notes.json';
-      await crossFS.write(this.app.vault, relPath, JSON.stringify(this.globalNotes, null, 2));
-    } catch (error) {
-      console.error('Error saving global notes:', error);
+    const snapshot = JSON.stringify({ notes: this.globalNotes, groups: this.noteGroups, defaultFnGroup: this._defaultFnGroup || null });
+    if (this._saveGlobalNotesPromise) {
+      await this._saveGlobalNotesPromise;
+    }
+    this._saveGlobalNotesPromise = (async () => {
+      try {
+        const relPath = '.obsidian/plugins/Regex-Css-Highlighter/global-notes.json';
+        const backupPath = '.obsidian/plugins/Regex-Css-Highlighter/global-notes.bak.json';
+        try {
+          const existing = await crossFS.read(this.app.vault, relPath);
+          if (existing && existing.trim()) {
+            await crossFS.write(this.app.vault, backupPath, existing);
+          }
+        } catch (e) {}
+        await crossFS.write(this.app.vault, relPath, snapshot);
+      } catch (error) {
+        console.error('Error saving global notes:', error);
+      } finally {
+        this._saveGlobalNotesPromise = null;
+      }
+    })();
+    await this._saveGlobalNotesPromise;
+  }
+
+  renderNoteText(container, text, options = {}) {
+    const { onToggle, noteId } = options;
+    if (!text || (!text.includes('- [ ]') && !text.includes('- [x]'))) {
+      container.textContent = text;
+      return;
+    }
+    const lines = text.split('\n');
+    container.innerHTML = '';
+    container.style.lineHeight = '1.5';
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const uncheckedMatch = line.match(/^(\s*)- \[ \] (.*)$/);
+      const checkedMatch = line.match(/^(\s*)- \[x\] (.*)$/);
+      if (uncheckedMatch || checkedMatch) {
+        const isChecked = !!checkedMatch;
+        const match = isChecked ? checkedMatch : uncheckedMatch;
+        const indent = match[1];
+        const content = match[2];
+        const lineEl = document.createElement('div');
+        lineEl.style.cssText = 'display:flex;align-items:flex-start;gap:4px;margin:0;padding:0;line-height:1.5;';
+        if (indent) lineEl.style.paddingLeft = (indent.length * 4) + 'px';
+        const cb = document.createElement('span');
+        cb.textContent = isChecked ? '☑' : '☐';
+        cb.style.cssText = 'cursor:pointer;font-size:12px;flex-shrink:0;line-height:1.5;user-select:none;';
+        cb.title = isChecked ? '点击取消勾选' : '点击勾选';
+        const textSpan = document.createElement('span');
+        textSpan.textContent = content;
+        textSpan.style.cssText = isChecked ? 'text-decoration:line-through;opacity:0.6;line-height:1.5;' : 'line-height:1.5;';
+        if (onToggle) {
+          const lineIndex = i;
+          cb.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const newLines = text.split('\n');
+            const currentLine = newLines[lineIndex];
+            if (currentLine.match(/^\s*- \[ \]/)) {
+              newLines[lineIndex] = currentLine.replace('- [ ]', '- [x]');
+            } else {
+              newLines[lineIndex] = currentLine.replace('- [x]', '- [ ]');
+            }
+            const newText = newLines.join('\n');
+            await onToggle(newText, noteId);
+          });
+        }
+        lineEl.appendChild(cb);
+        lineEl.appendChild(textSpan);
+        container.appendChild(lineEl);
+      } else {
+        const lineEl = document.createElement('div');
+        lineEl.style.cssText = 'margin:0;padding:0;line-height:1.5;';
+        lineEl.textContent = line;
+        container.appendChild(lineEl);
+      }
     }
   }
 
@@ -34790,37 +37108,447 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     for (const note of plugin.globalNotes) {
       if (note._hidden) continue;
       if (note._popout && plugin._notePopouts && plugin._notePopouts[note.id] && !plugin._notePopouts[note.id].isDestroyed()) continue;
+      const _floatNoteThemes = [];
+      const colorSchemePresets = plugin.colorSchemePresets || [];
+      function getNoteTheme(n) { if (n._customTheme) return n._customTheme; const s = colorSchemePresets.find(p => p.id === n._colorScheme); if (s) { const t = schemeToTheme(s); if (t) return t; } return colorSchemePresets.length ? schemeToTheme(colorSchemePresets[0]) : {bg:'rgba(40,40,40,0.92)',border:'rgba(255,255,255,0.15)',text:'#e0e0e0',faint:'rgba(255,255,255,0.25)'}; }
+      function parseSchemeCss(css) {
+        const bm = css.match(/\{([^}]*)\}/);
+        if (!bm) return null;
+        const props = {};
+        bm[1].split(';').forEach(seg => { const ci = seg.indexOf(':'); if (ci < 0) return; const n = seg.substring(0,ci).trim().toLowerCase(); const v = seg.substring(ci+1).trim(); if (n && v) props[n] = v; });
+        const bg = props.background || props['background-color'] || '';
+        const text = props.color || '';
+        if (!bg || !text) return null;
+        return {bg, text, shadow: props['box-shadow'] || '', backdropFilter: props['backdrop-filter'] || '', textureBg: props['background-image'] || ''};
+      }
+      function schemeToTheme(s) {
+        let p;
+        if (s.css) { p = parseSchemeCss(s.css); }
+        else if (s.bg && s.text) { p = {bg:s.bg, text:s.text, shadow:s.shadow||'', backdropFilter:s.backdropFilter||'', textureBg:s.textureBg||''}; }
+        else return null;
+        if (!p) return null;
+        const opMatch = p.bg.match(/[\d.]+\)$/);
+        const bOp = opMatch ? parseFloat(opMatch[0]) * 0.5 : 0.3;
+        const t = {bg:p.bg, border:p.bg.replace(/[\d.]+\)$/,bOp.toFixed(2)+')'), text:p.text, faint:p.text.replace(/[\d.]+\)$/,'0.4)')};
+        if (p.shadow) t.shadow = p.shadow;
+        if (p.backdropFilter) t.backdropFilter = p.backdropFilter;
+        if (p.textureBg) t.textureBg = p.textureBg;
+        return t;
+      }
+      function parseCssScheme(css) {
+        let p=css; const bm=css.match(/\{([^}]*)\}/); if(bm) p=bm[1];
+        const bgM=p.match(/background\s*:\s*([^;]+)/);
+        const cM=p.match(/(?<![a-z-])color\s*:\s*([^;]+)/i);
+        const oM=p.match(/opacity\s*:\s*([^;]+)/i);
+        if(!bgM||!cM) return null;
+        return {bg:bgM[1].trim(), text:cM[1].trim(), opacity:oM?parseFloat(oM[1].trim()):1};
+      }
+      const _cardTheme = getNoteTheme(note);
       const card = document.createElement('div');
       card.className = 'global-note-card';
       card.dataset.noteId = note.id;
-      card.style.cssText = 'max-width:240px;min-width:80px;min-height:30px;padding:4px 6px;background:rgba(168,213,162,0.15);border:1px solid rgba(168,213,162,0.3);display:flex;flex-direction:column;cursor:grab;user-select:none;margin-bottom:4px;position:fixed;z-index:1200;';
+      const _isMobileResize = !_isDesktop;
+      card.style.cssText = `max-width:480px;min-width:200px;min-height:80px;padding:4px 2px 4px 6px;background:${_cardTheme.bg};border:1px solid ${_cardTheme.border};display:flex;flex-direction:column;cursor:grab;user-select:none;margin-bottom:4px;position:fixed;z-index:1200;${_isMobileResize?'':'resize:both;'}overflow:hidden;height:auto;${_cardTheme.shadow?'box-shadow:'+_cardTheme.shadow+';':''}${_cardTheme.backdropFilter?'backdrop-filter:'+_cardTheme.backdropFilter+';-webkit-backdrop-filter:'+_cardTheme.backdropFilter+';':''}`;
+      if (_cardTheme.textureBg) {
+        const texLayer = document.createElement('div');
+        texLayer.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;background-image:'+_cardTheme.textureBg+';mix-blend-mode:overlay;border-radius:inherit;z-index:0;';
+        card.style.position = 'fixed';
+        card.appendChild(texLayer);
+      }
+      card.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+      card.style.transform = 'scale(0.95)';
+      card.style.opacity = '0';
+      requestAnimationFrame(() => { requestAnimationFrame(() => { card.style.transform = 'scale(1)'; card.style.opacity = '1'; }); });
+      const origRemove = card.remove.bind(card);
+      card.remove = () => { if (card._schemeTip) { card._schemeTip.remove(); card._schemeTip = null; } clearTimeout(card._schemeTipTimer); origRemove(); };
+      const actionbar = document.createElement('div');
+      actionbar.className = 'note-action-bar';
+      actionbar.style.cssText = `display:flex;align-items:center;justify-content:space-between;padding:2px 2px;position:absolute;top:0;left:0;right:0;z-index:2;opacity:${!_isDesktop ? '1' : '0'};transition:opacity 0.15s;pointer-events:${!_isDesktop ? 'auto' : 'none'};background:rgba(128,128,128,0.12);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);border-radius:0 0 4px 4px;color:${_cardTheme.text};`;
+      card.addEventListener('mouseenter', () => { actionbar.style.opacity = '1'; actionbar.style.pointerEvents = 'auto'; });
+      card.addEventListener('mouseleave', () => { if (_isDesktop) { actionbar.style.opacity = '0'; actionbar.style.pointerEvents = 'none'; } });
+      const actionLeft = document.createElement('div');
+      actionLeft.style.cssText = 'display:flex;align-items:center;gap:0;';
+      if (!_isDesktop) {
+        // 手机端：折叠/缩略按钮（替代长按）
+        const collapseBtn = document.createElement('span');
+        collapseBtn.className = 'note-collapse-btn';
+        collapseBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h6"/></svg>';
+        collapseBtn.title = t('fn.collapseNote') || '折叠 / 缩略';
+        collapseBtn.style.cssText = 'cursor:pointer;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:4px;transition:background 0.1s;';
+        collapseBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          const cardRect = card.getBoundingClientRect();
+          const evt = new MouseEvent('auxclick', { button: 1, bubbles: true, clientX: cardRect.left + 16, clientY: cardRect.top + 16 });
+          card.dispatchEvent(evt);
+        });
+        actionLeft.appendChild(collapseBtn);
+      }
+      if (_isDesktop) {
+        const popoutBtn = document.createElement('span');
+        popoutBtn.className = 'note-popout-btn';
+        popoutBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
+        popoutBtn.title = t('fn.popoutWindow');
+        popoutBtn.style.cssText = 'cursor:pointer;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:4px;transition:background 0.1s;';
+        popoutBtn.addEventListener('mouseenter', () => { popoutBtn.style.background = 'rgba(0,0,0,0.06)'; });
+        popoutBtn.addEventListener('mouseleave', () => { popoutBtn.style.background = 'transparent'; });
+        popoutBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          card.remove();
+          plugin._openNotePopout(note);
+        });
+        actionLeft.appendChild(popoutBtn);
+      }
+      const copyBtnInline = document.createElement('span');
+      copyBtnInline.className = 'note-copy-btn';
+      copyBtnInline.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+      copyBtnInline.title = t('fn.copyContent');
+      copyBtnInline.style.cssText = 'cursor:pointer;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:4px;transition:background 0.1s;';
+      copyBtnInline.addEventListener('mouseenter', () => { copyBtnInline.style.background = 'rgba(0,0,0,0.06)'; });
+      copyBtnInline.addEventListener('mouseleave', () => { copyBtnInline.style.background = 'transparent'; });
+      copyBtnInline.addEventListener('click', (e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(note.text || '').then(() => {
+          copyBtnInline.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>';
+          setTimeout(() => { copyBtnInline.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'; }, 800);
+        });
+      });
+      actionLeft.appendChild(copyBtnInline);
+      const paletteBtnInline = document.createElement('span');
+      paletteBtnInline.className = 'note-palette-btn';
+      paletteBtnInline.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.7 1.6-1.6 0-.4-.1-.8-.4-1.1-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2c3 0 5-2.2 5-5C23 5.6 18 2 12 2z"/><circle cx="7.5" cy="10.5" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="7" r="1.5" fill="currentColor" stroke="none"/><circle cx="16.5" cy="10.5" r="1.5" fill="currentColor" stroke="none"/></svg>';
+      paletteBtnInline.title = t('fn.colorScheme');
+      paletteBtnInline.style.cssText = 'cursor:pointer;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:4px;transition:background 0.1s;';
+      paletteBtnInline.addEventListener('mouseenter', () => { paletteBtnInline.style.background = 'rgba(0,0,0,0.06)'; });
+      paletteBtnInline.addEventListener('mouseleave', () => { paletteBtnInline.style.background = 'transparent'; });
+      paletteBtnInline.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const schemes = colorSchemePresets;
+        if (!schemes.length) return;
+        let idx = note._colorScheme ? schemes.findIndex(s => s.id === note._colorScheme) : 0;
+        if (idx < 0) idx = 0;
+        idx = (idx + (e.deltaY < 0 ? 1 : schemes.length - 1)) % schemes.length;
+        const scheme = schemes[idx];
+        const nt = schemeToTheme(scheme);
+        if (!nt) return;
+        note._customTheme = nt;
+        note._colorScheme = scheme.id;
+        delete note._customCss;
+        plugin.saveGlobalNotes();
+        card.style.background = nt.bg;
+        card.style.borderColor = nt.border;
+        textEl.style.color = nt.text;
+        tsEl.style.color = nt.faint;
+        actionbar.style.color = nt.text;
+        if (nt.shadow) card.style.boxShadow = nt.shadow; else card.style.boxShadow = '';
+        if (nt.backdropFilter) { card.style.backdropFilter = nt.backdropFilter; card.style.webkitBackdropFilter = nt.backdropFilter; } else { card.style.backdropFilter = ''; card.style.webkitBackdropFilter = ''; }
+        const texEl = card.querySelector('.fn-texture');
+        if (nt.textureBg && !texEl) { const tl=document.createElement('div');tl.className='fn-texture';tl.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;background-image:'+nt.textureBg+';mix-blend-mode:overlay;border-radius:inherit;z-index:0;';card.appendChild(tl); }
+        else if (!nt.textureBg && texEl) texEl.remove();
+        else if (nt.textureBg && texEl) texEl.style.backgroundImage = nt.textureBg;
+        if (!paletteBtnInline._schemeTip) { paletteBtnInline._schemeTip = document.createElement('div'); paletteBtnInline._schemeTip.className = 'scheme-tip'; paletteBtnInline._schemeTip.style.cssText = 'position:fixed;background:rgba(0,0,0,0.7);color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;pointer-events:none;z-index:9999;white-space:nowrap;transition:opacity 0.3s;'; document.body.appendChild(paletteBtnInline._schemeTip); }
+        const br = paletteBtnInline.getBoundingClientRect();
+        paletteBtnInline._schemeTip.style.top = (br.top - 22) + 'px';
+        paletteBtnInline._schemeTip.style.left = br.left + 'px';
+        paletteBtnInline._schemeTip.textContent = scheme.id;
+        paletteBtnInline._schemeTip.style.opacity = '1';
+        clearTimeout(paletteBtnInline._schemeTipTimer);
+        paletteBtnInline._schemeTipTimer = setTimeout(() => { if (paletteBtnInline._schemeTip) paletteBtnInline._schemeTip.style.opacity = '0'; }, 1200);
+        plugin._syncNoteTheme(note.id, 'inline');
+      }, { passive: false });
+      paletteBtnInline.addEventListener('click', (e) => {
+        e.stopPropagation();
+        console.log('[FloatNote] paletteBtn clicked, presets:', plugin.colorSchemePresets?.length);
+        const ex = document.querySelector('.color-scheme-popup');
+        if (ex) { ex.remove(); return; }
+        const noteCard = card;
+        let curTheme = getNoteTheme(note);
+        const popup = document.createElement('div');
+        popup.className = 'color-scheme-popup';
+        popup.style.cssText = 'position:fixed;z-index:10000;background:rgba(var(--mono-rgb-0),0.75);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border:none;border-radius:12px;padding:0;min-width:320px;max-width:380px;max-height:75vh;overflow:hidden;display:flex;flex-direction:column;font-size:12px;color:var(--text-normal);box-shadow:0 12px 40px rgba(0,0,0,0.35);';
+        const btnRect = paletteBtnInline.getBoundingClientRect();
+        popup.style.top = Math.min(btnRect.bottom + 4, window.innerHeight - 300) + 'px';
+        popup.style.left = Math.min(Math.max(btnRect.left - 260, 8), window.innerWidth - 390) + 'px';
+        const header = document.createElement('div');
+        header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 10px;cursor:move;user-select:none;-webkit-user-select:none;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;';
+        const title = document.createElement('span');
+        title.style.cssText = 'font-weight:bold;font-size:13px;';
+        title.textContent = t('fn.colorScheme');
+        header.appendChild(title);
+        popup.appendChild(header);
+        let pDrag=false,pDragX=0,pDragY=0,pStartX=0,pStartY=0;
+        header.addEventListener('mousedown',(e)=>{pDrag=true;pDragX=e.clientX;pDragY=e.clientY;const r=popup.getBoundingClientRect();pStartX=r.left;pStartY=r.top;e.preventDefault();});
+        document.addEventListener('mousemove',(e)=>{if(!pDrag)return;popup.style.left=(pStartX+e.clientX-pDragX)+'px';popup.style.top=(pStartY+e.clientY-pDragY)+'px';});
+        document.addEventListener('mouseup',()=>{pDrag=false;});
+        header.addEventListener('touchstart',(e)=>{const t=e.touches[0];pDrag=true;pDragX=t.clientX;pDragY=t.clientY;const r=popup.getBoundingClientRect();pStartX=r.left;pStartY=r.top;e.preventDefault();},{passive:false});
+        document.addEventListener('touchmove',(e)=>{if(!pDrag)return;const t=e.touches[0];popup.style.left=(pStartX+t.clientX-pDragX)+'px';popup.style.top=(pStartY+t.clientY-pDragY)+'px';e.preventDefault();},{passive:false});
+        document.addEventListener('touchend',()=>{pDrag=false;});
+        const scrollBody = document.createElement('div');
+        scrollBody.style.cssText = 'overflow-y:auto;padding:8px 10px;flex:1;';
+        const allSchemes = [...colorSchemePresets];
+
+        const grid = document.createElement('div');
+        grid.style.cssText = 'display:grid;grid-template-columns:repeat(5,1fr);gap:5px;';
+        let selectedSwatch = null;
+        allSchemes.forEach(scheme => {
+          const swatch = document.createElement('div');
+          const isSel = note._colorScheme === scheme.id;
+          swatch.dataset.schemeId = scheme.id;
+          swatch.style.cssText = 'background:'+(parseSchemeCss(scheme.css)?.bg||'')+';color:'+(parseSchemeCss(scheme.css)?.text||'')+';border-radius:4px;padding:4px;cursor:pointer;text-align:center;font-size:9px;height:32px;display:flex;align-items:center;justify-content:center;border:2px solid '+(isSel?'var(--interactive-accent)':'transparent')+';transition:border-color 0.1s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+          if (isSel) selectedSwatch = swatch;
+          swatch.textContent = scheme.id;
+          swatch.addEventListener('mouseenter', () => {
+            const theme = schemeToTheme(scheme);
+            if(!theme)return;
+            noteCard.style.background = theme.bg;
+            noteCard.style.borderColor = theme.border;
+            textEl.style.color = theme.text;
+            tsEl.style.color = theme.faint;
+            actionbar.style.color = theme.text;
+            if (theme.shadow) noteCard.style.boxShadow = theme.shadow; else noteCard.style.boxShadow = '';
+            if (theme.backdropFilter) { noteCard.style.backdropFilter = theme.backdropFilter; noteCard.style.webkitBackdropFilter = theme.backdropFilter; } else { noteCard.style.backdropFilter = ''; noteCard.style.webkitBackdropFilter = ''; }
+            const texEl = noteCard.querySelector('.fn-texture');
+            if (theme.textureBg && !texEl) { const tl=document.createElement('div');tl.className='fn-texture';tl.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;background-image:'+theme.textureBg+';mix-blend-mode:overlay;border-radius:inherit;z-index:0;';noteCard.appendChild(tl); }
+            else if (!theme.textureBg && texEl) texEl.remove();
+            else if (theme.textureBg && texEl) texEl.style.backgroundImage = theme.textureBg;
+          });
+          swatch.addEventListener('mouseleave', () => {
+            noteCard.style.background = curTheme.bg;
+            noteCard.style.borderColor = curTheme.border;
+            textEl.style.color = curTheme.text;
+            tsEl.style.color = curTheme.faint;
+            actionbar.style.color = curTheme.text;
+            if (curTheme.shadow) noteCard.style.boxShadow = curTheme.shadow; else noteCard.style.boxShadow = '';
+            if (curTheme.backdropFilter) { noteCard.style.backdropFilter = curTheme.backdropFilter; noteCard.style.webkitBackdropFilter = curTheme.backdropFilter; } else { noteCard.style.backdropFilter = ''; noteCard.style.webkitBackdropFilter = ''; }
+            const texEl = noteCard.querySelector('.fn-texture');
+            if (curTheme.textureBg && !texEl) { const tl=document.createElement('div');tl.className='fn-texture';tl.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;background-image:'+curTheme.textureBg+';mix-blend-mode:overlay;border-radius:inherit;z-index:0;';noteCard.appendChild(tl); }
+            else if (!curTheme.textureBg && texEl) texEl.remove();
+            else if (curTheme.textureBg && texEl) texEl.style.backgroundImage = curTheme.textureBg;
+          });
+          swatch.addEventListener('click', () => {
+            const theme = schemeToTheme(scheme);
+            if(!theme)return;
+            note._customTheme = theme;
+            note._colorScheme = scheme.id;
+            delete note._customCss;
+            plugin.saveGlobalNotes();
+            curTheme = theme;
+            noteCard.style.background = theme.bg;
+            noteCard.style.borderColor = theme.border;
+            textEl.style.color = theme.text;
+            tsEl.style.color = theme.faint;
+            actionbar.style.color = theme.text;
+            if (theme.shadow) noteCard.style.boxShadow = theme.shadow; else noteCard.style.boxShadow = '';
+            if (theme.backdropFilter) { noteCard.style.backdropFilter = theme.backdropFilter; noteCard.style.webkitBackdropFilter = theme.backdropFilter; } else { noteCard.style.backdropFilter = ''; noteCard.style.webkitBackdropFilter = ''; }
+            const texEl2 = noteCard.querySelector('.fn-texture');
+            if (theme.textureBg && !texEl2) { const tl=document.createElement('div');tl.className='fn-texture';tl.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;background-image:'+theme.textureBg+';mix-blend-mode:overlay;border-radius:inherit;z-index:0;';noteCard.appendChild(tl); }
+            else if (!theme.textureBg && texEl2) texEl2.remove();
+            else if (theme.textureBg && texEl2) texEl2.style.backgroundImage = theme.textureBg;
+            cssTextarea.value = scheme.css || '';
+            originalCss = (scheme.css || '').trim();
+            cssSection.style.display='block';
+            updateSaveBtn();
+            if (selectedSwatch) selectedSwatch.style.borderColor = 'transparent';
+            swatch.style.borderColor = 'var(--interactive-accent)';
+            selectedSwatch = swatch;
+            plugin._syncNoteTheme(note.id, 'inline');
+          });
+          swatch.addEventListener('mousedown', (e) => {
+            if (e.button !== 1) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const doDelete = () => {
+              const idx = plugin.colorSchemePresets.findIndex(s => s.id === scheme.id);
+              if (idx >= 0) { plugin.colorSchemePresets.splice(idx, 1); plugin.saveColorSchemes(); }
+              swatch.remove();
+              if (selectedSwatch === swatch) selectedSwatch = null;
+            };
+            if (localStorage.getItem('sg-scheme-no-confirm-delete') === '1') { doDelete(); return; }
+            const confirmEl = document.createElement('div');
+            confirmEl.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:12px;';
+            confirmEl.innerHTML = '<div style="background:var(--background-primary);padding:12px 16px;border-radius:8px;text-align:center;font-size:12px;"><div style="margin-bottom:8px;">'+t('fn.deleteScheme')+' '+scheme.id+'？</div><label style="font-size:10px;color:var(--text-faint);display:flex;align-items:center;gap:4px;justify-content:center;margin-bottom:8px;"><input type="checkbox" id="sg-no-confirm"> '+t('fn.noConfirmDelete')+'</label><div style="display:flex;gap:8px;justify-content:center;"><button id="sg-del-yes" style="padding:4px 12px;cursor:pointer;font-size:11px;background:var(--interactive-accent);color:var(--text-on-accent);border:none;border-radius:3px;">'+t('fn.delete')+'</button><button id="sg-del-no" style="padding:4px 12px;cursor:pointer;font-size:11px;border:1px solid var(--background-modifier-border);background:transparent;color:var(--text-normal);border-radius:3px;">'+t('fn.cancel')+'</button></div></div>';
+            popup.appendChild(confirmEl);
+            confirmEl.querySelector('#sg-del-yes').onclick = () => { if (confirmEl.querySelector('#sg-no-confirm').checked) localStorage.setItem('sg-scheme-no-confirm-delete','1'); doDelete(); confirmEl.remove(); };
+            confirmEl.querySelector('#sg-del-no').onclick = () => confirmEl.remove();
+          });
+          grid.appendChild(swatch);
+        });
+        scrollBody.appendChild(grid);
+        const cssSection = document.createElement('div');
+        cssSection.style.cssText = 'display:none;margin-top:8px;border-top:1px solid var(--background-modifier-border);padding-top:8px;';
+        const cssTextarea = document.createElement('textarea');
+        cssTextarea.style.cssText = 'width:100%;height:80px;font-size:11px;font-family:monospace;padding:6px;border:1px solid var(--background-modifier-border);background:var(--background-secondary);color:var(--text-normal);border-radius:4px;resize:vertical;box-sizing:border-box;';
+        cssTextarea.placeholder = '.my-scheme { background: rgba(...); color: rgba(...); }';
+        cssSection.appendChild(cssTextarea);
+        const saveBtn = document.createElement('button');
+        saveBtn.style.cssText = 'padding:3px 10px;cursor:pointer;font-size:11px;background:var(--interactive-accent);color:var(--text-on-accent);border:none;border-radius:3px;margin-top:6px;display:none;';
+        let originalCss = '';
+        const updateSaveBtn = () => {
+          const cur = cssTextarea.value.trim();
+          if (!cur || cur === originalCss) { saveBtn.style.display = 'none'; return; }
+          const curId = cur.match(/\.([\w\u4e00-\u9fff-]+)/)?.[1];
+          const origId = originalCss.match(/\.([\w\u4e00-\u9fff-]+)/)?.[1];
+          const curProps = cur.replace(/\.[\w\u4e00-\u9fff-]+/, '').trim();
+          const origProps = originalCss.replace(/\.[\w\u4e00-\u9fff-]+/, '').trim();
+          const isUpdate = originalCss && (curId === origId || curProps === origProps);
+          saveBtn.textContent = isUpdate ? t('fn.update') : t('fn.saveAsNew');
+          saveBtn.style.display = '';
+        };
+        saveBtn.addEventListener('click', () => {
+          const cls = cssTextarea.value.match(/\.([\w\u4e00-\u9fff-]+)/);
+          if (!cls) return;
+          const id = cls[1];
+          const parsed = parseSchemeCss(cssTextarea.value);
+          if (!parsed) return;
+          const theme = schemeToTheme(parsed);
+          if(!theme)return;
+          note._customTheme = theme;
+          note._colorScheme = id;
+          note._customCss = cssTextarea.value;
+          if (!plugin.colorSchemePresets) plugin.colorSchemePresets = [];
+          const origId = originalCss.match(/\.([\w\u4e00-\u9fff-]+)/)?.[1];
+          if (origId && originalCss) {
+            const existIdx = plugin.colorSchemePresets.findIndex(s => s.id === origId);
+            if (existIdx >= 0) { plugin.colorSchemePresets[existIdx] = {id, css:cssTextarea.value}; }
+            else { plugin.colorSchemePresets.push({id, css:cssTextarea.value}); }
+          } else {
+            const existIdx = plugin.colorSchemePresets.findIndex(s => s.id === id);
+            if (existIdx >= 0) { plugin.colorSchemePresets[existIdx].css = cssTextarea.value; }
+            else { plugin.colorSchemePresets.push({id, css:cssTextarea.value}); }
+          }
+          plugin.saveColorSchemes();
+          plugin.saveGlobalNotes();
+          curTheme = theme;
+          originalCss = cssTextarea.value.trim();
+          const oldSwatch = origId && origId !== id ? grid.querySelector('[data-scheme-id="'+origId+'"]') : null;
+          if (oldSwatch) { oldSwatch.dataset.schemeId = id; oldSwatch.textContent = id; oldSwatch.style.background = parsed.bg; oldSwatch.style.color = parsed.text; }
+          const existSwatch = grid.querySelector('[data-scheme-id="'+id+'"]');
+          if (existSwatch && !oldSwatch) { existSwatch.style.background = parsed.bg; existSwatch.style.color = parsed.text; }
+          else if (!existSwatch && !oldSwatch) {
+            const ns = document.createElement('div');
+            ns.dataset.schemeId = id;
+            ns.style.cssText = 'background:'+parsed.bg+';color:'+parsed.text+';border-radius:4px;padding:4px;cursor:pointer;text-align:center;font-size:9px;height:32px;display:flex;align-items:center;justify-content:center;border:2px solid var(--interactive-accent);transition:border-color 0.1s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+            ns.textContent = id;
+            ns.addEventListener('click', () => { cssTextarea.value = cssTextarea.value; if(selectedSwatch)selectedSwatch.style.borderColor='transparent'; ns.style.borderColor='var(--interactive-accent)'; selectedSwatch=ns; });
+            grid.appendChild(ns);
+          }
+          if (selectedSwatch) selectedSwatch.style.borderColor = 'transparent';
+          updateSaveBtn();
+          plugin._syncNoteTheme(note.id, 'inline');
+        });
+        cssSection.appendChild(saveBtn);
+
+        scrollBody.appendChild(cssSection);
+        const curScheme = allSchemes.find(s => s.id === note._colorScheme);
+        if (curScheme) { cssTextarea.value = curScheme.css || ''; originalCss = (curScheme.css || '').trim(); cssSection.style.display='block'; }
+        cssTextarea.addEventListener('input', () => {
+            updateSaveBtn();
+            const p = parseSchemeCss(cssTextarea.value);
+            if (p) {
+              const theme = schemeToTheme(p);
+              if(!theme)return;
+              noteCard.style.background = theme.bg; noteCard.style.borderColor = theme.border;
+              textEl.style.color = theme.text; tsEl.style.color = theme.faint; actionbar.style.color = theme.text;
+              if (theme.shadow) noteCard.style.boxShadow = theme.shadow; else noteCard.style.boxShadow = '';
+              if (theme.backdropFilter) { noteCard.style.backdropFilter = theme.backdropFilter; noteCard.style.webkitBackdropFilter = theme.backdropFilter; } else { noteCard.style.backdropFilter = ''; noteCard.style.webkitBackdropFilter = ''; }
+              const texEl = noteCard.querySelector('.fn-texture');
+              if (theme.textureBg && !texEl) { const tl=document.createElement('div');tl.className='fn-texture';tl.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;background-image:'+theme.textureBg+';mix-blend-mode:overlay;border-radius:inherit;z-index:0;';noteCard.appendChild(tl); }
+              else if (!theme.textureBg && texEl) texEl.remove();
+              else if (theme.textureBg && texEl) texEl.style.backgroundImage = theme.textureBg;
+            }
+          });
+        popup.appendChild(scrollBody);
+        const closeOnOutside = (ev) => {
+          if (!popup.contains(ev.target) && ev.target !== paletteBtnInline) {
+            popup.remove();
+            document.removeEventListener('mousedown', closeOnOutside);
+          }
+        };
+        setTimeout(() => document.addEventListener('mousedown', closeOnOutside), 0);
+        document.body.appendChild(popup);
+      });
+      actionLeft.appendChild(paletteBtnInline);
+      actionbar.appendChild(actionLeft);
+      const actionRight = document.createElement('div');
+      actionRight.style.cssText = 'display:flex;align-items:center;gap:0;';
+      const closeBtnInline = document.createElement('span');
+      closeBtnInline.className = 'note-close-btn';
+      closeBtnInline.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      closeBtnInline.title = t('fn.closeBtnTip');
+      closeBtnInline.style.cssText = 'cursor:pointer;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:4px;transition:background 0.1s;';
+      closeBtnInline.addEventListener('mouseenter', () => { closeBtnInline.style.background = 'rgba(0,0,0,0.06)'; });
+      closeBtnInline.addEventListener('mouseleave', () => { closeBtnInline.style.background = 'transparent'; });
+      closeBtnInline.addEventListener('click', (e) => {
+        e.stopPropagation();
+        note._hidden = true;
+        plugin.saveGlobalNotes();
+        card.style.transform = 'scale(0.95)';
+        card.style.opacity = '0';
+        setTimeout(() => card.remove(), 200);
+      });
+      closeBtnInline.addEventListener('mousedown', (e) => {
+        if (e.button === 1) { e.stopPropagation(); e.preventDefault(); }
+      });
+      closeBtnInline.addEventListener('auxclick', (e) => {
+        if (e.button === 1) {
+          e.stopPropagation();
+          e.preventDefault();
+          _undoDeleteNote(card, note, plugin);
+        }
+      });
+      actionRight.appendChild(closeBtnInline);
+      actionbar.appendChild(actionRight);
+      card.appendChild(actionbar);
       const textEl = document.createElement('div');
       textEl.className = 'global-note-text';
-      textEl.style.cssText = 'font-size:11px;color:var(--text-normal);padding:6px 8px;white-space:pre-wrap;word-break:break-word;min-height:20px;cursor:grab;';
-      textEl.textContent = note.text || '(双击编辑)';
-      if (!note.text) textEl.style.color = 'var(--text-faint)';
+      textEl.style.cssText = `font-size:11px;color:${_cardTheme.text};padding:6px 0 6px 8px;white-space:pre-wrap;word-break:break-word;min-height:20px;cursor:grab;line-height:1.5;overflow-y:auto;overflow-x:hidden;flex:1;scrollbar-width:thin;scrollbar-color:rgba(128,128,128,0.25) transparent;`;
+      let toggleHandler;
+      toggleHandler = async (newText) => {
+        note.text = newText;
+        await plugin.saveGlobalNotes();
+        plugin.renderNoteText(textEl, newText, { onToggle: toggleHandler, noteId: note.id });
+        plugin._syncNoteToPopout(note.id);
+      };
+      if (note.text) {
+        plugin.renderNoteText(textEl, note.text, { onToggle: toggleHandler, noteId: note.id });
+      } else {
+        textEl.textContent = '(' + t('main.doubleClickToEdit') + ')';
+        textEl.style.color = _cardTheme.faint;
+      }
       card.appendChild(textEl);
-      let isEditing = false;
-      let isDrag = false, dragStartX = 0, dragStartY = 0, cardStartX = 0, cardStartY = 0, dragMoved = false;
+      const tsEl = document.createElement('div');
+      tsEl.style.cssText = `font-size:9px;color:${_cardTheme.faint};padding:0 8px 2px;text-align:right;user-select:none;flex-shrink:0;`;
+      const ts = note._createdAt || note.id;
+      tsEl.textContent = ts ? new Date(ts).toLocaleString('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+      card.appendChild(tsEl);
+      let isEditing = false, isDrag = false, dragStartX = 0, dragStartY = 0, cardStartX = 0, cardStartY = 0, dragMoved = false;
+
       card.addEventListener('mousedown', (e) => {
         if (isEditing) return;
         if (e.button === 2) return;
+        const rect = card.getBoundingClientRect();
+        const resizeZone = 16;
+        if (e.clientX > rect.right - resizeZone && e.clientY > rect.bottom - resizeZone) return;
+        if (e.target.closest('.note-action-bar span')) return;
         isDrag = true;
         dragMoved = false;
         dragStartX = e.clientX;
         dragStartY = e.clientY;
-        const rect = card.getBoundingClientRect();
         cardStartX = rect.left;
         cardStartY = rect.top;
         card.style.cursor = 'grabbing';
-        e.preventDefault();
+
       });
       const onMouseMove = (e) => {
         if (!isDrag) return;
         const dx = e.clientX - dragStartX;
         const dy = e.clientY - dragStartY;
         if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return;
-        dragMoved = true;
+        if (!dragMoved) {
+          dragMoved = true;
+          window.getSelection().removeAllRanges();
+        }
         card.style.left = (cardStartX + dx) + 'px';
         card.style.top = (cardStartY + dy) + 'px';
       };
@@ -34832,6 +37560,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         if (!dragMoved) return;
         note._floatPos = { left: card.style.left, top: card.style.top };
         plugin.saveGlobalNotes();
+
       };
       document.addEventListener('mouseup', onMouseUp);
       card.addEventListener('touchstart', (e) => {
@@ -34866,27 +37595,99 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         plugin.saveGlobalNotes();
       };
       document.addEventListener('touchend', onTouchEnd);
-      textEl.addEventListener('dblclick', (e) => {
+      let cardOpacity = note._floatOpacity || 1;
+      let cardSchemeIdx = note._colorScheme ? colorSchemePresets.findIndex(s => s.id === note._colorScheme) : 0;
+      if (cardSchemeIdx < 0) cardSchemeIdx = 0;
+      let cardFontSize = note._floatFontSize || 11;
+      card.addEventListener('wheel', (e) => {
+        if (e.ctrlKey) {
+          e.preventDefault();
+          cardOpacity = Math.max(0.2, Math.min(1, cardOpacity + (e.deltaY < 0 ? 0.05 : -0.05)));
+          card.style.opacity = cardOpacity;
+          note._floatOpacity = cardOpacity;
+          plugin.saveGlobalNotes();
+        } else if (e.shiftKey) {
+          e.preventDefault();
+          cardSchemeIdx = (cardSchemeIdx + (e.deltaY < 0 ? 1 : colorSchemePresets.length - 1)) % colorSchemePresets.length;
+          const scheme = colorSchemePresets[cardSchemeIdx];
+          const nt = schemeToTheme(scheme);
+          card.style.background = nt.bg;
+          card.style.borderColor = nt.border;
+          textEl.style.color = nt.text;
+          tsEl.style.color = nt.faint;
+          actionbar.style.color = nt.text;
+          if (nt.shadow) card.style.boxShadow = nt.shadow; else card.style.boxShadow = '';
+          if (nt.backdropFilter) { card.style.backdropFilter = nt.backdropFilter; card.style.webkitBackdropFilter = nt.backdropFilter; } else { card.style.backdropFilter = ''; card.style.webkitBackdropFilter = ''; }
+          const texEl = card.querySelector('.fn-texture');
+          if (nt.textureBg && !texEl) { const tl=document.createElement('div');tl.className='fn-texture';tl.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;background-image:'+nt.textureBg+';mix-blend-mode:overlay;border-radius:inherit;z-index:0;';card.appendChild(tl); }
+          else if (!nt.textureBg && texEl) texEl.remove();
+          else if (nt.textureBg && texEl) texEl.style.backgroundImage = nt.textureBg;
+          note._customTheme = nt;
+          note._colorScheme = scheme.id;
+          delete note._customCss;
+          plugin.saveGlobalNotes();
+          if (!card._schemeTip) { card._schemeTip = document.createElement('div'); card._schemeTip.className = 'scheme-tip'; card._schemeTip.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.7);color:#fff;padding:4px 10px;border-radius:4px;font-size:11px;pointer-events:none;z-index:9999;white-space:nowrap;transition:opacity 0.3s;'; document.body.appendChild(card._schemeTip); }
+          const cr = card.getBoundingClientRect();
+          card._schemeTip.style.top = (cr.top + cr.height / 2) + 'px';
+          card._schemeTip.style.left = (cr.left + cr.width / 2) + 'px';
+          card._schemeTip.textContent = scheme.id;
+          card._schemeTip.style.opacity = '1';
+          clearTimeout(card._schemeTipTimer);
+          card._schemeTipTimer = setTimeout(() => { if (card._schemeTip) card._schemeTip.style.opacity = '0'; }, 1200);
+          plugin._syncNoteTheme(note.id, 'inline');
+        } else if (e.altKey) {
+          e.preventDefault();
+          cardFontSize = Math.max(9, Math.min(28, cardFontSize + (e.deltaY < 0 ? 1 : -1)));
+          textEl.style.fontSize = cardFontSize + 'px';
+          note._floatFontSize = cardFontSize;
+          plugin.saveGlobalNotes();
+        }
+      }, { passive: false });
+      card.addEventListener('dblclick', (e) => {
+        if (e.target.closest('.note-action-bar')) return;
+        if (e.target.tagName === 'SPAN' && e.target.style.cursor === 'pointer') return;
         e.stopPropagation();
         isEditing = true;
         card.style.cursor = 'default';
+        actionbar.style.display = 'none';
+        const savedHeight = card.getBoundingClientRect().height + 'px';
+        card.style.height = savedHeight;
+        const curTheme = getNoteTheme(note);
         const input = document.createElement('textarea');
         input.value = note.text;
-        input.style.cssText = 'font-size:11px;border:none;background:transparent;color:var(--text-normal);outline:none;width:100%;min-height:40px;resize:vertical;padding:6px 8px;box-sizing:border-box;cursor:text;';
+        const lineCount = (note.text || '').split('\n').length;
+        input.style.cssText = `font-size:11px;border:none;background:transparent;color:${curTheme.text};outline:none;width:100%;min-height:20px;resize:none;padding:6px 0 6px 8px;box-sizing:border-box;cursor:text;line-height:1.5;flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(128,128,128,0.25) transparent;caret-color:${curTheme.text};`;
+        const autoResize = () => { input.style.height = 'auto'; input.style.height = input.scrollHeight + 'px'; };
+        input.addEventListener('input', autoResize);
         textEl.style.display = 'none';
+        tsEl.style.display = 'none';
         card.appendChild(input);
         input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+        setTimeout(autoResize, 0);
         const finishEdit = () => {
           note.text = input.value;
+          const cardRect = card.getBoundingClientRect();
+          note._floatSize = { width: cardRect.width + 'px', height: cardRect.height + 'px' };
           plugin.saveGlobalNotes();
           isEditing = false;
           card.style.cursor = 'grab';
-          textEl.textContent = note.text || '(双击编辑)';
-          if (!note.text) textEl.style.color = 'var(--text-faint)';
-          else textEl.style.color = 'var(--text-normal)';
+          card.style.height = 'auto';
+          actionbar.style.display = 'flex';
+          textEl.innerHTML = '';
+          if (note.text) {
+            plugin.renderNoteText(textEl, note.text, { onToggle: toggleHandler, noteId: note.id });
+          } else {
+            textEl.textContent = '(' + t('main.doubleClickToEdit') + ')';
+          }
+          const endTheme = getNoteTheme(note);
+          if (!note.text) textEl.style.color = endTheme.faint;
+          else textEl.style.color = endTheme.text;
           textEl.style.display = '';
+          tsEl.style.display = '';
           input.remove();
           plugin._syncNoteToPopout(note.id);
+
         };
         input.addEventListener('blur', finishEdit);
         input.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { ev.preventDefault(); input.blur(); } });
@@ -34896,32 +37697,32 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         e.stopPropagation();
         const menu = new Menu();
         menu.addItem((item) => {
-          item.setTitle('删除笔记');
+          item.setTitle(t('fn.deleteNote'));
           item.setIcon('trash');
           item.onClick(() => {
-            card.remove();
             plugin._closeNotePopout(note.id);
-            plugin.globalNotes = plugin.globalNotes.filter(n => n.id !== note.id);
-            plugin.saveGlobalNotes();
+            _undoDeleteNote(card, note, plugin);
+            plugin._renderFloatNotesInPanel?.();
           });
         });
         menu.addItem((item) => {
-          item.setTitle('编辑笔记');
+          item.setTitle(t('fn.editNote'));
           item.setIcon('pencil');
           item.onClick(() => { textEl.dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); });
         });
         menu.addItem((item) => {
-          item.setTitle(note._hidden ? '显示悬浮' : '隐藏悬浮');
+          item.setTitle(note._hidden ? t('fn.showFloat') : t('fn.hideFloat'));
           item.setIcon(note._hidden ? 'eye' : 'eye-off');
           item.onClick(() => {
             note._hidden = !note._hidden;
             plugin.saveGlobalNotes();
             plugin.renderGlobalNotesArea();
+            plugin._renderFloatNotesInPanel?.();
           });
         });
         if (_isDesktop) {
           menu.addItem((item) => {
-            item.setTitle('弹出为独立窗口');
+            item.setTitle(t('fn.popoutWindow'));
             item.setIcon('pop-out');
             item.onClick(() => {
               card.remove();
@@ -34929,7 +37730,32 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             });
           });
         }
-        menu.showAtMouseEvent(e);
+        const noteGroups = plugin.noteGroups || [];
+        if (noteGroups.length > 0) {
+          menu.addItem((item) => {
+            item.setTitle(t('fn.moveToGroup'));
+            const sub = item.setSubmenu && item.setSubmenu() || null;
+            if (sub) {
+              noteGroups.forEach(g => {
+                sub.addItem((si) => { si.setTitle(g.name + (note._group === g.name ? ' ✓' : '')); si.onClick(() => { note._group = g.name; plugin.saveGlobalNotes(); plugin._renderFloatNotesInPanel?.(); }); });
+              });
+              sub.addItem((si) => { si.setTitle(t('fn.noGroup')); si.onClick(() => { delete note._group; plugin.saveGlobalNotes(); plugin._renderFloatNotesInPanel?.(); }); });
+            }
+          });
+        }
+        menu.addItem((item) => {
+          item.setTitle(t('fn.colorScheme'));
+          item.setIcon('palette');
+          item.onClick(() => {
+            paletteBtnInline.click();
+          });
+
+        });
+        menu.showAtPosition({x: e.clientX, y: e.clientY});
+        requestAnimationFrame(() => {
+          const menuEl = document.querySelector('.menu');
+          if (menuEl) menuEl.style.zIndex = '1300';
+        });
       });
       if (note._floatPos) {
         card.style.left = note._floatPos.left;
@@ -34940,6 +37766,109 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         card.style.left = Math.min(mx, window.innerWidth - 260) + 'px';
         card.style.top = Math.min(my, window.innerHeight - 80) + 'px';
         note._floatPos = { left: card.style.left, top: card.style.top };
+      }
+      if (note._floatSize) {
+        card.style.width = note._floatSize.width;
+        if (note._floatSize.height && note._floatSize.height !== 'auto') card.style.height = note._floatSize.height;
+
+      }
+      const resizeObs = new ResizeObserver(() => {
+        const r = card.getBoundingClientRect();
+        note._floatSize = { width: r.width + 'px', height: r.height + 'px' };
+        plugin.saveGlobalNotes();
+      });
+      resizeObs.observe(card);
+      // 阻止中键触发自动滚动
+      card.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); }, true);
+      // 折叠/缩略模式逻辑（中键点击和SVG按钮共用）
+      const collapseToMini = (posX, posY) => {
+        const _curTheme = getNoteTheme(note);
+        const mini = document.createElement('div');
+        mini.className = 'global-note-mini';
+        mini.dataset.noteId = note.id;
+        const firstChar = (note.text || '?')[0];
+        mini.textContent = firstChar;
+        mini.style.cssText = 'width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;border-radius:4px;cursor:pointer;position:fixed;z-index:1200;user-select:none;border:1px solid ' + _curTheme.border + ';background:' + _curTheme.bg + ';color:' + _curTheme.text + ';transition:transform 0.15s ease;touch-action:none;';
+        const cardRect = card.getBoundingClientRect();
+        mini.style.left = (posX !== undefined ? posX - 16 : cardRect.left) + 'px';
+        mini.style.top = (posY !== undefined ? posY - 16 : cardRect.top) + 'px';
+        mini.style.transform = 'scale(0.5)';
+        mini.style.opacity = '0';
+        requestAnimationFrame(() => { requestAnimationFrame(() => { mini.style.transform = 'scale(1)'; mini.style.opacity = '1'; }); });
+        card.style.display = 'none';
+        let _dragging = false, _dragMoved = false, _dragOffX = 0, _dragOffY = 0;
+        mini.addEventListener('mousedown', (de) => {
+          if (de.button !== 0) return;
+          _dragging = true; _dragMoved = false;
+          _dragOffX = de.clientX - mini.offsetLeft; _dragOffY = de.clientY - mini.offsetTop;
+          mini.style.cursor = 'grabbing'; de.preventDefault();
+        });
+        const _onMove = (me) => {
+          if (!_dragging) return;
+          _dragMoved = true;
+          const cx = me.clientX || (me.touches && me.touches[0] ? me.touches[0].clientX : 0);
+          const cy = me.clientY || (me.touches && me.touches[0] ? me.touches[0].clientY : 0);
+          mini.style.left = (cx - _dragOffX) + 'px'; mini.style.top = (cy - _dragOffY) + 'px';
+        };
+        const _onUp = () => { if (!_dragging) return; _dragging = false; mini.style.cursor = 'pointer'; };
+        const restoreCard = () => {
+          if (_dragMoved) return;
+          card.style.display = '';
+          mini.style.transform = 'scale(0.5)'; mini.style.opacity = '0';
+          setTimeout(() => { mini.remove(); document.removeEventListener('mousemove', _onMove); document.removeEventListener('mouseup', _onUp); }, 150);
+        };
+        document.addEventListener('mousemove', _onMove);
+        document.addEventListener('mouseup', _onUp);
+        mini.addEventListener('touchstart', (te) => {
+          te.preventDefault();
+          const t = te.touches[0];
+          _dragging = true; _dragMoved = false;
+          _dragOffX = t.clientX - mini.offsetLeft; _dragOffY = t.clientY - mini.offsetTop;
+        }, { passive: false });
+        document.addEventListener('touchmove', (te) => { if (_dragging) { te.preventDefault(); _onMove(te); } }, { passive: false });
+        document.addEventListener('touchend', () => {
+          if (!_dragging) return;
+          const wasMoved = _dragMoved;
+          _dragging = false; _dragMoved = false; mini.style.cursor = 'pointer';
+          if (!wasMoved) restoreCard();
+        });
+        mini.addEventListener('click', restoreCard);
+        mini.addEventListener('auxclick', (ae) => { ae.preventDefault(); ae.stopPropagation(); });
+        document.body.appendChild(mini);
+      };
+      card.addEventListener('auxclick', (e) => {
+        if (e.button !== 1) return;
+        e.preventDefault(); e.stopPropagation();
+        collapseToMini(e.clientX, e.clientY);
+      });
+      // 手机端：自定义resize handle（比原生resize:both更大更容易操作）
+      if (_isMobileResize) {
+        const noteResizeHandle = document.createElement('div');
+        noteResizeHandle.className = 'note-resize-handle';
+        noteResizeHandle.style.cssText = 'position:absolute;right:0;bottom:0;width:20px;height:20px;cursor:nwse-resize;z-index:5;background:linear-gradient(135deg,transparent 45%,var(--text-faint) 45%);border-radius:0 0 0 0;touch-action:none;opacity:0.5;';
+        card.appendChild(noteResizeHandle);
+        let nrStart = null;
+        const nrTouchMove = (te) => {
+          if (!nrStart) return;
+          te.preventDefault(); te.stopPropagation();
+          const t = te.touches[0];
+          const nw = Math.max(200, nrStart.w + (t.clientX - nrStart.x));
+          const nh = Math.max(80, nrStart.h + (t.clientY - nrStart.y));
+          card.style.width = nw + 'px';
+          card.style.height = nh + 'px';
+        };
+        const nrTouchEnd = () => {
+          nrStart = null;
+          document.removeEventListener('touchmove', nrTouchMove);
+          document.removeEventListener('touchend', nrTouchEnd);
+        };
+        noteResizeHandle.addEventListener('touchstart', (te) => {
+          te.preventDefault(); te.stopPropagation();
+          const t = te.touches[0];
+          nrStart = { x: t.clientX, y: t.clientY, w: card.offsetWidth, h: card.offsetHeight };
+          document.addEventListener('touchmove', nrTouchMove, { passive: false });
+          document.addEventListener('touchend', nrTouchEnd);
+        }, { passive: false });
       }
       document.body.appendChild(card);
     }
@@ -34958,9 +37887,18 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       try { remote = require('@electron/remote'); } catch(e) { remote = require('electron').remote; }
       const { BrowserWindow } = remote;
 
-      const pos = note._popoutPos || { x: 100, y: 100 };
-      const size = note._popoutSize || { w: 260, h: 120 };
       const currentWin = remote.getCurrentWindow();
+
+      let pos;
+      if (note._popoutPos) {
+        pos = note._popoutPos;
+      } else {
+        const screenX = (this.lastMouseX || 200) + (currentWin ? currentWin.getPosition()[0] : 0);
+        const screenY = (this.lastMouseY || 200) + (currentWin ? currentWin.getPosition()[1] : 0);
+        pos = { x: screenX, y: screenY };
+      }
+      const size = note._popoutSize || { w: 260, h: 120 };
+
       const win = new BrowserWindow({
         x: pos.x, y: pos.y,
         width: size.w, height: size.h,
@@ -34969,80 +37907,241 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         resizable: true,
         alwaysOnTop: true,
         skipTaskbar: true,
-        parent: currentWin || undefined,
+        focusable: false,
+
         webPreferences: { nodeIntegration: true, contextIsolation: false }
       });
-      const themes = [
-        { bg:'rgba(30,30,30,0.72)', border:'rgba(255,255,255,0.1)', bar:'rgba(255,255,255,0.05)', text:'#e0e0e0', faint:'rgba(255,255,255,0.2)', editBg:'rgba(255,255,255,0.06)', editBorder:'rgba(255,255,255,0.12)', closeColor:'rgba(255,255,255,0.35)', closeHover:'rgba(255,255,255,0.8)' },
-        { bg:'rgba(245,250,243,0.85)', border:'rgba(0,0,0,0.1)', bar:'rgba(0,0,0,0.04)', text:'#333', faint:'rgba(0,0,0,0.25)', editBg:'rgba(0,0,0,0.04)', editBorder:'rgba(0,0,0,0.12)', closeColor:'rgba(0,0,0,0.35)', closeHover:'rgba(0,0,0,0.7)' },
-        { bg:'rgba(168,213,162,0.25)', border:'rgba(168,213,162,0.3)', bar:'rgba(168,213,162,0.15)', text:'#2d5a27', faint:'rgba(45,90,39,0.3)', editBg:'rgba(168,213,162,0.15)', editBorder:'rgba(168,213,162,0.4)', closeColor:'rgba(45,90,39,0.4)', closeHover:'rgba(45,90,39,0.8)' },
-        { bg:'rgba(180,160,200,0.3)', border:'rgba(140,120,180,0.3)', bar:'rgba(140,120,180,0.12)', text:'#3a2d50', faint:'rgba(58,45,80,0.3)', editBg:'rgba(140,120,180,0.1)', editBorder:'rgba(140,120,180,0.3)', closeColor:'rgba(58,45,80,0.4)', closeHover:'rgba(58,45,80,0.8)' },
-        { bg:'rgba(200,180,160,0.3)', border:'rgba(160,140,120,0.3)', bar:'rgba(160,140,120,0.12)', text:'#4a3a2a', faint:'rgba(74,58,42,0.3)', editBg:'rgba(160,140,120,0.1)', editBorder:'rgba(160,140,120,0.3)', closeColor:'rgba(74,58,42,0.4)', closeHover:'rgba(74,58,42,0.8)' }
-      ];
-      const themeIdx = note._popoutTheme || 0;
-      const initTheme = themes[themeIdx] || themes[0];
+      const colorSchemePresets = this.colorSchemePresets || [];
+      function parseSchemeCssPopout(css) {
+        const bm = css.match(/\{([^}]*)\}/);
+        if (!bm) return null;
+        const props = {};
+        bm[1].split(';').forEach(seg => { const ci = seg.indexOf(':'); if (ci < 0) return; const n = seg.substring(0,ci).trim().toLowerCase(); const v = seg.substring(ci+1).trim(); if (n && v) props[n] = v; });
+        const bg = props.background || props['background-color'] || '';
+        const text = props.color || '';
+        if (!bg || !text) return null;
+        return {bg, text, shadow: props['box-shadow'] || '', backdropFilter: props['backdrop-filter'] || '', textureBg: props['background-image'] || ''};
+      }
+      function schemeToThemePopoutOuter(s) {
+        let p;
+        if (s.css) { p = parseSchemeCssPopout(s.css); }
+        else return null;
+        if (!p) return null;
+        const opMatch = p.bg.match(/[\d.]+\)$/);
+        const bOp = opMatch ? parseFloat(opMatch[0]) * 0.5 : 0.3;
+        const editOp = opMatch ? parseFloat(opMatch[0]) * 0.08 : 0.06;
+        const t = {bg:p.bg, border:p.bg.replace(/[\d.]+\)$/,bOp.toFixed(2)+')'), bar:p.bg.replace(/[\d.]+\)$/,Math.min(bOp,0.15).toFixed(2)+')'), text:p.text, faint:p.text.replace(/[\d.]+\)$/,'0.4)'), editBg:p.bg.replace(/[\d.]+\)$/,editOp.toFixed(2)+')'), editBorder:p.bg.replace(/[\d.]+\)$/,Math.min(bOp*0.5,0.2).toFixed(2)+')'), closeColor:p.text.replace(/[\d.]+\)$/,'0.4)'), closeHover:p.text.replace(/[\d.]+\)$/,'0.8)'), pinColor:p.text.replace(/[\d.]+\)$/,'0.3)'), pinActive:'rgba(200,150,0,0.9)'};
+        if (p.shadow) t.shadow = p.shadow;
+        if (p.backdropFilter) t.backdropFilter = p.backdropFilter;
+        if (p.textureBg) t.textureBg = p.textureBg;
+        return t;
+      }
+      const themes = colorSchemePresets.map(s => schemeToThemePopoutOuter(s)).filter(Boolean);
+      const themeIdx = note._colorScheme ? colorSchemePresets.findIndex(s => s.id === note._colorScheme) : 0;
+      if (note._customTheme) {
+        const ct = note._customTheme;
+        const customPopoutTheme = {bg:ct.bg, border:ct.border, bar:ct.bg.replace(/[\d.]+\)$/, '0.05)'), text:ct.text, faint:ct.faint, editBg:ct.bg.replace(/[\d.]+\)$/, '0.06)'), editBorder:ct.bg.replace(/[\d.]+\)$/, '0.15)'), closeColor:ct.text.replace(/[\d.]+\)$/, '0.4)'), closeHover:ct.text.replace(/[\d.]+\)$/, '0.8)'), pinColor:ct.text.replace(/[\d.]+\)$/, '0.3)'), pinActive:'rgba(200,150,0,0.9)'};
+        themes.push(customPopoutTheme);
+      }
+      const initTheme = themes[themeIdx >= 0 ? themeIdx : 0] || themes[0];
       const initFontSize = note._popoutFontSize || 13;
       const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{height:100%;overflow:hidden;}
 body{background:${initTheme.bg};border:1px solid ${initTheme.border};border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:${initTheme.text};display:flex;flex-direction:column;transition:background 0.2s,color 0.2s,border-color 0.2s;}
-.bar{height:20px;cursor:grab;display:flex;align-items:center;justify-content:flex-end;padding:0 6px;background:${initTheme.bar};-webkit-app-region:drag;flex-shrink:0;border-radius:8px 8px 0 0;transition:background 0.2s;}
-.bar span{-webkit-app-region:no-drag;cursor:pointer;font-size:13px;color:${initTheme.closeColor};padding:0 4px;line-height:20px;transition:color 0.15s;}
-.bar span:hover{color:${initTheme.closeHover};}
-.content{flex:1;padding:8px 10px;font-size:${initFontSize}px;white-space:pre-wrap;word-break:break-word;min-height:40px;outline:none;color:${initTheme.text};overflow-y:auto;transition:font-size 0.1s;}
-.content.readonly{cursor:default;}
-.content.editing{cursor:text;background:${initTheme.editBg};box-shadow:inset 0 0 0 1px ${initTheme.editBorder};}
-.content:empty::before{content:'(dblclick to edit)';color:${initTheme.faint};}
+.titlebar{display:flex;align-items:center;justify-content:space-between;padding:2px 2px;background:${initTheme.bar};-webkit-app-region:drag;flex-shrink:0;border-radius:8px 8px 0 0;color:${initTheme.text};position:relative;z-index:2;}
+.titlebar-left{display:flex;align-items:center;gap:0;-webkit-app-region:no-drag;}
+.titlebar-right{display:flex;align-items:center;-webkit-app-region:no-drag;}
+.titlebar-btn{cursor:pointer;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:4px;transition:background 0.1s;-webkit-app-region:no-drag;}
+.titlebar-btn:hover{background:rgba(0,0,0,0.06);}
+.content{flex:1;padding:8px 10px;font-size:${initFontSize}px;white-space:pre-wrap;word-break:break-word;min-height:40px;outline:none;color:${initTheme.text};overflow-y:auto;transition:font-size 0.1s;cursor:default;position:relative;z-index:2;}
+.content.editing{cursor:text;background:${initTheme.editBg};box-shadow:inset 0 0 0 1px ${initTheme.editBorder};caret-color:${initTheme.text};}
+.content:empty::before{content:'(${t('main.doubleClickToEdit')})';color:${initTheme.faint};}
+.content::-webkit-scrollbar{width:5px;}
+.content::-webkit-scrollbar-track{background:transparent;}
+.content::-webkit-scrollbar-thumb{background:rgba(128,128,128,0.25);border-radius:3px;}
+.content::-webkit-scrollbar-thumb:hover{background:rgba(128,128,128,0.45);}
+.global-note-text::-webkit-scrollbar{width:4px;}
+.global-note-text::-webkit-scrollbar-track{background:transparent;}
+.global-note-text::-webkit-scrollbar-thumb{background:rgba(128,128,128,0.25);border-radius:2px;}
+.global-note-text::-webkit-scrollbar-thumb:hover{background:rgba(128,128,128,0.45);}
+.ctx-tooltip{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.7);color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;pointer-events:none;z-index:9999;opacity:0;transition:opacity 0.3s;}
+.ctx-tooltip.show{opacity:1;}
+.timestamp{font-size:9px;color:${initTheme.faint};text-align:right;padding:0 10px 4px;flex-shrink:0;user-select:none;position:relative;z-index:2;}
 </style></head><body>
-<div class="bar"><span class="close-btn">✕</span></div>
-<div class="content readonly" contenteditable="false" spellcheck="false">${(note.text || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+<div class="titlebar">
+  <div class="titlebar-left"><span class="titlebar-btn back-btn" title="${t('fn.backToInline')}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></span><span class="titlebar-btn copy-btn" title="${t('fn.copyContent')}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span></div>
+  <div class="titlebar-right"><span class="titlebar-btn close-btn" title="${t('fn.closeBtnTip')}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+</div>
+<div class="content readonly" contenteditable="false" spellcheck="false"></div>
+<div class="timestamp">${(() => { const ts = note._createdAt || note.id; return ts ? new Date(ts).toLocaleString('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : ''; })()}</div>
+<div class="ctx-tooltip">try Ctrl/Shift/Alt+scroll</div>
 <script>
+try {
+console.log('[Popout] script loaded, note=${note.id}');
 const { ipcRenderer } = require('electron');
 const content = document.querySelector('.content');
 const closeBtn = document.querySelector('.close-btn');
+const backBtn = document.querySelector('.back-btn');
+const ctxTooltip = document.querySelector('.ctx-tooltip');
 let opacity = ${note._popoutOpacity || 1};
 let themeIdx = ${themeIdx};
+
 let fontSize = ${initFontSize};
+let noteText = ${(JSON.stringify(note.text || ''))};
+
 const themes = ${JSON.stringify(themes)};
+
+function renderNoteTextPopout(container, text) {
+  if (!text || (!text.includes('- [ ]') && !text.includes('- [x]'))) {
+    container.textContent = text;
+    return;
+  }
+  const lines = text.split('\\n');
+  container.innerHTML = '';
+  container.style.lineHeight = '1.5';
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const uncheckedMatch = line.match(/^(\\s*)- \\[ \\] (.*)$/);
+    const checkedMatch = line.match(/^(\\s*)- \\[x\\] (.*)$/);
+    if (uncheckedMatch || checkedMatch) {
+      const isChecked = !!checkedMatch;
+      const match = isChecked ? checkedMatch : uncheckedMatch;
+      const indent = match[1];
+      const cbContent = match[2];
+      const lineEl = document.createElement('div');
+      lineEl.style.cssText = 'display:flex;align-items:flex-start;gap:4px;margin:0;padding:0;line-height:1.5;';
+      if (indent) lineEl.style.paddingLeft = (indent.length * 4) + 'px';
+      const cb = document.createElement('span');
+      cb.textContent = isChecked ? '\\u2611' : '\\u2610';
+      cb.style.cssText = 'cursor:pointer;font-size:12px;flex-shrink:0;line-height:1.5;user-select:none;';
+      cb.title = isChecked ? '点击取消勾选' : '点击勾选';
+      const textSpan = document.createElement('span');
+      textSpan.textContent = cbContent;
+      textSpan.style.cssText = isChecked ? 'text-decoration:line-through;opacity:0.6;line-height:1.5;' : 'line-height:1.5;';
+      const lineIndex = i;
+      cb.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const newLines = noteText.split('\\n');
+        const currentLine = newLines[lineIndex];
+        if (currentLine.match(/^\\s*- \\[ \\]/)) {
+          newLines[lineIndex] = currentLine.replace('- [ ]', '- [x]');
+        } else {
+          newLines[lineIndex] = currentLine.replace('- [x]', '- [ ]');
+        }
+        noteText = newLines.join('\\n');
+        ipcRenderer.send('note-checkbox-toggle', '${note.id}', noteText);
+        renderNoteTextPopout(container, noteText);
+      });
+      lineEl.appendChild(cb);
+      lineEl.appendChild(textSpan);
+      container.appendChild(lineEl);
+    } else {
+      const lineEl = document.createElement('div');
+      lineEl.style.cssText = 'margin:0;padding:0;line-height:1.5;';
+      lineEl.textContent = line;
+      container.appendChild(lineEl);
+    }
+  }
+}
+
+renderNoteTextPopout(content, noteText);
 
 function applyTheme(t) {
   document.body.style.background = t.bg;
   document.body.style.borderColor = t.border;
   document.body.style.color = t.text;
-  const bar = document.querySelector('.bar');
-  bar.style.background = t.bar;
-  const span = bar.querySelector('span');
-  span.style.color = t.closeColor;
-  span.onmouseenter = () => span.style.color = t.closeHover;
-  span.onmouseleave = () => span.style.color = t.closeColor;
+  if (t.shadow) document.body.style.boxShadow = t.shadow; else document.body.style.boxShadow = '';
+  if (t.backdropFilter) { document.body.style.backdropFilter = t.backdropFilter; document.body.style.webkitBackdropFilter = t.backdropFilter; } else { document.body.style.backdropFilter = ''; document.body.style.webkitBackdropFilter = ''; }
+  let texEl = document.querySelector('.fn-texture');
+  if (t.textureBg && !texEl) { texEl=document.createElement('div');texEl.className='fn-texture';texEl.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;background-image:'+t.textureBg+';mix-blend-mode:overlay;z-index:1;';document.body.appendChild(texEl); }
+  else if (!t.textureBg && texEl) texEl.remove();
+  else if (t.textureBg && texEl) texEl.style.backgroundImage = t.textureBg;
+  const titlebar = document.querySelector('.titlebar');
+  titlebar.style.color = t.text;
   content.style.color = t.text;
   content.style.setProperty('--edit-bg', t.editBg);
   content.style.setProperty('--edit-border', t.editBorder);
   const s = document.querySelector('style');
-  s.textContent = s.textContent.replace(/\\.content\\.editing\\{[^}]*\\}/, '.content.editing{cursor:text;background:'+t.editBg+';box-shadow:inset 0 0 0 1px '+t.editBorder+';}');
+  s.textContent = s.textContent.replace(/\\.content\\.editing\\{[^}]*\\}/, '.content.editing{cursor:text;background:'+t.editBg+';box-shadow:inset 0 0 0 1px '+t.editBorder+';caret-color:'+t.text+';}');
   const emptyRule = s.textContent.match(/\\.content:empty::before\\{[^}]*\\}/);
-  if (emptyRule) s.textContent = s.textContent.replace(emptyRule[0], '.content:empty::before{content:\\'(dblclick to edit)\\';color:'+t.faint+';}');
+  if (emptyRule) s.textContent = s.textContent.replace(emptyRule[0], '.content:empty::before{content:\\'(${t('main.doubleClickToEdit')})\\';color:'+t.faint+';}');
 }
 
-closeBtn.onclick = () => ipcRenderer.send('note-close', '${note.id}');
-content.addEventListener('dblclick', () => {
-  content.contentEditable = 'true';
-  content.classList.remove('readonly');
+backBtn.onclick = () => { console.log('[Popout] backBtn clicked'); ipcRenderer.send('note-back', '${note.id}'); };
+
+const copyBtn = document.querySelector('.copy-btn');
+copyBtn.onclick = () => {
+  try {
+    const text = noteText || '';
+    require('electron').clipboard.writeText(text);
+    copyBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>';
+    setTimeout(() => { copyBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'; }, 800);
+  } catch(err) { console.error('[Popout] copy error:', err); }
+};
+
+closeBtn.onclick = () => { ipcRenderer.send('note-close', '${note.id}'); };
+closeBtn.addEventListener('auxclick', (e) => { if (e.button === 1) { e.preventDefault(); ipcRenderer.send('note-delete', '${note.id}'); } });
+
+const colorSchemePresets = ${JSON.stringify(colorSchemePresets)};
+let schemeIdx = colorSchemePresets.findIndex(s => s.id === '${note._colorScheme || ''}');
+
+if (schemeIdx < 0) schemeIdx = 0;
+function parseSchemeCss(css) {
+  const bm = css.match(/\\{([^}]*)\\}/);
+  if (!bm) return null;
+  const props = {};
+  bm[1].split(';').forEach(seg => { const ci = seg.indexOf(':'); if (ci < 0) return; const n = seg.substring(0,ci).trim().toLowerCase(); const v = seg.substring(ci+1).trim(); if (n && v) props[n] = v; });
+  const bg = props.background || props['background-color'] || '';
+  const text = props.color || '';
+  if (!bg || !text) return null;
+  return {bg, text, shadow: props['box-shadow'] || '', backdropFilter: props['backdrop-filter'] || '', textureBg: props['background-image'] || ''};
+}
+function schemeToThemePopout(s) {
+  let p;
+  if (s.css) { p = parseSchemeCss(s.css); }
+  else if (s.bg && s.text) { p = {bg:s.bg, text:s.text, shadow:s.shadow||'', backdropFilter:s.backdropFilter||'', textureBg:s.textureBg||''}; }
+  else return null;
+  if (!p) return null;
+  const opMatch = p.bg.match(/[\\d.]+\\)$/);
+  const bOp = opMatch ? parseFloat(opMatch[0]) * 0.5 : 0.3;
+  const editOp = opMatch ? parseFloat(opMatch[0]) * 0.08 : 0.06;
+  const t = {bg:p.bg, border:p.bg.replace(/[\\d.]+\\)$/,bOp.toFixed(2)+')'), bar:p.bg.replace(/[\\d.]+\\)$/,Math.min(bOp,0.15).toFixed(2)+')'), text:p.text, faint:p.text.replace(/[\\d.]+\\)$/,'0.4)'), editBg:p.bg.replace(/[\\d.]+\\)$/,editOp.toFixed(2)+')'), editBorder:p.bg.replace(/[\\d.]+\\)$/,Math.min(bOp*0.5,0.2).toFixed(2)+')'), closeColor:p.text.replace(/[\\d.]+\\)$/,'0.4)'), closeHover:p.text.replace(/[\\d.]+\\)$/,'0.8)'), pinColor:p.text.replace(/[\\d.]+\\)$/,'0.3)'), pinActive:'rgba(200,150,0,0.9)'};
+  if (p.shadow) t.shadow = p.shadow;
+  if (p.backdropFilter) t.backdropFilter = p.backdropFilter;
+  if (p.textureBg) t.textureBg = p.textureBg;
+  return t;
+}
+content.addEventListener('dblclick', (e) => {
+  e.preventDefault();
+  if (e.target.tagName === 'SPAN' && e.target.style.cursor === 'pointer') return;
+  if (content.querySelector('textarea')) return;
+  ipcRenderer.send('note-edit', '${note.id}', true);
   content.classList.add('editing');
-  content.focus();
-  const range = document.createRange();
-  range.selectNodeContents(content);
-  const sel = window.getSelection();
-  sel.removeAllRanges();
-  sel.addRange(range);
+  content.classList.remove('readonly');
+  setTimeout(() => {
+    const input = document.createElement('textarea');
+    input.value = noteText;
+    const cs = window.getComputedStyle(content);
+    input.style.cssText = 'width:100%;height:100%;border:none;background:transparent;color:'+cs.color+';font-size:'+cs.fontSize+';font-family:'+cs.fontFamily+';outline:none;resize:none;padding:8px 10px;box-sizing:border-box;';
+    content.style.display = 'none';
+    content.parentNode.insertBefore(input, content.nextSibling);
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+    const finishEdit = () => {
+      noteText = input.value;
+      ipcRenderer.send('note-update', '${note.id}', input.value);
+      ipcRenderer.send('note-edit', '${note.id}', false);
+      renderNoteTextPopout(content, noteText);
+      content.style.display = '';
+      input.remove();
+      content.classList.remove('editing');
+      content.classList.add('readonly');
+    };
+    input.addEventListener('blur', finishEdit);
+    input.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { ev.preventDefault(); input.blur(); } });
+  }, 100);
 });
-content.addEventListener('blur', () => {
-  content.contentEditable = 'false';
-  content.classList.add('readonly');
-  content.classList.remove('editing');
-  ipcRenderer.send('note-update', '${note.id}', content.innerText);
-});
-content.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); content.blur(); } });
 window.addEventListener('resize', () => ipcRenderer.send('note-resize', '${note.id}', window.innerWidth, window.innerHeight));
 document.addEventListener('wheel', (e) => {
   if (e.ctrlKey) {
@@ -35051,9 +38150,15 @@ document.addEventListener('wheel', (e) => {
     ipcRenderer.send('note-opacity', '${note.id}', opacity);
   } else if (e.shiftKey) {
     e.preventDefault();
-    themeIdx = (themeIdx + (e.deltaY < 0 ? 1 : themes.length - 1)) % themes.length;
-    applyTheme(themes[themeIdx]);
-    ipcRenderer.send('note-theme', '${note.id}', themeIdx);
+    schemeIdx = (schemeIdx + (e.deltaY < 0 ? 1 : colorSchemePresets.length - 1)) % colorSchemePresets.length;
+    const scheme = colorSchemePresets[schemeIdx];
+    const t = schemeToThemePopout(scheme);
+    applyTheme(t);
+    ipcRenderer.send('note-scheme', '${note.id}', scheme.id, t);
+    ctxTooltip.textContent = scheme.id;
+    ctxTooltip.classList.add('show');
+    clearTimeout(window._schemeTipTimer);
+    window._schemeTipTimer = setTimeout(() => ctxTooltip.classList.remove('show'), 1200);
   } else if (e.altKey) {
     e.preventDefault();
     fontSize = Math.max(9, Math.min(28, fontSize + (e.deltaY < 0 ? 1 : -1)));
@@ -35061,9 +38166,59 @@ document.addEventListener('wheel', (e) => {
     ipcRenderer.send('note-fontsize', '${note.id}', fontSize);
   }
 }, { passive: false });
+document.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  ctxTooltip.classList.add('show');
+  setTimeout(() => ctxTooltip.classList.remove('show'), 2000);
+});
 document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' || e.key === '-' || e.key === '0')) e.preventDefault(); });
+// Middle-click fold support
+let _isMini = false;
+// 阻止中键触发浏览器自动滚动
+document.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); }, true);
+content.addEventListener('auxclick', (e) => {
+  if (e.button !== 1 || _isMini) return;
+  e.preventDefault();
+  e.stopPropagation();
+  _isMini = true;
+  const firstChar = (content.innerText || '?')[0];
+  const mini = document.createElement('div');
+  mini.className = 'global-note-mini';
+  mini.textContent = firstChar;
+  const curBg = document.body.style.background || '';
+  const curColor = document.body.style.color || '';
+  const curBorder = document.body.style.borderColor || '';
+  mini.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;cursor:pointer;z-index:9999;user-select:none;-webkit-app-region:drag;border-radius:4px;overflow:hidden;';
+  mini.style.background = curBg;
+  mini.style.color = curColor;
+  mini.style.border = '1px solid ' + curBorder;
+  const restoreBtn = document.createElement('span');
+  restoreBtn.textContent = firstChar;
+  restoreBtn.style.cssText = '-webkit-app-region:no-drag;pointer-events:auto;line-height:1;';
+  mini.textContent = '';
+  mini.appendChild(restoreBtn);
+  document.querySelector('.titlebar').style.display = 'none';
+  content.style.display = 'none';
+  document.querySelector('.timestamp').style.display = 'none';
+  if (ctxTooltip) ctxTooltip.style.display = 'none';
+  ipcRenderer.send('note-mini', '${note.id}', true);
+  restoreBtn.addEventListener('click', () => {
+    _isMini = false;
+    mini.remove();
+    document.querySelector('.titlebar').style.display = '';
+    content.style.display = '';
+    document.querySelector('.timestamp').style.display = '';
+    if (ctxTooltip) ctxTooltip.style.display = '';
+    ipcRenderer.send('note-mini', '${note.id}', false);
+  });
+  mini.addEventListener('auxclick', (ae) => { ae.preventDefault(); ae.stopPropagation(); });
+  document.body.appendChild(mini);
+});
+} catch(err) { console.error('[Popout] script error:', err); }
 </script></body></html>`;
       win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+      try { require('fs').writeFileSync(require('path').join(require('os').tmpdir(), 'popout_debug.html'), html); console.log('[FloatNote] debug HTML saved to tmpdir'); } catch(e2) {}
+      console.log('[FloatNote] popout loaded, html length:', html.length, 'note:', note.id);
       if (note._popoutOpacity && note._popoutOpacity < 1) {
         win.once('ready-to-show', () => { try { win.setOpacity(note._popoutOpacity); } catch(e) {} });
       }
@@ -35083,16 +38238,57 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
         this.saveGlobalNotes();
         this.renderGlobalNotesArea();
       });
+      currentWin.on('minimize', () => {
+        setTimeout(() => {
+          if (!win.isDestroyed()) {
+            try { win.restore(); win.setAlwaysOnTop(true); } catch(e) {}
+          }
+        }, 100);
+      });
+      currentWin.on('close', () => {
+        if (!win.isDestroyed()) {
+          try { win.close(); } catch(e) {}
+        }
+      });
       const webContents = win.webContents;
       webContents.on('did-finish-load', () => {
         try { webContents.setVisualZoomLevelLimits(1, 1); } catch(e) {}
         webContents.on('ipc-message', (event, channel, ...args) => {
           if (channel === 'note-close') {
+            note._hidden = true;
+            this.saveGlobalNotes();
+            win.close();
+          } else if (channel === 'note-delete') {
+            this.globalNotes = this.globalNotes.filter(n => n.id !== note.id);
+            this.saveGlobalNotes();
+            win.close();
+          } else if (channel === 'note-back') {
+            note._popout = false;
+            if (!win.isDestroyed()) {
+              const [w, h] = win.getSize();
+              note._floatSize = { width: w + 'px', height: 'auto' };
+            }
+            this.saveGlobalNotes();
             win.close();
           } else if (channel === 'note-update') {
             const [id, text] = args;
             const n = this.globalNotes.find(n => String(n.id) === String(id));
             if (n) { n.text = text; this.saveGlobalNotes(); }
+          } else if (channel === 'note-checkbox-toggle') {
+            const [id, text] = args;
+            const n = this.globalNotes.find(n => String(n.id) === String(id));
+            if (n) { n.text = text; this.saveGlobalNotes(); }
+            const inlineCard = document.querySelector(`.global-note-card[data-note-id="${id}"] .global-note-text`);
+            if (inlineCard && n) {
+              let toggleHandler;
+              toggleHandler = async (newText) => {
+                n.text = newText;
+                await this.saveGlobalNotes();
+                this.renderNoteText(inlineCard, newText, { onToggle: toggleHandler, noteId: n.id });
+                this._syncNoteToPopout(n.id);
+              };
+              this.renderNoteText(inlineCard, n.text, { onToggle: toggleHandler, noteId: n.id });
+            }
           } else if (channel === 'note-resize') {
             const [id, w, h] = args;
             note._popoutSize = { w, h };
@@ -35104,12 +38300,68 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
             this.saveGlobalNotes();
           } else if (channel === 'note-theme') {
             const [id, ti] = args;
-            note._popoutTheme = ti;
+            note._colorScheme = (this.colorSchemePresets || [])[ti]?.id || '';
+            delete note._customTheme;
+            delete note._customCss;
             this.saveGlobalNotes();
+          } else if (channel === 'note-scheme') {
+            const [id, schemeId, theme] = args;
+            note._colorScheme = schemeId;
+            note._customTheme = theme;
+            delete note._customCss;
+            this.saveGlobalNotes();
+            this._syncNoteTheme(note.id, 'popout');
+          } else if (channel === 'note-scheme-css') {
+            const [id, css, parsed] = args;
+            note._colorScheme = 'custom';
+            note._customCss = css;
+            const opMatch = parsed.bg.match(/[\d.]+\)$/);
+            const bOp = opMatch ? parseFloat(opMatch[0]) * 0.5 : 0.3;
+            note._customTheme = {bg:parsed.bg, border:parsed.bg.replace(/[\d.]+\)$/,bOp.toFixed(2)+')'), text:parsed.text, faint:parsed.text.replace(/[\d.]+\)$/,'0.4)')};
+            if (!this.colorSchemePresets) this.colorSchemePresets = [];
+            const cls = css.match(/\.([\w\u4e00-\u9fff-]+)/);
+            const schemeId = cls ? cls[1] : 'custom-'+this.colorSchemePresets.length;
+            const existIdx = this.colorSchemePresets.findIndex(s => s.id === schemeId);
+            if (existIdx >= 0) { this.colorSchemePresets[existIdx].css = css; }
+            else { this.colorSchemePresets.push({id:schemeId, css}); }
+            this.saveColorSchemes();
+            this._syncNoteTheme(note.id, 'popout');
+
           } else if (channel === 'note-fontsize') {
             const [id, fs] = args;
             note._popoutFontSize = fs;
             this.saveGlobalNotes();
+          } else if (channel === 'note-pin') {
+            const [id, pinned] = args;
+            note._popoutPinned = !!pinned;
+
+            this.saveGlobalNotes();
+          } else if (channel === 'note-focusable') {
+            const [id, focusable] = args;
+            try { win.setFocusable(!!focusable); if (!focusable && currentWin && !currentWin.isDestroyed()) currentWin.focus(); } catch(e) {}
+          } else if (channel === 'note-edit') {
+            const [id, editing] = args;
+            try {
+              if (editing) {
+                win.setFocusable(true);
+
+              }
+            } catch(e) {}
+          } else if (channel === 'note-move') {
+            const [id, x, y] = args;
+            note._popoutPos = { x, y };
+            this.saveGlobalNotes();
+          } else if (channel === 'note-mini') {
+            const [id, isMini] = args;
+            if (isMini) {
+              note._preMiniSize = { w: win.getSize()[0], h: win.getSize()[1] };
+              win.setSize(32, 32);
+              win.setResizable(false);
+            } else {
+              const s = note._preMiniSize || { w: 260, h: 120 };
+              win.setSize(s.w, s.h);
+              win.setResizable(true);
+            }
           }
         });
       });
@@ -35137,8 +38389,68 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
     if (!note) return;
     try {
       const escaped = (note.text || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
-      win.webContents.executeJavaScript(`document.querySelector('.content').innerText='${escaped}'`);
+      win.webContents.executeJavaScript(`noteText='${escaped}'; renderNoteTextPopout(document.querySelector('.content'), noteText);`);
     } catch (e) {}
+  }
+
+  _syncNoteTheme(noteId, source) {
+    const note = this.globalNotes.find(n => String(n.id) === String(noteId));
+    if (!note) return;
+    const theme = note._customTheme;
+    if (!theme) return;
+    const selector = `[data-note-id="${noteId}"]`;
+    document.querySelectorAll(selector).forEach(card => {
+      const isPanelCard = card.classList.contains('fn-panel-card');
+      const isInlineCard = card.classList.contains('global-note-card');
+      const shouldUpdate = (source === 'inline' && isPanelCard) || (source === 'panel' && isInlineCard) || (source === 'popout');
+      if (!shouldUpdate) return;
+      if (isPanelCard) {
+        card.style.background = theme.bg;
+        card.style.borderColor = theme.border;
+        card.style.color = theme.text;
+        const cardText = card.querySelector('span');
+        const cardTs = card.querySelector('div');
+        if (cardText) cardText.style.color = theme.text;
+        if (cardTs) cardTs.style.color = theme.faint;
+        if (theme.shadow) card.style.boxShadow = theme.shadow; else card.style.boxShadow = '';
+        if (theme.backdropFilter) { card.style.backdropFilter = theme.backdropFilter; card.style.webkitBackdropFilter = theme.backdropFilter; } else { card.style.backdropFilter = ''; card.style.webkitBackdropFilter = ''; }
+        const texEl = card.querySelector('.fn-texture');
+        if (theme.textureBg && !texEl) { const tl=document.createElement('div');tl.className='fn-texture';tl.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;background-image:'+theme.textureBg+';mix-blend-mode:overlay;border-radius:inherit;z-index:0;';card.appendChild(tl); }
+        else if (!theme.textureBg && texEl) texEl.remove();
+        else if (theme.textureBg && texEl) texEl.style.backgroundImage = theme.textureBg;
+      } else if (isInlineCard) {
+        const textEl = card.querySelector('.global-note-text');
+        const tsEl = card.querySelectorAll('div')[1];
+        const actionbar = card.querySelector('.note-action-bar');
+        card.style.background = theme.bg;
+        card.style.borderColor = theme.border;
+        if (textEl) textEl.style.color = theme.text;
+        if (tsEl) tsEl.style.color = theme.faint;
+        if (actionbar) actionbar.style.color = theme.text;
+        if (theme.shadow) card.style.boxShadow = theme.shadow; else card.style.boxShadow = '';
+        if (theme.backdropFilter) { card.style.backdropFilter = theme.backdropFilter; card.style.webkitBackdropFilter = theme.backdropFilter; } else { card.style.backdropFilter = ''; card.style.webkitBackdropFilter = ''; }
+        const texEl = card.querySelector('.fn-texture');
+        if (theme.textureBg && !texEl) { const tl=document.createElement('div');tl.className='fn-texture';tl.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;background-image:'+theme.textureBg+';mix-blend-mode:overlay;border-radius:inherit;z-index:0;';card.appendChild(tl); }
+        else if (!theme.textureBg && texEl) texEl.remove();
+        else if (theme.textureBg && texEl) texEl.style.backgroundImage = theme.textureBg;
+      }
+    });
+    if (source !== 'popout' && _isDesktop) {
+      const win = this._notePopouts[noteId] || this._notePopouts[String(noteId)] || this._notePopouts[Number(noteId)];
+      if (win && !win.isDestroyed()) {
+        try {
+          const p = theme;
+          const opMatch = p.bg.match(/[\d.]+\)$/);
+          const bOp = opMatch ? parseFloat(opMatch[0]) * 0.5 : 0.3;
+          const editOp = opMatch ? parseFloat(opMatch[0]) * 0.08 : 0.06;
+          const pt = {bg:p.bg,border:p.bg.replace(/[\d.]+\)$/,bOp.toFixed(2)+')'),bar:p.bg.replace(/[\d.]+\)$/,Math.min(bOp,0.15).toFixed(2)+')'),text:p.text,faint:p.text.replace(/[\d.]+\)$/,'0.4)'),editBg:p.bg.replace(/[\d.]+\)$/,editOp.toFixed(2)+')'),editBorder:p.bg.replace(/[\d.]+\)$/,Math.min(bOp*0.5,0.2).toFixed(2)+')'),closeColor:p.text.replace(/[\d.]+\)$/,'0.4)'),closeHover:p.text.replace(/[\d.]+\)$/,'0.8)'),pinColor:p.text.replace(/[\d.]+\)$/,'0.3)'),pinActive:'rgba(200,150,0,0.9)'};
+          if (p.shadow) pt.shadow = p.shadow;
+          if (p.backdropFilter) pt.backdropFilter = p.backdropFilter;
+          if (p.textureBg) pt.textureBg = p.textureBg;
+          win.webContents.executeJavaScript('applyTheme(' + JSON.stringify(pt) + ')');
+        } catch (e) {}
+      }
+    }
   }
 
   _closeAllNotePopouts() {
@@ -35530,7 +38842,7 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
       const originalRegex = existingRule.regex;
       
       if (originalRegex.includes('|')) {
-        const parts = originalRegex.split('|');
+        const parts = _splitRegexPipes(originalRegex);
         if (parts.includes(trimmedClipboard)) {
           new Notice(`"${trimmedClipboard}" ` + t('main.alreadyExistsInRules'));
           return;
@@ -35542,7 +38854,7 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
         }
       }
       
-      const allParts = (originalRegex.includes('|') ? originalRegex.split('|') : [originalRegex]);
+      const allParts = (originalRegex.includes('|') ? _splitRegexPipes(originalRegex) : [originalRegex]);
       allParts.push(trimmedClipboard);
       allParts.sort((a, b) => b.length - a.length);
       const newRegex = allParts.join('|');
@@ -38005,7 +41317,7 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
           img.src = resourcePath;
           img.removeAttribute('data-filename');
         } else {
-          img.outerHTML = `<span style="color: #ff6b6b;">[图片未找到: ${filename}]</span>`;
+          img.outerHTML = `<span style="color: #ff6b6b;">${t('other.imgNotFound', {path: filename})}</span>`;
         }
       }
     }
@@ -38082,7 +41394,7 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
       if (!hasMetaChar) {
         plainTexts = [plainText];
       } else {
-        const parts = regex.split('|');
+        const parts = _splitRegexPipes(regex);
         const allSimple = parts.every(p => !/[.*+?^${}()[\]\\]/.test(p) && p.length >= 2);
         if (allSimple) plainTexts = parts;
       }
@@ -38173,9 +41485,9 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
     const savedScrollTop = container.scrollTop;
     container.innerHTML = '';
 
-    if (masonry) {
+    {
       const masonryStyle = document.createElement('style');
-      masonryStyle.textContent = `.${cssScope} .masonry-grid{column-gap:8px;}.${cssScope} .masonry-card{break-inside:avoid;margin-bottom:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(var(--mono-rgb-0),0.3);overflow:hidden;position:relative;}.${cssScope} .masonry-card:hover .masonry-toolbar{opacity:1;}.${cssScope} .masonry-color-bar{height:3px;border-radius:6px 6px 0 0;}.${cssScope} .masonry-card-body{padding:6px 8px;}.${cssScope} .masonry-file-tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:8px;display:inline-block;margin-bottom:4px;}.${cssScope} .masonry-toolbar{opacity:0;transition:opacity 0.15s ease;position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:flex-end;gap:3px;padding:4px 6px;background:linear-gradient(transparent,rgba(var(--mono-rgb-0),0.6) 40%);border-radius:0 0 6px 6px;pointer-events:none;}.${cssScope} .masonry-card:hover .masonry-toolbar{pointer-events:auto;}.${cssScope} .masonry-card-body img{max-width:100%;height:auto;border-radius:4px;cursor:zoom-in;}`;
+      masonryStyle.textContent = `.${cssScope} .masonry-grid{column-gap:8px;}.${cssScope} .masonry-card{break-inside:avoid;margin-bottom:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(var(--mono-rgb-0),0.3);overflow:hidden;position:relative;}.${cssScope} .masonry-card:hover .masonry-toolbar{opacity:1;}.${cssScope} .masonry-card-body{padding:6px 8px;}.${cssScope} .masonry-file-tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:8px;display:inline-block;margin-bottom:4px;}.${cssScope} .masonry-toolbar{opacity:0;transition:opacity 0.15s ease;position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:flex-end;gap:3px;padding:4px 6px;background:linear-gradient(transparent,rgba(var(--mono-rgb-0),0.6) 40%);border-radius:0 0 6px 6px;pointer-events:none;}.${cssScope} .masonry-card:hover .masonry-toolbar{pointer-events:auto;}.${cssScope} .masonry-card-body img{max-width:100%;height:auto;border-radius:4px;cursor:zoom-in;}`;
       container.appendChild(masonryStyle);
 
       let _imgFloatEl = null;
@@ -38206,12 +41518,21 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
     }
 
     const styleEl = document.createElement('style');
-    styleEl.textContent = `.${cssScope} .remark-popup-content p{margin:0;}.${cssScope} .remark-popup-content ul,.${cssScope} .remark-popup-content ol{margin:0;padding-left:20px;}.${cssScope} .remark-popup-content li{margin:0;}.${cssScope} .remark-popup-content h1,.${cssScope} .remark-popup-content h2,.${cssScope} .remark-popup-content h3,.${cssScope} .remark-popup-content h4,.${cssScope} .remark-popup-content h5,.${cssScope} .remark-popup-content h6{margin:0;}.${cssScope} .remark-popup-content blockquote{margin:0;}.${cssScope} .remark-popup-content hr{margin:5px 0;}.${cssScope} .remark-popup-content table{border-collapse:separate;border-spacing:0;margin:8px 0;width:100%;border-radius:6px;overflow:hidden;border:1px solid var(--border-color);font-size:11px;}.${cssScope} .remark-popup-content th,.${cssScope} .remark-popup-content td{padding:5px 10px;text-align:left;border-bottom:1px solid var(--border-color);border-right:1px solid var(--border-color);}.${cssScope} .remark-popup-content th:last-child,.${cssScope} .remark-popup-content td:last-child{border-right:none;}.${cssScope} .remark-popup-content tr:last-child td{border-bottom:none;}.${cssScope} .remark-popup-content th{background:linear-gradient(180deg,var(--background-modifier-hover),var(--background-secondary));font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);}.${cssScope} .remark-popup-content tr:nth-child(even) td{background-color:rgba(0,0,0,0.03);}.${cssScope} .remark-popup-content tr:hover td{background-color:var(--background-modifier-hover);}.${cssScope} .remark-popup-content img{max-width:100%;height:auto;border-radius:4px;margin:4px 0;}.${cssScope} .remark-popup-content .internal-embed{max-width:100%;}.${cssScope} .remark-popup-content .internal-embed img{max-width:100%;height:auto;border-radius:4px;margin:4px 0;}`;
+    styleEl.textContent = `.${cssScope} .remark-popup-content p{margin:0;}.${cssScope} .remark-popup-content ul,.${cssScope} .remark-popup-content ol{margin:0;padding-left:20px;}.${cssScope} .remark-popup-content li{margin:0;}.${cssScope} .remark-popup-content h1,.${cssScope} .remark-popup-content h2,.${cssScope} .remark-popup-content h3,.${cssScope} .remark-popup-content h4,.${cssScope} .remark-popup-content h5,.${cssScope} .remark-popup-content h6{margin:0;}.${cssScope} .remark-popup-content blockquote{margin:0;}.${cssScope} .remark-popup-content hr{margin:5px 0;}.${cssScope} .remark-popup-content table{border-collapse:separate;border-spacing:0;margin:8px 0;width:100%;border-radius:6px;overflow:hidden;border:1px solid var(--border-color);font-size:11px;}.${cssScope} .remark-popup-content th,.${cssScope} .remark-popup-content td{padding:5px 10px;text-align:left;border-bottom:1px solid var(--border-color);border-right:1px solid var(--border-color);}.${cssScope} .remark-popup-content th:last-child,.${cssScope} .remark-popup-content td:last-child{border-right:none;}.${cssScope} .remark-popup-content tr:last-child td{border-bottom:none;}.${cssScope} .remark-popup-content th{background:linear-gradient(180deg,var(--background-modifier-hover),var(--background-secondary));font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);}.${cssScope} .remark-popup-content tr:nth-child(even) td{background-color:rgba(0,0,0,0.03);}.${cssScope} .remark-popup-content tr:hover td{background-color:var(--background-modifier-hover);}.${cssScope} .remark-popup-content img{max-width:100%;height:auto;border-radius:4px;margin:4px 0;}.${cssScope} .remark-popup-content .internal-embed{max-width:100%;}.${cssScope} .remark-popup-content .internal-embed img{max-width:100%;height:auto;border-radius:4px;margin:4px 0;}.inline-remark-section .remark-content-block{border:none;background:transparent;padding:0;margin:0;}.inline-remark-section .remark-content-block .remark-block-body{padding:0;}`;
     container.appendChild(styleEl);
 
 
     if (plugin.settings?.showRelatedNotes !== false && ruleRegex) {
-      const searchTerms = ruleRegex.split('|').map(s => s.trim()).filter(s => s.length > 0);
+      const _excludedGroups = plugin.settings?.excludedRelatedNotesCategories || [];
+      const _groups = plugin.config?.globalRuleGroups || {};
+      let _isExcluded = false;
+      if (_excludedGroups.length > 0) {
+        for (const _grp in _groups) {
+          if (_excludedGroups.includes(_grp) && _groups[_grp].includes(ruleRegex)) { _isExcluded = true; break; }
+        }
+      }
+      if (!_isExcluded) {
+      const searchTerms = _splitRegexPipes(ruleRegex).map(s => s.trim()).filter(s => s.length > 0);
       if (searchTerms.length > 0) {
         const allFiles = plugin.app.vault.getFiles();
         const mdFiles = allFiles.filter(f => f.extension === 'md');
@@ -38232,10 +41553,14 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
           relatedSection.style.cssText = 'margin-bottom:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:6px;background:rgba(var(--mono-rgb-0),0.15);';
           const relatedHeader = document.createElement('div');
           relatedHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;gap:4px;';
-          relatedHeader.textContent = t('main.relatedNotes');
+          const relatedHeaderText = document.createElement('span');
+          relatedHeaderText.textContent = t('main.relatedNotes') + ' ' + relatedNotes.length;
+          relatedHeader.appendChild(relatedHeaderText);
           relatedSection.appendChild(relatedHeader);
           const relatedList = document.createElement('div');
-          relatedList.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+    relatedList.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;overflow:hidden;';
+          // 添加折叠按钮
+          _createSectionToggle(plugin, 'relatedNotes', relatedList, relatedHeader);
           for (const note of relatedNotes.slice(0, 10)) {
             const noteLink = document.createElement('span');
             noteLink.className = 'related-note-link';
@@ -38243,7 +41568,7 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
             noteLink.textContent = nameWithoutExt;
             noteLink.title = note.path;
             noteLink.dataset.path = note.path;
-            noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;';
+            noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;max-width:100%;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;';
             noteLink.addEventListener('mouseenter', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.5)'; });
             noteLink.addEventListener('mouseleave', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
             noteLink.addEventListener('click', (e) => {
@@ -38272,7 +41597,7 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
                 noteLink.textContent = nameWithoutExt;
                 noteLink.title = note.path;
                 noteLink.dataset.path = note.path;
-                noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;';
+                noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;max-width:100%;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;';
                 noteLink.addEventListener('mouseenter', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.5)'; });
                 noteLink.addEventListener('mouseleave', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
                 noteLink.addEventListener('click', (e) => {
@@ -38290,31 +41615,257 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
           container.appendChild(relatedSection);
         }
       }
-    }
-
-    if (plugin.settings?.showRelatedHighlights !== false && ruleRegex) {
-      const hlSearchTerms = ruleRegex.split('|').map(s => s.trim()).filter(s => s.length > 0);
+      }
+    }    if (plugin.settings?.showRelatedHighlights !== false && ruleRegex) {
+      const _excludedHlGroups = plugin.settings?.excludedRelatedNotesCategories || [];
+      const _hlGroups = plugin.config?.globalRuleGroups || {};
+      let _isHlExcluded = false;
+      if (_excludedHlGroups.length > 0) {
+        for (const _grp in _hlGroups) {
+          if (_excludedHlGroups.includes(_grp) && _hlGroups[_grp].includes(ruleRegex)) { _isHlExcluded = true; break; }
+        }
+      }
+      if (!_isHlExcluded) {
+      const hlSearchTerms = _splitRegexPipes(ruleRegex).map(s => s.trim()).filter(s => s.length > 0);
       if (hlSearchTerms.length > 0) {
         const hlMatches = [];
         if (plugin._highlightDbReady && plugin._highlightDb.length > 0) {
           for (const entry of plugin._highlightDb) {
             const isMatch = hlSearchTerms.some(term =>
-              _regexMatch(entry.text, term) || entry.text.includes(_extractPlainText(term))
+              _regexMatch(entry.text, term)
             );
-            if (isMatch) hlMatches.push(entry);
+            // 同时匹配高亮备注
+            const isRemarkMatch = !isMatch && hlSearchTerms.some(term => {
+              const remark = plugin._getHighlightRemark(entry.path, entry.text) || '';
+              return remark && remark.includes(term);
+            });
+            if (isMatch || isRemarkMatch) hlMatches.push(entry);
           }
         }
-        if (hlMatches.length > 0) {
+        const sgSentences = (plugin._pendingSentenceRules && plugin._pendingSentenceRules.length > 0) ? plugin._pendingSentenceRules : [];
+        if (hlMatches.length > 0 || sgSentences.length > 0) {
+          const totalCount = hlMatches.length + sgSentences.length;
           const hlSection = document.createElement('div');
           hlSection.className = 'related-highlights-section';
           hlSection.style.cssText = 'margin-bottom:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:6px;background:rgba(var(--mono-rgb-0),0.15);';
           const hlHeader = document.createElement('div');
           hlHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;gap:4px;';
-          hlHeader.textContent = t('main.relatedHighlights') + ' (' + hlMatches.length + ')';
+          const hlTitleSpan = document.createElement('span');
+          hlTitleSpan.textContent = t('main.relatedHighlights') + ' (' + totalCount + ')';
+          hlHeader.appendChild(hlTitleSpan);
+          // 问号图标
+          const hlHelpIcon2 = document.createElement('span');
+          hlHelpIcon2.innerHTML = _SVG_QUESTION;
+          hlHelpIcon2.style.cssText = 'cursor:help;opacity:0.4;display:inline-flex;align-items:center;transition:opacity 0.15s;';
+          hlHelpIcon2.addEventListener('mouseenter', () => { hlHelpIcon2.style.opacity = '0.8'; });
+          hlHelpIcon2.addEventListener('mouseleave', () => { hlHelpIcon2.style.opacity = '0.4'; });
+          hlHelpIcon2.addEventListener('click', (he) => {
+            he.preventDefault(); he.stopPropagation();
+            const existingTip = hlSection.querySelector('.hl-help-tip');
+            if (existingTip) { existingTip.remove(); return; }
+            const tip = document.createElement('div');
+            tip.className = 'hl-help-tip';
+            tip.style.cssText = 'font-size:11px;color:var(--text-muted);line-height:1.5;padding:6px 8px;margin-top:4px;border-radius:6px;background:rgba(var(--mono-rgb-0),0.1);border:1px dashed var(--background-modifier-border);';
+            tip.innerHTML = '<div style="font-weight:600;margin-bottom:4px;">相关高亮 / Related Highlights</div>' +
+              '<div style="margin-bottom:3px;">▸ 显示逻辑 / Display logic：根据关键词规则匹配文档中的 <mark style="background:rgba(255,200,0,0.5);padding:0 2px;">==高亮==</mark> 文本和句子规则，同时匹配高亮备注中包含搜索词的条目 / Matches keyword rules against highlighted text and sentence rules, also matches highlights whose remarks contain the search term</div>' +
+              '<div style="margin-bottom:3px;">▸ 建议用法 / Suggested usage：给高亮添加评论/记号以加深记忆，当选中文本时，高亮中没有提及但评论中提及的词也会匹配并显示对应高亮 / Add comments/markers to highlights for deeper memory; when selecting text, terms mentioned only in remarks will also match and show related highlights</div>' +
+              '<div style="margin-bottom:3px;">▸ 备注样式 / Remark style：Shift+滚轮切换5种气泡样式 / Shift+Scroll to switch 5 bubble styles</div>' +
+              '<div style="margin-bottom:3px;">▸ 双击备注可直接编辑 / Double-click remark to edit</div>' +
+              '<div>▸ 点击高亮中的关键词可打开详情弹窗 / Click keyword in highlight to open detail popup</div>';
+            hlHeader.after(tip);
+          });
+          hlHeader.appendChild(hlHelpIcon2);
           hlSection.appendChild(hlHeader);
           const hlHues = [210, 30, 150, 340, 270, 60, 180, 90, 120, 0];
           const hlList = document.createElement('div');
           hlList.style.cssText = 'display:flex;flex-direction:column;gap:3px;';
+          // 注入气泡样式
+          if (!document.getElementById('hl-bubble-styles')) {
+            const bubbleStyle = document.createElement('style');
+            bubbleStyle.id = 'hl-bubble-styles';
+            bubbleStyle.textContent = `.hl-bubble-0{position:relative;background:rgba(230,236,244,0.92);border-radius:14px;padding:10px 14px;margin-top:10px;max-width:92%}.hl-bubble-0::before{content:"";position:absolute;top:-8px;left:24px;width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:8px solid rgba(230,236,244,0.92)}.hl-bubble-0 .hl-remark-text{font-size:0.94em;line-height:1.6;color:rgba(30,40,55,0.92)}.hl-bubble-1{display:flex;flex-direction:column;gap:0;padding:0}.hl-bubble-1 .hl-remark-text{position:relative;align-self:flex-end;max-width:82%;background:rgba(120,170,220,0.90);border-radius:14px 4px 14px 14px;padding:8px 12px;color:rgba(255,255,255,0.96);font-size:0.93em;line-height:1.6}.hl-bubble-2{position:relative;background:rgba(255,224,200,0.90);border-radius:22px 16px 24px 14px;padding:10px 14px;margin-top:12px;max-width:90%}.hl-bubble-2::before{content:"";position:absolute;top:-7px;left:22px;width:16px;height:16px;background:rgba(255,224,200,0.90);border-radius:60% 40% 50% 50%;transform:rotate(20deg)}.hl-bubble-2 .hl-remark-text{font-size:0.94em;line-height:1.6;color:rgba(80,46,20,0.92)}.hl-bubble-3{position:relative;background:rgba(255,244,200,0.92);border-radius:16px 18px 16px 4px;padding:10px 14px;margin-top:12px;max-width:88%;transform:rotate(-1.5deg);box-shadow:2px 3px 6px rgba(0,0,0,0.10)}.hl-bubble-3::before{content:"";position:absolute;top:-6px;left:20px;width:14px;height:14px;background:rgba(255,244,200,0.92);clip-path:polygon(0% 100%,100% 100%,30% 0%);transform:rotate(-8deg)}.hl-bubble-3 .hl-remark-text{font-size:0.94em;line-height:1.6;color:rgba(70,54,14,0.92)}.hl-bubble-4{position:relative;background:rgba(210,236,224,0.92);border-radius:20px;padding:10px 14px;margin-top:14px;max-width:90%}.hl-bubble-4::before{content:"";position:absolute;top:-10px;left:26px;width:20px;height:14px;background:rgba(210,236,224,0.92);border-radius:50% 50% 50% 10%;transform:rotate(-25deg)}.hl-bubble-4 .hl-remark-text{font-size:0.94em;line-height:1.6;color:rgba(20,60,42,0.92)}`;
+            document.head.appendChild(bubbleStyle);
+          }
+          const _attachBubbleWheel = (el, rPath, rText) => {
+      el.dataset.remarkPath = rPath;
+      el.dataset.remarkText = rText;
+      el.addEventListener('wheel', (we) => {
+        if (!we.shiftKey) return;
+        we.preventDefault(); we.stopPropagation();
+        const cur = parseInt(el.className.match(/hl-bubble-(\d+)/)?.[1] || '0');
+        const next = (cur + (we.deltaY > 0 ? 1 : 4)) % 5;
+        el.className = 'hl-remark-display hl-bubble-' + next;
+        plugin._setHighlightBubbleStyle(rPath, rText, next);
+      }, { passive: false });
+      el.addEventListener('dblclick', (de) => {
+        de.stopPropagation(); de.preventDefault();
+        const oldVal = plugin._getHighlightRemark(rPath, rText);
+        const textNode = el.querySelector('.hl-remark-text');
+        if (!textNode) return;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = oldVal;
+        input.style.cssText = 'width:100%;padding:2px 4px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);font-size:0.9em;box-sizing:border-box;outline:none;';
+        textNode.replaceWith(input);
+        input.focus(); input.select();
+        const save = () => {
+          const val = input.value.trim();
+          plugin._setHighlightRemark(rPath, rText, val);
+          if (val) {
+            const newText = document.createElement('span');
+            newText.className = 'hl-remark-text';
+            newText.textContent = val.split('\n')[0];
+            input.replaceWith(newText);
+            const oldTs = el.querySelector('.hl-remark-ts');
+            if (oldTs) oldTs.remove();
+            _appendRemarkTs(el, Date.now());
+          } else {
+            el.remove();
+          }
+        };
+        input.addEventListener('blur', save);
+        input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { const newText = document.createElement('span'); newText.className = 'hl-remark-text'; newText.textContent = oldVal.split('\n')[0]; input.replaceWith(newText); } });
+      });
+    };
+          // SG句子高亮：排在OB高亮前面
+          const sgFileIdx = { value: 0 };
+          const sgFileMap = new Map();
+          for (const sr of sgSentences) {
+            const srPath = sr._sourceFile || (sr.links && sr.links.length > 0 ? sr.links[0].filePath : '') || plugin.app.workspace.getActiveFile()?.path || '';
+            const srName = srPath ? srPath.split('/').pop().replace(/\.md$/, '') : '';
+            if (srPath && !sgFileMap.has(srPath)) { sgFileMap.set(srPath, sgFileIdx.value); sgFileIdx.value++; }
+            const sgHue = sgFileMap.has(srPath) ? hlHues[sgFileMap.get(srPath) % hlHues.length] : 210;
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:stretch;gap:0;font-size:11px;background:rgba(255,235,100,0.12);border-radius:3px;margin-bottom:1px;';
+            const contentWrap = document.createElement('div');
+            contentWrap.style.cssText = 'flex:1;min-width:0;';
+            if (srName) {
+              const titleRow = document.createElement('div');
+              titleRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:2px;';
+              const fileLink = document.createElement('span');
+              fileLink.className = 'related-highlight-link';
+              fileLink.textContent = srName;
+              fileLink.title = srPath;
+              fileLink.dataset.path = srPath;
+              fileLink.style.cssText = `color:var(--interactive-accent);cursor:pointer;text-decoration:none;white-space:nowrap;font-weight:600;font-size:10px;`;
+              const sgPlainText = _extractPlainText(sr.regex);
+              const jumpToSg = async () => {
+                await plugin.app.workspace.openLinkText(srPath, '', true);
+                await new Promise(r => setTimeout(r, 300));
+                // 强制刷新高亮渲染
+                plugin.rulesVersion++;
+                plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+                const view = plugin.app.workspace.getActiveViewOfType(require('obsidian').MarkdownView);
+                if (view && view.editor) {
+                  const firstSentence = sgPlainText.split(/[。！？.!?\n]/)[0] || sgPlainText.substring(0, 30);
+                  const content = view.editor.getValue();
+                  const idx = content.indexOf(firstSentence);
+                  if (idx !== -1) {
+                    const before = content.substring(0, idx);
+                    const line = before.split('\n').length - 1;
+                    const ch = before.split('\n').pop().length;
+                    view.editor.setCursor({ line, ch });
+                    view.editor.scrollIntoView({ from: { line, ch }, to: { line, ch: ch + firstSentence.length } });
+                  }
+                }
+              };
+              fileLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                jumpToSg();
+              });
+              titleRow.appendChild(fileLink);
+              contentWrap.appendChild(titleRow);
+            }
+            const textSpan = document.createElement('span');
+            textSpan.className = 'highlight-regex-text';
+            textSpan.style.cssText = 'display:inline;word-break:break-all;user-select:text;-webkit-user-select:text;';
+            // 统一使用 _buildKeywordRanges 渲染关键词样式
+            const srFullText2 = _extractPlainText(sr.regex);
+            const _allRules2 = [...plugin.rules, ...(Array.isArray(plugin.globalRules) ? plugin.globalRules : [])];
+            const kwRanges2 = _buildKeywordRanges(srFullText2, _allRules2);
+            if (kwRanges2.length > 0) {
+              let lastEnd = 0;
+              for (const seg of kwRanges2) {
+                if (seg.start > lastEnd) {
+                  textSpan.appendChild(document.createTextNode(srFullText2.substring(lastEnd, seg.start)));
+                }
+                const kwSpan = document.createElement('span');
+                kwSpan.className = (seg.cssClass || '') + ' highlight-regex-text';
+                kwSpan.style.cssText = 'cursor:pointer;';
+                kwSpan.textContent = srFullText2.substring(seg.start, seg.end);
+                kwSpan.dataset.ruleRegex = seg.regex;
+                kwSpan.addEventListener('click', (ce) => { ce.stopPropagation(); plugin.openKeywordWindow(seg.regex); });
+                textSpan.appendChild(kwSpan);
+                lastEnd = seg.end;
+              }
+              if (lastEnd < srFullText2.length) {
+                textSpan.appendChild(document.createTextNode(srFullText2.substring(lastEnd)));
+              }
+            } else {
+              textSpan.textContent = srFullText2;
+            }
+            const srPlainText = srFullText2;
+            const srRemark = plugin._getHighlightRemark(srPath, srPlainText) || sr.remark || '';
+            if (srRemark) textSpan.title = srRemark;
+            contentWrap.appendChild(textSpan);
+            // SG句子备注按钮
+            const createPopupSgRemarkBtn = (currentRemark) => {
+              const btn = document.createElement('span');
+              btn.innerHTML = !!currentRemark ? _SVG_REMARK_HAS : _SVG_REMARK_NO;
+              btn.title = currentRemark || '';
+              btn.style.cssText = 'cursor:pointer;margin-left:4px;opacity:0.5;transition:opacity 0.15s ease;flex-shrink:0;display:inline-flex;align-items:center;';
+              btn.addEventListener('mouseenter', () => { btn.style.opacity = '1'; });
+              btn.addEventListener('mouseleave', () => { btn.style.opacity = '0.5'; });
+              btn.addEventListener('click', (e) => {
+                e.preventDefault(); e.stopPropagation();
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = plugin._getHighlightRemark(srPath, srPlainText) || sr.remark || '';
+                input.style.cssText = 'font-size:10px;width:100%;margin-top:2px;padding:1px 4px;border:1px solid var(--background-modifier-border);border-radius:3px;background:var(--background-primary);color:var(--text-normal);';
+                btn.replaceWith(input);
+                input.focus();
+                input.select();
+                const save = () => {
+                  const val = input.value.trim();
+                  plugin._setHighlightRemark(srPath, srPlainText, val);
+                  if (val) { sr.remark = val; } else if (sr.remark) { sr.remark = ''; }
+                  const newBtn = createPopupSgRemarkBtn(val);
+                  input.replaceWith(newBtn);
+                  const existingRemark = contentWrap.querySelector('.hl-remark-display');
+                  if (existingRemark) existingRemark.remove();
+                  if (val) {
+                    const remarkSpan = document.createElement('div');
+                    remarkSpan.className = 'hl-remark-display hl-bubble-' + plugin._getHighlightBubbleStyle(srPath, srPlainText);
+                    const rText = document.createElement('span');
+                    rText.className = 'hl-remark-text';
+                    rText.textContent = val.split('\n')[0];
+                    remarkSpan.appendChild(rText);
+                    _appendRemarkTs(remarkSpan, Date.now());
+                    _attachBubbleWheel(remarkSpan, srPath, srPlainText);
+                    contentWrap.appendChild(remarkSpan);
+                  }
+                };
+                input.addEventListener('blur', save);
+                input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { input.value = currentRemark; input.blur(); } });
+              });
+              return btn;
+            };
+            textSpan.appendChild(createPopupSgRemarkBtn(srRemark));
+            if (srRemark) {
+              const remarkSpan = document.createElement('div');
+              remarkSpan.className = 'hl-remark-display hl-bubble-' + plugin._getHighlightBubbleStyle(srPath, srPlainText);
+              const rText = document.createElement('span');
+              rText.className = 'hl-remark-text';
+              rText.textContent = srRemark.split('\n')[0];
+              remarkSpan.appendChild(rText);
+              _appendRemarkTs(remarkSpan, plugin._getHighlightRemarkTimestamp(srPath, srPlainText));
+              _attachBubbleWheel(remarkSpan, srPath, srPlainText);
+              contentWrap.appendChild(remarkSpan);
+            }
+            row.appendChild(contentWrap);
+            hlList.appendChild(row);
+          }
           const hlSeen = new Set();
           const hlLimit = 20;
           let hlCount = 0;
@@ -38329,9 +41880,7 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
             if (!hlFileMap.has(m.path)) { hlFileMap.set(m.path, hlFileIdx); hlFileIdx++; }
             const fh = hlHues[hlFileMap.get(m.path) % hlHues.length];
             const row = document.createElement('div');
-            row.style.cssText = 'display:flex;align-items:stretch;gap:0;font-size:11px;';
-            const bar = document.createElement('span');
-            bar.style.cssText = `width:3px;border-radius:2px;flex-shrink:0;background:hsl(${fh},50%,50%);margin-right:6px;`;
+            row.style.cssText = 'display:flex;align-items:stretch;gap:0;font-size:11px;background:rgba(255,235,100,0.12);border-radius:3px;margin-bottom:1px;';
             const contentWrap = document.createElement('div');
             contentWrap.style.cssText = 'flex:1;min-width:0;';
             const titleRow = document.createElement('div');
@@ -38368,43 +41917,326 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
             titleRow.appendChild(fileLink);
             contentWrap.appendChild(titleRow);
             const hlSpan = document.createElement('span');
-            hlSpan.style.cssText = 'background:rgba(255,235,100,0.25);padding:1px 4px;border-radius:3px;user-select:text;-webkit-user-select:text;display:block;';
-            let highlighted = false;
+            hlSpan.style.cssText = 'padding:1px 4px;border-radius:3px;user-select:text;-webkit-user-select:text;display:block;background:rgba(255,235,100,0.12);';
+            // 统一使用 _buildKeywordRanges 渲染关键词样式
+            const _allRules3 = [...plugin.rules, ...(Array.isArray(plugin.globalRules) ? plugin.globalRules : [])];
+            const kwRanges3 = _buildKeywordRanges(m.text, _allRules3);
+            const allRanges3 = [...kwRanges3.map(r => ({ ...r, isKeyword: true }))];
             for (const term of hlSearchTerms) {
               const plainTerm = _extractPlainText(term);
-              const parts = m.text.split(plainTerm);
-              if (parts.length > 1) {
-                hlSpan.textContent = '';
-                for (let i = 0; i < parts.length; i++) {
-                  if (parts[i]) hlSpan.appendChild(document.createTextNode(parts[i]));
-                  if (i < parts.length - 1) {
-                    const mark = document.createElement('mark');
-                    mark.textContent = plainTerm;
-                    mark.style.cssText = 'background:rgba(255,200,0,0.5);color:inherit;padding:0 1px;border-radius:2px;';
-                    hlSpan.appendChild(mark);
-                  }
-                }
-                highlighted = true;
-                break;
+              if (!plainTerm) continue;
+              let si = 0;
+              while (true) {
+                const idx = m.text.indexOf(plainTerm, si);
+                if (idx === -1) break;
+                allRanges3.push({ start: idx, end: idx + plainTerm.length, isKeyword: false });
+                si = idx + plainTerm.length;
               }
             }
-            if (!highlighted) hlSpan.textContent = m.text;
+            allRanges3.sort((a, b) => a.start - b.start || b.end - a.end);
+            const renderedRanges3 = [];
+            for (const r of allRanges3) {
+              if (renderedRanges3.length > 0 && renderedRanges3[renderedRanges3.length-1].end >= r.start) {
+                const prev = renderedRanges3[renderedRanges3.length-1];
+                if (prev.isKeyword || r.isKeyword) {
+                  prev.end = Math.max(prev.end, r.end);
+                  if (r.isKeyword && !prev.isKeyword) { prev.isKeyword = true; prev.cssClass = r.cssClass; prev.regex = r.regex; }
+                } else {
+                  prev.end = Math.max(prev.end, r.end);
+                }
+              } else {
+                renderedRanges3.push({ ...r });
+              }
+            }
+            if (renderedRanges3.length > 0) {
+              let lastEnd = 0;
+              for (const seg of renderedRanges3) {
+                if (seg.start > lastEnd) {
+                  hlSpan.appendChild(document.createTextNode(m.text.substring(lastEnd, seg.start)));
+                }
+                if (seg.isKeyword) {
+                  const kwSpan = document.createElement('span');
+                  kwSpan.className = (seg.cssClass || '') + ' highlight-regex-text';
+                  kwSpan.style.cssText = 'cursor:pointer;';
+                  kwSpan.textContent = m.text.substring(seg.start, seg.end);
+                  if (seg.regex) {
+                    kwSpan.dataset.ruleRegex = seg.regex;
+                    kwSpan.addEventListener('click', (ce) => { ce.stopPropagation(); plugin.openKeywordWindow(seg.regex); });
+                  }
+                  hlSpan.appendChild(kwSpan);
+                } else {
+                  const mark = document.createElement('mark');
+                  mark.textContent = m.text.substring(seg.start, seg.end);
+                  mark.style.cssText = 'background:rgba(255,200,0,0.5);color:inherit;padding:0 1px;border-radius:2px;';
+                  hlSpan.appendChild(mark);
+                }
+                lastEnd = seg.end;
+              }
+              if (lastEnd < m.text.length) {
+                hlSpan.appendChild(document.createTextNode(m.text.substring(lastEnd)));
+              }
+            } else {
+              hlSpan.textContent = m.text;
+            }
             contentWrap.appendChild(hlSpan);
-            row.appendChild(bar);
+            // OB高亮备注按钮
+            const hlRemark = plugin._getHighlightRemark(m.path, m.text);
+            const createPopupObRemarkBtn = (currentRemark) => {
+              const btn = document.createElement('span');
+              btn.innerHTML = !!currentRemark ? _SVG_REMARK_HAS : _SVG_REMARK_NO;
+              btn.title = currentRemark || '';
+              btn.style.cssText = 'cursor:pointer;margin-left:4px;opacity:0.5;transition:opacity 0.15s ease;flex-shrink:0;display:inline-flex;align-items:center;';
+              btn.addEventListener('mouseenter', () => { btn.style.opacity = '1'; });
+              btn.addEventListener('mouseleave', () => { btn.style.opacity = '0.5'; });
+              btn.addEventListener('click', (e) => {
+                e.preventDefault(); e.stopPropagation();
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = plugin._getHighlightRemark(m.path, m.text) || '';
+                input.style.cssText = 'font-size:10px;width:100%;margin-top:2px;padding:1px 4px;border:1px solid var(--background-modifier-border);border-radius:3px;background:var(--background-primary);color:var(--text-normal);';
+                btn.replaceWith(input);
+                input.focus();
+                input.select();
+                const save = () => {
+                  const val = input.value.trim();
+                  plugin._setHighlightRemark(m.path, m.text, val);
+                  const newBtn = createPopupObRemarkBtn(val);
+                  input.replaceWith(newBtn);
+                  const existingRemark = contentWrap.querySelector('.hl-remark-display');
+                  if (existingRemark) existingRemark.remove();
+                  if (val) {
+                    const remarkSpan = document.createElement('div');
+                    remarkSpan.className = 'hl-remark-display hl-bubble-' + plugin._getHighlightBubbleStyle(m.path, m.text);
+                    const rText = document.createElement('span');
+                    rText.className = 'hl-remark-text';
+                    rText.textContent = val.split('\n')[0];
+                    remarkSpan.appendChild(rText);
+                    _appendRemarkTs(remarkSpan, Date.now());
+                    _attachBubbleWheel(remarkSpan, m.path, m.text);
+                    contentWrap.appendChild(remarkSpan);
+                  }
+                };
+                input.addEventListener('blur', save);
+                input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { input.value = currentRemark; input.blur(); } });
+              });
+              return btn;
+            };
+            hlSpan.appendChild(createPopupObRemarkBtn(hlRemark));
+            if (hlRemark) {
+              const remarkSpan = document.createElement('div');
+              remarkSpan.className = 'hl-remark-display hl-bubble-' + plugin._getHighlightBubbleStyle(m.path, m.text);
+              const rText = document.createElement('span');
+              rText.className = 'hl-remark-text';
+              rText.textContent = hlRemark.split('\n')[0];
+              remarkSpan.appendChild(rText);
+              _appendRemarkTs(remarkSpan, plugin._getHighlightRemarkTimestamp(m.path, m.text));
+              _attachBubbleWheel(remarkSpan, m.path, m.text);
+              contentWrap.appendChild(remarkSpan);
+            }
             row.appendChild(contentWrap);
             hlList.appendChild(row);
           }
           if (hlMatches.length > hlLimit) {
             const moreRow = document.createElement('div');
             moreRow.style.cssText = 'font-size:10px;color:var(--text-muted);padding:2px 4px;text-align:center;';
-            moreRow.textContent = `+${hlMatches.length - hlLimit} 更多`;
+            moreRow.textContent = `+${hlMatches.length - hlLimit}`;
             hlList.appendChild(moreRow);
           }
           hlSection.appendChild(hlList);
+          // 添加折叠按钮
+          _createSectionToggle(plugin, 'relatedHighlights', hlList, hlHeader);
           container.appendChild(hlSection);
         }
       }
+      }
     }
+
+    const remarkBlock = document.createElement('div');
+    remarkBlock.className = 'remark-content-block';
+    remarkBlock.style.cssText = 'margin-bottom:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:6px;background:rgba(var(--mono-rgb-0),0.15);';
+    const remarkBlockHeader = document.createElement('div');
+    remarkBlockHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:4px;';
+    const remarkBlockHeaderLeft = document.createElement('div');
+    remarkBlockHeaderLeft.style.cssText = 'display:flex;align-items:center;gap:4px;';
+    const remarkBlockTitle = document.createElement('span');
+    remarkBlockTitle.textContent = t('remark.keywordRemarks');
+    remarkBlockHeaderLeft.appendChild(remarkBlockTitle);
+    remarkBlockHeader.appendChild(remarkBlockHeaderLeft);
+    // 添加备注按钮（移到标题栏）
+    const remarkAddBtn = document.createElement('button');
+    remarkAddBtn.textContent = '+';
+    remarkAddBtn.title = t('remark.addRemark');
+    remarkAddBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:16px;line-height:0;font-size:11px;font-weight:700;margin-left:4px;';
+    remarkBlockHeader.appendChild(remarkAddBtn);
+    remarkAddBtn.addEventListener('click', async (ce) => {
+      ce.preventDefault();
+      ce.stopPropagation();
+      if (keepOpenRef) keepOpenRef.val = true;
+      if (!ruleRegex) return;
+      const isGlobalRule = ruleSource === 'global';
+      const newLink = { remark: '', timestamp: Date.now() };
+      if (isGlobalRule) {
+        const r = plugin.globalRules.find(r => r.regex === ruleRegex);
+        if (r) {
+          if (!r.links) r.links = [];
+          r.links.push(newLink);
+          if (targetEl) targetEl.dataset.links = JSON.stringify(r.links);
+          if (onDirty) onDirty();
+          await plugin.saveGlobalRules(plugin.globalRules, true);
+        }
+      } else {
+        const r = plugin.rules.find(r => r.regex === ruleRegex);
+        if (r) {
+          if (!r.links) r.links = [];
+          r.links.push(newLink);
+          if (targetEl) targetEl.dataset.links = JSON.stringify(r.links);
+          if (onDirty) onDirty();
+          await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+        }
+      }
+      onRefresh();
+    });
+    // 迁移按钮：检查是否有带 filePath 的 link（任意规则）
+    const _anyRuleHasFilePathLinks = (() => {
+      for (const r of plugin.globalRules) { if (r.links?.some(l => l.filePath?.trim())) return true; }
+      for (const [, entry] of Object.entries(plugin._fileRulesData || {})) {
+        if (entry?.rules) { for (const r of entry.rules) { if (r.links?.some(l => l.filePath?.trim())) return true; } }
+      }
+      return false;
+    })();
+    if (_anyRuleHasFilePathLinks) {
+      const migrateBtn = document.createElement('button');
+      migrateBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>';
+      migrateBtn.title = '迁移备注 / Migrate Remarks';
+      migrateBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:16px;line-height:0;margin-left:4px;transition:color 0.15s;';
+      migrateBtn.addEventListener('mouseenter', () => { migrateBtn.style.color = 'var(--text-accent)'; });
+      migrateBtn.addEventListener('mouseleave', () => { migrateBtn.style.color = 'var(--text-muted)'; });
+      migrateBtn.addEventListener('click', async (me) => {
+        me.preventDefault(); me.stopPropagation();
+        if (keepOpenRef) keepOpenRef.val = true;
+        // 显示预览面板
+        const previewEl = document.createElement('div');
+        previewEl.className = 'remark-migrate-preview';
+        previewEl.style.cssText = 'margin-top:8px;padding:8px;border:1px solid var(--interactive-accent);border-radius:8px;background:var(--background-secondary);font-size:11px;line-height:1.5;';
+        previewEl.innerHTML =
+          '<div style="font-weight:600;color:var(--text-accent);margin-bottom:6px;">迁移备注 / Migrate Remarks</div>' +
+          '<div style="color:var(--text-muted);margin-bottom:8px;">关键词备注现在定位为你的个人思考空间，不再需要关联文件路径。此工具会扫描所有关键词备注，将直接复制原文的备注转为文档中的 ==高亮== 标记，其余备注则把文件路径转为 [[链接引用]] 写入备注文本，然后移除文件路径字段。<br>/ Keyword remarks are now your personal thinking space, no longer tied to file paths. This tool scans all keyword remarks: remarks that copy original text verbatim will be converted to ==highlights== in the document; the rest will have their file paths written as [[wiki-links]] into the remark text, then the file path field will be removed.</div>' +
+          '<div style="color:var(--text-muted);margin-bottom:4px;font-weight:600;">处理流程 / Process</div>' +
+          '<ol style="color:var(--text-muted);margin:0 0 8px 16px;padding:0;">' +
+          '<li>备份所有规则数据（global-rules.json、file-rules.json）到 backup/ 目录</li>' +
+          '<li>遍历全部关键词规则（全局规则 + 文件规则），逐条检查备注</li>' +
+          '<li>如果备注文本在目标文档中找到完全匹配且尚未高亮 → 在文档中插入 ==高亮== 标记，移除该备注</li>' +
+          '<li>如果找不到完全匹配 → 将文件名作为 [[文件名]] 写到备注开头，移除 filePath 和 searchText 字段</li>' +
+          '</ol>' +
+          '<div id="migrate-preview-list" style="max-height:260px;overflow-y:auto;margin-bottom:8px;"></div>' +
+          '<div style="display:flex;gap:6px;align-items:center;">' +
+          '<button id="migrate-preview-btn" style="padding:2px 10px;cursor:pointer;border:none;border-radius:4px;background:var(--interactive-accent);color:#fff;font-size:11px;font-weight:600;height:22px;">预览 / Preview</button>' +
+          '<button id="migrate-execute-btn" style="padding:2px 10px;cursor:pointer;border:none;border-radius:4px;background:var(--background-modifier-hover);color:var(--text-muted);font-size:11px;font-weight:600;height:22px;opacity:0.5;pointer-events:none;">执行迁移 / Execute</button>' +
+          '<button id="migrate-cancel-btn" style="padding:2px 10px;cursor:pointer;border:none;border-radius:4px;background:var(--background-modifier-hover);color:var(--text-muted);font-size:11px;height:22px;">取消 / Cancel</button>' +
+          '</div>';
+        remarkBlock.insertBefore(previewEl, remarkBlockBody);
+
+        const previewList = previewEl.querySelector('#migrate-preview-list');
+        const previewBtn = previewEl.querySelector('#migrate-preview-btn');
+        const executeBtn = previewEl.querySelector('#migrate-execute-btn');
+        const cancelBtn = previewEl.querySelector('#migrate-cancel-btn');
+
+        let migratePlan = null;
+
+        cancelBtn.addEventListener('click', () => { previewEl.remove(); });
+
+        previewBtn.addEventListener('click', async () => {
+          previewBtn.textContent = '...';
+          previewBtn.style.pointerEvents = 'none';
+          migratePlan = await plugin._buildAllRemarksMigrationPlan();
+          previewList.innerHTML = '';
+          if (!migratePlan || migratePlan.items.length === 0) {
+            previewList.innerHTML = '<div style="color:var(--text-muted);">所有备注已是最新的，无需迁移</div>';
+          } else {
+            // 按规则分组显示
+            const byRule = new Map();
+            for (const item of migratePlan.items) {
+              const key = item.ruleRegex;
+              if (!byRule.has(key)) byRule.set(key, []);
+              byRule.get(key).push(item);
+            }
+            let totalHl = 0, totalRef = 0;
+            for (const [regex, ruleItems] of byRule) {
+              const groupTitle = document.createElement('div');
+              groupTitle.style.cssText = 'font-weight:600;color:var(--text-normal);margin:6px 0 3px;padding:2px 4px;background:rgba(var(--mono-rgb-0),0.08);border-radius:3px;font-size:10px;';
+              groupTitle.textContent = regex;
+              previewList.appendChild(groupTitle);
+              for (const item of ruleItems) {
+                const row = document.createElement('div');
+                row.style.cssText = 'padding:3px 6px;margin-bottom:2px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.1);';
+                const actionLabel = item.action === 'highlight'
+                  ? '<span style="color:var(--text-accent);font-size:9px;">→ ==高亮==</span>'
+                  : '<span style="color:#e5a00d;font-size:9px;">→ [[引用]]</span>';
+                const remarkPreview = (item.remark || '').substring(0, 50) + ((item.remark || '').length > 50 ? '...' : '');
+                row.innerHTML = '<div style="display:flex;align-items:center;gap:4px;"><span style="color:hsl(' + item.hue + ',50%,45%);font-weight:600;font-size:9px;">@' + (item.fileName || '(' + (t('main.noTitle') || '无标题') + ')') + '</span>' + actionLabel + '</div>' +
+                  '<div style="color:var(--text-muted);margin-top:1px;word-break:break-all;font-size:10px;">' + remarkPreview.replace(/</g, '&lt;') + '</div>';
+                previewList.appendChild(row);
+                if (item.action === 'highlight') totalHl++; else totalRef++;
+              }
+            }
+            const summary = document.createElement('div');
+            summary.style.cssText = 'font-weight:600;color:var(--text-normal);margin-top:6px;padding-top:4px;border-top:1px solid var(--background-modifier-border);';
+            summary.textContent = '共 ' + migratePlan.items.length + ' 条：' + totalHl + ' 条转高亮，' + totalRef + ' 条转引用';
+            previewList.appendChild(summary);
+          }
+          previewBtn.textContent = '预览 / Preview';
+          previewBtn.style.pointerEvents = '';
+          executeBtn.style.opacity = '1';
+          executeBtn.style.pointerEvents = 'auto';
+          executeBtn.style.background = 'var(--interactive-accent)';
+          executeBtn.style.color = '#fff';
+        });
+
+        executeBtn.addEventListener('click', async () => {
+          if (!migratePlan) return;
+          executeBtn.textContent = '...';
+          executeBtn.style.pointerEvents = 'none';
+          await plugin._executeAllRemarksMigration(migratePlan);
+          executeBtn.textContent = '完成 / Done';
+          executeBtn.style.background = 'var(--background-modifier-success)';
+          setTimeout(() => { previewEl.remove(); onRefresh(); }, 800);
+        });
+      });
+      remarkBlockHeader.appendChild(migrateBtn);
+    }
+
+    remarkBlock.appendChild(remarkBlockHeader);
+    const remarkBlockBody = document.createElement('div');
+    remarkBlockBody.className = 'remark-block-body';
+    remarkBlock.appendChild(remarkBlockBody);
+    // 添加折叠按钮
+    _createSectionToggle(plugin, 'keywordRemarks', remarkBlockBody, remarkBlockHeaderLeft);
+    container.appendChild(remarkBlock);
+
+    const aiQuestionBlock = document.createElement('div');
+    aiQuestionBlock.className = 'ai-question-block';
+    aiQuestionBlock.style.cssText = 'margin-bottom:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:6px;background:rgba(var(--mono-rgb-0),0.15);';
+    const aiQuestionBlockHeader = document.createElement('div');
+    aiQuestionBlockHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:4px;';
+    const aiQuestionBlockHeaderLeft = document.createElement('div');
+    aiQuestionBlockHeaderLeft.style.cssText = 'display:flex;align-items:center;gap:4px;';
+    const aiQuestionBlockTitle = document.createElement('span');
+    aiQuestionBlockTitle.textContent = t('remark.aiQuestions');
+    aiQuestionBlockHeaderLeft.appendChild(aiQuestionBlockTitle);
+    aiQuestionBlockHeader.appendChild(aiQuestionBlockHeaderLeft);
+    // AI 提问生成按钮（移到标题栏右侧，与关联词一致）
+    const aiAddBtn = document.createElement('button');
+    aiAddBtn.textContent = '+';
+    aiAddBtn.title = t('remark.aiAsk');
+    aiAddBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:16px;line-height:0;font-size:11px;font-weight:700;';
+    // aiHasContent 和点击逻辑在后面绑定
+    aiQuestionBlockHeader.appendChild(aiAddBtn);
+    aiQuestionBlock.appendChild(aiQuestionBlockHeader);
+    const aiQuestionBlockBody = document.createElement('div');
+    aiQuestionBlockBody.className = 'ai-question-block-body';
+    aiQuestionBlock.appendChild(aiQuestionBlockBody);
+    // 添加折叠按钮（替代原有的aiFoldBtn）
+    _createSectionToggle(plugin, 'aiQuestions', aiQuestionBlockBody, aiQuestionBlockHeaderLeft);
 
     const linksByFile = new Map();
     if (links && links.length > 0) {
@@ -38438,7 +42270,7 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
 
     const fileHues = [210, 30, 150, 340, 270, 60, 180, 90];
 
-    if (masonry) {
+    {
       const masonryGrid = document.createElement('div');
       masonryGrid.className = 'masonry-grid';
 
@@ -38453,80 +42285,63 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
       masonryRO.observe(container);
 
       const allItems = [];
-      let fi = 0;
       for (const [fp, fls] of linksByFile) {
-        const fn = fp.split('/').pop().replace(/\.md$/, '');
-        const fh = fileHues[fi % fileHues.length];
         for (const lk of fls) {
-          allItems.push({ link: lk, filePath: fp, fileName: fn, fileHue: fh });
+          allItems.push({ link: lk, filePath: fp });
         }
-        fi++;
       }
 
       const aiItems = allItems.filter(it => !!it.link._aiQuestion);
       const normalItems = allItems.filter(it => !it.link._aiQuestion);
 
       for (const item of normalItems) {
-        const { link: lk, filePath: fp, fileName: fn, fileHue: fh } = item;
+        const { link: lk, filePath: fp } = item;
         const remarkContent = lk.remark || '';
         if (!remarkContent.trim() && lk._fromFileRule && !showFromFileRuleDelete) continue;
 
         const card = document.createElement('div');
         card.className = 'masonry-card';
 
-        const colorBar = document.createElement('div');
-        colorBar.className = 'masonry-color-bar';
-        colorBar.style.cssText = `background:hsl(${fh},50%,50%);`;
-        card.appendChild(colorBar);
-
         const cardBody = document.createElement('div');
         cardBody.className = 'masonry-card-body';
 
-        const fileTag = document.createElement('span');
-        fileTag.className = 'masonry-file-tag';
-        fileTag.textContent = fn || '(' + t('main.noTitle') + ')';
-        fileTag.style.cssText = `color:hsl(${fh},50%,35%);background:hsl(${fh},50%,90%);cursor:text;`;
-        fileTag.addEventListener('dblclick', (de) => {
-          de.stopPropagation();
-          de.preventDefault();
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.value = fp || '';
-          const origW = fileTag.offsetWidth;
-          input.style.cssText = `font-size:9px;padding:1px 5px;border:none;border-radius:6px;background:var(--background-modifier-hover);color:var(--text-muted);width:${origW}px;outline:none;box-sizing:border-box;`;
-          fileTag.replaceWith(input);
-          input.focus();
-          input.select();
-          let saved = false;
-          const save = async () => {
-            if (saved) return; saved = true;
-            const val = input.value.trim();
-            const newFn = val ? val.split('/').pop().replace(/\.md$/, '') : '';
-            fileTag.textContent = newFn || '(' + t('main.noTitle') + ')';
-            input.replaceWith(fileTag);
-            const actualRuleM = ruleSource === 'global' ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
-            if (actualRuleM && actualRuleM.links) {
-              for (const lk of fileLinks) {
-                const al = lk.timestamp ? actualRuleM.links.find(l => l.filePath === fp && l.timestamp === lk.timestamp) : actualRuleM.links.find(l => l.filePath === fp);
-                if (al) al.filePath = val;
-              }
-              if (targetEl) targetEl.dataset.links = JSON.stringify(actualRuleM.links);
-              if (onDirty) onDirty();
-              if (ruleSource === 'global') await plugin.saveGlobalRules(plugin.globalRules, true);
-              else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
-            }
-          };
-          input.addEventListener('blur', save);
-          input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { saved = true; input.replaceWith(fileTag); } });
-        });
-        cardBody.appendChild(fileTag);
+        // 时间戳标签替代文件名标签
+        const tsTag = document.createElement('span');
+        tsTag.className = 'masonry-file-tag';
+        const tsVal = lk.timestamp || 0;
+        tsTag.textContent = tsVal ? _fmtRemarkTs(tsVal) : '--:--';
+        tsTag.style.cssText = 'color:var(--text-faint);cursor:default;font-size:9px;';
+        cardBody.appendChild(tsTag);
+
+        // 如果有 filePath，显示 inline 文件引用标签
+        if (lk.filePath && lk.filePath.trim()) {
+          const fn = lk.filePath.split('/').pop().replace(/\.md$/, '');
+          if (fn) {
+            const fileRefEl = document.createElement('span');
+            fileRefEl.textContent = '@' + fn;
+            fileRefEl.dataset.filePath = lk.filePath;
+            fileRefEl.title = lk.filePath + '\n单击：新标签页打开\n中键：新窗口打开';
+            fileRefEl.style.cssText = 'font-size:9px;font-weight:600;color:var(--text-accent);cursor:pointer;display:inline-block;margin-left:6px;padding:0 4px;border-radius:4px;background:rgba(var(--interactive-accent-rgb),0.1);';
+            fileRefEl.addEventListener('click', (e) => {
+              e.preventDefault(); e.stopPropagation();
+              const fp = fileRefEl.dataset.filePath;
+              if (fp) plugin.app.workspace.openLinkText(fp, '', true);
+            });
+            fileRefEl.addEventListener('auxclick', (e) => {
+              if (e.button !== 1) return;
+              e.preventDefault(); e.stopPropagation();
+              const fp = fileRefEl.dataset.filePath;
+              if (fp) { const leaf = plugin.app.workspace.getLeaf('window'); const file = plugin.app.metadataCache.getFirstLinkpathDest(fp.replace(/\.md$/, ''), '') || plugin.app.vault.getAbstractFileByPath(fp); if (file) leaf.openFile(file); }
+            });
+            cardBody.appendChild(fileRefEl);
+          }
+        }
 
         const remarkEl = document.createElement('div');
         remarkEl.className = 'remark-popup-content';
         remarkEl.dataset.remarkSource = 'link';
-        remarkEl.dataset.filePath = fp;
-        remarkEl.dataset.linkIndex = String(allItems.indexOf(item));
-        remarkEl.style.cssText = 'font-size:12px;overflow:hidden;cursor:text;';
+        remarkEl.dataset.linkTimestamp = String(lk.timestamp || 0);
+        remarkEl.style.cssText = 'overflow:hidden;cursor:text;';
         if (remarkContent) {
           try {
             const { MarkdownRenderer: MR, Component } = require('obsidian');
@@ -38535,6 +42350,24 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
             MR.renderMarkdown(remarkContent, remarkEl, plugin.currentFilePath || '', component);
             remarkEl._component = component;
             if (showImageRender) plugin.renderImagesManually(remarkContent, remarkEl, plugin);
+            // 委托处理备注中的 [[wiki-links]] 点击
+            remarkEl.addEventListener('click', (ce) => {
+              const linkEl = ce.target.closest('a.internal-link, a.is-unresolved');
+              if (linkEl) {
+                ce.preventDefault(); ce.stopPropagation();
+                const href = linkEl.dataset.href || linkEl.getAttribute('href') || linkEl.textContent;
+                if (href) plugin.app.workspace.openLinkText(href, '', true);
+              }
+            });
+            remarkEl.addEventListener('auxclick', (ce) => {
+              if (ce.button !== 1) return;
+              const linkEl = ce.target.closest('a.internal-link, a.is-unresolved');
+              if (linkEl) {
+                ce.preventDefault(); ce.stopPropagation();
+                const href = linkEl.dataset.href || linkEl.getAttribute('href') || linkEl.textContent;
+                if (href) { const leaf = plugin.app.workspace.getLeaf('window'); const file = plugin.app.metadataCache.getFirstLinkpathDest(href.replace(/\.md$/, ''), '') || plugin.app.vault.getAbstractFileByPath(href); if (file) leaf.openFile(file); }
+              }
+            });
           } catch { remarkEl.textContent = remarkContent; }
         } else {
           remarkEl.textContent = '(' + t('main.doubleClickToEditRemark') + ')';
@@ -38548,7 +42381,6 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
           const textarea = document.createElement('textarea');
           textarea.value = remarkContent;
           textarea.dataset.source = 'link';
-          textarea.dataset.linkFilePath = fp;
           textarea.dataset.linkTimestamp = String(lk.timestamp || 0);
           textarea.style.cssText = `width:100%;min-height:${Math.max(origHeight, 60)}px;padding:4px;border:1px solid var(--border-color);border-radius:4px;background:var(--background-secondary);color:var(--text-normal);font-size:12px;font-family:var(--font-family);resize:vertical;box-sizing:border-box;outline:none;line-height:1.5;`;
           const parent = remarkEl.parentNode;
@@ -38580,7 +42412,7 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
             const newValue = textarea.value.trim();
             const actualRule2 = isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
             if (actualRule2 && actualRule2.links) {
-              const al = lk.timestamp ? actualRule2.links.find(l => l.filePath === fp && l.timestamp === lk.timestamp) : actualRule2.links.find(l => l.filePath === fp && !l.timestamp);
+              const al = lk.timestamp ? actualRule2.links.find(l => l.timestamp === lk.timestamp) : actualRule2.links.find(l => l === lk);
               if (al) { al.remark = newValue; if (targetEl) targetEl.dataset.links = JSON.stringify(actualRule2.links); if (onDirty) onDirty(); if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true); else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true); }
             }
             onRefresh();
@@ -38593,189 +42425,56 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
           switchToTextarea();
         });
 
-        if (!lk._fromFileRule || showFromFileRuleDelete) {
-          const toolbar = document.createElement('div');
-          toolbar.className = 'masonry-toolbar';
-
-          const searchTag = document.createElement('span');
-          searchTag.textContent = lk.searchText ? lk.searchText.substring(0, 15) + (lk.searchText.length > 15 ? '...' : '') : '(' + t('main.noSearchText') + ')';
-          searchTag.dataset.editField = 'searchText';
-          searchTag.dataset.filePath = fp;
-          searchTag.dataset.linkIndex = String(allItems.indexOf(item));
-          searchTag.style.cssText = 'font-size:9px;color:var(--text-muted);background:var(--background-modifier-hover);padding:1px 5px;border-radius:6px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-          if (!lk.searchText) searchTag.style.fontStyle = 'italic';
-          searchTag.addEventListener('dragover', (de) => {
-            if (de.dataTransfer?.types?.includes('text/plain') || de.dataTransfer?.types?.includes('text/unicode')) {
-              de.preventDefault();
-              searchTag.style.background = 'var(--text-accent)';
-              searchTag.style.color = 'var(--text-on-accent)';
-            }
+        // 右键菜单替代底部操作栏
+        card.addEventListener('contextmenu', (cme) => {
+          cme.preventDefault(); cme.stopPropagation();
+          const menu = new (require('obsidian')).Menu();
+          menu.addItem((mi) => {
+            mi.setIcon('pencil');
+            mi.setTitle(t('main.doubleClickToEditRemark') || '编辑');
+            mi.onClick(() => switchToTextarea());
           });
-          searchTag.addEventListener('dragleave', () => {
-            searchTag.style.background = 'var(--background-modifier-hover)';
-            searchTag.style.color = 'var(--text-muted)';
+          menu.addItem((mi) => {
+            mi.setIcon('copy');
+            mi.setTitle(t('main.copyRemark') || '复制');
+            mi.onClick(() => navigator.clipboard.writeText(remarkContent));
           });
-          searchTag.addEventListener('drop', async (de) => {
-            de.preventDefault(); de.stopPropagation();
-            const droppedText = de.dataTransfer?.getData('text/plain')?.trim();
-            searchTag.style.background = 'var(--background-modifier-hover)';
-            searchTag.style.color = 'var(--text-muted)';
-            if (!droppedText) return;
-            lk.searchText = droppedText;
-            if (ruleRegex) {
-              const ig = isGlobal;
-              const rulesList = ig ? plugin.globalRules : plugin.rules;
-              const r = rulesList.find(r => r.regex === ruleRegex);
-              if (r && r.links) {
-                const actualLink = r.links.find(l => l.filePath === fp && l.timestamp === lk.timestamp);
-                if (actualLink) actualLink.searchText = droppedText;
-                if (targetEl) targetEl.dataset.links = JSON.stringify(r.links);
-              }
-              if (onDirty) onDirty();
-              if (ig) await plugin.saveGlobalRules(plugin.globalRules, true);
-              else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
-            }
-            onRefresh();
-          });
-          toolbar.appendChild(searchTag);
-
-          const openBtn = document.createElement('button');
-          openBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="16.5" cy="16.5" r="2.5"/><path d="M18.5 18.5L21 21"/></svg>';
-          openBtn.title = t('main.openDocument');
-          openBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;';
-
-          openBtn.addEventListener('click', async (ce) => { ce.preventDefault(); ce.stopPropagation(); if (lk) await plugin.openLinkAndSearch(lk.filePath, lk.searchText); });
-          toolbar.appendChild(openBtn);
-
-          const pasteBtn = document.createElement('button');
-          pasteBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>';
-          pasteBtn.title = t('main.pasteRemark');
-          pasteBtn.style.cssText = 'padding:1px 3px;cursor:pointer;border:none;border-radius:3px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:16px;line-height:0;';
-          pasteBtn.addEventListener('mousedown', (me) => { me.preventDefault(); });
-          pasteBtn.addEventListener('click', async (ce) => {
-            ce.preventDefault(); ce.stopPropagation();
-            const ta = toolbar.parentElement?.querySelector('textarea[data-source="link"]');
-            if (ta) {
-              try {
-                const clipText = await navigator.clipboard.readText();
-                if (!clipText.trim()) return;
-                const start = ta.selectionStart;
-                const end = ta.selectionEnd;
-                const before = ta.value.substring(0, start);
-                const after = ta.value.substring(end);
-                ta.value = before + clipText.trim() + after;
-                ta.selectionStart = ta.selectionEnd = start + clipText.trim().length;
-                ta.focus();
-                new Notice(t('main.remarkPasted'));
-              } catch (e) {}
-              return;
-            }
-            try {
-              const clipText = await navigator.clipboard.readText();
-              if (!clipText.trim()) return;
-              const actualRule = isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
-              if (actualRule && actualRule.links) {
-                const al = lk.timestamp ? actualRule.links.find(l => l.filePath === fp && l.timestamp === lk.timestamp) : actualRule.links.find(l => l.filePath === fp && !l.timestamp);
-                if (al) {
-                  al.remark = remarkContent.trim() ? remarkContent.trim() + '\n' + clipText.trim() : clipText.trim();
-                  if (targetEl) targetEl.dataset.links = JSON.stringify(actualRule.links);
-                  if (onDirty) onDirty();
-                  if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
-                  else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
-                  new Notice(remarkContent.trim() ? t('main.remarkAppended') : t('main.remarkPasted'));
-                  onRefresh();
+          if (!lk._fromFileRule || showFromFileRuleDelete) {
+            menu.addItem((mi) => {
+              mi.setIcon('trash');
+              mi.setTitle(t('main.deleteRemark') || '删除');
+              mi.onClick(async () => {
+                if (lk._fromFileRule && lk._sourceFilePath && plugin._fileRulesData) {
+                  const srcFp = lk._sourceFilePath;
+                  if (plugin._fileRulesData[srcFp]?.rules) {
+                    const srcRule = plugin._fileRulesData[srcFp].rules.find(r => r.regex === ruleRegex);
+                    if (srcRule?.links) { const linkIdx = lk.timestamp ? srcRule.links.findIndex(l => l.timestamp === lk.timestamp) : srcRule.links.indexOf(lk); if (linkIdx !== -1) srcRule.links.splice(linkIdx, 1); plugin._scheduleFileRulesWrite(); }
+                  }
+                } else {
+                  const rulesList = isGlobal ? plugin.globalRules : plugin.rules;
+                  const ruleIdx = rulesList.findIndex(r => r.regex === ruleRegex);
+                  if (ruleIdx !== -1) {
+                    const r = rulesList[ruleIdx];
+                    if (r && r.links) { const linkIdx = lk.timestamp ? r.links.findIndex(l => l.timestamp === lk.timestamp) : r.links.indexOf(lk); if (linkIdx !== -1) r.links.splice(linkIdx, 1); }
+                    if ((!r.links || r.links.length === 0) && (!r.cssClass || r.cssClass.trim() === '')) { rulesList.splice(ruleIdx, 1); if (targetEl) delete targetEl.dataset.links; }
+                    else { if (r.links && r.links.length === 0) delete r.links; if (targetEl) targetEl.dataset.links = JSON.stringify(r.links || []); }
+                    if (onDirty) onDirty();
+                    if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
+                    else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+                  }
                 }
-              }
-            } catch (e) { /* clipboard read may fail */ }
-          });
-          toolbar.appendChild(pasteBtn);
-
-          const copyBtn = document.createElement('button');
-          copyBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-          copyBtn.title = t('main.copyRemark');
-          copyBtn.style.cssText = 'padding:1px 3px;cursor:pointer;border:none;border-radius:3px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:16px;line-height:0;';
-          copyBtn.addEventListener('click', (ce) => { ce.preventDefault(); ce.stopPropagation(); navigator.clipboard.writeText(remarkContent).then(() => { copyBtn.style.color = 'var(--text-normal)'; setTimeout(() => { copyBtn.style.color = 'var(--text-muted)'; }, 800); }); });
-          toolbar.appendChild(copyBtn);
-
-          const deleteBtn = document.createElement('button');
-          deleteBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
-          deleteBtn.title = t('main.deleteRemark');
-          deleteBtn.style.cssText = 'padding:1px 3px;cursor:pointer;border:none;border-radius:3px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:16px;line-height:0;';
-          deleteBtn.addEventListener('click', async (ce) => {
-            ce.preventDefault(); ce.stopPropagation();
-            const fl = linksByFile.get(fp);
-            if (fl) { const idx = fl.indexOf(lk); if (idx !== -1) fl.splice(idx, 1); if (fl.length === 0) linksByFile.delete(fp); }
-            if (lk._fromFileRule && lk._sourceFilePath && plugin._fileRulesData) {
-              const srcFp = lk._sourceFilePath;
-              if (plugin._fileRulesData[srcFp]?.rules) {
-                const srcRule = plugin._fileRulesData[srcFp].rules.find(r => r.regex === ruleRegex);
-                if (srcRule?.links) { const linkIdx = lk.timestamp ? srcRule.links.findIndex(l => l.filePath === lk.filePath && l.timestamp === lk.timestamp) : srcRule.links.findIndex(l => l.filePath === lk.filePath && l.searchText === lk.searchText); if (linkIdx !== -1) srcRule.links.splice(linkIdx, 1); plugin._scheduleFileRulesWrite(); }
-              }
-            } else {
-              const rulesList = isGlobal ? plugin.globalRules : plugin.rules;
-              const ruleIdx = rulesList.findIndex(r => r.regex === ruleRegex);
-              if (ruleIdx !== -1) {
-                const r = rulesList[ruleIdx];
-                if (r && r.links) { const linkIdx = lk.timestamp ? r.links.findIndex(l => l.filePath === lk.filePath && l.timestamp === lk.timestamp) : r.links.findIndex(l => l.filePath === lk.filePath && l.searchText === lk.searchText); if (linkIdx !== -1) r.links.splice(linkIdx, 1); }
-                if ((!r.links || r.links.length === 0) && (!r.cssClass || r.cssClass.trim() === '')) { rulesList.splice(ruleIdx, 1); if (targetEl) delete targetEl.dataset.links; }
-                else { if (r.links && r.links.length === 0) delete r.links; if (targetEl) targetEl.dataset.links = JSON.stringify(r.links || []); }
-                if (onDirty) onDirty();
-                if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
-                else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
-              }
-            }
-            onRefresh();
-          });
-          toolbar.appendChild(deleteBtn);
-
-          toolbar.addEventListener('dblclick', (de) => {
-            de.stopPropagation();
-            de.preventDefault();
-            switchToTextarea();
-          });
-
-          searchTag.addEventListener('dblclick', (de) => {
-            de.stopPropagation();
-            de.preventDefault();
-            if (keepOpenRef) keepOpenRef.val = true;
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = lk.searchText || '';
-            const origW = searchTag.offsetWidth;
-            input.style.cssText = `font-size:9px;padding:1px 5px;border:none;border-radius:6px;background:var(--background-modifier-hover);color:var(--text-muted);width:${origW}px;outline:none;box-sizing:border-box;`;
-            searchTag.replaceWith(input);
-            input.focus();
-            input.select();
-            let saved = false;
-            const save = async () => {
-              if (saved) return; saved = true;
-              const val = input.value.trim();
-              lk.searchText = val;
-              searchTag.textContent = val ? val.substring(0, 15) + (val.length > 15 ? '...' : '') : '(' + t('main.noSearchText') + ')';
-              searchTag.style.fontStyle = val ? 'normal' : 'italic';
-              input.replaceWith(searchTag);
-              const actualRule3 = isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
-              if (actualRule3 && actualRule3.links) {
-                const al = lk.timestamp ? actualRule3.links.find(l => l.filePath === fp && l.timestamp === lk.timestamp) : actualRule3.links.find(l => l.filePath === fp && !l.timestamp);
-                if (al) al.searchText = val;
-                if (targetEl) targetEl.dataset.links = JSON.stringify(actualRule3.links);
-                if (onDirty) onDirty();
-                if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
-                else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
-              }
-            };
-            input.addEventListener('blur', save);
-            input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { saved = true; input.replaceWith(searchTag); } });
-          });
-
-          card.appendChild(toolbar);
-        }
+                onRefresh();
+              });
+            });
+          }
+          menu.showAtMouseEvent(cme);
+        });
 
         card.appendChild(cardBody);
         masonryGrid.appendChild(card);
       }
 
-      container.appendChild(masonryGrid);
+      remarkBlockBody.appendChild(masonryGrid);
 
       for (const item of aiItems) {
         const { link: lk, filePath: fp, fileHue: fh } = item;
@@ -38786,29 +42485,11 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
         const aiTitleBar = document.createElement('div');
         aiTitleBar.style.cssText = 'display:flex;align-items:flex-start;gap:4px;margin-bottom:4px;';
         const aiTitleText = document.createElement('span');
-        aiTitleText.textContent = 'askedbyAi: ' + lk._aiQuestion;
-        aiTitleText.style.cssText = 'font-size:11px;font-weight:600;color:hsl(35,70%,45%);flex:1;min-width:0;overflow-wrap:break-word;word-break:break-word;';
-        aiTitleBar.appendChild(aiTitleText);
+        aiTitleText.style.cssText = 'font-size:11px;font-weight:600;color:hsl(35,70%,45%);overflow-wrap:break-word;word-break:break-word;';
+        const aiTitleTextNode = document.createTextNode(lk._aiQuestion + ' ');
+        aiTitleText.appendChild(aiTitleTextNode);
 
-        const aiHelpBtn = document.createElement('button');
-        aiHelpBtn.textContent = '?';
-        aiHelpBtn.title = t('remark.aiBreakdownQuestion');
-        aiHelpBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;font-size:11px;font-weight:700;flex-shrink:0;';
-        aiHelpBtn.addEventListener('click', async (ce) => {
-          ce.preventDefault(); ce.stopPropagation();
-          if (keepOpenRef) keepOpenRef.val = true;
-          if (!lk._aiThread) lk._aiThread = [];
-          const thread = lk._aiThread;
-          const threadContext = thread.map(t => (t.role === 'ai' ? 'AI: ' : '用户: ') + t.content).join('\n');
-          const helpPrompt = `你之前向用户提出了一个问题："${lk._aiQuestion}"\n\n以下是后续对话：\n${threadContext || '（尚无后续对话）'}\n\n用户表示对这个问题无从下手，不知道怎么回答。请帮用户初步分析拆解这个问题，给出思考方向和步骤提示，但不要直接给出答案。只输出拆解分析，不要任何前缀。`;
-          aiHelpBtn.textContent = '...'; aiHelpBtn.style.pointerEvents = 'none';
-          try {
-            const aiReply = await plugin.callAI(helpPrompt);
-            if (aiReply && aiReply.trim()) { thread.push({ role: 'ai', content: aiReply.trim() }); if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true); else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true); onRefresh(); }
-          } catch (err) { new Notice(t('remark.aiBreakdownFailed') + ': ' + (err.message || '未知错误')); }
-          finally { aiHelpBtn.textContent = '?'; aiHelpBtn.style.pointerEvents = ''; }
-        });
-        aiTitleBar.appendChild(aiHelpBtn);
+        aiTitleBar.appendChild(aiTitleText);
 
         const aiDeleteBtn = document.createElement('button');
         aiDeleteBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
@@ -38820,7 +42501,7 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
           if (fl) { const idx = fl.indexOf(lk); if (idx !== -1) fl.splice(idx, 1); if (fl.length === 0) linksByFile.delete(fp); }
           const rulesList = isGlobal ? plugin.globalRules : plugin.rules;
           const ruleIdx = rulesList.findIndex(r => r.regex === ruleRegex);
-          if (ruleIdx !== -1) { const r = rulesList[ruleIdx]; if (r && r.links) { const linkIdx = lk.timestamp ? r.links.findIndex(l => l.filePath === lk.filePath && l.timestamp === lk.timestamp) : r.links.findIndex(l => l.filePath === lk.filePath && l.searchText === lk.searchText); if (linkIdx !== -1) r.links.splice(linkIdx, 1); } if ((!r.links || r.links.length === 0) && (!r.cssClass || r.cssClass.trim() === '')) rulesList.splice(ruleIdx, 1); }
+          if (ruleIdx !== -1) { const r = rulesList[ruleIdx]; if (r && r.links) { const linkIdx = lk.timestamp ? r.links.findIndex(l => l.timestamp === lk.timestamp) : r.links.indexOf(lk); if (linkIdx !== -1) r.links.splice(linkIdx, 1); } if ((!r.links || r.links.length === 0) && (!r.cssClass || r.cssClass.trim() === '')) rulesList.splice(ruleIdx, 1); }
           if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
           else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
           onRefresh();
@@ -38829,29 +42510,74 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
         aiGroup.appendChild(aiTitleBar);
 
         const thread = lk._aiThread || [];
-        for (const entry of thread) {
+        for (let ti = 0; ti < thread.length; ti++) {
+          const entry = thread[ti];
           const entryEl = document.createElement('div');
           entryEl.style.cssText = 'margin-top:4px;padding-left:8px;border-left:2px solid ' + (entry.role === 'ai' ? 'hsl(35,70%,60%)' : 'hsl(200,50%,60%)') + ';';
-          const entryLabel = document.createElement('div');
-          entryLabel.style.cssText = 'font-size:10px;font-weight:600;color:var(--text-muted);margin-bottom:2px;';
-          entryLabel.textContent = entry.role === 'ai' ? '🤖 AI' : '👤 你';
-          entryEl.appendChild(entryLabel);
-          const entryContent = document.createElement('div');
+          const entryLabelRow = document.createElement('div');
+          entryLabelRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:2px;';
+          const entryLabel = document.createElement('span');
+          entryLabel.style.cssText = 'font-size:10px;font-weight:600;color:var(--text-muted);';
+          entryLabel.textContent = entry.role === 'ai' ? t('other.aiLabel') : t('other.youLabel');
+          entryLabelRow.appendChild(entryLabel);
+          // 删除按钮
+          const entryDelBtn = document.createElement('button');
+          entryDelBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+          entryDelBtn.title = t('main.deleteRemark');
+          entryDelBtn.style.cssText = 'padding:0 3px;cursor:pointer;border:none;background:none;color:var(--text-faint);display:inline-flex;align-items:center;justify-content:center;height:14px;line-height:0;';
+          entryDelBtn.addEventListener('click', async (de) => {
+            de.preventDefault(); de.stopPropagation();
+            if (keepOpenRef) keepOpenRef.val = true;
+            const thr = lk._aiThread || [];
+            thr.splice(ti, 1);
+            const ig = isGlobal; const rl = ig ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
+            if (rl && rl.links) { const al = lk.timestamp ? rl.links.find(l => l.timestamp === lk.timestamp) : null; if (al) al._aiThread = thr; }
+            if (ig) await plugin.saveGlobalRules(plugin.globalRules, true); else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+            onRefresh();
+          });
+          entryLabelRow.appendChild(entryDelBtn);
+          // 折叠按钮（仅AI回复且有内容时）
+          let foldBtn = null;
+          let entryContent = null;
+          if (entry.role === 'ai' && entry.content && entry.content.length > 60) {
+            foldBtn = document.createElement('button');
+            foldBtn.textContent = '▽';
+            foldBtn.title = t('remark.toggleFold') || '折叠/展开';
+            foldBtn.style.cssText = 'padding:0 3px;cursor:pointer;border:none;background:none;color:var(--text-faint);display:inline-flex;align-items:center;justify-content:center;height:14px;line-height:0;font-size:10px;margin-left:auto;';
+            entryLabelRow.appendChild(foldBtn);
+          }
+          entryEl.appendChild(entryLabelRow);
+          entryContent = document.createElement('div');
           entryContent.style.cssText = 'font-size:12px;overflow-wrap:break-word;word-break:break-word;';
           try { const { MarkdownRenderer: MR, Component } = require('obsidian'); const component = new Component(); component.load(); MR.renderMarkdown(entry.content, entryContent, plugin.currentFilePath || '', component); } catch { entryContent.textContent = entry.content; }
           entryEl.appendChild(entryContent);
+          // 折叠逻辑
+          if (foldBtn) {
+            let folded = true;
+            const fullHTML = entryContent.innerHTML;
+            // 截取前60字符的纯文本作为摘要
+            const summaryText = entry.content.replace(/[#*_\[\]()]/g, '').substring(0, 60) + '...';
+            entryContent.textContent = summaryText;
+            foldBtn.textContent = '▷';
+            foldBtn.addEventListener('click', (fe) => {
+              fe.preventDefault(); fe.stopPropagation();
+              folded = !folded;
+              if (folded) { entryContent.textContent = summaryText; foldBtn.textContent = '▷'; }
+              else { entryContent.innerHTML = fullHTML; foldBtn.textContent = '▽'; }
+            });
+          }
           if (entry.role === 'ai') {
             const entryHelpBtn = document.createElement('button');
-            entryHelpBtn.textContent = '?'; entryHelpBtn.title = '继续追问AI';
+            entryHelpBtn.textContent = '?'; entryHelpBtn.title = t('other.aiFollowUp');
             entryHelpBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:16px;line-height:0;font-size:10px;font-weight:700;margin-top:2px;';
             entryHelpBtn.addEventListener('click', async (ce2) => {
               ce2.preventDefault(); ce2.stopPropagation();
               if (keepOpenRef) keepOpenRef.val = true;
               const t2 = lk._aiThread || []; const t2Ctx = t2.map(t => (t.role === 'ai' ? 'AI: ' : '用户: ') + t.content).join('\n');
-              const followPrompt = `你之前向用户提出了一个问题："${lk._aiQuestion}"\n\n以下是后续对话：\n${t2Ctx}\n\n用户对AI上一条回复仍有疑问，请进一步分析拆解，给出更具体的思考方向，但不要直接给出答案。只输出分析，不要任何前缀。`;
+              const followPrompt = `你之前向用户提出了一个问题："${lk._aiQuestion}"\n\n以下是后续对话：\n${t2Ctx}\n\n用户对AI上一条回复仍有疑问。请简要补充2-3个更具体的思考方向，每个不超过20字，用编号列出。不要展开细节，不要给答案，不要任何前缀。`;
               entryHelpBtn.textContent = '...'; entryHelpBtn.style.pointerEvents = 'none';
-              try { const reply = await plugin.callAI(followPrompt); if (reply && reply.trim()) { t2.push({ role: 'ai', content: reply.trim() }); const ig = isGlobal; const rl = ig ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex); if (rl && rl.links) { const al = lk.timestamp ? rl.links.find(l => l.filePath === lk.filePath && l.timestamp === lk.timestamp) : null; if (al) al._aiThread = t2; } if (ig) await plugin.saveGlobalRules(plugin.globalRules, true); else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true); onRefresh(); } }
-              catch (err) { new Notice('AI 追问失败: ' + (err.message || '未知错误')); }
+              try { const reply = await plugin.callAI(followPrompt); if (reply && reply.trim()) { t2.push({ role: 'ai', content: reply.trim() }); const ig = isGlobal; const rl = ig ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex); if (rl && rl.links) { const al = lk.timestamp ? rl.links.find(l => l.timestamp === lk.timestamp) : null; if (al) al._aiThread = t2; } if (ig) await plugin.saveGlobalRules(plugin.globalRules, true); else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true); onRefresh(); } }
+              catch (err) { new Notice(t('other.aiFollowUpFailed', {err: err.message || '未知错误'})); }
               finally { entryHelpBtn.textContent = '?'; entryHelpBtn.style.pointerEvents = ''; }
             });
             entryEl.appendChild(entryHelpBtn);
@@ -38861,12 +42587,12 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
 
         if (remarkContent.trim()) {
           const remarkEl = document.createElement('div');
-          remarkEl.className = 'remark-popup-content'; remarkEl.dataset.remarkSource = 'link'; remarkEl.dataset.filePath = fp; remarkEl.dataset.linkIndex = String(allItems.indexOf(item));
-          remarkEl.style.cssText = 'font-size:12px;overflow:hidden;margin-top:4px;cursor:text;';
-          try { const { MarkdownRenderer: MR, Component } = require('obsidian'); const component = new Component(); component.load(); MR.renderMarkdown(remarkContent, remarkEl, plugin.currentFilePath || '', component); } catch { remarkEl.textContent = remarkContent; }
+          remarkEl.className = 'remark-popup-content'; remarkEl.dataset.remarkSource = 'link'; remarkEl.dataset.linkTimestamp = String(lk.timestamp || 0);
+          remarkEl.style.cssText = 'overflow:hidden;margin-top:4px;cursor:text;';
+          try { const { MarkdownRenderer: MR, Component } = require('obsidian'); const component = new Component(); component.load(); MR.renderMarkdown(remarkContent, remarkEl, plugin.currentFilePath || '', component); remarkEl.addEventListener('click', (ce) => { const le = ce.target.closest('a.internal-link, a.is-unresolved'); if (le) { ce.preventDefault(); ce.stopPropagation(); const h = le.dataset.href || le.getAttribute('href') || le.textContent; if (h) plugin.app.workspace.openLinkText(h, '', true); } }); remarkEl.addEventListener('auxclick', (ce) => { if (ce.button !== 1) return; const le = ce.target.closest('a.internal-link, a.is-unresolved'); if (le) { ce.preventDefault(); ce.stopPropagation(); const h = le.dataset.href || le.getAttribute('href') || le.textContent; if (h) { const leaf = plugin.app.workspace.getLeaf('window'); const file = plugin.app.metadataCache.getFirstLinkpathDest(h.replace(/\.md$/, ''), '') || plugin.app.vault.getAbstractFileByPath(h); if (file) leaf.openFile(file); } } }); } catch { remarkEl.textContent = remarkContent; }
           aiGroup.appendChild(remarkEl);
           const feedbackBtn = document.createElement('button');
-          feedbackBtn.textContent = '↗'; feedbackBtn.title = '将回答反馈给AI';
+          feedbackBtn.textContent = '↗'; feedbackBtn.title = t('other.aiFeedback');
           feedbackBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:16px;line-height:0;font-size:11px;font-weight:700;margin-top:2px;';
           feedbackBtn.addEventListener('click', async (ce3) => {
             ce3.preventDefault(); ce3.stopPropagation();
@@ -38875,540 +42601,236 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
             const t3Ctx = t3.map(t => (t.role === 'ai' ? 'AI: ' : '用户: ') + t.content).join('\n');
             const fbPrompt = `你之前向用户提出了一个问题："${lk._aiQuestion}"\n\n以下是后续对话：\n${t3Ctx}\n\n用户给出了回答。请针对用户的回答给出反馈：指出回答中正确和不足之处，或进一步追问，帮助用户深化理解。只输出反馈，不要任何前缀。`;
             feedbackBtn.textContent = '...'; feedbackBtn.style.pointerEvents = 'none';
-            try { const reply = await plugin.callAI(fbPrompt); if (reply && reply.trim()) { t3.push({ role: 'ai', content: reply.trim() }); const ig = isGlobal; const rl = ig ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex); if (rl && rl.links) { const al = lk.timestamp ? rl.links.find(l => l.filePath === lk.filePath && l.timestamp === lk.timestamp) : null; if (al) al._aiThread = t3; } if (ig) await plugin.saveGlobalRules(plugin.globalRules, true); else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true); onRefresh(); } }
-            catch (err) { new Notice('AI 反馈失败: ' + (err.message || '未知错误')); }
+            try { const reply = await plugin.callAI(fbPrompt); if (reply && reply.trim()) { t3.push({ role: 'ai', content: reply.trim() }); const ig = isGlobal; const rl = ig ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex); if (rl && rl.links) { const al = lk.timestamp ? rl.links.find(l => l.timestamp === lk.timestamp) : null; if (al) al._aiThread = t3; } if (ig) await plugin.saveGlobalRules(plugin.globalRules, true); else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true); onRefresh(); } }
+            catch (err) { new Notice(t('other.aiFeedbackFailed', {err: err.message || '未知错误'})); }
             finally { feedbackBtn.textContent = '↗'; feedbackBtn.style.pointerEvents = ''; }
           });
           aiGroup.appendChild(feedbackBtn);
         } else {
           const emptyEl = document.createElement('div');
-          emptyEl.className = 'remark-popup-content'; emptyEl.dataset.remarkSource = 'link'; emptyEl.dataset.filePath = fp; emptyEl.dataset.linkIndex = String(allItems.indexOf(item));
+          emptyEl.className = 'remark-popup-content'; emptyEl.dataset.remarkSource = 'link'; emptyEl.dataset.linkTimestamp = String(lk.timestamp || 0);
           emptyEl.style.cssText = 'font-size:12px;overflow:hidden;margin-top:4px;cursor:text;color:var(--text-muted);font-style:italic;';
           emptyEl.textContent = '(' + t('main.doubleClickToEditRemark') + ')';
           aiGroup.appendChild(emptyEl);
         }
 
-        container.appendChild(aiGroup);
-      }
-    } else {
-    let fileIndex = 0;
-    for (const [filePath, fileLinks] of linksByFile) {
-      const fileName = filePath.split('/').pop().replace(/\.md$/, '');
-      const fileHue = fileHues[fileIndex % fileHues.length];
-
-      const groupEl = document.createElement('div');
-      groupEl.className = 'remark-source-group';
-      groupEl.style.cssText = fileIndex > 0 ? 'margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08);' : '';
-
-      const headerEl = document.createElement('div');
-      headerEl.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;';
-      const headerLeft = document.createElement('div');
-      headerLeft.style.cssText = 'display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;min-width:0;';
-
-      const fileNameEl = document.createElement('span');
-      fileNameEl.textContent = '📄 ' + (fileName || '(' + t('main.noTitle') + ')');
-      if (showFileNameEdit) {
-        fileNameEl.dataset.editField = 'filePath';
-        fileNameEl.dataset.filePath = filePath;
-      }
-      fileNameEl.style.cssText = `font-size:10px;font-weight:600;color:hsl(${fileHue},50%,35%);background:hsl(${fileHue},50%,90%);padding:1px 6px;border-radius:8px;flex-shrink:0;${showFileNameEdit ? 'cursor:text;border-bottom:1px dashed transparent;white-space:nowrap;' : ''}`;
-      if (showFileNameEdit) {
-        fileNameEl.addEventListener('mouseenter', () => { fileNameEl.style.borderBottomColor = 'var(--text-muted)'; });
-        fileNameEl.addEventListener('mouseleave', () => { fileNameEl.style.borderBottomColor = 'transparent'; });
-        fileNameEl.addEventListener('dblclick', (de) => {
-          de.stopPropagation();
-          de.preventDefault();
+        // AI 对话输入框
+        const aiInputRow = document.createElement('div');
+        aiInputRow.style.cssText = 'display:flex;gap:4px;align-items:center;margin-top:4px;';
+        const aiInput = document.createElement('input');
+        aiInput.type = 'text';
+        aiInput.placeholder = t('remark.aiReplyPlaceholder') || '回复AI...';
+        aiInput.style.cssText = 'flex:1;font-size:11px;padding:3px 8px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);outline:none;min-width:0;';
+        const aiSendBtn = document.createElement('button');
+        aiSendBtn.textContent = '↗';
+        aiSendBtn.title = t('other.aiFeedback');
+        aiSendBtn.style.cssText = 'padding:0 6px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:20px;line-height:0;font-size:11px;font-weight:700;flex-shrink:0;';
+        const handleAiReply = async () => {
+          const val = aiInput.value.trim();
+          if (!val) return;
+          aiInput.value = '';
           if (keepOpenRef) keepOpenRef.val = true;
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.value = filePath || '';
-          const origW = fileNameEl.offsetWidth;
-          input.style.cssText = `font-size:9px;padding:1px 5px;border:none;border-radius:6px;background:var(--background-modifier-hover);color:var(--text-muted);width:${origW}px;outline:none;box-sizing:border-box;`;
-          fileNameEl.replaceWith(input);
-          input.focus();
-          input.select();
-          let saved = false;
-          const save = async () => {
-            if (saved) return; saved = true;
-            const val = input.value.trim();
-            const newFileName = val ? val.split('/').pop().replace(/\.md$/, '') : '';
-            fileNameEl.textContent = '📄 ' + (newFileName || '(' + t('main.noTitle') + ')');
-            input.replaceWith(fileNameEl);
-            const actualRuleFn = ruleSource === 'global' ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
-            if (actualRuleFn && actualRuleFn.links) {
-              for (const lk of fileLinks) {
-                const al = lk.timestamp ? actualRuleFn.links.find(l => l.filePath === filePath && l.timestamp === lk.timestamp) : actualRuleFn.links.find(l => l.filePath === filePath);
-                if (al) al.filePath = val;
-              }
-              if (targetEl) targetEl.dataset.links = JSON.stringify(actualRuleFn.links);
-              if (onDirty) onDirty();
-              if (ruleSource === 'global') await plugin.saveGlobalRules(plugin.globalRules, true);
-              else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
-            }
-          };
-          input.addEventListener('blur', save);
-          input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { saved = true; input.replaceWith(fileNameEl); } });
-        });
+          if (!lk._aiThread) lk._aiThread = [];
+          const tArr = lk._aiThread;
+          tArr.push({ role: 'user', content: val });
+          const tCtx = tArr.map(t => (t.role === 'ai' ? 'AI: ' : '用户: ') + t.content).join('\n');
+          aiSendBtn.textContent = '...'; aiSendBtn.style.pointerEvents = 'none'; aiInput.disabled = true;
+          try {
+            const reply = await plugin.callAI(`你之前向用户提出了一个问题："${lk._aiQuestion}"\n\n以下是后续对话：\n${tCtx}\n\n用户给出了回答。请针对用户的回答给出反馈：指出回答中正确和不足之处，或进一步追问，帮助用户深化理解。只输出反馈，不要任何前缀。`);
+            if (reply && reply.trim()) { tArr.push({ role: 'ai', content: reply.trim() }); const ig = isGlobal; const rl = ig ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex); if (rl && rl.links) { const al = lk.timestamp ? rl.links.find(l => l.timestamp === lk.timestamp) : null; if (al) al._aiThread = tArr; } if (ig) await plugin.saveGlobalRules(plugin.globalRules, true); else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true); onRefresh(); }
+          } catch (err) { new Notice(t('other.aiFeedbackFailed', {err: err.message || '未知错误'})); }
+          finally { aiSendBtn.textContent = '↗'; aiSendBtn.style.pointerEvents = ''; aiInput.disabled = false; aiInput.focus(); }
+        };
+        aiSendBtn.addEventListener('click', handleAiReply);
+        aiInput.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); handleAiReply(); } });
+        aiInputRow.appendChild(aiInput);
+        aiInputRow.appendChild(aiSendBtn);
+        aiGroup.appendChild(aiInputRow);
+
+        aiQuestionBlockBody.appendChild(aiGroup);
       }
-      headerLeft.appendChild(fileNameEl);
-
-      if (showFileRuleBadge) {
-        const hasFileRuleLink = fileLinks.some(l => l._fromFileRule);
-        if (hasFileRuleLink) {
-          const fileRuleBadge = document.createElement('span');
-          fileRuleBadge.textContent = 'l';
-          fileRuleBadge.style.cssText = `font-size:10px;font-weight:700;color:hsl(${fileHue},50%,35%);background:hsl(${fileHue},50%,85%);padding:1px 5px;border-radius:8px;flex-shrink:0;`;
-          headerLeft.appendChild(fileRuleBadge);
-        }
-      }
-
-      headerEl.appendChild(headerLeft);
-      groupEl.appendChild(headerEl);
-
-      const bodyEl = document.createElement('div');
-      bodyEl.className = 'remark-source-body';
-
-      for (let i = 0; i < fileLinks.length; i++) {
-        const link = fileLinks[i];
-        const remarkContent = link.remark || '';
-        const isAiQuestion = !!link._aiQuestion;
-
-        if (i > 0) {
-          const innerDivider = document.createElement('div');
-          innerDivider.style.cssText = 'border-top:1px solid rgba(255,255,255,0.08);margin:4px 0;';
-          bodyEl.appendChild(innerDivider);
-        }
-
-        const remarkWrapper = document.createElement('div');
-        remarkWrapper.style.cssText = `display:flex;align-items:${alignItems};gap:6px;`;
-        const dot = document.createElement('span');
-        dot.style.cssText = `width:${dotSize}px;height:${dotSize}px;border-radius:50%;background:${isAiQuestion ? 'hsl(35,70%,50%)' : `hsl(${fileHue},50%,50%)`};flex-shrink:0;${alignItems === 'baseline' ? '' : 'margin-top:5px;'}`;
-        remarkWrapper.appendChild(dot);
-        const remarkBox = document.createElement('div');
-        remarkBox.style.cssText = 'flex:1;min-width:0;overflow:hidden;';
-
-        if (isAiQuestion) {
-          const aiTitleBar = document.createElement('div');
-          aiTitleBar.style.cssText = 'display:flex;align-items:flex-start;gap:4px;margin-bottom:4px;';
-          const aiTitleText = document.createElement('span');
-          aiTitleText.textContent = 'askedbyAi: ' + link._aiQuestion;
-          aiTitleText.style.cssText = 'font-size:11px;font-weight:600;color:hsl(35,70%,45%);flex:1;min-width:0;overflow-wrap:break-word;word-break:break-word;';
-          aiTitleBar.appendChild(aiTitleText);
-
-          const aiHelpBtn = document.createElement('button');
-          aiHelpBtn.textContent = '?';
-          aiHelpBtn.title = t('remark.aiBreakdownQuestion');
-          aiHelpBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;font-size:11px;font-weight:700;flex-shrink:0;';
-          aiHelpBtn.addEventListener('click', async (ce) => {
-            ce.preventDefault();
-            ce.stopPropagation();
-            if (keepOpenRef) keepOpenRef.val = true;
-            if (!link._aiThread) link._aiThread = [];
-            const thread = link._aiThread;
-            const threadContext = thread.map(t => (t.role === 'ai' ? 'AI: ' : '用户: ') + t.content).join('\n');
-            const helpPrompt = `你之前向用户提出了一个问题："${link._aiQuestion}"\n\n以下是后续对话：\n${threadContext || '（尚无后续对话）'}\n\n用户表示对这个问题无从下手，不知道怎么回答。请帮用户初步分析拆解这个问题，给出思考方向和步骤提示，但不要直接给出答案。只输出拆解分析，不要任何前缀。`;
-            aiHelpBtn.textContent = '...';
-            aiHelpBtn.style.pointerEvents = 'none';
-            try {
-              const aiReply = await plugin.callAI(helpPrompt);
-              if (aiReply && aiReply.trim()) {
-                thread.push({ role: 'ai', content: aiReply.trim() });
-                if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
-                else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
-                onRefresh();
-              }
-            } catch (err) {
-              new Notice(t('remark.aiBreakdownFailed') + ': ' + (err.message || '未知错误'));
-            } finally {
-              aiHelpBtn.textContent = '?';
-              aiHelpBtn.style.pointerEvents = '';
-            }
-          });
-          aiTitleBar.appendChild(aiHelpBtn);
-
-          const aiDeleteBtn = document.createElement('button');
-          aiDeleteBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
-          aiDeleteBtn.title = t('main.deleteRemark');
-          aiDeleteBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;flex-shrink:0;';
-          aiDeleteBtn.addEventListener('click', async (ce) => {
-            ce.preventDefault();
-            ce.stopPropagation();
-            const fl = linksByFile.get(filePath);
-            if (fl) {
-              const idx = fl.indexOf(link);
-              if (idx !== -1) fl.splice(idx, 1);
-              if (fl.length === 0) linksByFile.delete(filePath);
-            }
-            const rulesList = isGlobal ? plugin.globalRules : plugin.rules;
-            const ruleIdx = rulesList.findIndex(r => r.regex === ruleRegex);
-            if (ruleIdx !== -1) {
-              const r = rulesList[ruleIdx];
-              if (r && r.links) {
-                const linkIdx = link.timestamp
-                  ? r.links.findIndex(l => l.filePath === link.filePath && l.timestamp === link.timestamp)
-                  : r.links.findIndex(l => l.filePath === link.filePath && l.searchText === link.searchText);
-                if (linkIdx !== -1) r.links.splice(linkIdx, 1);
-              }
-              if ((!r.links || r.links.length === 0) && (!r.cssClass || r.cssClass.trim() === '')) {
-                rulesList.splice(ruleIdx, 1);
-              }
-            }
-            if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
-            else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
-            onRefresh();
-          });
-          aiTitleBar.appendChild(aiDeleteBtn);
-          remarkBox.appendChild(aiTitleBar);
-
-          const thread = link._aiThread || [];
-          for (const entry of thread) {
-            const entryEl = document.createElement('div');
-            entryEl.style.cssText = 'margin-top:4px;padding-left:8px;border-left:2px solid ' + (entry.role === 'ai' ? 'hsl(35,70%,60%)' : 'hsl(200,50%,60%)') + ';';
-            const entryLabel = document.createElement('div');
-            entryLabel.style.cssText = 'font-size:10px;font-weight:600;color:var(--text-muted);margin-bottom:2px;';
-            entryLabel.textContent = entry.role === 'ai' ? '🤖 AI' : '👤 你';
-            entryEl.appendChild(entryLabel);
-            const entryContent = document.createElement('div');
-            entryContent.style.cssText = 'font-size:12px;overflow-wrap:break-word;word-break:break-word;';
-            try {
-              const { MarkdownRenderer: MR, Component } = require('obsidian');
-              const component = new Component();
-              component.load();
-              MR.renderMarkdown(entry.content, entryContent, plugin.currentFilePath || '', component);
-            } catch { entryContent.textContent = entry.content; }
-            entryEl.appendChild(entryContent);
-            if (entry.role === 'ai') {
-              const entryHelpBtn = document.createElement('button');
-              entryHelpBtn.textContent = '?';
-              entryHelpBtn.title = '继续追问AI';
-              entryHelpBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:16px;line-height:0;font-size:10px;font-weight:700;margin-top:2px;';
-              entryHelpBtn.addEventListener('click', async (ce2) => {
-                ce2.preventDefault();
-                ce2.stopPropagation();
-                if (keepOpenRef) keepOpenRef.val = true;
-                const t2 = link._aiThread || [];
-                const t2Ctx = t2.map(t => (t.role === 'ai' ? 'AI: ' : '用户: ') + t.content).join('\n');
-                const followPrompt = `你之前向用户提出了一个问题："${link._aiQuestion}"\n\n以下是后续对话：\n${t2Ctx}\n\n用户对AI上一条回复仍有疑问，请进一步分析拆解，给出更具体的思考方向，但不要直接给出答案。只输出分析，不要任何前缀。`;
-                entryHelpBtn.textContent = '...';
-                entryHelpBtn.style.pointerEvents = 'none';
-                try {
-                  const reply = await plugin.callAI(followPrompt);
-                  if (reply && reply.trim()) {
-                    t2.push({ role: 'ai', content: reply.trim() });
-                    const ig = isGlobal;
-                    const rl = ig ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
-                    if (rl && rl.links) {
-                      const al = link.timestamp ? rl.links.find(l => l.filePath === link.filePath && l.timestamp === link.timestamp) : null;
-                      if (al) al._aiThread = t2;
-                    }
-                    if (ig) await plugin.saveGlobalRules(plugin.globalRules, true);
-                    else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
-                    onRefresh();
-                  }
-                } catch (err) {
-                  new Notice('AI 追问失败: ' + (err.message || '未知错误'));
-                } finally {
-                  entryHelpBtn.textContent = '?';
-                  entryHelpBtn.style.pointerEvents = '';
-                }
-              });
-              entryEl.appendChild(entryHelpBtn);
-            }
-            remarkBox.appendChild(entryEl);
-          }
-
-          if (remarkContent.trim()) {
-            const remarkEl = document.createElement('div');
-            remarkEl.className = 'remark-popup-content';
-            remarkEl.dataset.remarkSource = 'link';
-            remarkEl.dataset.filePath = filePath;
-            remarkEl.dataset.linkIndex = String(i);
-            remarkEl.style.cssText = 'font-size:12px;overflow:hidden;margin-top:4px;cursor:text;';
-            try {
-              const { MarkdownRenderer: MR, Component } = require('obsidian');
-              const component = new Component();
-              component.load();
-              MR.renderMarkdown(remarkContent, remarkEl, plugin.currentFilePath || '', component);
-            } catch { remarkEl.textContent = remarkContent; }
-            remarkBox.appendChild(remarkEl);
-
-            const feedbackBtn = document.createElement('button');
-            feedbackBtn.textContent = '↗';
-            feedbackBtn.title = '将回答反馈给AI';
-            feedbackBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:16px;line-height:0;font-size:11px;font-weight:700;margin-top:2px;';
-            feedbackBtn.addEventListener('click', async (ce3) => {
-              ce3.preventDefault();
-              ce3.stopPropagation();
-              if (keepOpenRef) keepOpenRef.val = true;
-              if (!link._aiThread) link._aiThread = [];
-              const t3 = link._aiThread;
-              t3.push({ role: 'user', content: remarkContent });
-              const t3Ctx = t3.map(t => (t.role === 'ai' ? 'AI: ' : '用户: ') + t.content).join('\n');
-              const fbPrompt = `你之前向用户提出了一个问题："${link._aiQuestion}"\n\n以下是后续对话：\n${t3Ctx}\n\n用户给出了回答。请针对用户的回答给出反馈：指出回答中正确和不足之处，或进一步追问，帮助用户深化理解。只输出反馈，不要任何前缀。`;
-              feedbackBtn.textContent = '...';
-              feedbackBtn.style.pointerEvents = 'none';
-              try {
-                const reply = await plugin.callAI(fbPrompt);
-                if (reply && reply.trim()) {
-                  t3.push({ role: 'ai', content: reply.trim() });
-                  const ig = isGlobal;
-                  const rl = ig ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
-                  if (rl && rl.links) {
-                    const al = link.timestamp ? rl.links.find(l => l.filePath === link.filePath && l.timestamp === link.timestamp) : null;
-                    if (al) al._aiThread = t3;
-                  }
-                  if (ig) await plugin.saveGlobalRules(plugin.globalRules, true);
-                  else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
-                  onRefresh();
-                }
-              } catch (err) {
-                new Notice('AI 反馈失败: ' + (err.message || '未知错误'));
-              } finally {
-                feedbackBtn.textContent = '↗';
-                feedbackBtn.style.pointerEvents = '';
-              }
-            });
-            remarkBox.appendChild(feedbackBtn);
-          } else {
-            const emptyRemarkEl = document.createElement('div');
-            emptyRemarkEl.className = 'remark-popup-content';
-            emptyRemarkEl.dataset.remarkSource = 'link';
-            emptyRemarkEl.dataset.filePath = filePath;
-            emptyRemarkEl.dataset.linkIndex = String(i);
-            emptyRemarkEl.style.cssText = 'font-size:12px;overflow:hidden;margin-top:4px;cursor:text;color:var(--text-muted);font-style:italic;';
-            emptyRemarkEl.textContent = '(' + t('main.doubleClickToEditRemark') + ')';
-            remarkBox.appendChild(emptyRemarkEl);
-          }
-        } else {
-          if (!remarkContent.trim() && link._fromFileRule && !showFromFileRuleDelete) continue;
-
-          const remarkEl = document.createElement('div');
-          remarkEl.className = 'remark-popup-content';
-          remarkEl.dataset.remarkSource = 'link';
-          remarkEl.dataset.linkIndex = String(i);
-          remarkEl.dataset.filePath = filePath;
-          remarkEl.style.cssText = 'font-size:12px;overflow:hidden;cursor:text;';
-
-          if (remarkContent) {
-            try {
-              const { MarkdownRenderer: MR, Component } = require('obsidian');
-              const component = new Component();
-              component.load();
-              const sourcePath = plugin.currentFilePath || '';
-              MR.renderMarkdown(remarkContent, remarkEl, sourcePath, component);
-              remarkEl._component = component;
-              if (showImageRender) plugin.renderImagesManually(remarkContent, remarkEl, plugin);
-            } catch { remarkEl.textContent = remarkContent; }
-          } else {
-            if (link._fromFileRule && !showFromFileRuleDelete) continue;
-            remarkEl.textContent = '(' + t('main.doubleClickToEditRemark') + ')';
-            remarkEl.style.cssText += 'color:var(--text-muted);font-style:italic;';
-          }
-          remarkBox.appendChild(remarkEl);
-
-          if (!link._fromFileRule || showFromFileRuleDelete) {
-            const toolBar = document.createElement('div');
-            toolBar.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:0;';
-
-            const searchTag = document.createElement('span');
-            searchTag.textContent = link.searchText ? link.searchText.substring(0, 20) + (link.searchText.length > 20 ? '...' : '') : '(' + t('main.noSearchText') + ')';
-            searchTag.dataset.editField = 'searchText';
-            searchTag.dataset.filePath = filePath;
-            searchTag.dataset.linkIndex = String(i);
-            searchTag.style.cssText = 'font-size:10px;color:var(--text-muted);background:var(--background-modifier-hover);padding:1px 6px;border-radius:8px;cursor:text;border-bottom:1px dashed transparent;';
-            if (!link.searchText) searchTag.style.fontStyle = 'italic';
-            searchTag.addEventListener('mouseenter', () => { searchTag.style.borderBottomColor = 'var(--text-muted)'; });
-            searchTag.addEventListener('mouseleave', () => { searchTag.style.borderBottomColor = 'transparent'; });
-            searchTag.addEventListener('dragover', (de) => {
-              if (de.dataTransfer?.types?.includes('text/plain') || de.dataTransfer?.types?.includes('text/unicode')) {
-                de.preventDefault();
-                searchTag.style.borderBottomColor = 'var(--text-accent)';
-                searchTag.style.background = 'var(--text-accent)';
-                searchTag.style.color = 'var(--text-on-accent)';
-              }
-            });
-            searchTag.addEventListener('dragleave', () => {
-              searchTag.style.borderBottomColor = 'transparent';
-              searchTag.style.background = 'var(--background-modifier-hover)';
-              searchTag.style.color = 'var(--text-muted)';
-            });
-            searchTag.addEventListener('drop', async (de) => {
-              de.preventDefault();
-              de.stopPropagation();
-              const droppedText = de.dataTransfer?.getData('text/plain')?.trim();
-              searchTag.style.borderBottomColor = 'transparent';
-              searchTag.style.background = 'var(--background-modifier-hover)';
-              searchTag.style.color = 'var(--text-muted)';
-              if (!droppedText) return;
-              link.searchText = droppedText;
-              if (ruleRegex) {
-                const ig = isGlobal;
-                const rulesList = ig ? plugin.globalRules : plugin.rules;
-                const r = rulesList.find(r => r.regex === ruleRegex);
-                if (r && r.links) {
-                  const actualLink = r.links.find(l => l.filePath === filePath && l.timestamp === link.timestamp);
-                  if (actualLink) actualLink.searchText = droppedText;
-                  if (targetEl) targetEl.dataset.links = JSON.stringify(r.links);
-                }
-                if (onDirty) onDirty();
-                if (ig) await plugin.saveGlobalRules(plugin.globalRules, true);
-                else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
-              }
-              onRefresh();
-            });
-            toolBar.appendChild(searchTag);
-
-
-            const openBtn = document.createElement('button');
-            openBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="16.5" cy="16.5" r="2.5"/><path d="M18.5 18.5L21 21"/></svg>';
-            openBtn.title = t('main.openDocument');
-            openBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;';
-            openBtn.addEventListener('click', async (ce) => {
-              ce.preventDefault();
-              ce.stopPropagation();
-              if (link) await plugin.openLinkAndSearch(link.filePath, link.searchText);
-            });
-            toolBar.appendChild(openBtn);
-
-            const pasteBtn = document.createElement('button');
-            pasteBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>';
-            pasteBtn.title = t('main.pasteRemark');
-            pasteBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;';
-            pasteBtn.addEventListener('mousedown', (me) => { me.preventDefault(); });
-            pasteBtn.addEventListener('click', async (ce) => {
-              ce.preventDefault();
-              ce.stopPropagation();
-              const ta = toolBar.parentElement?.querySelector('textarea[data-source="link"]');
-              if (ta) {
-                try {
-                  const clipText = await navigator.clipboard.readText();
-                  if (!clipText.trim()) return;
-                  const start = ta.selectionStart;
-                  const end = ta.selectionEnd;
-                  const before = ta.value.substring(0, start);
-                  const after = ta.value.substring(end);
-                  ta.value = before + clipText.trim() + after;
-                  ta.selectionStart = ta.selectionEnd = start + clipText.trim().length;
-                  ta.focus();
-                  new Notice(t('main.remarkPasted'));
-                } catch (e) {}
-                return;
-              }
-              try {
-                const clipText = await navigator.clipboard.readText();
-                if (!clipText.trim()) return;
-                const actualRule = isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
-                if (actualRule && actualRule.links) {
-                  const al = link.timestamp ? actualRule.links.find(l => l.filePath === link.filePath && l.timestamp === link.timestamp) : actualRule.links.find(l => l.filePath === link.filePath && !l.timestamp);
-                  if (al) {
-                    al.remark = remarkContent.trim() ? remarkContent.trim() + '\n' + clipText.trim() : clipText.trim();
-                    if (targetEl) targetEl.dataset.links = JSON.stringify(actualRule.links);
-                    if (onDirty) onDirty();
-                    if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
-                    else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
-                    new Notice(remarkContent.trim() ? t('main.remarkAppended') : t('main.remarkPasted'));
-                    onRefresh();
-                  }
-                }
-              } catch (e) { /* clipboard read may fail */ }
-            });
-            toolBar.appendChild(pasteBtn);
-
-            const copyBtn = document.createElement('button');
-            copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-            copyBtn.title = t('main.copyRemark');
-            copyBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;';
-            copyBtn.addEventListener('click', (ce) => {
-              ce.preventDefault();
-              ce.stopPropagation();
-              navigator.clipboard.writeText(remarkContent).then(() => {
-                copyBtn.style.color = 'var(--text-normal)';
-                setTimeout(() => { copyBtn.style.color = 'var(--text-muted)'; }, 800);
-              });
-            });
-            toolBar.appendChild(copyBtn);
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
-            deleteBtn.title = t('main.deleteRemark');
-            deleteBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;';
-            deleteBtn.addEventListener('click', async (ce) => {
-              ce.preventDefault();
-              ce.stopPropagation();
-              const fl = linksByFile.get(filePath);
-              if (fl) {
-                const idx = fl.indexOf(link);
-                if (idx !== -1) fl.splice(idx, 1);
-                if (fl.length === 0) linksByFile.delete(filePath);
-              }
-              if (link._fromFileRule && link._sourceFilePath && plugin._fileRulesData) {
-                const srcFp = link._sourceFilePath;
-                if (plugin._fileRulesData[srcFp]?.rules) {
-                  const srcRule = plugin._fileRulesData[srcFp].rules.find(r => r.regex === ruleRegex);
-                  if (srcRule?.links) {
-                    const linkIdx = link.timestamp
-                      ? srcRule.links.findIndex(l => l.filePath === link.filePath && l.timestamp === link.timestamp)
-                      : srcRule.links.findIndex(l => l.filePath === link.filePath && l.searchText === link.searchText);
-                    if (linkIdx !== -1) srcRule.links.splice(linkIdx, 1);
-                    plugin._scheduleFileRulesWrite();
-                  }
-                }
-              } else {
-                const rulesList = isGlobal ? plugin.globalRules : plugin.rules;
-                const ruleIdx = rulesList.findIndex(r => r.regex === ruleRegex);
-                if (ruleIdx !== -1) {
-                  const r = rulesList[ruleIdx];
-                  if (r && r.links) {
-                    const linkIdx = link.timestamp
-                      ? r.links.findIndex(l => l.filePath === link.filePath && l.timestamp === link.timestamp)
-                      : r.links.findIndex(l => l.filePath === link.filePath && l.searchText === link.searchText);
-                    if (linkIdx !== -1) r.links.splice(linkIdx, 1);
-                  }
-                  if ((!r.links || r.links.length === 0) && (!r.cssClass || r.cssClass.trim() === '')) {
-                    rulesList.splice(ruleIdx, 1);
-                    if (targetEl) delete targetEl.dataset.links;
-                  } else {
-                    if (r.links && r.links.length === 0) delete r.links;
-                    if (targetEl) targetEl.dataset.links = JSON.stringify(r.links || []);
-                  }
-                  if (onDirty) onDirty();
-                  if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
-                  else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
-                }
-              }
-              onRefresh();
-            });
-            toolBar.appendChild(deleteBtn);
-            remarkBox.appendChild(toolBar);
-          }
-        }
-
-        remarkWrapper.appendChild(remarkBox);
-        bodyEl.appendChild(remarkWrapper);
-      }
-
-      groupEl.appendChild(bodyEl);
-      container.appendChild(groupEl);
-      fileIndex++;
     }
 
-    } // end else (non-masonry)
+    // 渲染 AI 提问项到独立块
+    for (const [filePath, fileLinks] of linksByFile) {
+      for (let i = 0; i < fileLinks.length; i++) {
+        const link = fileLinks[i];
+        if (!link._aiQuestion) continue;
+        const remarkContent = link.remark || '';
+        const aiGroup = document.createElement('div');
+        aiGroup.style.cssText = 'margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.06);';
+        
+        const aiTitleBar = document.createElement('div');
+        aiTitleBar.style.cssText = 'display:flex;align-items:flex-start;gap:4px;margin-bottom:4px;';
+        const aiTitleText = document.createElement('span');
+        aiTitleText.style.cssText = 'font-size:11px;font-weight:600;color:hsl(35,70%,45%);overflow-wrap:break-word;word-break:break-word;';
+        const aiTitleTextNode = document.createTextNode(link._aiQuestion + ' ');
+        aiTitleText.appendChild(aiTitleTextNode);
+
+        aiTitleBar.appendChild(aiTitleText);
+
+        const aiDeleteBtn = document.createElement('button');
+        aiDeleteBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+        aiDeleteBtn.title = t('main.deleteRemark');
+        aiDeleteBtn.style.cssText = 'padding:1px 4px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:18px;line-height:0;flex-shrink:0;';
+        aiDeleteBtn.addEventListener('click', async (ce) => {
+          ce.preventDefault(); ce.stopPropagation();
+          const fl = linksByFile.get(filePath);
+          if (fl) { const idx = fl.indexOf(link); if (idx !== -1) fl.splice(idx, 1); if (fl.length === 0) linksByFile.delete(filePath); }
+          const rulesList = isGlobal ? plugin.globalRules : plugin.rules;
+          const ruleIdx = rulesList.findIndex(r => r.regex === ruleRegex);
+          if (ruleIdx !== -1) { const r = rulesList[ruleIdx]; if (r && r.links) { const linkIdx = link.timestamp ? r.links.findIndex(l => l.timestamp === link.timestamp) : r.links.indexOf(link); if (linkIdx !== -1) r.links.splice(linkIdx, 1); } if ((!r.links || r.links.length === 0) && (!r.cssClass || r.cssClass.trim() === '')) rulesList.splice(ruleIdx, 1); }
+          if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
+          else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+          onRefresh();
+        });
+        aiTitleBar.appendChild(aiDeleteBtn);
+        aiGroup.appendChild(aiTitleBar);
+        
+        const thread = link._aiThread || [];
+        for (let ti = 0; ti < thread.length; ti++) {
+          const entry = thread[ti];
+          const entryEl = document.createElement('div');
+          entryEl.style.cssText = 'margin-top:4px;padding-left:8px;border-left:2px solid ' + (entry.role === 'ai' ? 'hsl(35,70%,60%)' : 'hsl(200,50%,60%)') + ';';
+          const entryLabelRow = document.createElement('div');
+          entryLabelRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:2px;';
+          const entryLabel = document.createElement('span');
+          entryLabel.style.cssText = 'font-size:10px;font-weight:600;color:var(--text-muted);';
+          entryLabel.textContent = entry.role === 'ai' ? t('other.aiLabel') : t('other.youLabel');
+          entryLabelRow.appendChild(entryLabel);
+          const entryDelBtn2 = document.createElement('button');
+          entryDelBtn2.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+          entryDelBtn2.title = t('main.deleteRemark');
+          entryDelBtn2.style.cssText = 'padding:0 3px;cursor:pointer;border:none;background:none;color:var(--text-faint);display:inline-flex;align-items:center;justify-content:center;height:14px;line-height:0;';
+          entryDelBtn2.addEventListener('click', async (de) => {
+            de.preventDefault(); de.stopPropagation();
+            if (keepOpenRef) keepOpenRef.val = true;
+            const thr2 = link._aiThread || [];
+            thr2.splice(ti, 1);
+            const ig2 = isGlobal; const rl2 = ig2 ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
+            if (rl2 && rl2.links) { const al2 = link.timestamp ? rl2.links.find(l => l.timestamp === link.timestamp) : null; if (al2) al2._aiThread = thr2; }
+            if (ig2) await plugin.saveGlobalRules(plugin.globalRules, true); else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+            onRefresh();
+          });
+          entryLabelRow.appendChild(entryDelBtn2);
+          let foldBtn2 = null;
+          let entryContent2 = null;
+          if (entry.role === 'ai' && entry.content && entry.content.length > 60) {
+            foldBtn2 = document.createElement('button');
+            foldBtn2.textContent = '▽';
+            foldBtn2.title = t('remark.toggleFold') || '折叠/展开';
+            foldBtn2.style.cssText = 'padding:0 3px;cursor:pointer;border:none;background:none;color:var(--text-faint);display:inline-flex;align-items:center;justify-content:center;height:14px;line-height:0;font-size:10px;margin-left:auto;';
+            entryLabelRow.appendChild(foldBtn2);
+          }
+          entryEl.appendChild(entryLabelRow);
+          entryContent2 = document.createElement('div');
+          entryContent2.style.cssText = 'font-size:12px;overflow-wrap:break-word;word-break:break-word;';
+          try { const { MarkdownRenderer: MR, Component } = require('obsidian'); const component = new Component(); component.load(); MR.renderMarkdown(entry.content, entryContent2, plugin.currentFilePath || '', component); } catch { entryContent2.textContent = entry.content; }
+          entryEl.appendChild(entryContent2);
+          // 折叠逻辑
+          if (foldBtn2) {
+            let folded2 = true;
+            const fullHTML2 = entryContent2.innerHTML;
+            const summaryText2 = entry.content.replace(/[#*_\[\]()]/g, '').substring(0, 60) + '...';
+            entryContent2.textContent = summaryText2;
+            foldBtn2.textContent = '▷';
+            foldBtn2.addEventListener('click', (fe) => {
+              fe.preventDefault(); fe.stopPropagation();
+              folded2 = !folded2;
+              if (folded2) { entryContent2.textContent = summaryText2; foldBtn2.textContent = '▷'; }
+              else { entryContent2.innerHTML = fullHTML2; foldBtn2.textContent = '▽'; }
+            });
+          }
+          if (entry.role === 'ai') {
+            const entryHelpBtn = document.createElement('button');
+            entryHelpBtn.textContent = '?'; entryHelpBtn.title = t('other.aiFollowUp');
+            entryHelpBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:16px;line-height:0;font-size:10px;font-weight:700;margin-top:2px;';
+            entryHelpBtn.addEventListener('click', async (ce2) => {
+              ce2.preventDefault(); ce2.stopPropagation();
+              if (keepOpenRef) keepOpenRef.val = true;
+              const t2 = link._aiThread || []; const t2Ctx = t2.map(t => (t.role === 'ai' ? 'AI: ' : '用户: ') + t.content).join('\n');
+              const followPrompt = `你之前向用户提出了一个问题："${link._aiQuestion}"\n\n以下是后续对话：\n${t2Ctx}\n\n用户对AI上一条回复仍有疑问。请简要补充2-3个更具体的思考方向，每个不超过20字，用编号列出。不要展开细节，不要给答案，不要任何前缀。`;
+              entryHelpBtn.textContent = '...'; entryHelpBtn.style.pointerEvents = 'none';
+              try { const reply = await plugin.callAI(followPrompt); if (reply && reply.trim()) { t2.push({ role: 'ai', content: reply.trim() }); const ig = isGlobal; const rl = ig ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex); if (rl && rl.links) { const al = link.timestamp ? rl.links.find(l => l.timestamp === link.timestamp) : null; if (al) al._aiThread = t2; } if (ig) await plugin.saveGlobalRules(plugin.globalRules, true); else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true); onRefresh(); } }
+              catch (err) { new Notice(t('other.aiFollowUpFailed', {err: err.message || '未知错误'})); }
+              finally { entryHelpBtn.textContent = '?'; entryHelpBtn.style.pointerEvents = ''; }
+            });
+            entryEl.appendChild(entryHelpBtn);
+          }
+          aiGroup.appendChild(entryEl);
+        }
+        
+        if (remarkContent.trim()) {
+          const remarkEl = document.createElement('div');
+          remarkEl.className = 'remark-popup-content'; remarkEl.dataset.remarkSource = 'link'; remarkEl.dataset.linkTimestamp = String(link.timestamp || 0);
+          remarkEl.style.cssText = 'overflow:hidden;margin-top:4px;cursor:text;';
+          try { const { MarkdownRenderer: MR, Component } = require('obsidian'); const component = new Component(); component.load(); MR.renderMarkdown(remarkContent, remarkEl, plugin.currentFilePath || '', component); remarkEl.addEventListener('click', (ce) => { const le = ce.target.closest('a.internal-link, a.is-unresolved'); if (le) { ce.preventDefault(); ce.stopPropagation(); const h = le.dataset.href || le.getAttribute('href') || le.textContent; if (h) plugin.app.workspace.openLinkText(h, '', true); } }); remarkEl.addEventListener('auxclick', (ce) => { if (ce.button !== 1) return; const le = ce.target.closest('a.internal-link, a.is-unresolved'); if (le) { ce.preventDefault(); ce.stopPropagation(); const h = le.dataset.href || le.getAttribute('href') || le.textContent; if (h) { const leaf = plugin.app.workspace.getLeaf('window'); const file = plugin.app.metadataCache.getFirstLinkpathDest(h.replace(/\.md$/, ''), '') || plugin.app.vault.getAbstractFileByPath(h); if (file) leaf.openFile(file); } } }); } catch { remarkEl.textContent = remarkContent; }
+          aiGroup.appendChild(remarkEl);
+          const feedbackBtn = document.createElement('button');
+          feedbackBtn.textContent = '↗'; feedbackBtn.title = t('other.aiFeedback');
+          feedbackBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:16px;line-height:0;font-size:11px;font-weight:700;margin-top:2px;';
+          feedbackBtn.addEventListener('click', async (ce3) => {
+            ce3.preventDefault(); ce3.stopPropagation();
+            if (keepOpenRef) keepOpenRef.val = true;
+            if (!link._aiThread) link._aiThread = []; const t3 = link._aiThread; t3.push({ role: 'user', content: remarkContent });
+            const t3Ctx = t3.map(t => (t.role === 'ai' ? 'AI: ' : '用户: ') + t.content).join('\n');
+            const fbPrompt = `你之前向用户提出了一个问题："${link._aiQuestion}"\n\n以下是后续对话：\n${t3Ctx}\n\n用户给出了回答。请针对用户的回答给出反馈：指出回答中正确和不足之处，或进一步追问，帮助用户深化理解。只输出反馈，不要任何前缀。`;
+            feedbackBtn.textContent = '...'; feedbackBtn.style.pointerEvents = 'none';
+            try { const reply = await plugin.callAI(fbPrompt); if (reply && reply.trim()) { t3.push({ role: 'ai', content: reply.trim() }); const ig = isGlobal; const rl = ig ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex); if (rl && rl.links) { const al = link.timestamp ? rl.links.find(l => l.timestamp === link.timestamp) : null; if (al) al._aiThread = t3; } if (ig) await plugin.saveGlobalRules(plugin.globalRules, true); else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true); onRefresh(); } }
+            catch (err) { new Notice(t('other.aiFeedbackFailed', {err: err.message || '未知错误'})); }
+            finally { feedbackBtn.textContent = '↗'; feedbackBtn.style.pointerEvents = ''; }
+          });
+          aiGroup.appendChild(feedbackBtn);
+        }
+        
+        // AI 对话输入框
+        const aiInputRow2 = document.createElement('div');
+        aiInputRow2.style.cssText = 'display:flex;gap:4px;align-items:center;margin-top:4px;';
+        const aiInput2 = document.createElement('input');
+        aiInput2.type = 'text';
+        aiInput2.placeholder = t('remark.aiReplyPlaceholder') || '回复AI...';
+        aiInput2.style.cssText = 'flex:1;font-size:11px;padding:3px 8px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);outline:none;min-width:0;';
+        const aiSendBtn2 = document.createElement('button');
+        aiSendBtn2.textContent = '↗';
+        aiSendBtn2.title = t('other.aiFeedback');
+        aiSendBtn2.style.cssText = 'padding:0 6px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:flex;align-items:center;justify-content:center;height:20px;line-height:0;font-size:11px;font-weight:700;flex-shrink:0;';
+        const handleAiReply2 = async () => {
+          const val = aiInput2.value.trim();
+          if (!val) return;
+          aiInput2.value = '';
+          if (keepOpenRef) keepOpenRef.val = true;
+          if (!link._aiThread) link._aiThread = [];
+          const tArr2 = link._aiThread;
+          tArr2.push({ role: 'user', content: val });
+          const tCtx2 = tArr2.map(t => (t.role === 'ai' ? 'AI: ' : '用户: ') + t.content).join('\n');
+          aiSendBtn2.textContent = '...'; aiSendBtn2.style.pointerEvents = 'none'; aiInput2.disabled = true;
+          try {
+            const reply = await plugin.callAI(`你之前向用户提出了一个问题："${link._aiQuestion}"\n\n以下是后续对话：\n${tCtx2}\n\n用户给出了回答。请针对用户的回答给出反馈：指出回答中正确和不足之处，或进一步追问，帮助用户深化理解。只输出反馈，不要任何前缀。`);
+            if (reply && reply.trim()) { tArr2.push({ role: 'ai', content: reply.trim() }); const ig = isGlobal; const rl = ig ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex); if (rl && rl.links) { const al = link.timestamp ? rl.links.find(l => l.timestamp === link.timestamp) : null; if (al) al._aiThread = tArr2; } if (ig) await plugin.saveGlobalRules(plugin.globalRules, true); else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true); onRefresh(); }
+          } catch (err) { new Notice(t('other.aiFeedbackFailed', {err: err.message || '未知错误'})); }
+          finally { aiSendBtn2.textContent = '↗'; aiSendBtn2.style.pointerEvents = ''; aiInput2.disabled = false; aiInput2.focus(); }
+        };
+        aiSendBtn2.addEventListener('click', handleAiReply2);
+        aiInput2.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); handleAiReply2(); } });
+        aiInputRow2.appendChild(aiInput2);
+        aiInputRow2.appendChild(aiSendBtn2);
+        aiGroup.appendChild(aiInputRow2);
+        
+        aiQuestionBlockBody.appendChild(aiGroup);
+      }
+    }
 
     if (linksByFile.size === 0) {
       const noContentEl = document.createElement('span');
       noContentEl.style.cssText = 'color: var(--text-muted)';
       noContentEl.textContent = t('remark.noContent');
-      container.appendChild(noContentEl);
+      remarkBlockBody.appendChild(noContentEl);
     }
 
     const aiBtnContainer = document.createElement('div');
-    aiBtnContainer.style.cssText = `position:sticky;bottom:0;${_isDesktop ? 'float:right;' : 'display:flex;justify-content:center;gap:6px;'}margin-top:6px;`;
+    aiBtnContainer.style.cssText = `position:sticky;bottom:0;clear:both;${_isDesktop ? 'display:flex;justify-content:flex-end;gap:6px;' : 'display:flex;justify-content:center;gap:6px;'}margin-top:6px;`;
 
-    const aiAskBtn = document.createElement('button');
-    aiAskBtn.className = 'remark-ai-ask-btn';
-    aiAskBtn.textContent = '?';
-    aiAskBtn.title = t('remark.aiAsk');
-    aiAskBtn.style.cssText = `font-weight:800;font-size:11px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #e0a01c, #460000, #e0a01c, #cb6a11);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(224, 160, 28, 0.8));background-color:rgba(224, 160, 28, 0.05);box-shadow:inset 0 0 0 1px rgba(224, 160, 28, 0.3), 0 0 15px rgba(70, 0, 0, 0.2);animation:hp-amber-shift 4s ease infinite;line-height:1;width:26px;height:26px;aspect-ratio:1/1;`;
+    // aiAskBtn 已移到 aiQuestionBlock 标题栏（aiAddBtn），此处绑定逻辑
     const aiBtnStyle = document.createElement('style');
     aiBtnStyle.textContent = '@keyframes hp-amber-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }';
     container.appendChild(aiBtnStyle);
@@ -39443,12 +42865,12 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
       }
     }
     if (!aiHasContent) {
-      aiAskBtn.style.opacity = '0.35';
-      aiAskBtn.style.cursor = 'not-allowed';
-      aiAskBtn.title = t('remark.aiAskDisabled');
+      aiAddBtn.style.opacity = '0.35';
+      aiAddBtn.style.cursor = 'not-allowed';
+      aiAddBtn.title = t('remark.aiAskDisabled');
     }
 
-    aiAskBtn.addEventListener('click', async (ce) => {
+    aiAddBtn.addEventListener('click', async (ce) => {
       ce.preventDefault();
       ce.stopPropagation();
 
@@ -39486,7 +42908,7 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
           const kwRemarks = kwRule.links.filter(l => l.remark && l.remark.trim()).map(l => l.remark.trim());
           if (kwRemarks.length > 0) {
             const relInfo = relatedKwMap.get(kwRegex);
-            const relLabel = relInfo.relation === 'mention' ? '→ 提及' : '← 被提及';
+            const relLabel = relInfo.relation === 'mention' ? t('other.mentionTo') : t('other.mentionedBy');
             contextParts.push(`【关联关键词${relLabel}: ${kwRegex}】\n${kwRemarks.join('\n')}`);
           }
         }
@@ -39494,13 +42916,13 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
       const fullContext = contextParts.join('\n\n');
       if (!fullContext.trim()) { new Notice(t('remark.aiAskDisabled')); return; }
 
-      aiAskBtn.style.opacity = '0.5';
-      aiAskBtn.textContent = '...';
-      aiAskBtn.style.pointerEvents = 'none';
+      aiAddBtn.style.opacity = '0.5';
+      aiAddBtn.textContent = '...';
+      aiAddBtn.style.pointerEvents = 'none';
       try {
         const prompt = `你是一个学习助手。你的任务是根据以下关键词备注内容，向用户提出一个具体、有针对性的问题，帮助用户更好理解该关键词。\n\n提问原则（按重要性由AI自行判断使用哪一种，而非固定顺序）：\n1. 隐含联系：备注之间、或该关键词与关联词备注之间，是否存在尚未被显式写出的联系、呼应或矛盾\n2. 理解薄弱处：是否有某条备注内容浅显（如直接摘抄原文、缺乏个人理解的迹象），可以追问"用你自己的话说，这是什么意思"\n3. 应用/检验：是否可以让用户尝试用该关键词解释一个具体场景，检验理解程度\n\n要求：\n- 每次只问一个问题，不要列多个问题\n- 问题应具体、针对当前关键词和备注内容，不能是泛用模板\n- 根据备注内容的语言自动判断输出语言\n- 只输出问题本身，不要任何前缀、解释或多余文字\n\n以下是备注内容：\n\n${fullContext}`;
         const aiQuestion = await plugin.callAI(prompt);
-        if (!aiQuestion || !aiQuestion.trim()) { new Notice('AI 未返回有效问题'); return; }
+        if (!aiQuestion || !aiQuestion.trim()) { new Notice(t('other.aiNoQuestion')); return; }
         const newAiLink = { filePath: '', searchText: '', remark: '', timestamp: Date.now(), _aiQuestion: aiQuestion.trim(), _aiThread: [] };
         const actualRule = rule || (isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex));
         if (actualRule) {
@@ -39515,17 +42937,16 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
       } catch (err) {
         new Notice(t('remark.aiAskFailed') + ': ' + (err.message || '未知错误'));
       } finally {
-        aiAskBtn.style.opacity = aiHasContent ? '1' : '0.35';
-        aiAskBtn.textContent = '?';
-        aiAskBtn.style.pointerEvents = '';
+        aiAddBtn.style.opacity = aiHasContent ? '1' : '0.35';
+        aiAddBtn.textContent = '+';
+        aiAddBtn.style.pointerEvents = '';
       }
     });
-    aiBtnContainer.appendChild(aiAskBtn);
 
     const aiGraphBtn = document.createElement('button');
     aiGraphBtn.textContent = '⬡';
     aiGraphBtn.title = t('remark.aiRelationGraph');
-    aiGraphBtn.style.cssText = `font-weight:800;font-size:10px;padding:2px 8px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1ce060, #004620, #1ce060, #6acb11);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 224, 96, 0.8));background-color:rgba(28, 224, 96, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 224, 96, 0.3), 0 0 15px rgba(0, 70, 32, 0.2);animation:hp-green-shift 4s ease infinite;line-height:1;margin-left:4px;width:26px;height:26px;aspect-ratio:1/1;`;
+    aiGraphBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:16px;line-height:0;font-size:11px;font-weight:700;margin-left:4px;';
     const aiGraphBtnStyle = document.createElement('style');
     aiGraphBtnStyle.textContent = '@keyframes hp-green-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }';
     container.appendChild(aiGraphBtnStyle);
@@ -39533,6 +42954,8 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
       aiGraphBtn.style.opacity = '0.35';
       aiGraphBtn.style.cursor = 'not-allowed';
     }
+    // 插入到关联词标题栏（延迟插入，由调用方处理）
+    // aiGraphBtn 将通过 renderResult.aiGraphBtn 返回给调用方
 
     const _sanitizeMermaid = (code) => {
       const _sanitizeText = (text) => {
@@ -39755,17 +43178,21 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
       return expanded.join('\n');
     };
 
-    const _renderGraphSection = (mermaidCode, existingSection) => {
+    const _renderGraphSection = (mermaidCode, existingSection, targetContainer) => {
       const graphSection = existingSection || document.createElement('div');
       graphSection.className = 'ai-relation-graph-section';
-      graphSection.style.cssText = 'margin-bottom:8px;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-secondary);';
+      graphSection.style.cssText = 'margin-top:6px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:6px;background:rgba(var(--mono-rgb-0),0.1);';
       graphSection.innerHTML = '';
 
       const graphHeader = document.createElement('div');
-      graphHeader.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
+      graphHeader.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;';
       const graphTitle = document.createElement('span');
-      graphTitle.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.3px;';
+      graphTitle.style.cssText = 'font-size:10px;font-weight:600;color:var(--text-muted);letter-spacing:0.3px;cursor:pointer;user-select:none;';
       graphTitle.textContent = '⬡ ' + t('remark.aiRelationGraph');
+      const graphToggle = document.createElement('span');
+      graphToggle.textContent = '▸';
+      graphToggle.style.cssText = 'font-size:10px;color:var(--text-muted);margin-left:4px;transition:transform 0.15s ease;';
+      graphTitle.appendChild(graphToggle);
       graphHeader.appendChild(graphTitle);
 
       const graphToolbar = document.createElement('div');
@@ -39867,6 +43294,12 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
       mermaidEl.textContent = mermaidCode;
       graphContent.appendChild(mermaidEl);
       graphViewport.appendChild(graphContent);
+      graphViewport.style.display = 'none';
+      graphTitle.addEventListener('click', () => {
+        const isCollapsed = graphViewport.style.display === 'none';
+        graphViewport.style.display = isCollapsed ? '' : 'none';
+        graphToggle.textContent = isCollapsed ? '▾' : '▸';
+      });
       graphSection.appendChild(graphViewport);
 
         const applyZoom = (newScale, skipSave) => {
@@ -39894,10 +43327,11 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
            graphContent.dataset.scale = String(newScale);
            zoomLevel.textContent = Math.round(newScale * 100) + '%';
            if (!skipSave) {
-             plugin.settings.graphZoomLevel = newScale;
-             plugin.saveData(plugin.settings).catch(() => {});
-           }
-         };
+              plugin.settings.graphZoomLevel = newScale;
+              plugin.saveData(plugin.settings).catch(() => {});
+       }
+
+    };
 
       const autoFitZoom = () => {
         const tryFit = (attempt = 0) => {
@@ -39978,14 +43412,15 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
       })();
 
       if (!graphSection.parentElement) {
-        let insertBefore = null;
-        for (const child of container.childNodes) {
-          if (child.nodeType === 1 && child.tagName !== 'STYLE' && !child.classList?.contains('ai-relation-graph-section')) {
-            insertBefore = child;
-            break;
-          }
+        const gc = targetContainer || container;
+        const chipsBar = gc.querySelector('.keyword-chips-bar');
+        if (chipsBar && chipsBar.nextSibling) {
+          gc.insertBefore(graphSection, chipsBar.nextSibling);
+        } else if (chipsBar) {
+          gc.appendChild(graphSection);
+        } else {
+          gc.appendChild(graphSection);
         }
-        container.insertBefore(graphSection, insertBefore);
       }
 
       if (keepOpenRef) keepOpenRef.val = true;
@@ -40059,9 +43494,7 @@ document.addEventListener('keydown', (e) => { if (e.ctrlKey && (e.key === '=' ||
         if (kwRule && kwRule.links) {
           const kwRemarks = kwRule.links.filter(l => l.remark && l.remark.trim()).map(l => l.remark.trim());
           if (kwRemarks.length > 0) {
-            const relLabel = isZh
-              ? (relInfo.relation === 'mention' ? '→ 提及' : '← 被提及')
-              : (relInfo.relation === 'mention' ? '→ mentions' : '← mentioned by');
+            const relLabel = relInfo.relation === 'mention' ? t('other.mentionTo') : t('other.mentionedBy');
             const snippetLine = relInfo.snippet
               ? (isZh ? `\n关联依据: "${relInfo.snippet}"` : `\nContext: "${relInfo.snippet}"`)
               : '';
@@ -40118,7 +43551,7 @@ Here are the remarks:
 ${fullContext}`;
 
       const prompt = isZh ? promptZh : promptEn;
-      const aiResponse = await plugin.callAI(prompt, { maxTokens: 4096 });
+      const aiResponse = await plugin.callAI(prompt, { maxTokens: plugin.settings?.aiGraphMaxTokens || 4096 });
       if (!aiResponse || !aiResponse.trim()) { new Notice(t('remark.aiRelationGraphFailed')); return null; }
 
       let mermaidCode = aiResponse.trim();
@@ -40133,9 +43566,7 @@ ${fullContext}`;
     };
 
     const currentRule = isGlobal ? plugin.globalRules.find(r => r.regex === ruleRegex) : plugin.rules.find(r => r.regex === ruleRegex);
-    if (currentRule?._mermaidGraph) {
-      _renderGraphSection(_sanitizeMermaid(currentRule._mermaidGraph));
-    }
+    const _existingMermaidGraph = currentRule?._mermaidGraph ? _sanitizeMermaid(currentRule._mermaidGraph) : null;
 
     aiGraphBtn.addEventListener('click', async (ce) => {
       ce.preventDefault();
@@ -40157,8 +43588,8 @@ ${fullContext}`;
           if (isGlobal) await plugin.saveGlobalRules(plugin.globalRules, true);
           else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
         }
-        const existingSection = container.querySelector('.ai-relation-graph-section');
-        _renderGraphSection(mermaidCode, existingSection || undefined);
+        const existingSection = (aiGraphBtn.closest('.keyword-chips-block') || container).querySelector('.ai-relation-graph-section');
+        _renderGraphSection(mermaidCode, existingSection || undefined, aiGraphBtn.closest('.keyword-chips-block') || undefined);
       } catch (err) {
         new Notice(t('remark.aiRelationGraphFailed') + ': ' + (err.message || ''));
       } finally {
@@ -40167,70 +43598,146 @@ ${fullContext}`;
         aiGraphBtn.style.pointerEvents = '';
       }
     });
-    aiBtnContainer.appendChild(aiGraphBtn);
 
-    const addBtn = document.createElement('button');
-    addBtn.className = 'remark-add-btn';
-    addBtn.textContent = '+';
-    addBtn.title = t('remark.addRemark');
-    addBtn.style.cssText = `font-weight:800;font-size:11px;padding:2px 10px;border-radius:999px;border:none;cursor:pointer;background:linear-gradient(145deg, #1CB5E0, #000046, #1CB5E0, #6a11cb);background-size:200% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 7px rgba(28, 181, 224, 0.8));background-color:rgba(28, 181, 224, 0.05);box-shadow:inset 0 0 0 1px rgba(28, 181, 224, 0.3), 0 0 15px rgba(0, 0, 70, 0.2);animation:hp-blue-shift 4s ease infinite;line-height:1;width:26px;height:26px;aspect-ratio:1/1;`;
-    const addBtnStyle = document.createElement('style');
-    addBtnStyle.textContent = '@keyframes hp-blue-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }';
-    container.appendChild(addBtnStyle);
-    addBtn.addEventListener('click', async (ce) => {
-      ce.preventDefault();
-      ce.stopPropagation();
-      if (keepOpenRef) keepOpenRef.val = true;
-      if (!ruleRegex) return;
-      const isGlobalRule = ruleSource === 'global';
-      const newLink = { filePath: plugin.currentFilePath || '', searchText: '', remark: '', timestamp: Date.now() };
-      if (isGlobalRule) {
-        const r = plugin.globalRules.find(r => r.regex === ruleRegex);
-        if (r) {
-          if (!r.links) r.links = [];
-          r.links.push(newLink);
-          if (targetEl) targetEl.dataset.links = JSON.stringify(r.links);
-          if (onDirty) onDirty();
-          await plugin.saveGlobalRules(plugin.globalRules, true);
-        }
-      } else {
-        const r = plugin.rules.find(r => r.regex === ruleRegex);
-        if (r) {
-          if (!r.links) r.links = [];
-          r.links.push(newLink);
-          if (targetEl) targetEl.dataset.links = JSON.stringify(r.links);
-          if (onDirty) onDirty();
-          await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
-        }
-      }
-      onRefresh();
-    });
-    aiBtnContainer.appendChild(addBtn);
+
+    // aiBtnContainer 仅作为插入锚点，不再包含按钮
+    aiBtnContainer.style.cssText = 'clear:both;height:0;overflow:hidden;';
     container.appendChild(aiBtnContainer);
-
 
     if (savedScrollTop > 0) {
       requestAnimationFrame(() => { container.scrollTop = savedScrollTop; });
     }
 
-    return { linksByFile };
+    container.addEventListener('dblclick', (e) => {
+      const remarkEl = e.target.closest('[data-remark-source="link"]');
+      if (!remarkEl) return;
+      e.stopPropagation();
+      e.preventDefault();
+
+      const fp = remarkEl.dataset.filePath;
+      const li = parseInt(remarkEl.dataset.linkIndex);
+      const fileLs = linksByFile.get(fp);
+      if (!fileLs || !fileLs[li]) return;
+      const linkRef = fileLs[li];
+      const editValue = linkRef.remark || '';
+      const linkTimestamp = linkRef.timestamp || 0;
+
+      if (keepOpenRef) keepOpenRef.val = true;
+      const origHeight = remarkEl.offsetHeight;
+      const textarea = document.createElement('textarea');
+      textarea.value = editValue;
+      textarea.dataset.source = 'link';
+      textarea.dataset.linkFilePath = fp;
+      textarea.dataset.linkTimestamp = String(linkTimestamp);
+      textarea.style.cssText = `width:100%;min-height:${Math.max(origHeight, 60)}px;padding:4px;border:1px solid var(--border-color);border-radius:4px;background:var(--background-secondary);color:var(--text-normal);font-size:12px;font-family:var(--font-family);resize:vertical;box-sizing:border-box;outline:none;line-height:1.5;`;
+
+      const parent = remarkEl.parentNode;
+      parent.replaceChild(textarea, remarkEl);
+      textarea.focus();
+
+      textarea.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Escape') {
+          ev.preventDefault();
+          textarea.blur();
+        }
+      });
+
+      textarea.addEventListener('paste', async (pe) => {
+        const items = pe.clipboardData?.items;
+        if (!items) return;
+        let imageItem = null;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.startsWith('image/')) { imageItem = items[i]; break; }
+        }
+        if (!imageItem) return;
+        pe.preventDefault();
+        const file = imageItem.getAsFile();
+        if (!file) return;
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const uint8 = new Uint8Array(arrayBuffer);
+          let binary = '';
+          for (let i = 0; i < uint8.length; i++) binary += String.fromCharCode(uint8[i]);
+          const base64 = btoa(binary);
+          const ext = file.type.split('/')[1] || 'png';
+          const fileName = `pasted-image-${Date.now()}.${ext}`;
+          const attachmentFolder = plugin.app.vault.config?.attachmentFolderPath || '附件';
+          const fullPath = `${attachmentFolder}/${fileName}`;
+          try {
+            if (!(await plugin.app.vault.adapter.exists(attachmentFolder))) {
+              await plugin.app.vault.adapter.mkdir(attachmentFolder);
+            }
+          } catch { await plugin.app.vault.adapter.mkdir(attachmentFolder); }
+          await plugin.app.vault.adapter.writeBinary(fullPath, uint8);
+          const imgMd = `![[${fileName}]]`;
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          textarea.value = textarea.value.substring(0, start) + imgMd + textarea.value.substring(end);
+          textarea.selectionStart = textarea.selectionEnd = start + imgMd.length;
+        } catch (err) { new Notice(t('other.pasteImgFailed', {err: err.message || '未知错误'})); }
+      });
+
+      let blurSaved = false;
+      textarea.addEventListener('blur', async () => {
+        if (blurSaved) return;
+        blurSaved = true;
+        const newValue = textarea.value.trim();
+        linkRef.remark = newValue;
+        const ig = isGlobal;
+        const rulesList = ig ? plugin.globalRules : plugin.rules;
+        const r = rulesList.find(r => r.regex === ruleRegex);
+        if (r && r.links) {
+          let actualLink = null;
+          if (linkTimestamp) {
+            actualLink = r.links.find(l => l.filePath === fp && l.timestamp === linkTimestamp);
+          }
+          if (!actualLink && li >= 0 && li < r.links.length) {
+            const candidate = r.links[li];
+            if (candidate.filePath === fp) actualLink = candidate;
+          }
+          if (actualLink) {
+            actualLink.remark = newValue;
+          }
+        }
+        if (targetEl) targetEl.dataset.links = JSON.stringify(r ? r.links : []);
+        if (onDirty) onDirty();
+        if (ig) await plugin.saveGlobalRules(plugin.globalRules, true);
+        else await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
+        onRefresh();
+      });
+    });
+
+    return { linksByFile, container, aiBtnContainer, aiGraphBtn, _existingMermaidGraph, _renderGraphSection, aiQuestionBlock };
   }
 
   // 打开关键词独立窗口（可拖动，可打开多个）
   openKeywordWindow(keywordRegex, preservedRect) {
     const plugin = this;
 
-    const isGlobal = plugin.globalRules.some(r => r.regex === keywordRegex);
-    const rule = isGlobal
+    // 优先精确匹配 regex，其次匹配包含该关键词的规则
+    let isGlobal = plugin.globalRules.some(r => r.regex === keywordRegex);
+    let rule = isGlobal
       ? plugin.globalRules.find(r => r.regex === keywordRegex)
       : plugin.rules.find(r => r.regex === keywordRegex);
+    // 如果精确匹配失败，尝试从规则 parts 或 remark 中匹配
+    if (!rule) {
+      const allRules = [...(Array.isArray(plugin.globalRules) ? plugin.globalRules : []), ...(Array.isArray(plugin.rules) ? plugin.rules : [])];
+      rule = allRules.find(r => {
+        const parts = _splitRegexPipes(r.regex);
+        return parts.includes(keywordRegex) || _regexMatch(keywordRegex, r.regex);
+      });
+      if (rule) isGlobal = plugin.globalRules.includes(rule);
+    }
     const links = (rule && rule.links) ? rule.links : [];
 
     if (!rule && links.length === 0) {
-      const hasGlobal = plugin.globalRules.some(r => r.regex === keywordRegex);
-      const hasLocal = plugin.rules.some(r => r.regex === keywordRegex);
+      const hasGlobal = plugin.globalRules.some(r => r.regex === keywordRegex || _splitRegexPipes(r.regex).includes(keywordRegex));
+      const hasLocal = plugin.rules.some(r => r.regex === keywordRegex || _splitRegexPipes(r.regex).includes(keywordRegex));
 
-      if (!hasGlobal && !hasLocal) return;
+      if (!hasGlobal && !hasLocal) {
+        // 即使不在规则中也尝试打开窗口（显示相关文档和相关高亮）
+        isGlobal = false;
+      }
     }
 
     const popupSpacing = plugin.settings.popupSpacing !== undefined ? plugin.settings.popupSpacing : 10;
@@ -40277,10 +43784,19 @@ ${fullContext}`;
     const titleText = document.createElement('span');
     titleText.textContent = keywordRegex;
     titleText.dataset.editField = 'ruleRegex';
-    titleText.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%;cursor:text;border-bottom:1px dashed transparent;transition:border-bottom-color 0.15s ease;';
+    const _isKwSentence = _isSentenceRule(keywordRegex, plugin.settings);
+    titleText.style.cssText = _isKwSentence
+      ? 'font-size:11px;font-weight:600;color:var(--text-muted);cursor:text;border-bottom:1px dashed transparent;transition:border-bottom-color 0.15s ease;max-width:90%;word-break:break-all;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;'
+      : 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%;cursor:text;border-bottom:1px dashed transparent;transition:border-bottom-color 0.15s ease;';
     titleText.addEventListener('mouseenter', () => { titleText.style.borderBottomColor = 'var(--text-muted)'; });
     titleText.addEventListener('mouseleave', () => { titleText.style.borderBottomColor = 'transparent'; });
     titleLeft.appendChild(titleText);
+    if (_isKwSentence) {
+      const sentenceTag = document.createElement('span');
+      sentenceTag.textContent = t('main.relatedHighlights');
+      sentenceTag.style.cssText = 'font-size:9px;padding:1px 6px;border-radius:8px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-muted);flex-shrink:0;white-space:nowrap;';
+      titleLeft.appendChild(sentenceTag);
+    }
 
     // 来源数量 badge
     const remarkCount = links.filter(l => l.remark && l.remark.trim()).length;
@@ -40331,24 +43847,7 @@ ${fullContext}`;
       if (!kwLongPressTriggered) { e.preventDefault(); win.remove(); }
     });
     closeBtn.addEventListener('touchcancel', cancelKwLongPress);
-    const kwMasonryBtn = document.createElement('span');
-    kwMasonryBtn.textContent = '⊞';
-    kwMasonryBtn.title = t('remark.masonryMode');
-    kwMasonryBtn.style.cssText = 'cursor:pointer;font-size:13px;color:var(--text-faint);padding:1px 5px;border-radius:3px;transition:all 0.15s ease;flex-shrink:0;margin-right:2px;';
-    if (_remarkMasonryMode) kwMasonryBtn.style.color = 'var(--text-accent)';
-    kwMasonryBtn.addEventListener('mouseenter', () => { kwMasonryBtn.style.background = 'var(--background-modifier-hover)'; kwMasonryBtn.style.color = 'var(--text-normal)'; });
-    kwMasonryBtn.addEventListener('mouseleave', () => { kwMasonryBtn.style.background = 'transparent'; kwMasonryBtn.style.color = _remarkMasonryMode ? 'var(--text-accent)' : 'var(--text-faint)'; });
-    kwMasonryBtn.addEventListener('click', (ce) => {
-      ce.stopPropagation();
-      _remarkMasonryMode = !_remarkMasonryMode;
-      plugin.settings.remarkMasonryMode = _remarkMasonryMode;
-      plugin.saveData(plugin.settings);
-      kwMasonryBtn.style.color = _remarkMasonryMode ? 'var(--text-accent)' : 'var(--text-faint)';
-      const r = win.getBoundingClientRect();
-      win.remove();
-      plugin.openKeywordWindow(keywordRegex, { width: r.width, height: r.height, left: r.left, top: r.top });
-    });
-    titleBar.appendChild(kwMasonryBtn);
+
     titleBar.appendChild(closeBtn);
     win.appendChild(titleBar);
 
@@ -40392,7 +43891,7 @@ ${fullContext}`;
       showImageRender: true,
       showFromFileRuleDelete: false,
       cssScope: 'keyword-detail-window',
-      masonry: _remarkMasonryMode
+      masonry: _calcMasonry(links, plugin)
     });
 
     const linksByFile = renderResult.linksByFile;
@@ -40401,50 +43900,6 @@ ${fullContext}`;
 
     // 双击编辑
     content.addEventListener('dblclick', (e) => {
-      // 编辑搜索词
-      const searchTagEl = e.target.closest('[data-edit-field="searchText"]');
-      if (searchTagEl) {
-        e.stopPropagation();
-        const fp = searchTagEl.dataset.filePath;
-        const li = parseInt(searchTagEl.dataset.linkIndex);
-        const fileLs = linksByFile.get(fp);
-        if (!fileLs || !fileLs[li]) return;
-        const linkRef = fileLs[li];
-        const oldSearchText = linkRef.searchText || '';
-
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = oldSearchText;
-        const origW = searchTagEl.offsetWidth;
-        input.style.cssText = `font-size:10px;padding:1px 6px;border:none;border-radius:8px;background:var(--background-modifier-hover);color:var(--text-muted);width:${origW}px;outline:none;box-sizing:border-box;margin:0;height:auto;line-height:normal;`;
-        searchTagEl.replaceWith(input);
-        input.focus();
-        input.select();
-
-        let saved = false;
-        const save = async () => {
-          if (saved) return;
-          saved = true;
-          const val = input.value.trim();
-          linkRef.searchText = val;
-          searchTagEl.textContent = val ? val.substring(0, 20) + (val.length > 20 ? '...' : '') : '(' + t('main.noSearchText') + ')';
-          searchTagEl.style.fontStyle = val ? 'normal' : 'italic';
-          input.replaceWith(searchTagEl);
-          const isGlobal = plugin.globalRules.some(r => r.regex === keywordRegex);
-          if (isGlobal) {
-            await plugin.saveGlobalRules(plugin.globalRules, true);
-          } else {
-            await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
-          }
-        };
-        input.addEventListener('blur', save);
-        input.addEventListener('keydown', (ev) => {
-          if (ev.key === 'Enter') input.blur();
-          if (ev.key === 'Escape') { saved = true; input.replaceWith(searchTagEl); }
-        });
-        return;
-      }
-
       // 编辑备注内容
       const remarkEl = e.target.closest('[data-remark-source]');
       if (!remarkEl) return;
@@ -40550,7 +44005,7 @@ ${fullContext}`;
     const sortedKws = [...keywordIndex.values()]
       .filter(k => k.plainTexts && k.plainTexts.length > 0 && k.regex !== keywordRegex)
       .sort((a, b) => Math.max(...b.plainTexts.map(p => p.length)) - Math.max(...a.plainTexts.map(p => p.length)));
-    for (const link of rule.links) {
+    for (const link of (rule.links || [])) {
       const remarkText = link.remark || '';
       if (!remarkText.trim()) continue;
       for (const kw of sortedKws) {
@@ -40575,16 +44030,26 @@ ${fullContext}`;
     }
 
     if (allRelatedKeywords.size > 0) {
+      const kwBlock = document.createElement('div');
+      kwBlock.className = 'keyword-chips-block';
+      kwBlock.style.cssText = 'margin-bottom:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:6px;background:rgba(var(--mono-rgb-0),0.15);';
+      const kwBlockHeader = document.createElement('div');
+      kwBlockHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:4px;';
+      const kwBlockHeaderLeft = document.createElement('div');
+      kwBlockHeaderLeft.style.cssText = 'display:flex;align-items:center;gap:4px;';
+      const kwBlockTitle = document.createElement('span');
+      kwBlockTitle.textContent = t('remark.relatedKeywords');
+      kwBlockHeaderLeft.appendChild(kwBlockTitle);
+      kwBlockHeader.appendChild(kwBlockHeaderLeft);
+      if (renderResult?.aiGraphBtn) kwBlockHeader.appendChild(renderResult.aiGraphBtn);
+      kwBlock.appendChild(kwBlockHeader);
       const chipsBar = document.createElement('div');
       chipsBar.className = 'keyword-chips-bar';
-              chipsBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;background:transparent;border-top:1px solid rgba(255,255,255,0.08);border-radius:0 0 12px 12px;flex-shrink:0;margin:0 -' + popupSpacing + 'px -' + popupSpacing + 'px -' + popupSpacing + 'px;';
+      chipsBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;flex-shrink:0;';
 
-      const label = document.createElement('span');
-      label.textContent = '🔗';
-      label.style.cssText = 'font-size:11px;color:var(--text-muted);margin-right:2px;align-self:center;';
-      chipsBar.appendChild(label);
 
       for (const [kwRegex, info] of allRelatedKeywords) {
+
         const chip = document.createElement('span');
         chip.className = 'keyword-chip';
         chip.title = (info.relation === 'mention' ? t('main.keywordMentions') : t('main.keywordMentionedBy')) + ' ' + kwRegex;
@@ -40710,7 +44175,29 @@ ${fullContext}`;
         winStartY = Math.round(rect.top);
       }, { passive: true });
 
-      win.appendChild(chipsBar);
+      kwBlock.appendChild(chipsBar);
+      // 添加折叠按钮
+      _createSectionToggle(plugin, 'relatedKeywords', chipsBar, kwBlockHeaderLeft);
+      if (renderResult?._existingMermaidGraph && renderResult?._renderGraphSection) renderResult._renderGraphSection(renderResult._existingMermaidGraph, undefined, kwBlock);
+      if (renderResult?.aiBtnContainer && content.contains(renderResult.aiBtnContainer)) content.insertBefore(kwBlock, renderResult.aiBtnContainer);
+      else content.appendChild(kwBlock);
+      // 插入 AI 提问块到关联词下方
+      if (renderResult?.aiQuestionBlock) {
+        if (kwBlock.parentNode) {
+          // 关联词已插入，在其后插入
+          kwBlock.after(renderResult.aiQuestionBlock);
+        } else {
+          // 关联词未插入，在 aiBtnContainer 前插入
+          if (renderResult?.aiBtnContainer && content.contains(renderResult.aiBtnContainer)) content.insertBefore(renderResult.aiQuestionBlock, renderResult.aiBtnContainer);
+          else content.appendChild(renderResult.aiQuestionBlock);
+        }
+      }
+    }
+
+    // 即使没有关联词，也要插入 AI 提问块（如果有的话）
+    if (allRelatedKeywords.size === 0 && renderResult?.aiQuestionBlock) {
+      if (renderResult?.aiBtnContainer && content.contains(renderResult.aiBtnContainer)) content.insertBefore(renderResult.aiQuestionBlock, renderResult.aiBtnContainer);
+      else content.appendChild(renderResult.aiQuestionBlock);
     }
 
     // 右下角 resize 手柄
@@ -40934,6 +44421,7 @@ ${fullContext}`;
       const highlightEl = target.closest('.highlight-tooltip-text, .highlight-regex-text');
       if (!highlightEl) return;
       
+
       // 如果当前已有弹窗，检查是否是同一个规则（通过 ruleRegex 判断，而非 DOM 引用）
       if (currentPopover && currentTargetEl && !plugin._keepExistingPopup) {
         const currentRegex = currentTargetEl.dataset?.ruleRegex;
@@ -41212,11 +44700,20 @@ ${fullContext}`;
           const popupTitleText = document.createElement('span');
           popupTitleText.textContent = targetEl.dataset.ruleRegex || '';
           popupTitleText.dataset.editField = 'ruleRegex';
-          popupTitleText.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;border-bottom:1px dashed transparent;transition:border-bottom-color 0.15s ease;max-width:70%;';
+          const _isCurrentSentence = _isSentenceRule(targetEl.dataset.ruleRegex || '', plugin.settings);
+          popupTitleText.style.cssText = _isCurrentSentence
+            ? 'font-size:11px;font-weight:600;color:var(--text-muted);cursor:text;border-bottom:1px dashed transparent;transition:border-bottom-color 0.15s ease;max-width:90%;word-break:break-all;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;'
+            : 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;border-bottom:1px dashed transparent;transition:border-bottom-color 0.15s ease;max-width:70%;';
           popupTitleText.addEventListener('mouseenter', () => { popupTitleText.style.borderBottomColor = 'var(--text-muted)'; });
           popupTitleText.addEventListener('mouseleave', () => { popupTitleText.style.borderBottomColor = 'transparent'; });
           popupTitleBar.appendChild(popupLeftBtns);
           popupTitleBar.appendChild(popupTitleText);
+          if (_isCurrentSentence) {
+            const sentenceTag = document.createElement('span');
+            sentenceTag.textContent = t('main.relatedHighlights');
+            sentenceTag.style.cssText = 'font-size:9px;padding:1px 6px;border-radius:8px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-muted);margin-left:4px;flex-shrink:0;white-space:nowrap;';
+            popupTitleBar.appendChild(sentenceTag);
+          }
           // 右侧：关闭按钮
           const popupCloseBtn = document.createElement('span');
           popupCloseBtn.textContent = '✕';
@@ -41265,23 +44762,7 @@ ${fullContext}`;
             if (!popupLongPressTriggered) { e.preventDefault(); hidePopup(true, true); }
           });
           popupCloseBtn.addEventListener('touchcancel', cancelLongPress);
-          const popupMasonryBtn = document.createElement('span');
-          popupMasonryBtn.textContent = '⊞';
-          popupMasonryBtn.title = t('remark.masonryMode');
-          popupMasonryBtn.style.cssText = 'cursor:pointer;font-size:13px;color:var(--text-faint);padding:1px 5px;border-radius:3px;transition:all 0.15s ease;flex-shrink:0;margin-right:2px;';
-          if (_remarkMasonryMode) popupMasonryBtn.style.color = 'var(--text-accent)';
-          popupMasonryBtn.addEventListener('mouseenter', () => { popupMasonryBtn.style.background = 'var(--background-modifier-hover)'; popupMasonryBtn.style.color = 'var(--text-normal)'; });
-          popupMasonryBtn.addEventListener('mouseleave', () => { popupMasonryBtn.style.background = 'transparent'; popupMasonryBtn.style.color = _remarkMasonryMode ? 'var(--text-accent)' : 'var(--text-faint)'; });
-          popupMasonryBtn.addEventListener('click', (ce) => {
-            ce.stopPropagation();
-            _remarkMasonryMode = !_remarkMasonryMode;
-            plugin.settings.remarkMasonryMode = _remarkMasonryMode;
-            plugin.saveData(plugin.settings);
-            popupMasonryBtn.style.color = _remarkMasonryMode ? 'var(--text-accent)' : 'var(--text-faint)';
-            renderAllRemarks();
-            repositionPopup();
-          });
-          popupTitleBar.appendChild(popupMasonryBtn);
+
           popupTitleBar.appendChild(popupCloseBtn);
           popup.appendChild(popupTitleBar);
           
@@ -41487,7 +44968,8 @@ ${fullContext}`;
           contentContainer.appendChild(styleElement);
           
           // 将 links 按 filePath 分组
-          const linksByFile = new Map();
+
+    const linksByFile = new Map();
           if (links && links.length > 0) {
             for (const link of links) {
               const key = link.filePath;
@@ -41525,6 +45007,236 @@ ${fullContext}`;
           
           // ===== 渲染所有备注内容（预览模式） =====
           let currentLinksByFile = null;
+          let currentRenderResult = null;
+          const renderRelatedKeywordsAndAI = () => {
+            // ===== 关键词反向链接 chips 区（固定在弹窗底部边缘） =====
+            const currentRegex = targetEl.dataset.ruleRegex;
+            if (currentRegex) {
+              const keywordIndex = plugin.buildKeywordIndex();
+              const backlinkIndex = plugin.buildBacklinkIndex(keywordIndex);
+
+              // 收集当前关键词备注中提到的其他关键词（正向：当前关键词的备注里提到了谁）
+              const mentionedKeywords = [];
+              const currentRule = plugin.globalRules.find(r => r.regex === currentRegex) || plugin.rules.find(r => r.regex === currentRegex);
+              if (currentRule && currentRule.links) {
+                const sortedKws = [...keywordIndex.values()]
+                  .filter(k1 => k1.plainTexts && k1.plainTexts.length > 0 && k1.regex !== currentRegex)
+                  .sort((a, b) => Math.max(...b.plainTexts.map(p => p.length)) - Math.max(...a.plainTexts.map(p => p.length)));
+                for (const link of currentRule.links) {
+                  const remarkText = link.remark || '';
+                  if (!remarkText.trim()) continue;
+                  for (const kw of sortedKws) {
+                    if (mentionedKeywords.some(m => m.regex === kw.regex)) continue;
+                    if (kw.plainTexts.some(p => remarkText.includes(p))) {
+                      mentionedKeywords.push(kw);
+                    }
+                  }
+                }
+              }
+
+              // 反向：谁提到了当前关键词
+              const mentionedBy = backlinkIndex.get(currentRegex) || [];
+
+              // 合并去重
+              const allRelatedKeywords = new Map();
+              for (const kw of mentionedKeywords) {
+                allRelatedKeywords.set(kw.regex, { regex: kw.regex, cssClass: kw.cssClass, relation: 'mention' });
+              }
+              for (const bl of mentionedBy) {
+                if (!allRelatedKeywords.has(bl.sourceRegex)) {
+                  // 查找来源规则的 cssClass
+                  const sourceRule = plugin.globalRules.find(r => r.regex === bl.sourceRegex) || plugin.rules.find(r => r.regex === bl.sourceRegex);
+                  allRelatedKeywords.set(bl.sourceRegex, { regex: bl.sourceRegex, cssClass: sourceRule?.cssClass || '', relation: 'mentionedBy' });
+                }
+              }
+
+              if (allRelatedKeywords.size > 0) {
+                const kwBlock = document.createElement('div');
+                kwBlock.className = 'keyword-chips-block';
+                kwBlock.style.cssText = 'margin-bottom:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:6px;background:rgba(var(--mono-rgb-0),0.15);';
+                const kwBlockHeader = document.createElement('div');
+                kwBlockHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:4px;';
+                const kwBlockHeaderLeft = document.createElement('div');
+                kwBlockHeaderLeft.style.cssText = 'display:flex;align-items:center;gap:4px;';
+                const kwBlockTitle = document.createElement('span');
+                kwBlockTitle.textContent = t('remark.relatedKeywords');
+                kwBlockHeaderLeft.appendChild(kwBlockTitle);
+                kwBlockHeader.appendChild(kwBlockHeaderLeft);
+                if (currentRenderResult?.aiGraphBtn) kwBlockHeader.appendChild(currentRenderResult.aiGraphBtn);
+                kwBlock.appendChild(kwBlockHeader);
+                const chipsBar = document.createElement('div');
+                chipsBar.className = 'keyword-chips-bar';
+        chipsBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;flex-shrink:0;';
+
+
+                for (const [kwRegex, info] of allRelatedKeywords) {
+
+                  const chip = document.createElement('span');
+                  chip.className = 'keyword-chip';
+                  chip.title = (info.relation === 'mention' ? t('main.keywordMentions') : t('main.keywordMentionedBy')) + ' ' + kwRegex;
+          chip.style.cssText = 'display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(var(--mono-rgb-0),0.3);transition:all 0.15s ease;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+
+                  const chipLabel = document.createElement('span');
+                  chipLabel.textContent = (info.relation === 'mention' ? '→ ' : '← ') + kwRegex;
+                  if (info.cssClass) {
+                    chipLabel.className = info.cssClass + ' highlight-regex-text';
+                    chip.style.borderColor = 'transparent';
+                  } else {
+                    chipLabel.style.cssText = 'font-weight:500;color:var(--text-normal);';
+                  }
+                  chip.appendChild(chipLabel);
+
+                  // 悬浮预览
+                  let hoverTimeout = null;
+                  let previewEl = null;
+                  let previewHideTimeout = null;
+
+                  const closePreview = () => {
+                    if (previewEl) { previewEl.remove(); previewEl = null; }
+                    if (previewHideTimeout) { clearTimeout(previewHideTimeout); previewHideTimeout = null; }
+                  };
+
+                  chip.addEventListener('mouseenter', () => {
+                    if (!_isDesktop) return;
+                    chip.style.transform = 'scale(1.05)';
+                    chip.style.filter = 'brightness(1.15)';
+                    if (previewHideTimeout) { clearTimeout(previewHideTimeout); previewHideTimeout = null; }
+                    if (previewEl) return;
+                    hoverTimeout = setTimeout(() => {
+                      const kwRule = plugin.globalRules.find(r => r.regex === kwRegex) || plugin.rules.find(r => r.regex === kwRegex);
+                      if (!kwRule || !kwRule.links) return;
+                      const remarks = kwRule.links.filter(l => l.remark && l.remark.trim()).map(l => l.remark.trim());
+                      if (remarks.length === 0) return;
+
+                      previewEl = document.createElement('div');
+                      previewEl.className = 'keyword-chip-preview';
+              previewEl.style.cssText = `position:fixed;z-index:1200;max-width:350px;max-height:300px;overflow-y:auto;padding:${popupSpacing}px;background:rgba(var(--mono-rgb-0),0.75);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border:none;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.35);font-size:12px;line-height:1.4;`;
+              previewEl.addEventListener('mousedown', () => plugin.constructor.bringToFront(previewEl));
+
+                      const titleDiv = document.createElement('div');
+                      titleDiv.textContent = kwRegex;
+                      titleDiv.style.cssText = 'font-weight:600;margin-bottom:4px;color:var(--text-accent);';
+                      previewEl.appendChild(titleDiv);
+
+                      for (const r of remarks) {
+                        const rDiv = document.createElement('div');
+                        rDiv.textContent = r;
+                        rDiv.style.cssText = 'color:var(--text-muted);margin-top:2px;border-left:2px solid var(--background-modifier-border);padding-left:6px;';
+                        previewEl.appendChild(rDiv);
+                      }
+
+                      previewEl.addEventListener('mouseenter', () => {
+                        if (previewHideTimeout) { clearTimeout(previewHideTimeout); previewHideTimeout = null; }
+                      });
+                      previewEl.addEventListener('mouseleave', () => {
+                        previewHideTimeout = setTimeout(() => {
+                          closePreview();
+                          chip.style.transform = 'scale(1)';
+                          chip.style.filter = '';
+                        }, 200);
+                      });
+
+              document.body.appendChild(previewEl);
+              plugin.constructor.bringToFront(previewEl);
+
+                      const chipRect = chip.getBoundingClientRect();
+                      const previewHeight = previewEl.offsetHeight;
+                      let top = chipRect.top - previewHeight - 4;
+                      if (top < 4) top = chipRect.bottom + 4;
+                      let left = chipRect.left;
+                      if (left + 350 > window.innerWidth) left = window.innerWidth - 360;
+                      previewEl.style.top = top + 'px';
+                      previewEl.style.left = left + 'px';
+                    }, 400);
+                  });
+                  chip.addEventListener('mouseleave', () => {
+                    if (hoverTimeout) clearTimeout(hoverTimeout);
+                    previewHideTimeout = setTimeout(() => {
+                      closePreview();
+                      chip.style.transform = 'scale(1)';
+                      chip.style.filter = '';
+                    }, 200);
+                  });
+
+          chip.addEventListener('click', (ce) => {
+
+            ce.preventDefault();
+            ce.stopPropagation();
+                    closePreview();
+                    chip.style.transform = 'scale(1)';
+                    chip.style.filter = '';
+                    // 检查是否已有该关键词的窗口
+                    const existingWin = document.querySelector(`.keyword-detail-window[data-keyword="${CSS.escape(kwRegex)}"]`);
+                    if (existingWin) {
+                      existingWin.remove();
+                    } else {
+                      plugin.openKeywordWindow(kwRegex);
+                    }
+                  });
+
+                  chipsBar.appendChild(chip);
+                }
+
+                // chips 底部拖动移动弹窗
+                chipsBar.style.cursor = 'move';
+                chipsBar.addEventListener('mousedown', (e) => {
+                  if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('.keyword-chip')) return;
+                  isDraggingPopup = true;
+                  popupDragStartX = e.clientX;
+                  popupDragStartY = e.clientY;
+                  const rect = popup.getBoundingClientRect();
+                  popupWinStartX = Math.round(rect.left);
+                  popupWinStartY = Math.round(rect.top);
+                  e.preventDefault();
+                });
+                chipsBar.addEventListener('touchstart', (e) => {
+                  if (e.target.tagName === 'INPUT') return;
+                  const touch = e.touches[0];
+                  isDraggingPopup = true;
+                  popupDragStartX = touch.clientX;
+                  popupDragStartY = touch.clientY;
+                  const rect = popup.getBoundingClientRect();
+                  popupWinStartX = Math.round(rect.left);
+                  popupWinStartY = Math.round(rect.top);
+                }, { passive: true });
+
+                kwBlock.appendChild(chipsBar);
+                // 添加折叠按钮
+                _createSectionToggle(plugin, 'relatedKeywords', chipsBar, kwBlockHeaderLeft);
+                if (currentRenderResult?._existingMermaidGraph && currentRenderResult?._renderGraphSection) currentRenderResult._renderGraphSection(currentRenderResult._existingMermaidGraph, undefined, kwBlock);
+                if (currentRenderResult?.aiBtnContainer && currentRenderResult.container.contains(currentRenderResult.aiBtnContainer)) currentRenderResult.container.insertBefore(kwBlock, currentRenderResult.aiBtnContainer);
+                else contentContainer.appendChild(kwBlock);
+                // 插入 AI 提问块到关联词下方
+                if (currentRenderResult?.aiQuestionBlock) {
+                  if (kwBlock.parentNode) {
+                    kwBlock.after(currentRenderResult.aiQuestionBlock);
+                  } else {
+                    if (currentRenderResult?.aiBtnContainer && currentRenderResult.container.contains(currentRenderResult.aiBtnContainer)) currentRenderResult.container.insertBefore(currentRenderResult.aiQuestionBlock, currentRenderResult.aiBtnContainer);
+                    else contentContainer.appendChild(currentRenderResult.aiQuestionBlock);
+                  }
+                }
+
+                // 版本标签放入 chipsBar 内部（避免重叠）
+                const versionLabel = document.createElement('span');
+                const pluginVersion = plugin && plugin.manifest ? plugin.manifest.version : '';
+                versionLabel.textContent = 'SwiftGlossa' + (pluginVersion ? ' v' + pluginVersion : '');
+                versionLabel.style.cssText = 'font-size:8px;color:var(--text-faint);opacity:0.3;user-select:none;-webkit-user-select:none;line-height:1;margin-left:auto;align-self:center;';
+                chipsBar.appendChild(versionLabel);
+              } else {
+                // 无 chips 时，版本标签固定在弹窗底部
+                const versionLabel = document.createElement('div');
+                const pluginVersion = plugin && plugin.manifest ? plugin.manifest.version : '';
+                versionLabel.textContent = 'SwiftGlossa' + (pluginVersion ? ' v' + pluginVersion : '');
+                versionLabel.style.cssText = 'position:absolute;bottom:2px;left:6px;font-size:8px;color:var(--text-faint);opacity:0.3;user-select:none;-webkit-user-select:none;line-height:1;pointer-events:none;';
+                popup.appendChild(versionLabel);
+                // 即使没有关联词，也要插入 AI 提问块
+                if (currentRenderResult?.aiQuestionBlock) {
+                  if (currentRenderResult?.aiBtnContainer && currentRenderResult.container.contains(currentRenderResult.aiBtnContainer)) currentRenderResult.container.insertBefore(currentRenderResult.aiQuestionBlock, currentRenderResult.aiBtnContainer);
+                  else contentContainer.appendChild(currentRenderResult.aiQuestionBlock);
+                }
+              }
+            }
+          };
           const renderAllRemarks = () => {
             popup.style.minWidth = '';
             let freshLinks = [];
@@ -41539,7 +45251,7 @@ ${fullContext}`;
               popupFontSize,
               popupLineHeight: plugin.settings.popupLineHeight !== undefined ? plugin.settings.popupLineHeight : 1.5,
 
-              onRefresh: () => { keepOpen = true; renderAllRemarks(); repositionPopup(); },
+              onRefresh: () => { keepOpen = true; renderAllRemarks(); renderRelatedKeywordsAndAI(); repositionPopup(); },
               onReposition: () => { repositionPopup(); },
               onDirty: () => { isDirty = true; },
               keepOpenRef: { val: false },
@@ -41552,9 +45264,10 @@ ${fullContext}`;
               showImageRender: true,
               showFromFileRuleDelete: true,
               cssScope: 'remark-custom-popup',
-              masonry: _remarkMasonryMode
+              masonry: _calcMasonry(freshLinks, plugin)
             });
             currentLinksByFile = result.linksByFile;
+            currentRenderResult = result;
           };
           
           // 重新定位弹窗（内容变化后调用）
@@ -41644,6 +45357,7 @@ ${fullContext}`;
           
           // 初始渲染
           renderAllRemarks();
+          renderRelatedKeywordsAndAI();
           
 
           // 显示弹窗
@@ -41704,70 +45418,6 @@ ${fullContext}`;
             // 锁定弹窗宽度，防止编辑时弹窗坍缩
             const currentPopupWidth = popup.offsetWidth;
             popup.style.minWidth = currentPopupWidth + 'px';
-            
-            // 编辑搜索词
-            const searchTag = e.target.closest('[data-edit-field="searchText"]');
-            if (searchTag) {
-              keepOpen = true; // 编辑模式下不自动关闭弹窗
-              const filePath = searchTag.dataset.filePath;
-              const linkIndex = parseInt(searchTag.dataset.linkIndex);
-              const fileLinks = currentLinksByFile.get(filePath);
-              if (!fileLinks || !fileLinks[linkIndex]) return;
-              const linkRef = fileLinks[linkIndex];
-              const oldSearchText = linkRef.searchText || '';
-              const oldFilePath = linkRef.filePath || '';
-              const oldTimestamp = linkRef.timestamp || 0;
-              
-              const input = document.createElement('input');
-              input.type = 'text';
-              input.value = linkRef.searchText || '';
-              const origSearchWidth = searchTag.offsetWidth;
-              input.style.cssText = `font-size:10px;padding:1px 6px;border:none;border-radius:8px;background:var(--background-modifier-hover);color:var(--text-muted);width:${origSearchWidth}px;outline:none;box-sizing:border-box;margin:0;height:auto;line-height:normal;`;
-              searchTag.replaceWith(input);
-              input.focus();
-              input.select();
-              
-              let searchSaved = false;
-              const saveSearchText = async () => {
-                if (searchSaved) return;
-                searchSaved = true;
-                const newValue = input.value.trim();
-                linkRef.searchText = newValue;
-                const ruleRegex = targetEl.dataset.ruleRegex;
-                if (ruleRegex) {
-                  // 同时更新原始规则数据中的对应条目
-                  const isGlobal = plugin.globalRules.some(r => r.regex === ruleRegex);
-                  const rulesList = isGlobal ? plugin.globalRules : plugin.rules;
-                  const rule = rulesList.find(r => r.regex === ruleRegex);
-                  if (rule && rule.links) {
-                    // 用 filePath + timestamp 匹配
-                    let actualLink = null;
-                    if (oldTimestamp) {
-                      actualLink = rule.links.find(l => l.filePath === oldFilePath && l.timestamp === oldTimestamp);
-                    }
-                    if (!actualLink && linkIndex >= 0 && linkIndex < rule.links.length) {
-                      const candidate = rule.links[linkIndex];
-                      if (candidate.filePath === oldFilePath) actualLink = candidate;
-                    }
-                    if (actualLink) {
-                      actualLink.searchText = newValue;
-                    }
-                    targetEl.dataset.links = JSON.stringify(rule.links);
-                  }
-                  isDirty = true;
-                  if (isGlobal) {
-                    await plugin.saveGlobalRules(plugin.globalRules, true);
-                  } else {
-                    await plugin.saveFileRules(plugin.currentFilePath, plugin.rules, true);
-                  }
-                }
-                renderAllRemarks();
-                repositionPopup();
-              };
-              input.addEventListener('blur', saveSearchText);
-              input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); if (ev.key === 'Escape') { renderAllRemarks(); repositionPopup(); } });
-              return;
-            }
             
             // 编辑文档名(filePath)
             const fileNameEl = e.target.closest('[data-edit-field="filePath"]');
@@ -42007,23 +45657,14 @@ ${fullContext}`;
                 const rule = rulesList.find(r => r.regex === ruleRegex);
                 plugin.remarkLog('[RegexCssHL] 备注编辑失焦: 查找规则', { found: !!rule, ruleRegex, isGlobal });
                 if (rule && rule.links) {
-                  // 优先用 filePath + timestamp 匹配（timestamp 是唯一的）
+                  // 优先用 timestamp 匹配（timestamp 是唯一的）
                   let actualLink = null;
                   if (linkTimestamp) {
-                    actualLink = rule.links.find(l => l.filePath === linkFilePath && l.timestamp === linkTimestamp);
+                    actualLink = rule.links.find(l => l.timestamp === linkTimestamp);
                   }
-                  // 回退：用 linkIndex 匹配（currentLinksByFile 中的索引可能与 rule.links 不同，需验证）
+                  // 回退：用 linkIndex 匹配
                   if (!actualLink && linkIndex >= 0 && linkIndex < rule.links.length) {
-                    const candidate = rule.links[linkIndex];
-                    if (candidate.filePath === linkFilePath) {
-                      actualLink = candidate;
-                      plugin.remarkLog('[RegexCssHL] 备注编辑失焦: 通过 linkIndex 回退匹配');
-                    }
-                  }
-                  // 最终回退：遍历所有 links 找到 filePath 匹配且 remark 未设置的
-                  if (!actualLink) {
-                    actualLink = rule.links.find(l => l.filePath === linkFilePath && (!l.remark || l.remark.trim() === ''));
-                    if (actualLink) plugin.remarkLog('[RegexCssHL] 备注编辑失焦: 通过 filePath+空备注 回退匹配');
+                    actualLink = rule.links[linkIndex];
                   }
                   
                   if (actualLink) {
@@ -42189,8 +45830,17 @@ ${fullContext}`;
                     plugin.refreshCurrentView();
                   } else {
                     setTimeout(checkRefresh, 300);
-                  }
-                };
+      }
+
+      if (inputValue) {
+        requestAnimationFrame(() => {
+          const matchedRule = this.contentEl.querySelector('[data-rule-regex][style*="2px solid var(--interactive-accent)"]');
+          if (matchedRule) matchedRule.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          const matchedStyle = this.contentEl.querySelector('.style-option[style*="2px solid var(--interactive-accent)"]');
+          if (matchedStyle) matchedStyle.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        });
+      }
+    };
                 setTimeout(checkRefresh, 300);
               } else {
                 plugin.refreshCurrentView();
@@ -42350,7 +46000,7 @@ ${fullContext}`;
                     if (!existsInLocal.links) existsInLocal.links = [];
                     for (const link of rule.links) {
                       const isDuplicate = existsInLocal.links.some(l =>
-                        l.filePath === link.filePath && (l.timestamp ? l.timestamp === link.timestamp : l.searchText === link.searchText)
+                        l.timestamp === link.timestamp
                       );
                       if (!isDuplicate) existsInLocal.links.push(link);
                     }
@@ -42385,7 +46035,7 @@ ${fullContext}`;
                     if (!existsInGlobal.links) existsInGlobal.links = [];
                     for (const link of rule.links) {
                       const isDuplicate = existsInGlobal.links.some(l =>
-                        l.filePath === link.filePath && (l.timestamp ? l.timestamp === link.timestamp : l.searchText === link.searchText)
+                        l.timestamp === link.timestamp
                       );
                       if (!isDuplicate) existsInGlobal.links.push(link);
                     }
@@ -42426,8 +46076,7 @@ ${fullContext}`;
               plugin.rulesVersion++;
               plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
               plugin.refreshCurrentView();
-              new Notice(t('main.ruleRemoved'));
-            });
+              });
             popupLeftBtns.appendChild(ruleBadge);
           }
 
@@ -42705,206 +46354,6 @@ ${fullContext}`;
 
           popup.appendChild(contentContainer);
 
-          // ===== 关键词反向链接 chips 区（固定在弹窗底部边缘） =====
-          const currentRegex = targetEl.dataset.ruleRegex;
-          if (currentRegex) {
-            const keywordIndex = plugin.buildKeywordIndex();
-            const backlinkIndex = plugin.buildBacklinkIndex(keywordIndex);
-
-            // 收集当前关键词备注中提到的其他关键词（正向：当前关键词的备注里提到了谁）
-            const mentionedKeywords = [];
-            const currentRule = plugin.globalRules.find(r => r.regex === currentRegex) || plugin.rules.find(r => r.regex === currentRegex);
-            if (currentRule && currentRule.links) {
-              const sortedKws = [...keywordIndex.values()]
-                .filter(k => k.plainTexts && k.plainTexts.length > 0 && k.regex !== currentRegex)
-                .sort((a, b) => Math.max(...b.plainTexts.map(p => p.length)) - Math.max(...a.plainTexts.map(p => p.length)));
-              for (const link of currentRule.links) {
-                const remarkText = link.remark || '';
-                if (!remarkText.trim()) continue;
-                for (const kw of sortedKws) {
-                  if (mentionedKeywords.some(m => m.regex === kw.regex)) continue;
-                  if (kw.plainTexts.some(p => remarkText.includes(p))) {
-                    mentionedKeywords.push(kw);
-                  }
-                }
-              }
-            }
-
-            // 反向：谁提到了当前关键词
-            const mentionedBy = backlinkIndex.get(currentRegex) || [];
-
-            // 合并去重
-            const allRelatedKeywords = new Map();
-            for (const kw of mentionedKeywords) {
-              allRelatedKeywords.set(kw.regex, { regex: kw.regex, cssClass: kw.cssClass, relation: 'mention' });
-            }
-            for (const bl of mentionedBy) {
-              if (!allRelatedKeywords.has(bl.sourceRegex)) {
-                // 查找来源规则的 cssClass
-                const sourceRule = plugin.globalRules.find(r => r.regex === bl.sourceRegex) || plugin.rules.find(r => r.regex === bl.sourceRegex);
-                allRelatedKeywords.set(bl.sourceRegex, { regex: bl.sourceRegex, cssClass: sourceRule?.cssClass || '', relation: 'mentionedBy' });
-              }
-            }
-
-            if (allRelatedKeywords.size > 0) {
-              const chipsBar = document.createElement('div');
-              chipsBar.className = 'keyword-chips-bar';
-      chipsBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;background:transparent;border-top:1px solid rgba(255,255,255,0.08);border-radius:0 0 12px 12px;flex-shrink:0;margin:0 -' + popupSpacing + 'px -' + popupSpacing + 'px -' + popupSpacing + 'px;';
-
-              // 标签
-              const label = document.createElement('span');
-              label.textContent = '🔗';
-              label.style.cssText = 'font-size:11px;color:var(--text-muted);margin-right:2px;align-self:center;';
-              chipsBar.appendChild(label);
-
-              for (const [kwRegex, info] of allRelatedKeywords) {
-                const chip = document.createElement('span');
-                chip.className = 'keyword-chip';
-                chip.title = (info.relation === 'mention' ? t('main.keywordMentions') : t('main.keywordMentionedBy')) + ' ' + kwRegex;
-        chip.style.cssText = 'display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(var(--mono-rgb-0),0.3);transition:all 0.15s ease;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-
-                const chipLabel = document.createElement('span');
-                chipLabel.textContent = (info.relation === 'mention' ? '→ ' : '← ') + kwRegex;
-                if (info.cssClass) {
-                  chipLabel.className = info.cssClass + ' highlight-regex-text';
-                  chip.style.borderColor = 'transparent';
-                } else {
-                  chipLabel.style.cssText = 'font-weight:500;color:var(--text-normal);';
-                }
-                chip.appendChild(chipLabel);
-
-                // 悬浮预览
-                let hoverTimeout = null;
-                let previewEl = null;
-                let previewHideTimeout = null;
-
-                const closePreview = () => {
-                  if (previewEl) { previewEl.remove(); previewEl = null; }
-                  if (previewHideTimeout) { clearTimeout(previewHideTimeout); previewHideTimeout = null; }
-                };
-
-                chip.addEventListener('mouseenter', () => {
-                  if (!_isDesktop) return;
-                  chip.style.transform = 'scale(1.05)';
-                  chip.style.filter = 'brightness(1.15)';
-                  if (previewHideTimeout) { clearTimeout(previewHideTimeout); previewHideTimeout = null; }
-                  if (previewEl) return;
-                  hoverTimeout = setTimeout(() => {
-                    const kwRule = plugin.globalRules.find(r => r.regex === kwRegex) || plugin.rules.find(r => r.regex === kwRegex);
-                    if (!kwRule || !kwRule.links) return;
-                    const remarks = kwRule.links.filter(l => l.remark && l.remark.trim()).map(l => l.remark.trim());
-                    if (remarks.length === 0) return;
-
-                    previewEl = document.createElement('div');
-                    previewEl.className = 'keyword-chip-preview';
-            previewEl.style.cssText = `position:fixed;z-index:1200;max-width:350px;max-height:300px;overflow-y:auto;padding:${popupSpacing}px;background:rgba(var(--mono-rgb-0),0.75);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border:none;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.35);font-size:12px;line-height:1.4;`;
-            previewEl.addEventListener('mousedown', () => plugin.constructor.bringToFront(previewEl));
-
-                    const titleDiv = document.createElement('div');
-                    titleDiv.textContent = kwRegex;
-                    titleDiv.style.cssText = 'font-weight:600;margin-bottom:4px;color:var(--text-accent);';
-                    previewEl.appendChild(titleDiv);
-
-                    for (const r of remarks) {
-                      const rDiv = document.createElement('div');
-                      rDiv.textContent = r;
-                      rDiv.style.cssText = 'color:var(--text-muted);margin-top:2px;border-left:2px solid var(--background-modifier-border);padding-left:6px;';
-                      previewEl.appendChild(rDiv);
-                    }
-
-                    previewEl.addEventListener('mouseenter', () => {
-                      if (previewHideTimeout) { clearTimeout(previewHideTimeout); previewHideTimeout = null; }
-                    });
-                    previewEl.addEventListener('mouseleave', () => {
-                      previewHideTimeout = setTimeout(() => {
-                        closePreview();
-                        chip.style.transform = 'scale(1)';
-                        chip.style.filter = '';
-                      }, 200);
-                    });
-
-            document.body.appendChild(previewEl);
-            plugin.constructor.bringToFront(previewEl);
-
-                    const chipRect = chip.getBoundingClientRect();
-                    const previewHeight = previewEl.offsetHeight;
-                    let top = chipRect.top - previewHeight - 4;
-                    if (top < 4) top = chipRect.bottom + 4;
-                    let left = chipRect.left;
-                    if (left + 350 > window.innerWidth) left = window.innerWidth - 360;
-                    previewEl.style.top = top + 'px';
-                    previewEl.style.left = left + 'px';
-                  }, 400);
-                });
-                chip.addEventListener('mouseleave', () => {
-                  if (hoverTimeout) clearTimeout(hoverTimeout);
-                  previewHideTimeout = setTimeout(() => {
-                    closePreview();
-                    chip.style.transform = 'scale(1)';
-                    chip.style.filter = '';
-                  }, 200);
-                });
-
-        chip.addEventListener('click', (ce) => {
-
-          ce.preventDefault();
-          ce.stopPropagation();
-                  closePreview();
-                  chip.style.transform = 'scale(1)';
-                  chip.style.filter = '';
-                  // 检查是否已有该关键词的窗口
-                  const existingWin = document.querySelector(`.keyword-detail-window[data-keyword="${CSS.escape(kwRegex)}"]`);
-                  if (existingWin) {
-                    existingWin.remove();
-                  } else {
-                    plugin.openKeywordWindow(kwRegex);
-                  }
-                });
-
-                chipsBar.appendChild(chip);
-              }
-
-              // chips 底部拖动移动弹窗
-              chipsBar.style.cursor = 'move';
-              chipsBar.addEventListener('mousedown', (e) => {
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('.keyword-chip')) return;
-                isDraggingPopup = true;
-                popupDragStartX = e.clientX;
-                popupDragStartY = e.clientY;
-                const rect = popup.getBoundingClientRect();
-                popupWinStartX = Math.round(rect.left);
-                popupWinStartY = Math.round(rect.top);
-                e.preventDefault();
-              });
-              chipsBar.addEventListener('touchstart', (e) => {
-                if (e.target.tagName === 'INPUT') return;
-                const touch = e.touches[0];
-                isDraggingPopup = true;
-                popupDragStartX = touch.clientX;
-                popupDragStartY = touch.clientY;
-                const rect = popup.getBoundingClientRect();
-                popupWinStartX = Math.round(rect.left);
-                popupWinStartY = Math.round(rect.top);
-              }, { passive: true });
-
-              popup.appendChild(chipsBar);
-
-              // 版本标签放入 chipsBar 内部（避免重叠）
-              const versionLabel = document.createElement('span');
-              const pluginVersion = plugin && plugin.manifest ? plugin.manifest.version : '';
-              versionLabel.textContent = 'SwiftGlossa' + (pluginVersion ? ' v' + pluginVersion : '');
-              versionLabel.style.cssText = 'font-size:8px;color:var(--text-faint);opacity:0.3;user-select:none;-webkit-user-select:none;line-height:1;margin-left:auto;align-self:center;';
-              chipsBar.appendChild(versionLabel);
-            } else {
-              // 无 chips 时，版本标签固定在弹窗底部
-              const versionLabel = document.createElement('div');
-              const pluginVersion = plugin && plugin.manifest ? plugin.manifest.version : '';
-              versionLabel.textContent = 'SwiftGlossa' + (pluginVersion ? ' v' + pluginVersion : '');
-              versionLabel.style.cssText = 'position:absolute;bottom:2px;left:6px;font-size:8px;color:var(--text-faint);opacity:0.3;user-select:none;-webkit-user-select:none;line-height:1;pointer-events:none;';
-              popup.appendChild(versionLabel);
-            }
-          }
-          
           // 右下角 resize 手柄
           const popupResizeHandle = document.createElement('div');
           popupResizeHandle.style.cssText = `
@@ -43201,8 +46650,14 @@ ${fullContext}`;
           e.preventDefault();
           e.stopPropagation();
           e.stopImmediatePropagation();
-          hideMobileHighlightActions();
           if (navigator.vibrate) navigator.vibrate(30);
+          
+          // 显示 c/i/g/l 按钮在悬浮球旁
+          const floatingBall2 = document.getElementById('regex-highlighter-floating-ball');
+          if (floatingBall2 && ruleRegex) {
+            plugin._showRuleActionButtons(floatingBall2, ruleRegex);
+          }
+          
           await plugin.ensureSidebarView();
           const retryShowRemark = async (attempts) => {
             const modal = plugin._regexHighlightModal;
@@ -43303,7 +46758,7 @@ ${fullContext}`;
                 if (rule.links && rule.links.length > 0) {
                   if (!existsInLocal.links) existsInLocal.links = [];
                   for (const link of rule.links) {
-                    const isDuplicate = existsInLocal.links.some(l => l.filePath === link.filePath && (l.timestamp ? l.timestamp === link.timestamp : l.searchText === link.searchText));
+                    const isDuplicate = existsInLocal.links.some(l => l.timestamp === link.timestamp);
                     if (!isDuplicate) existsInLocal.links.push(link);
                   }
                 }
@@ -43336,7 +46791,7 @@ ${fullContext}`;
                 if (rule.links && rule.links.length > 0) {
                   if (!existsInGlobal.links) existsInGlobal.links = [];
                   for (const link of rule.links) {
-                    const isDuplicate = existsInGlobal.links.some(l => l.filePath === link.filePath && (l.timestamp ? l.timestamp === link.timestamp : l.searchText === link.searchText));
+                    const isDuplicate = existsInGlobal.links.some(l => l.timestamp === link.timestamp);
                     if (!isDuplicate) existsInGlobal.links.push(link);
                   }
                 }
@@ -43728,7 +47183,7 @@ ${fullContext}`;
               if (!existsInLocal.links) existsInLocal.links = [];
               for (const link of rule.links) {
                 const isDuplicate = existsInLocal.links.some(l =>
-                  l.filePath === link.filePath && (l.timestamp ? l.timestamp === link.timestamp : l.searchText === link.searchText)
+                  l.timestamp === link.timestamp
                 );
                 if (!isDuplicate) existsInLocal.links.push(link);
               }
@@ -43767,7 +47222,7 @@ ${fullContext}`;
               if (!existsInGlobal.links) existsInGlobal.links = [];
               for (const link of rule.links) {
                 const isDuplicate = existsInGlobal.links.some(l =>
-                  l.filePath === link.filePath && (l.timestamp ? l.timestamp === link.timestamp : l.searchText === link.searchText)
+                  l.timestamp === link.timestamp
                 );
                 if (!isDuplicate) existsInGlobal.links.push(link);
               }
@@ -43813,7 +47268,6 @@ ${fullContext}`;
         plugin.rulesVersion++;
         plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
         plugin.refreshCurrentView();
-        new Notice(t('main.ruleRemoved'));
         hideBadge();
       });
       
@@ -43959,7 +47413,7 @@ ${fullContext}`;
         const ruleSource = target.dataset.ruleSource;
         const existingPopup = document.querySelector('.remark-custom-popup');
         if (existingPopup && existingPopup.dataset.ruleRegex === ruleRegex && existingPopup.dataset.ruleSource === ruleSource) {
-          const addBtn = existingPopup.querySelector('.remark-add-btn');
+          const addBtn = existingPopup.querySelector('[title="' + t('remark.addRemark') + '"]');
           if (addBtn) {
             addBtn.click();
             hideRemarkBadge();
@@ -44028,7 +47482,7 @@ ${fullContext}`;
           const popup = Array.from(popups).find(p => p.dataset.ruleRegex === ruleRegex && p.dataset.ruleSource === ruleSource) || popups[popups.length - 1];
           if (popup) {
             const emptyRemark = popup.querySelector('[data-remark-source="link"]');
-            if (emptyRemark && emptyRemark.textContent?.includes('双击编辑')) {
+            if (emptyRemark && emptyRemark.textContent?.includes(t('main.doubleClickToEditRemark'))) {
               emptyRemark.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
             }
           }
@@ -44304,13 +47758,14 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
   const resizeHandle = document.createElement('div');
   resizeHandle.className = "modal-resize-handle";
   resizeHandle.style.position = "fixed";
-  resizeHandle.style.width = "12px";
-  resizeHandle.style.height = "12px";
+  resizeHandle.style.width = _isDesktop ? "12px" : "28px";
+  resizeHandle.style.height = _isDesktop ? "12px" : "28px";
   resizeHandle.style.cursor = "nwse-resize";
   resizeHandle.style.zIndex = "10001";
   resizeHandle.style.background = "linear-gradient(135deg, transparent 50%, var(--text-muted) 50%)";
   resizeHandle.style.pointerEvents = "auto";
   resizeHandle.style.borderRadius = "0 0 8px 0";
+  if (!_isDesktop) resizeHandle.style.touchAction = "none";
   document.body.appendChild(resizeHandle);
   
   const updatePosition = () => {
@@ -44377,6 +47832,48 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
   };
   
   resizeHandle.addEventListener("mousedown", onResizeMouseDown);
+  
+  // 手机端touch支持
+  resizeHandle.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    isResizing = true;
+    resizeStartX = touch.clientX;
+    resizeStartY = touch.clientY;
+    resizeStartWidth = modalEl.offsetWidth;
+    resizeStartHeight = modalEl.offsetHeight;
+    modalEl.style.maxHeight = 'none';
+    if (contentEl) contentEl.style.maxHeight = 'none';
+    e.preventDefault();
+    e.stopPropagation();
+  }, { passive: false });
+  const onResizeTouchMove = (e) => {
+    if (!isResizing) return;
+    const touch = e.touches[0];
+    const newWidth = Math.max(minWidth, Math.min(maxWidth, resizeStartWidth + (touch.clientX - resizeStartX)));
+    const newHeight = Math.max(300, resizeStartHeight + (touch.clientY - resizeStartY));
+    modalEl.style.width = `${newWidth}px`;
+    modalEl.style.maxWidth = `${newWidth}px`;
+    modalEl.style.height = `${newHeight}px`;
+    contentEl.style.width = "100%";
+    contentEl.style.maxWidth = "100%";
+    if (widthInput) widthInput.value = newWidth;
+  };
+  const onResizeTouchEnd = () => {
+    if (!isResizing) return;
+    isResizing = false;
+    const newWidth = modalEl.offsetWidth;
+    const newHeight = modalEl.offsetHeight;
+    if (modalInstance.plugin && modalInstance.plugin.settings) {
+      modalInstance.plugin.settings[widthSettingsKey] = newWidth;
+      if (options.heightSettingsKey) {
+        modalInstance.plugin.settings[options.heightSettingsKey] = newHeight;
+      }
+      modalInstance.plugin.saveData(modalInstance.plugin.settings);
+    }
+    updatePosition();
+  };
+  document.addEventListener('touchmove', onResizeTouchMove, { passive: true });
+  document.addEventListener('touchend', onResizeTouchEnd);
   
   modalInstance._resizeHandle = resizeHandle;
   modalInstance._resizeUpdatePosition = updatePosition;

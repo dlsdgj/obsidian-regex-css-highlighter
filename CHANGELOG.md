@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v2.0.0 (2026-07-26)
+## 🆕 v2.0.1 (2026-07-26)
+
+- **SG Sentence Keyword Non-clickable / SG句子关键词不可点击** — Removed click handler from SG sentence keywords in related highlights (both main panel and keyword popup) to avoid redundant popup showing the same sentence / 移除相关高亮中SG句子规则关键词的点击事件，避免打开弹窗重复显示相同句子
+
+## v2.0.0 (2026-07-26)
 
 - **Related Highlights Tooltip Bilingual / 相关高亮提示双语** — Fully translated Related Highlights help tooltip to bilingual format (Display logic, Suggested usage, Remark style, etc.) / 相关高亮帮助提示完整双语翻译（显示逻辑、建议用法、备注样式等）
 - **Modal Initial Position Fix / 主面板初始位置修复** — Fixed main panel briefly appearing at top-left corner on first open by adding centered transform in constructor / 修复首次打开主面板时短暂出现在左上角，构造时添加居中transform

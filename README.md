@@ -89,6 +89,13 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 <summary>Changelog / 更新日志</summary>
 
 <details>
+<summary>v2.0.1 (2026-07-26)</summary>
+
+- **SG Sentence Keyword Non-clickable / SG句子关键词不可点击** — Removed click handler from SG sentence keywords in related highlights (both main panel and keyword popup) to avoid redundant popup showing the same sentence / 移除相关高亮中SG句子规则关键词的点击事件，避免打开弹窗重复显示相同句子
+
+</details>
+
+<details>
 <summary>v2.0.0 (2026-07-26)</summary>
 
 - **Related Highlights Tooltip Bilingual / 相关高亮提示双语** — Fully translated Related Highlights help tooltip to bilingual format (Display logic, Suggested usage, Remark style, etc.) / 相关高亮帮助提示完整双语翻译（显示逻辑、建议用法、备注样式等）

@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover, PluginSettingTab, ItemView, WorkspaceLeaf } = require('obsidian');
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover, PluginSettingTab, ItemView, WorkspaceLeaf } = require('obsidian');
 const { StateEffect, StateField } = require('@codemirror/state');
 const { EditorView, Decoration } = require('@codemirror/view');
 const hlMarshmallowField = StateField.define({
@@ -19121,10 +19121,8 @@ class AddRegexRuleModal {
           }
           const kwSpan = document.createElement('span');
           kwSpan.className = (seg.cssClass || '') + ' highlight-regex-text';
-          kwSpan.style.cssText = 'cursor:pointer;';
+          // SG句子规则：关键词只显示样式，不可点击（点击会打开弹窗显示相同句子，多余）
           kwSpan.textContent = srFullText.substring(seg.start, seg.end);
-          kwSpan.dataset.ruleRegex = seg.regex;
-          kwSpan.addEventListener('click', (ce) => { ce.stopPropagation(); plugin.openKeywordWindow(seg.regex); });
           textSpan.appendChild(kwSpan);
           lastEnd = seg.end;
         }
@@ -41792,10 +41790,8 @@ content.addEventListener('auxclick', (e) => {
                 }
                 const kwSpan = document.createElement('span');
                 kwSpan.className = (seg.cssClass || '') + ' highlight-regex-text';
-                kwSpan.style.cssText = 'cursor:pointer;';
+                // SG句子规则：关键词只显示样式，不可点击
                 kwSpan.textContent = srFullText2.substring(seg.start, seg.end);
-                kwSpan.dataset.ruleRegex = seg.regex;
-                kwSpan.addEventListener('click', (ce) => { ce.stopPropagation(); plugin.openKeywordWindow(seg.regex); });
                 textSpan.appendChild(kwSpan);
                 lastEnd = seg.end;
               }

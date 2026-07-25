@@ -6,7 +6,7 @@
 
 Highlight text with regex and custom CSS. Add interlinear notes above keywords, keyword-level remarks with backlinks, and AskMe AI questions to deepen understanding. (Formerly Regex CSS Highlighter)/通过正则表达式匹配文本并应用自定义CSS高亮。支持在关键词上方添加行间注释、关键词级别的带反链批注，以及AskMe AI提问以加深理解。（原 Regex CSS Highlighter）
 
-![SwiftGlossa Demo / SwiftGlossa演示](./assets/PixPin_2026-07-05_04-56-33_compressed.gif)
+![SwiftGlossa Demo / SwiftGlossa演示](./assets/PixPin_2026-07-26_07-13-32_compressed.gif)
 
 
 

@@ -1,7 +1,7 @@
 **义父/Patron daddy**:[莫问归期6666](https://b23.tv/TMXF3Jh)
 
 
-# SwiftGlossa / 积微探赜(zé) 
+# SwiftGlossa / 积微探赜
 
 
 Highlight text with regex and custom CSS. Add interlinear notes above keywords, keyword-level remarks with backlinks, and AskMe AI questions to deepen understanding. (Formerly Regex CSS Highlighter)/通过正则表达式匹配文本并应用自定义CSS高亮。支持在关键词上方添加行间注释、关键词级别的带反链批注，以及AskMe AI提问以加深理解。（原 Regex CSS Highlighter）
@@ -30,6 +30,7 @@ Highlight text with regex and custom CSS. Add interlinear notes above keywords, 
 
 
 
+D:\Documents\Obsidian Vault\.obsidian\plugins\Regex-Css-Highlighter\main.js
 ### 📱 Mobile Adaptation / 移动端适配
 
 <details>
@@ -86,7 +87,95 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 ## Changelog / 更新日志
 
 <details>
+<summary>v2.0.2 (2026-08-01)</summary>
+
+- **Tooltip Disabled State / Tooltip禁用状态** — "Add as Global/File Rule" options grayed out when no text selected / 未选中文字时"添加为全局/文件规则"选项灰色不可点击
+- **Action Buttons Redesign / 操作按钮重设计** — c/i/g/l buttons: circular→pill on hover, purple accent (#7c6cf0) matching floating ball / 圆形→悬停药丸形，紫色accent呼应悬浮球
+- **Right-Side Expansion / 右侧展开方向** — Buttons expand text leftward when floating ball is on right / 悬浮球右侧时文字向左展开
+- **g/l Toggle Capsule / g/l胶囊切换** — Capsule toggle with circular sub-items, active item purple-highlighted / 胶囊toggle圆形子项，激活项紫底
+
+</details>
+
+<details>
+<summary>v2.0.1.3 (2026-08-01)</summary>
+
+- **EditingChip Click Opens CSS Editor / 样式chip点击打开CSS编辑器** — Click editingChip opens CSSEditorModal instead of canceling / 点击editingChip打开CSS编辑器
+- **Switch Style No Collapse / 切换样式不再折叠** — Only opens style chip if not already pinned / 仅未展开时才点击styleChip
+- **Style Button Hover Tooltip / 样式按钮悬停提示** — Interactive tooltip with primary + expandable secondary options / 交互式tooltip含主要+可展开次要选项
+- **Remove Update Rule Button / 移除更新规则按钮** — No longer needed in input area / 输入框中不再需要
+- **EditingChip Hidden for Non-Rule Text / 非规则文本隐藏editingChip** — Only shows when input matches editing rule regex / 仅输入匹配编辑规则时显示
+- **Global Rule Duplicate Prevention / 全局规则重复防护** — Shows notice instead of adding duplicate file rule / 提示而非添加重复文件规则
+- **Dynamic Rule Existence Check / 动态规则存在检查** — Dynamic check instead of stale closure variables / 动态检查而非过期闭包变量
+- **Highlight Dedup Safety Net / 高亮去重安全网** — Deduplicates allRules by regex+cssClass / 按regex+cssClass去重
+- **Sentence Rule Global Guard / 长句全局规则防护** — addGlobalRule rejects regex exceeding sentence threshold / 拒绝超过句子长度阈值的regex
+- **addGlobalRule Returns Boolean / 返回布尔值** — Callers show success notice only on true / 调用方仅true时显示成功提示
+- **Remove Duplicate Middle-Click / 移除重复中键处理器** — Keeps auxclick only, eliminates double Notice / 仅保留auxclick，消除双重Notice
+- **Direct push→addGlobalRule / 直接push改为addGlobalRule** — Consistent sentence rule checking / 统一长句检查
+- **Complex Regex Keyword Highlighting / 复杂正则关键词高亮** — _buildKeywordRanges supports lookbehind/non-capturing groups / 支持lookbehind/非捕获组
+- **Click-Show Dblclick Edit Fix / 点击显示双击编辑修复** — Row click excludes remarkSpan / row click排除remarkSpan
+- **Remark Display Mode Instant Refresh / 评论显示方式即时刷新** — cloneNode + rebind on mode change / 切换时cloneNode+重新绑定
+- **Always Mode Display Fix / 常显模式修复** — Sets display='' instead of silent return / 设置display=''而非静默返回
+- **Remark Keyword Matching / 评论关键词匹配** — Keywords in comments show CSS styles and are clickable / 评论中关键词显示样式且可点击
+- **Float Button Empty JSON Fix / 悬浮按钮空JSON修复** — Checks empty content before JSON.parse / 解析前检查空内容
+
+</details>
+
+<details>
+<summary>v2.0.1.2 (2026-07-29)</summary>
+
+- **Prompt Dialog Fix / prompt()对话框修复** — Replaced prompt() with InputModal in Electron / Electron中用InputModal替代prompt()
+- **Collapsed Note Disappear Fix / 折叠笔记消失修复** — renderGlobalNotesArea removes both card and mini / 渲染时同时移除card和mini
+- **Drag Auto-Expand Fix / 拖动自动展开修复** — Drag state guard in mini click handler / mini click添加拖动状态守卫
+- **Drag Position Save / 拖动位置保存** — Mini drag saves _collapsedPos and persists / mini拖动后保存位置并持久化
+- **Window Size Loss Fix / 窗口大小丢失修复** — 5-layer protection for 0px size data / 5层防护防止0px尺寸数据
+- **Mobile Chip First-Click Fix / 手机chip首次点击修复** — Capture-phase handler with timestamp guard / capture-phase handler加时间戳守卫
+- **Mobile Settings Bar Drag / 手机设置栏拖动** — Touch drag support on settings bar / 设置栏添加触摸拖动
+- **Panel Dblclick Scroll Fix / 面板双击跳顶修复** — Removed dblclick handlers that caused DOM rebuild and scrollTop reset / 移除导致DOM重建和scrollTop重置的dblclick handler
+- **Related Keyword Chip Click Fix / 关联词chip点击修复** — Changed to openKeywordWindow to prevent scroll reset / 改为openKeywordWindow防止滚动重置
+- **ScrollTop Preservation / scrollTop保持** — _preservedScrollTop property + setTimeout(0) restore / _preservedScrollTop属性+setTimeout(0)恢复
+- **Mini Note Touch/Click Fix / 迷你笔记触摸点击修复** — Unified touch/click with vibrate feedback + double-invocation guard / 统一touch/click加震动反馈和双重调用守卫
+- **Floating Ball Toggle as Checkbox / 悬浮球开关改复选框** — Native checkbox replaces chip, avoids touch/click competition / 原生checkbox替代chip避开touch/click竞争
+- **Settings Bar Click Exclusion / 设置栏click排除** — Handlers exclude popup/interactive elements / handler排除弹窗和交互元素
+
+</details>
+
+<details>
 <summary>Changelog / 更新日志</summary>
+
+<summary>v2.0.1.1 (2026-07-28)</summary>
+
+- **Update Rule Button Redesign / 更新规则按钮重设计** — Moved inside regex input as compact pill, hidden by default, shown only after clicking a rule button / 移入输入框内部药丸形，默认隐藏，仅点击规则按钮后显示
+- **Update Rule Logic Fix / 更新规则逻辑修复** — currentEditingRule only set on rule button click, reset on input change / 仅点击规则按钮时设置，输入变化时重置
+- **Color Scheme Save as New / 配色方案保存为新方案** — "Save as New" adds new preset instead of replacing; auto-rename on ID conflict / 新增而非替换，ID冲突自动重命名
+- **Related Highlights Settings / 相关高亮设置** — Gear icon with settings popup for both types: font size, line height, uniform keyword style, click-to-show remarks / 两种相关高亮均添加设置：字体大小、行距、关键词样式统一、评论点击显示
+- **Related Highlights Renamed / 相关高亮改名** — "Non-Keyword Related Highlights" and "Keyword Related Highlights" / "非关键词相关高亮"和"关键词相关高亮"
+- **Uniform Keyword Style / 关键词样式统一** — Unify keyword styles to a single CSS class, fallback to original when empty / 统一关键词样式为指定CSS类名，空值用原样式
+- **Click-to-Show Remarks / 高亮评论点击显示** — Hide remark bubbles by default, show on click / 默认隐藏评论气泡，点击显示
+- **Chip Hover Mode for Groups / 分组悬停模式** — Keyword group chips respect hover mode setting / 分组chip受悬停模式控制
+- **Float Note Width Fix / 悬浮笔记宽度修复** — Removed maxWidth lock; restored max-width:480px / 移除maxWidth锁定，恢复max-width:480px
+- **Panel Card Height Fix / 面板笔记高度修复** — Removed _panelCardHeight mechanism, height auto-adapts / 移除_panelCardHeight，高度自适应
+- **Dblclick Edit Fix / 双击编辑修复** — Removed span[style] guard blocking dblclick / 移除span[style]守卫，双击可编辑
+- **chipBar Position Fix / chipBar位置修复** — Fixed chipBar moved out of chipContentSection / 修复chipBar被移出chipContentSection
+- **Keyword Click Fix / 关键词点击修复** — Keywords in related highlights open independent window / 关键词点击打开独立窗口
+- **saveSettings Error Fix / saveSettings错误修复** — Fixed saveSettings is not a function / 修复saveSettings未定义
+
+</details>
+
+<details>
+<details>
+<summary>v2.0.1.1 (2026-07-26)</summary>
+
+- **Mobile Floating Note Toolbar / 手机悬浮笔记操作栏** — Toolbar hidden by default on mobile, tap to toggle / 手机端操作栏默认隐藏，点击切换显示
+- **Collapsed Note Drag Fix / 折叠笔记拖动修复** — Desktop: drag mini no longer expands on release; collapsed state persisted across re-renders and restarts / 桌面端拖动mini不再展开；折叠状态持久化
+- **Mobile History Keywords Always Visible / 手机端历史关键词常显** — History section always visible on mobile; clear only clears chips; mobile clicks add to history / 历史区块常显，清空仅清chip，手机端点击添加历史
+- **Mobile Del Button / 手机端删除按钮** — Added "del" button below c/i/g/l near floating ball for quick rule deletion / 悬浮球旁添加del按钮快速删除规则
+- **Mobile Main Panel Scroll / 手机端主面板滚动** — Content area allows vertical scroll (pan-y) / 内容区域允许垂直滚动
+- **Mobile Main Panel Drag / 手机端主面板拖动** — Settings bar bottom supports touch drag (floating panel only); resize handle follows / 设置栏底部支持拖动；resize handle跟随
+- **Mobile Sidebar Match Fix / 手机端侧边栏匹配修复** — Closing and reopening main panel no longer breaks keyword match display / 关闭主面板后关键词匹配正常显示
+- **Floating Note Edit Style / 悬浮笔记编辑样式** — Removed border/radius from edit textarea; fills window size / 编辑框去掉边框圆角，自适应窗口
+- **Related Highlights for Rule Keywords / 规则关键词相关高亮** — Keywords with matching rules now show related highlights and backlinks / 有规则的关键词也显示相关高亮和反向引用
+
+</details>
 
 <details>
 <summary>v2.0.1 (2026-07-26)</summary>

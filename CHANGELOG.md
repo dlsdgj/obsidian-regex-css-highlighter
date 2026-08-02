@@ -2,7 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v2.0.2 (2026-08-01)
+## 🆕 v2.0.3 (2026-08-03)
+
+- **GridStack 24-Col CSS Fix / GridStack 24列CSS修复** — Injected dynamic `.gs-24` CSS rules for widget width/left positioning (gridstack.min.css only had `.gs-12` rules, causing widgets to collapse to 0 width) / 注入24列CSS规则修复卡片宽度坍缩（gridstack.min.css仅有12列规则，导致卡片宽度为0）
+- **Drag Handle SVG / 拖动手柄SVG** — Replaced text character with 6-dot SVG icon, unified desktop/mobile appearance / 用6点SVG图标替换文字字符，桌面/手机统一样式
+- **Info Color Scheme / Info配色方案** — Replaced preset palettes with custom color pickers (section bg + card bg) + 6 preset schemes, card header set transparent / 自定义颜色选择器替换预设调色板（板块+卡片背景）+6组预设，卡片标题栏透明
+- **Info Section Grid / Info板块网格** — Toggleable grid background on info section matching gridstack cell size for visual snapping guide / Info板块可切换网格背景，尺寸与gridstack吸附步长一致
+- **Card Drag Fix / 卡片拖动修复** — Drag limited to drag handle only, card content/header don't trigger drag, fixes mobile scroll issue / 拖动仅通过手柄，卡片内容/标题栏不触发拖动，修复手机滚动问题
+- **Floating Ball Style Edit / 悬浮球样式编辑** — Right-click shows options menu (edit class name + display text, or custom CSS), removes conflicting inline styles when applying class / 右键弹选项菜单（编辑类名+显示文字或自定义CSS），应用类名时移除冲突内联样式
+- **Multi-line Remark Edit / 多行备注编辑** — Inline remark editing changed to textarea, Esc key saves content / 内联备注改为多行textarea，Esc键保存
+- **New Install Defaults / 新装默认值** — showRuleSourceBadge, showRemarkBadge, chipHoverMode default to false; moved remark badge setting to display group above rule source badge / 规则来源标记、备注提示符、悬停模式默认关闭；备注提示符设置移至显示组规则来源标记上方
+
+## v2.0.2.2 (2026-08-02)
+
+- **GridStack.js Integration / GridStack.js集成** — Replaced masonry CSS columns with GridStack.js for free drag-and-drop resizable card layout / 用GridStack.js替换masonry布局，实现自由拖拽调整大小的卡片布局
+- **Inline Resource Loading / 内联资源加载** — GridStack JS/CSS loaded via adapter.read() and injected inline to bypass CSP restrictions / 通过adapter.read()读取并内联注入GridStack JS/CSS，绕过CSP限制
+- **GridStack Layout Persistence / GridStack布局持久化** — Layout saved as {x,y,w,h} per card in infoGridLayout, replacing old height-only infoCardLayout / 每张卡片布局保存为{x,y,w,h}到infoGridLayout，替换仅高度的infoCardLayout
+- **GridStack Resize Freedom / GridStack自由调整** — disableOneColumnMode, all 8 resize handles, alwaysShowResizeHandle, minW=1 for full resize freedom / 禁用单列模式，8方向resize手柄，始终显示手柄，最小宽度1列
+- **Hover Popup Info at Top / 悬停弹窗info置顶** — Info section moved to top of hover popup content instead of bottom / Info板块移至悬停弹窗内容顶部
+- **Sidebar Info Restoration / 侧边栏info恢复** — Modal info section recreated after hover popup closes, fixing addInfoSection closure overwriting / 悬停弹窗关闭后重建面板info板块，修复闭包覆盖问题
+- **Non-Keyword Info Hiding / 非关键词info隐藏** — Info section hidden when selecting non-keyword text, shown when selecting keyword / 选中非关键词时隐藏info板块，选中关键词时显示
+- **Non-Keyword Style Chip Hiding / 非关键词样式chip隐藏** — Editing chip hidden when selecting non-keyword text via _refreshUpdateChip / 选中非关键词时通过_refreshUpdateChip隐藏样式chip
+- **English Translation Fix / 英文翻译修复** — Replaced "关键词" with "keyword" in 3 English translation strings / 3处英文翻译中"关键词"改为"keyword"
+
+## v2.0.2.1 (2026-08-01)
+
+- **Hover Mode Translation / 悬停模式翻译** — Added missing English translation for "桌面端鼠标悬停模式" setting label / 补充"桌面端鼠标悬停模式"设置的英文翻译
+- **CSS Tab Context Menu: Copy Full Style / CSS tab右键菜单：复制完整样式** — Replaced "Add as Global Rule" option with "Copy Full Style" in style button right-click menu / 样式按钮右键菜单中"添加为全局规则"替换为"复制完整样式"
+- **Keyword Group Toggle Inline / 关键词分组toggle内联** — Group collapse/expand toggle button placed inside groupGrid (same line as rules), hidden when collapsed, dynamically moved to visible grid on group switch / 分组折叠/展开按钮放入groupGrid内（与规则同行），折叠时隐藏，切换分组时动态移动到可见grid
+- **Keyword Group Count Badge / 关键词分组计数** — Added count badge at end of each group showing keyword count / 每个分组末尾添加关键词数量计数badge
+- **Remark Settings Button / 备注设置按钮** — Added settings button (font size/line height sliders) next to keyword remarks title, inline expand like related highlights; removed font/line-height from popup settings panel / 关键词备注标题旁添加设置按钮（字体/行距slider），内联展开；移除弹窗设置中的字体/行间距项
+- **Related Keywords SVG Fix / 关联词SVG修复** — Changed textContent to innerHTML for related keywords title so SVG icon renders correctly / 关联词标题改用innerHTML使SVG图标正确渲染
+- **Emoji to SVG in English / 英文翻译emoji替换SVG** — Replaced 📝🔗🤖 emojis in English translations with SVG icons matching Chinese version / 英文翻译中emoji替换为与中文一致的SVG图标
+- **Hover Popup Without Remark / 无备注时悬停弹窗** — Hover popup now shows when rule regex exists (has related highlights/documents) even without remark content / 有规则regex（相关高亮/文档）时即使无备注也显示悬停弹窗
+
+## v2.0.2 (2026-08-01)
 
 - **Tooltip Disabled State / Tooltip禁用状态** — "Add as Global Rule" and "Add as File Rule" options in style button tooltip now appear grayed out and non-clickable when no text is selected, instead of silently doing nothing / 未选中文字时样式按钮tooltip中"添加为全局规则"和"添加为文件规则"选项显示为灰色不可点击，而非静默无反馈
 - **Floating Ball Action Buttons Redesign / 悬浮球操作按钮重设计** — c/i/g/l buttons redesigned as circular icons that expand to pill shape on hover with label text, using purple accent color (#7c6cf0) matching the floating ball gradient / c/i/g/l按钮改为圆形图标，悬停展开药丸形显示文字标签，使用紫色accent配色呼应悬浮球渐变

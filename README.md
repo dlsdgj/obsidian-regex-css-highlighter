@@ -1,14 +1,16 @@
 **义父/Patron daddy**:[莫问归期6666](https://b23.tv/TMXF3Jh)
 
 
-# SwiftGlossa / 积微探赜
+# SwiftGlossa 
 
 
 Highlight text with regex and custom CSS. Add interlinear notes above keywords, keyword-level remarks with backlinks, and AskMe AI questions to deepen understanding. (Formerly Regex CSS Highlighter)/通过正则表达式匹配文本并应用自定义CSS高亮。支持在关键词上方添加行间注释、关键词级别的带反链批注，以及AskMe AI提问以加深理解。（原 Regex CSS Highlighter）
 
-![SwiftGlossa Demo / SwiftGlossa演示](./assets/PixPin_2026-07-26_07-13-32_compressed.gif)
-
-
+![Remark Feature / 1](./assets/203-1.png)
+![Remark Feature / 2](./assets/203-2.png)
+![Remark Feature / 3](./assets/203-3.png)
+<details>
+<summary>Features</summary>
 
 ## Features / 功能特性
 
@@ -66,7 +68,7 @@ D:\Documents\Obsidian Vault\.obsidian\plugins\Regex-Css-Highlighter\main.js
 
 </details>
 
-
+</details>
 
 
 ## Installation / 安装
@@ -85,6 +87,49 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 </details>
 
 ## Changelog / 更新日志
+
+<details>
+<summary>v2.0.3 (2026-08-03)</summary>
+
+- **GridStack 24-Col CSS Fix / GridStack 24列CSS修复** — Injected dynamic `.gs-24` CSS rules for widget width/left positioning (gridstack.min.css only had `.gs-12` rules, causing widgets to collapse) / 注入24列CSS规则修复卡片宽度坍缩（gridstack.min.css仅有12列规则，导致卡片宽度为0）
+- **Drag Handle SVG / 拖动手柄SVG** — Replaced text character with 6-dot SVG icon, unified desktop/mobile / 用6点SVG图标替换文字字符，桌面/手机统一
+- **Info Color Scheme / Info配色方案** — Custom color pickers (section bg + card bg) + 6 presets, card header transparent / 自定义颜色选择器+6组预设，卡片标题栏透明
+- **Info Section Grid / Info板块网格** — Toggleable grid background matching gridstack cell size / 可切换网格背景，尺寸与gridstack步长一致
+- **Card Drag Fix / 卡片拖动修复** — Drag limited to handle only, fixes mobile scroll / 拖动仅通过手柄，修复手机滚动
+- **Floating Ball Style Edit / 悬浮球样式编辑** — Right-click options menu (class name + display text or custom CSS) / 右键选项菜单（类名+显示文字或自定义CSS）
+- **Multi-line Remark / 多行备注** — Inline remark editing uses textarea, Esc saves / 内联备注用textarea，Esc保存
+- **New Install Defaults / 新装默认值** — Rule source badge, remark badge, hover mode default off; remark badge setting moved to display group / 规则来源标记、备注提示符、悬停模式默认关闭；备注提示符移至显示组
+
+</details>
+
+<details>
+<summary>v2.0.2.2 (2026-08-02)</summary>
+
+- **GridStack.js Integration / GridStack.js集成** — Replaced masonry CSS columns with GridStack.js for free drag-and-drop resizable card layout / 用GridStack.js替换masonry布局，实现自由拖拽调整大小的卡片布局
+- **Inline Resource Loading / 内联资源加载** — GridStack JS/CSS loaded via adapter.read() and injected inline to bypass CSP / 通过adapter.read()读取并内联注入，绕过CSP限制
+- **Layout Persistence / 布局持久化** — Layout saved as {x,y,w,h} per card in infoGridLayout / 每张卡片布局保存为{x,y,w,h}到infoGridLayout
+- **Resize Freedom / 自由调整** — disableOneColumnMode, 8 resize handles, alwaysShowResizeHandle, minW=1 / 禁用单列模式，8方向手柄，始终显示，最小1列
+- **Hover Info at Top / 悬停info置顶** — Info section moved to top of hover popup / Info板块移至悬停弹窗顶部
+- **Sidebar Info Restoration / 侧边栏info恢复** — Modal info section recreated after hover popup closes / 悬停弹窗关闭后重建面板info板块
+- **Non-Keyword Info Hiding / 非关键词info隐藏** — Info section hidden when selecting non-keyword text / 选中非关键词时隐藏info板块
+- **Non-Keyword Style Chip Hiding / 非关键词样式chip隐藏** — Editing chip hidden for non-keyword via _refreshUpdateChip / 选中非关键词时隐藏样式chip
+- **English Translation Fix / 英文翻译修复** — "关键词"→"keyword" in 3 English strings / 3处英文翻译修复
+
+</details>
+
+<details>
+<summary>v2.0.2.1 (2026-08-01)</summary>
+
+- **Hover Mode Translation / 悬停模式翻译** — Added English translation for hover mode setting / 补充悬停模式设置英文翻译
+- **CSS Context: Copy Full Style / CSS右键：复制完整样式** — Replaced "Add as Global Rule" with "Copy Full Style" / "添加为全局规则"替换为"复制完整样式"
+- **Group Toggle Inline / 分组toggle内联** — Toggle button inside groupGrid, hidden when collapsed, moves to visible grid / toggle放入grid内与规则同行，折叠隐藏，切换时动态移动
+- **Group Count Badge / 分组计数** — Count badge at end of each keyword group / 每个分组末尾添加计数badge
+- **Remark Settings / 备注设置** — Font/line-height sliders in remark title, removed from popup settings / 备注标题旁字体/行距设置，移除弹窗设置中对应项
+- **SVG Icon Fix / SVG图标修复** — Related keywords title uses innerHTML for SVG / 关联词标题改用innerHTML渲染SVG
+- **Emoji→SVG / emoji替换SVG** — English translations use SVG icons instead of emoji / 英文翻译emoji替换为SVG
+
+
+</details>
 
 <details>
 <summary>v2.0.2 (2026-08-01)</summary>

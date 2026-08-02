@@ -91,6 +91,16 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 
 <details>
+<summary>v2.0.4 (2026-08-03)</summary>
+
+- **AI Prompt Panel Rewrite / AI提示词面板重写** — Multi-select chips with combined prompts, removed reply length setting (users set length in prompt text) / 多选chip组合提示词，移除回复长度设定（用户直接在提示词中写长度）
+- **Preset Prompts in Settings / 预设提示词移至设置** — 4 preset prompts moved to info settings under custom prompts, fully editable/deletable / 4个预设提示词移到info设置自定义提示词下，可编辑删除
+- **Preset Prompt i18n / 预设提示词国际化** — Preset prompts auto-translate on language switch; editing a preset converts it to custom / 预设提示词语言切换时自动翻译；编辑后变为自定义
+- **New Install Defaults / 新装默认值** — showInfoSection defaults to true; floating notes include consultation info preset (hidden) / 显示Info板块默认开启；悬浮笔记包含咨询信息预设（隐藏）
+
+</details>
+
+<details>
 <summary>v2.0.3 (2026-08-03)</summary>
 
 - **GridStack 24-Col CSS Fix / GridStack 24列CSS修复** — Injected dynamic `.gs-24` CSS rules for widget width/left positioning (gridstack.min.css only had `.gs-12` rules, causing widgets to collapse) / 注入24列CSS规则修复卡片宽度坍缩（gridstack.min.css仅有12列规则，导致卡片宽度为0）

@@ -650,6 +650,20 @@ const i18n = {
     'settings.showInfoSectionDesc': '在面板中显示关键词 Info 板块（从 info 文件夹读取 关键词.md）',
     'settings.infoVaultFolder': 'Info 库内文件夹',
     'settings.infoVaultFolderDesc': '可选：从库中指定文件夹读取 关键词.md（留空则仅读取插件 info 文件夹）',
+    'settings.infoCustomPrompts': '自定义提示词',
+    'settings.presetPlainExplain': '大白话解释',
+    'settings.presetPlainExplainText': '用大白话解释「{keyword}」，',
+    'settings.presetOneLineDef': '一句话定义',
+    'settings.presetOneLineDefText': '给「{keyword}」下一句话定义，',
+    'settings.presetExample': '举例说明',
+    'settings.presetExampleText': '举一个「{keyword}」的生活例子，',
+    'settings.presetCompare': '对比相似概念',
+    'settings.presetCompareText': '对比「{keyword}」和相似概念的区别，',
+    'settings.promptLabelPlaceholder': '标签',
+    'settings.promptTextPlaceholder': '提示词文本({keyword}替换)',
+    'settings.addPrompt': '+ 添加提示词',
+    'main.aiPromptTitle': '提示词',
+    'main.aiSend': '发送',
     'main.infoSection': 'Info',
     'main.infoEmpty': '点击关键词 chip 查看 Info（从 info 文件夹读取 关键词.md）',
     'main.infoNotFound': '未找到该关键词的 Info 文件',
@@ -1718,6 +1732,20 @@ const i18n = {
     'settings.showInfoSectionDesc': 'Show keyword Info section in panel (reads keyword.md from info folder)',
     'settings.infoVaultFolder': 'Info Vault Folder',
     'settings.infoVaultFolderDesc': 'Optional: read keyword.md from a vault folder (leave empty to use plugin info folder only)',
+    'settings.infoCustomPrompts': 'Custom Prompts',
+    'settings.presetPlainExplain': 'Plain Explain',
+    'settings.presetPlainExplainText': 'Explain "{keyword}" in plain words, ',
+    'settings.presetOneLineDef': 'One-line Def',
+    'settings.presetOneLineDefText': 'Give a one-line definition for "{keyword}", ',
+    'settings.presetExample': 'Example',
+    'settings.presetExampleText': 'Give a real-life example of "{keyword}", ',
+    'settings.presetCompare': 'Compare',
+    'settings.presetCompareText': 'Compare "{keyword}" with similar concepts, ',
+    'settings.promptLabelPlaceholder': 'Label',
+    'settings.promptTextPlaceholder': 'Prompt text ({keyword} replaced)',
+    'settings.addPrompt': '+ Add Prompt',
+    'main.aiPromptTitle': 'Prompts',
+    'main.aiSend': 'Send',
     'main.infoSection': 'Info',
     'main.infoEmpty': 'Click a keyword chip to view Info (reads keyword.md from info folder)',
     'main.infoNotFound': 'No Info file found for this keyword',
@@ -20412,23 +20440,48 @@ class AddRegexRuleModal {
       vfInput.placeholder = t('settings.infoVaultFolderDesc');
       vfInput.addEventListener('change', () => { _s.infoVaultFolder = vfInput.value.trim(); plugin.saveData(plugin.settings); });
       menu.appendChild(vfInput);
-      const promptLabel = document.createElement('div');
-      promptLabel.textContent = t('main.infoAiPrompt');
-      promptLabel.style.cssText = 'color:var(--text-muted);font-weight:600;margin:6px 0 4px;font-size:11px;';
-      menu.appendChild(promptLabel);
-      const promptTa = document.createElement('textarea');
-      promptTa.value = _s.infoAiPrompt || '用大白话介绍/解释「{keyword}」，150字内。\n\nExplain "{keyword}" in plain language, within 150 words.';
-      promptTa.style.cssText = 'width:100%;height:80px;font-size:10px;padding:4px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);resize:vertical;font-family:var(--font-monospace);';
-      promptTa.addEventListener('blur', () => { _s.infoAiPrompt = promptTa.value; plugin.saveData(plugin.settings); });
-      menu.appendChild(promptTa);
-      const resetBtn = document.createElement('button');
-        resetBtn.textContent = t('main.infoResetPrompt');
-      resetBtn.style.cssText = 'margin-top:4px;padding:2px 8px;cursor:pointer;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);font-size:10px;';
-      resetBtn.addEventListener('click', () => {
-        promptTa.value = '用大白话介绍/解释「{keyword}」，150字内。\n\nExplain "{keyword}" in plain language, within 150 words.';
-        _s.infoAiPrompt = promptTa.value; plugin.saveData(plugin.settings);
-      });
-      menu.appendChild(resetBtn);
+      const cpLabel = document.createElement('div');
+      cpLabel.textContent = t('settings.infoCustomPrompts');
+      cpLabel.style.cssText = 'color:var(--text-muted);font-weight:600;margin:6px 0 4px;font-size:11px;';
+      menu.appendChild(cpLabel);
+      const _presetPrompts = [
+        { label: t('settings.presetPlainExplain'), text: t('settings.presetPlainExplainText'), _isPreset: true, _presetKey: 'plainExplain' },
+        { label: t('settings.presetOneLineDef'), text: t('settings.presetOneLineDefText'), _isPreset: true, _presetKey: 'oneLineDef' },
+        { label: t('settings.presetExample'), text: t('settings.presetExampleText'), _isPreset: true, _presetKey: 'example' },
+        { label: t('settings.presetCompare'), text: t('settings.presetCompareText'), _isPreset: true, _presetKey: 'compare' },
+      ];
+      const _presetKeyMap = { plainExplain: ['settings.presetPlainExplain', 'settings.presetPlainExplainText'], oneLineDef: ['settings.presetOneLineDef', 'settings.presetOneLineDefText'], example: ['settings.presetExample', 'settings.presetExampleText'], compare: ['settings.presetCompare', 'settings.presetCompareText'] };
+      if (!_s.infoCustomPrompts || _s.infoCustomPrompts.length === 0) { _s.infoCustomPrompts = _presetPrompts.map(p => ({...p})); _s._presetPromptsLang = _currentLang; }
+      else { _s.infoCustomPrompts.forEach(p => { if (p._isPreset && _presetKeyMap[p._presetKey]) { p.label = t(_presetKeyMap[p._presetKey][0]); p.text = t(_presetKeyMap[p._presetKey][1]); } }); }
+      const cpList = document.createElement('div');
+      cpList.style.cssText = 'margin-bottom:6px;';
+      menu.appendChild(cpList);
+      const _renderCustomPrompts = () => {
+        cpList.innerHTML = '';
+        _s.infoCustomPrompts.forEach((p, i) => {
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:4px;margin:3px 0;';
+          const lblInp = document.createElement('input');
+          lblInp.type = 'text'; lblInp.value = p.label; lblInp.placeholder = t('settings.promptLabelPlaceholder');
+          lblInp.style.cssText = 'flex:1;font-size:10px;padding:2px 4px;border:1px solid var(--background-modifier-border);border-radius:3px;';
+          const txtInp = document.createElement('input');
+          txtInp.type = 'text'; txtInp.value = p.text; txtInp.placeholder = t('settings.promptTextPlaceholder');
+          txtInp.style.cssText = 'flex:2;font-size:10px;padding:2px 4px;border:1px solid var(--background-modifier-border);border-radius:3px;';
+          const delBtn = document.createElement('span');
+          delBtn.textContent = '×'; delBtn.style.cssText = 'cursor:pointer;color:var(--text-error);font-size:14px;flex-shrink:0;padding:0 2px;';
+          lblInp.addEventListener('change', () => { p.label = lblInp.value; delete p._isPreset; delete p._presetKey; plugin.saveData(plugin.settings); });
+          txtInp.addEventListener('change', () => { p.text = txtInp.value; delete p._isPreset; delete p._presetKey; plugin.saveData(plugin.settings); });
+          delBtn.addEventListener('click', () => { _s.infoCustomPrompts.splice(i, 1); plugin.saveData(plugin.settings); _renderCustomPrompts(); });
+          row.appendChild(lblInp); row.appendChild(txtInp); row.appendChild(delBtn);
+          cpList.appendChild(row);
+        });
+      };
+      _renderCustomPrompts();
+      const addPromptBtn = document.createElement('button');
+      addPromptBtn.textContent = t('settings.addPrompt');
+      addPromptBtn.style.cssText = 'margin-top:2px;padding:3px 8px;cursor:pointer;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);font-size:10px;';
+      addPromptBtn.addEventListener('click', () => { _s.infoCustomPrompts.push({ label: '', text: '' }); plugin.saveData(plugin.settings); _renderCustomPrompts(); });
+      menu.appendChild(addPromptBtn);
       headerRow.after(menu);
       const closeMenu = (ev) => { if (!menu.contains(ev.target) && !infoSettingIcon.contains(ev.target)) { menu.remove(); document.removeEventListener('mousedown', closeMenu); } };
       setTimeout(() => document.addEventListener('mousedown', closeMenu), 0);
@@ -20628,21 +20681,65 @@ class AddRegexRuleModal {
       const _openAiPopup = () => {
         if (_aiPopup) { _closeAiPopup(); return; }
         const kwName = fileName.replace(/\.md$/, '').replace(/_\d+$/, '');
-        const promptTemplate = plugin.settings?.infoAiPrompt || '用大白话介绍/解释「{keyword}」，150字内。\n\nExplain "{keyword}" in plain language, within 150 words.';
-        const fullPrompt = promptTemplate.replace(/\{keyword\}/g, kwName);
+        const _presetKeyMap = { plainExplain: ['settings.presetPlainExplain', 'settings.presetPlainExplainText'], oneLineDef: ['settings.presetOneLineDef', 'settings.presetOneLineDefText'], example: ['settings.presetExample', 'settings.presetExampleText'], compare: ['settings.presetCompare', 'settings.presetCompareText'] };
+        if (!plugin.settings.infoCustomPrompts || plugin.settings.infoCustomPrompts.length === 0) {
+          plugin.settings.infoCustomPrompts = Object.entries(_presetKeyMap).map(([k, [lk, tk]]) => ({ label: t(lk), text: t(tk), _isPreset: true, _presetKey: k }));
+          plugin.saveData(plugin.settings);
+        } else {
+          plugin.settings.infoCustomPrompts.forEach(p => { if (p._isPreset && _presetKeyMap[p._presetKey]) { p.label = t(_presetKeyMap[p._presetKey][0]); p.text = t(_presetKeyMap[p._presetKey][1]); } });
+        }
+        const _allPrompts = (plugin.settings.infoCustomPrompts || []).filter(p => p.label && p.text);
+        const _selected = new Set([0]);
         _aiPopup = document.createElement('div');
-        _aiPopup.style.cssText = 'position:fixed;z-index:9999;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:11px;width:320px;';
-        const sendBtn = document.createElement('button');
-        sendBtn.textContent = t('main.infoAiSend') || '发送';
-        sendBtn.style.cssText = 'width:100%;padding:4px 8px;cursor:pointer;border:1px solid var(--interactive-accent);border-radius:4px;background:var(--interactive-accent);color:var(--text-on-accent);font-size:11px;font-weight:600;margin-bottom:6px;';
+        _aiPopup.style.cssText = 'position:fixed;z-index:9999;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:14px;padding:14px;box-shadow:0 4px 16px rgba(0,0,0,0.08);font-size:11px;width:340px;';
+        const panelHead = document.createElement('div');
+        panelHead.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;';
+        const headLabel = document.createElement('span');
+        headLabel.textContent = t('main.aiPromptTitle');
+        headLabel.style.cssText = 'font-size:12px;color:var(--text-muted);font-weight:500;';
+        panelHead.appendChild(headLabel);
+        _aiPopup.appendChild(panelHead);
+        const chipRow = document.createElement('div');
+        chipRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;';
+        _aiPopup.appendChild(chipRow);
+        const _renderChips = () => {
+          chipRow.innerHTML = '';
+          _allPrompts.forEach((p, i) => {
+            const chip = document.createElement('div');
+            const isSel = _selected.has(i);
+            chip.style.cssText = `font-size:11px;padding:5px 11px;border-radius:14px;cursor:pointer;user-select:none;display:flex;align-items:center;gap:4px;transition:all 0.15s;border:1px solid ${isSel?'#b3a1ec':'var(--background-modifier-border)'};background:${isSel?'#f1ecfd':'var(--background-secondary)'};color:${isSel?'#6c4fd4':'var(--text-normal)'};`;
+            if (isSel) {
+              const check = document.createElement('span');
+              check.textContent = '✓';
+              check.style.fontSize = '11px';
+              chip.appendChild(check);
+            }
+            const lbl = document.createElement('span');
+            lbl.textContent = p.label;
+            chip.appendChild(lbl);
+            chip.addEventListener('click', () => {
+              if (_selected.has(i)) _selected.delete(i); else _selected.add(i);
+              _renderChips(); _updatePrompt();
+            });
+            chipRow.appendChild(chip);
+          });
+        };
         const promptTa = document.createElement('textarea');
-        promptTa.value = fullPrompt;
-        promptTa.style.cssText = 'width:100%;height:100px;font-size:10px;padding:4px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);resize:vertical;font-family:var(--font-monospace);';
-        _aiPopup.appendChild(sendBtn);
+        promptTa.style.cssText = 'width:100%;box-sizing:border-box;min-height:64px;border-radius:10px;border:1px solid var(--background-modifier-border);background:var(--background-secondary);padding:10px 12px;font-size:12px;color:var(--text-normal);line-height:1.6;resize:vertical;font-family:inherit;margin-bottom:8px;';
         _aiPopup.appendChild(promptTa);
+        const sendBtn = document.createElement('button');
+        sendBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' + t('main.aiSend');
+        sendBtn.style.cssText = 'width:100%;padding:9px;border:none;border-radius:10px;background:linear-gradient(135deg,#9b7ee8,#8266d6);color:#fff;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;';
+        _aiPopup.appendChild(sendBtn);
+        const _updatePrompt = () => {
+          const sortedIdx = Array.from(_selected).sort((a, b) => a - b).filter(i => _allPrompts[i]);
+          promptTa.value = sortedIdx.map(i => _allPrompts[i].text.replace(/\{keyword\}/g, kwName)).join('');
+        };
+        _renderChips();
+        _updatePrompt();
         document.body.appendChild(_aiPopup);
         const btnRect = aiBtn.getBoundingClientRect();
-        _aiPopup.style.left = Math.min(btnRect.left, window.innerWidth - 340) + 'px';
+        _aiPopup.style.left = Math.min(btnRect.left, window.innerWidth - 360) + 'px';
         _aiPopup.style.top = (btnRect.bottom + 4) + 'px';
         sendBtn.addEventListener('click', async () => {
           const p = promptTa.value.trim();
@@ -20657,11 +20754,12 @@ class AddRegexRuleModal {
               _closeAiPopup();
             }
           } catch (err) { new Notice(t('main.infoAiFailed') + ': ' + (err.message || t('main.infoUnknownError'))); }
-          finally { sendBtn.textContent = t('main.infoAiSend') || '发送'; sendBtn.disabled = false; aiBtn.style.opacity = '1'; }
+          finally { sendBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' + t('main.aiSend'); sendBtn.disabled = false; aiBtn.style.opacity = '1'; }
         });
         const _onDocDown = (ev) => { if (_aiPopup && !_aiPopup.contains(ev.target) && !aiBtn.contains(ev.target)) { _closeAiPopup(); document.removeEventListener('mousedown', _onDocDown); } };
         setTimeout(() => document.addEventListener('mousedown', _onDocDown), 0);
       };
+
       aiBtn.addEventListener('mouseenter', () => { aiBtn.style.opacity = '1'; });
       aiBtn.addEventListener('mouseleave', () => { aiBtn.style.opacity = '0.5'; });
       aiBtn.addEventListener('click', (ce) => { ce.stopPropagation(); ce.preventDefault(); _openAiPopup(); });
@@ -24168,6 +24266,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       chipHoverMode: false,
       showRelatedNotes: true,
       showRelatedHighlights: true,
+      showInfoSection: true,
       sentenceThresholdCN: 8,
       sentenceThresholdEN: 3,
 
@@ -38250,14 +38349,14 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           this._defaultFnGroup = data.defaultFnGroup || null;
         }
       } else {
-        this.globalNotes = [{ id: Date.now().toString(), text: '悬浮笔记操作方式 / Floating Note Controls：\n• Shift + 滚轮 → 切换配色 / Shift+Scroll → Change color scheme\n• Ctrl + 滚轮 → 调整透明度 / Ctrl+Scroll → Adjust opacity\n• Alt + 滚轮 → 调整字号 / Alt+Scroll → Adjust font size\n• 双击 → 编辑内容 / Double-click → Edit content\n• 点击调色盘按钮 → 选择配色方案 / Click palette button → Choose color scheme\n\n添加笔记：在悬浮球选项中点击"+"按钮\nAdd notes: Click the "+" button in the floating ball options', _createdAt: Date.now(), _hidden: true }];
+        this.globalNotes = [{ id: Date.now().toString(), text: '悬浮笔记操作方式 / Floating Note Controls：\n• Shift + 滚轮 → 切换配色 / Shift+Scroll → Change color scheme\n• Ctrl + 滚轮 → 调整透明度 / Ctrl+Scroll → Adjust opacity\n• Alt + 滚轮 → 调整字号 / Alt+Scroll → Adjust font size\n• 双击 → 编辑内容 / Double-click → Edit content\n• 点击调色盘按钮 → 选择配色方案 / Click palette button → Choose color scheme\n\n添加笔记：在悬浮球选项中点击"+"按钮\nAdd notes: Click the "+" button in the floating ball options', _createdAt: Date.now(), _hidden: true }, { id: (Date.now() + 1).toString(), text: '插件免费, 使用方法提供有偿咨询-vx:jtugqivi (giantPigeon)', _createdAt: Date.now() + 1, _hidden: true }];
       }
       if (!this.noteGroups || this.noteGroups.length === 0) {
         this.noteGroups = [];
       }
     } catch (error) {
       console.error('Error loading global notes:', error);
-      this.globalNotes = [{ id: Date.now().toString(), text: '悬浮笔记操作方式 / Floating Note Controls：\n• Shift + 滚轮 → 切换配色 / Shift+Scroll → Change color scheme\n• Ctrl + 滚轮 → 调整透明度 / Ctrl+Scroll → Adjust opacity\n• Alt + 滚轮 → 调整字号 / Alt+Scroll → Adjust font size\n• 双击 → 编辑内容 / Double-click → Edit content\n• 点击调色盘按钮 → 选择配色方案 / Click palette button → Choose color scheme\n\n添加笔记：在悬浮球选项中点击"+"按钮\nAdd notes: Click the "+" button in the floating ball options', _createdAt: Date.now(), _hidden: true }];
+      this.globalNotes = [{ id: Date.now().toString(), text: '悬浮笔记操作方式 / Floating Note Controls：\n• Shift + 滚轮 → 切换配色 / Shift+Scroll → Change color scheme\n• Ctrl + 滚轮 → 调整透明度 / Ctrl+Scroll → Adjust opacity\n• Alt + 滚轮 → 调整字号 / Alt+Scroll → Adjust font size\n• 双击 → 编辑内容 / Double-click → Edit content\n• 点击调色盘按钮 → 选择配色方案 / Click palette button → Choose color scheme\n\n添加笔记：在悬浮球选项中点击"+"按钮\nAdd notes: Click the "+" button in the floating ball options', _createdAt: Date.now(), _hidden: true }, { id: (Date.now() + 1).toString(), text: '插件免费, 使用方法提供有偿咨询-vx:jtugqivi (giantPigeon)', _createdAt: Date.now() + 1, _hidden: true }];
       this.noteGroups = [];
     }
   }

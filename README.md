@@ -1384,3 +1384,4 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 If you find this plugin helpful, consider buying me a coffee! / 如果这个插件对你有帮助，请考虑支持我！
 
 <img src="assets/reward.png" width="300" />
+<img src="assets/插件免费.png" width="300" />

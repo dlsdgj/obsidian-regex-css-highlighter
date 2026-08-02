@@ -86,7 +86,9 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 </details>
 
-## Changelog / 更新日志
+<details>
+<summary>Changelog / 更新日志</summary>
+
 
 <details>
 <summary>v2.0.3 (2026-08-03)</summary>
@@ -185,8 +187,6 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 </details>
 
 <details>
-<summary>Changelog / 更新日志</summary>
-
 <summary>v2.0.1.1 (2026-07-28)</summary>
 
 - **Update Rule Button Redesign / 更新规则按钮重设计** — Moved inside regex input as compact pill, hidden by default, shown only after clicking a rule button / 移入输入框内部药丸形，默认隐藏，仅点击规则按钮后显示
@@ -206,7 +206,7 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 </details>
 
-<details>
+
 <details>
 <summary>v2.0.1.1 (2026-07-26)</summary>
 

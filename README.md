@@ -91,6 +91,13 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 
 <details>
+<summary>v2.0.5 (2026-08-03)</summary>
+
+- **GridStack Resources Embedded / GridStack资源内嵌** — Inlined gridstack.min.css and gridstack-all.min.js into main.js, fixing info cards collapsing to single column and missing resize handle on fresh install (missing external files caused GridStack load failure) / 将gridstack.min.css和gridstack-all.min.js内嵌进main.js，修复新装时info卡片单列显示且右下角无调整大小按钮（外部文件缺失导致GridStack加载失败）
+
+</details>
+
+<details>
 <summary>v2.0.4 (2026-08-03)</summary>
 
 - **AI Prompt Panel Rewrite / AI提示词面板重写** — Multi-select chips with combined prompts, removed reply length setting (users set length in prompt text) / 多选chip组合提示词，移除回复长度设定（用户直接在提示词中写长度）

@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v2.0.4 (2026-08-03)
+## 🆕 v2.0.5 (2026-08-03)
+
+- **GridStack Resources Embedded / GridStack资源内嵌** — Inlined gridstack.min.css and gridstack-all.min.js directly into main.js, fixing info section cards collapsing to single column and missing resize handle on fresh install (external files missing caused GridStack load failure) / 将gridstack.min.css和gridstack-all.min.js内嵌进main.js，修复新装时info板块卡片单列显示且右下角无调整大小按钮的问题（外部文件缺失导致GridStack加载失败）
+
+## v2.0.4 (2026-08-03)
 
 - **AI Prompt Panel Rewrite / AI提示词面板重写** — Multi-select chips with combined prompts, removed reply length setting (users set length in prompt text directly) / 多选chip组合提示词，移除回复长度设定（用户直接在提示词中写长度）
 - **Preset Prompts in Settings / 预设提示词移至设置** — 4 preset prompts moved to info settings under custom prompts, fully editable/deletable / 4个预设提示词移到info设置自定义提示词下，可编辑删除

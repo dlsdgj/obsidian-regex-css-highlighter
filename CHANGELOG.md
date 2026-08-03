@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v2.0.5 (2026-08-03)
+## 🆕 v2.0.6 (2026-08-03)
+
+- **Sidebar/Main Panel Init Guard / 侧边栏与主面板初始化守卫** — onOpen now waits for plugin onload (settings/rulesUpdateEmitter) to finish before rendering, fixing sidebar "Cannot read properties of undefined" error and empty main panel on fresh install/update (view restored before async onload completes) / onOpen 现在等待插件 onload（settings/rulesUpdateEmitter）完成后再渲染，修复新装/更新时侧边栏报错和主面板空白（view 在 async onload 完成前被恢复）
+- **Intro Floating Note / 介绍悬浮笔记** — New install auto-pops a bilingual (CN/EN) intro floating note with usage guide; removed old consultation note (also cleaned for existing users on update) / 新装自动弹出中英双语介绍悬浮笔记（含用法指南）；移除旧版咨询笔记（已安装用户更新后也清除）
+
+## v2.0.5 (2026-08-03)
 
 - **GridStack Resources Embedded / GridStack资源内嵌** — Inlined gridstack.min.css and gridstack-all.min.js directly into main.js, fixing info section cards collapsing to single column and missing resize handle on fresh install (external files missing caused GridStack load failure) / 将gridstack.min.css和gridstack-all.min.js内嵌进main.js，修复新装时info板块卡片单列显示且右下角无调整大小按钮的问题（外部文件缺失导致GridStack加载失败）
 

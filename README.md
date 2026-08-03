@@ -91,6 +91,14 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 
 <details>
+<summary>v2.0.6 (2026-08-03)</summary>
+
+- **Sidebar/Main Panel Init Guard / 侧边栏与主面板初始化守卫** — onOpen waits for plugin onload (settings/rulesUpdateEmitter) before rendering, fixing sidebar crash and empty main panel on fresh install/update (view restored before async onload completes) / onOpen 等待插件 onload（settings/rulesUpdateEmitter）完成后再渲染，修复新装/更新时侧边栏报错和主面板空白（view 在 async onload 完成前被恢复）
+- **Intro Floating Note / 介绍悬浮笔记** — New install auto-pops a bilingual intro floating note with usage guide; old consultation note removed (also cleaned for existing users) / 新装自动弹出中英双语介绍悬浮笔记（含用法指南）；移除旧版咨询笔记（已安装用户更新后也清除）
+
+</details>
+
+<details>
 <summary>v2.0.5 (2026-08-03)</summary>
 
 - **GridStack Resources Embedded / GridStack资源内嵌** — Inlined gridstack.min.css and gridstack-all.min.js into main.js, fixing info cards collapsing to single column and missing resize handle on fresh install (missing external files caused GridStack load failure) / 将gridstack.min.css和gridstack-all.min.js内嵌进main.js，修复新装时info卡片单列显示且右下角无调整大小按钮（外部文件缺失导致GridStack加载失败）

@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v2.0.7 (2026-08-04)
+## 🆕 v2.0.8 (2026-08-04)
+
+- **Mobile Sidebar Keyword Persistence / 手机端侧边栏关键词持久化** — Swiping from sidebar back to editor no longer clears matching keywords; they persist until the next keyword is clicked or the input is manually cleared (same-file view switch no longer triggers modal refresh) / 手机端从侧边栏右滑回编辑器不再清空匹配关键词；持续显示直到下个关键词被激活或手动清空输入框（同一文件视图切换不再触发modal刷新）
+
+## v2.0.7 (2026-08-04)
 
 - **Info Font Color / Info字体颜色** — Added text color setting to info section color scheme (covers title, button, chip text); dark mode auto-uses "深夜" preset for proper contrast / Info板块配色方案新增字体颜色设定（覆盖标题、按钮、chip文字）；深色模式自动对应"深夜"预设
 - **Mobile CSS Style Preview / 手机端CSS样式预览** — Tapping a style button under CSS tab now pops up a floating style preview (same as desktop pin button) instead of directly applying as a file rule / 手机端CSS tab下点击样式按钮弹出悬浮样式预览（与桌面版pin按钮一致），不再直接应用为当前文件规则

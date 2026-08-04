@@ -38106,6 +38106,16 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   async onFileChange(filePath) {
     if (!filePath) return;
 
+    // 同一文件切换视图（如手机端侧边栏↔编辑器）时，不刷新modal，保留匹配关键词显示
+    if (filePath === this.currentFilePath) {
+      const { MarkdownView } = require('obsidian');
+      const activeLeaf = this.app.workspace.getActiveViewOfType(MarkdownView);
+      if (activeLeaf && activeLeaf.getMode() === 'preview') {
+        this.checkAndApplyHighlights();
+      }
+      return;
+    }
+
     this.currentFilePath = filePath;
     await this.loadFileRules(filePath);
 

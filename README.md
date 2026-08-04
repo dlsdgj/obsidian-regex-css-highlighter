@@ -91,6 +91,13 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 
 <details>
+<summary>v2.0.9 (2026-08-04)</summary>
+
+- **Release Assets Fix / 发布资源修复** — Re-release with proper GitHub release assets (main.js + manifest.json); previous v2.0.7/v2.0.8 releases had 0 assets causing Obsidian "missing files" error / 重新发布并附带正确的GitHub Release资源（main.js + manifest.json）；之前v2.0.7/v2.0.8版本发布时未上传资源文件，导致Obsidian提示"缺少文件"
+
+</details>
+
+<details>
 <summary>v2.0.8 (2026-08-04)</summary>
 
 - **Mobile Sidebar Keyword Persistence / 手机端侧边栏关键词持久化** — Swiping from sidebar back to editor no longer clears matching keywords; they persist until the next keyword is clicked or the input is manually cleared / 手机端从侧边栏右滑回编辑器不再清空匹配关键词；持续显示直到下个关键词被激活或手动清空输入框

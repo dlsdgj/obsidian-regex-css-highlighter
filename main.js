@@ -1,4 +1,5 @@
 const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover, PluginSettingTab, ItemView, WorkspaceLeaf } = require('obsidian');
+
 const { StateEffect, StateField } = require('@codemirror/state');
 const { EditorView, Decoration } = require('@codemirror/view');
 const hlMarshmallowField = StateField.define({
@@ -398,6 +399,7 @@ document.head.appendChild(_counterStyle);
 const _isDesktop = typeof process !== 'undefined' && process.versions && !!process.versions.electron;
 let _remarkMasonryMode = false; // will be synced from settings on load
 let _remarkMasonryAuto = true;
+
 function _calcMasonry(links, plugin) {
   if (plugin?.settings?.remarkMasonryAuto) {
     return (links && links.length > 1);
@@ -650,13 +652,13 @@ const i18n = {
     'settings.infoVaultFolderDesc': '可选：从库中指定文件夹读取 关键词.md（留空则仅读取插件 info 文件夹）',
     'settings.infoCustomPrompts': '自定义提示词',
     'settings.presetPlainExplain': '大白话解释',
-    'settings.presetPlainExplainText': '用大白话解释「{keyword}」，',
+    'settings.presetPlainExplainText': '用大白话解释「{keyword}」，150字内',
     'settings.presetOneLineDef': '一句话定义',
-    'settings.presetOneLineDefText': '给「{keyword}」下一句话定义，',
+    'settings.presetOneLineDefText': '给「{keyword}」下一句话定义，150字内',
     'settings.presetExample': '举例说明',
-    'settings.presetExampleText': '举一个「{keyword}」的生活例子，',
+    'settings.presetExampleText': '举一个「{keyword}」的生活例子，150字内',
     'settings.presetCompare': '对比相似概念',
-    'settings.presetCompareText': '对比「{keyword}」和相似概念的区别，',
+    'settings.presetCompareText': '对比「{keyword}」和相似概念的区别，150字内',
     'settings.promptLabelPlaceholder': '标签',
     'settings.promptTextPlaceholder': '提示词文本({keyword}替换)',
     'settings.addPrompt': '+ 添加提示词',
@@ -681,6 +683,7 @@ const i18n = {
     'main.infoColorScheme': '配色',
     'main.infoSectionBg': '板块背景',
     'main.infoCardBg': '卡片背景',
+    'main.infoTextColor': '字体颜色',
     'main.infoCardGrid': '卡片网格',
     'main.infoPresetKraft': '牛皮纸',
     'main.infoPresetInk': '水墨',
@@ -1363,7 +1366,8 @@ const i18n = {
     'settings.remarkPopupBorderColor': '备注弹窗边框颜色',
     'settings.remarkPopupOnlyOnSelection': '仅在选中文本时弹出',
     'settings.remarkPopupHideOnSelection': '选中文本时不弹出备注',
-    'settings.hidePopupWhenSidebarOpen': '侧边栏打开时不显示弹窗',
+    'settings.hidePopupWhenSidebarOpen': '侧边栏打开时鼠标悬停到编辑器关键词上不触发弹窗',
+    'settings.hoverKeywordNoPopup': '鼠标悬停关键词 不触发弹窗',
     'settings.showRemarkBadge': '在高亮文字右上角显示备注提示符',
     'settings.showRemarkBadgeHint': '悬停高亮文本时显示n(备注)标记',
     'settings.remarkBadgeThreshold': '字数阈值',
@@ -1732,13 +1736,13 @@ const i18n = {
     'settings.infoVaultFolderDesc': 'Optional: read keyword.md from a vault folder (leave empty to use plugin info folder only)',
     'settings.infoCustomPrompts': 'Custom Prompts',
     'settings.presetPlainExplain': 'Plain Explain',
-    'settings.presetPlainExplainText': 'Explain "{keyword}" in plain words, ',
+    'settings.presetPlainExplainText': 'Explain "{keyword}" in plain words, within 150 chars',
     'settings.presetOneLineDef': 'One-line Def',
-    'settings.presetOneLineDefText': 'Give a one-line definition for "{keyword}", ',
+    'settings.presetOneLineDefText': 'Give a one-line definition for "{keyword}", within 150 chars',
     'settings.presetExample': 'Example',
-    'settings.presetExampleText': 'Give a real-life example of "{keyword}", ',
+    'settings.presetExampleText': 'Give a real-life example of "{keyword}", within 150 chars',
     'settings.presetCompare': 'Compare',
-    'settings.presetCompareText': 'Compare "{keyword}" with similar concepts, ',
+    'settings.presetCompareText': 'Compare "{keyword}" with similar concepts, within 150 chars',
     'settings.promptLabelPlaceholder': 'Label',
     'settings.promptTextPlaceholder': 'Prompt text ({keyword} replaced)',
     'settings.addPrompt': '+ Add Prompt',
@@ -1763,6 +1767,7 @@ const i18n = {
     'main.infoColorScheme': 'Color Scheme',
     'main.infoSectionBg': 'Section BG',
     'main.infoCardBg': 'Card BG',
+    'main.infoTextColor': 'Text Color',
     'main.infoCardGrid': 'Card Grid',
     'main.infoPresetKraft': 'Kraft',
     'main.infoPresetInk': 'Ink',
@@ -2445,7 +2450,8 @@ const i18n = {
     'settings.remarkPopupBorderColor': 'Remark Popup Border Color',
     'settings.remarkPopupOnlyOnSelection': 'Only Popup on Selected Text',
     'settings.remarkPopupHideOnSelection': 'Hide Popup When Text Selected',
-    'settings.hidePopupWhenSidebarOpen': 'Hide Popup When Sidebar Open',
+    'settings.hidePopupWhenSidebarOpen': 'No popup on hover over editor keywords when sidebar open',
+    'settings.hoverKeywordNoPopup': 'No popup on hover over keywords',
     'settings.showRemarkBadge': 'Show remark indicator at top-right of highlighted text',
     'settings.showRemarkBadgeHint': 'Show n(remark) badge when hovering highlighted text',
     'settings.remarkBadgeThreshold': 'Character Threshold',
@@ -8658,11 +8664,11 @@ class AddRegexRuleModal {
       let _tapTarget = null;
       let _tapTime = 0;
       let _tapPos = null;
+      let _suppressNextClick = false;
       this._mobileTouchStartHandler = (e) => {
         if (e.target.closest('.modal-resize-handle')) return;
         const target = e.target.closest(_tapSelector);
         if (target) {
-          e.preventDefault();
           _tapTarget = target;
           _tapTime = Date.now();
           const touch = e.touches ? e.touches[0] : e;
@@ -8675,11 +8681,14 @@ class AddRegexRuleModal {
         const dx = Math.abs(e.changedTouches[0].clientX - _tapPos.x);
         const dy = Math.abs(e.changedTouches[0].clientY - _tapPos.y);
         if (dur < 500 && dx < 15 && dy < 15) {
+          _suppressNextClick = true;
           if (_tapTarget.closest('.rch-close-btn')) {
             this.close();
           } else {
             _tapTarget.click();
           }
+        } else {
+          _suppressNextClick = true;
         }
         _tapTarget = null;
       };
@@ -8688,13 +8697,22 @@ class AddRegexRuleModal {
           const dx = Math.abs(e.touches[0].clientX - _tapPos.x);
           const dy = Math.abs(e.touches[0].clientY - _tapPos.y);
           if (dx > 15 || dy > 15) {
+            _suppressNextClick = true;
             _tapTarget = null;
           }
         }
       };
-      this.modalEl.addEventListener('touchstart', this._mobileTouchStartHandler, { passive: false });
-      this.modalEl.addEventListener('touchend', this._mobileTouchEndHandler);
+      this._mobileClickSuppressHandler = (e) => {
+        if (_suppressNextClick) {
+          _suppressNextClick = false;
+          e.stopPropagation();
+          e.preventDefault();
+        }
+      };
+      this.modalEl.addEventListener('touchstart', this._mobileTouchStartHandler, { passive: true });
+      this.modalEl.addEventListener('touchend', this._mobileTouchEndHandler, { passive: true });
       this.modalEl.addEventListener('touchmove', this._mobileTouchMoveHandler, { passive: true });
+      this.modalEl.addEventListener('click', this._mobileClickSuppressHandler, true);
 
     }
 
@@ -8704,6 +8722,32 @@ class AddRegexRuleModal {
     this._rulesUpdateHandler = () => {
       if (!this._isOpen) return;
       this._needsRefresh = true;
+      // 手机端添加关键词后"key words"tab不及时刷新：
+      // 原有逻辑仅标记 _needsRefresh，等用户交互内联备注时才刷新。
+      // 现增加防抖自动刷新，确保关键词列表立即更新。
+      if (this._skipRefreshOnInteraction) return;
+      if (this._rulesRefreshTimer) clearTimeout(this._rulesRefreshTimer);
+      this._rulesRefreshTimer = setTimeout(async () => {
+        if (!this._isOpen || this._skipRefreshOnInteraction) { return; }
+        try {
+          const scrollTop = this.contentEl?.scrollTop || 0;
+          // 检测当前激活的chip（KEY WORDS / STYLES / FLOATING NOTES）
+          const activeChip = this.contentEl?.querySelector('.rch-top-chip[data-active="true"]');
+          const activeChipClass = activeChip?.className.match(/rch-(style|rules|float-note)-chip/)?.[0] || null;
+          await this.refreshModalContent();
+          this._needsRefresh = false;
+          if (this.contentEl) this.contentEl.scrollTop = scrollTop;
+          // 延迟恢复tab，等onOpen的requestAnimationFrame创建chip bar完成
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              const chipToRestore = activeChipClass ? this.contentEl?.querySelector('.' + activeChipClass) : null;
+              if (chipToRestore) chipToRestore.click();
+            });
+          });
+        } catch (e) {
+          console.error('[RegexCssHL] Auto-refresh modal failed:', e);
+        }
+      }, 250);
     };
     this.plugin.rulesUpdateEmitter.addEventListener('update', this._rulesUpdateHandler);
 
@@ -8746,6 +8790,7 @@ class AddRegexRuleModal {
       if (this._mobileTouchStartHandler) this.modalEl.removeEventListener('touchstart', this._mobileTouchStartHandler);
       if (this._mobileTouchEndHandler) this.modalEl.removeEventListener('touchend', this._mobileTouchEndHandler);
       if (this._mobileTouchMoveHandler) this.modalEl.removeEventListener('touchmove', this._mobileTouchMoveHandler);
+      if (this._mobileClickSuppressHandler) this.modalEl.removeEventListener('click', this._mobileClickSuppressHandler, true);
     }
     if (!_isDesktop && this._selectionClearHandler) {
       document.removeEventListener('selectionchange', this._selectionClearHandler);
@@ -9515,7 +9560,6 @@ class AddRegexRuleModal {
   }
 
   async onOpen() {
-
     if (this.plugin.settings?.enableDebugLog) {
       console.time('[主面板] onOpen总耗时');
       console.log('[主面板] onOpen开始, cssStyles数量:', this.cssStyles?.size, 'styleCategories键数:', Object.keys(styleCategories || {}).length);
@@ -10199,6 +10243,18 @@ class AddRegexRuleModal {
     inputEl.placeholder = t('main.searchOrAdd') + '...';
     inputEl.value = regexValue;
     inputEl.style.cssText = 'width:100%;padding:8px 56px 8px 12px;border:1px solid var(--background-modifier-border);border-radius:20px;box-sizing:border-box;font-size:13px;transition:border-color 0.15s ease;'; inputEl.addEventListener('focus', () => { inputEl.style.borderColor = 'var(--interactive-accent)'; }); inputEl.addEventListener('blur', () => { inputEl.style.borderColor = 'var(--background-modifier-border)'; });
+    inputEl.addEventListener('input', () => {
+      const val = inputEl.value.trim();
+      const _grpChips = this.contentEl?.querySelectorAll('.global-rules-section [data-group]');
+      if (!_grpChips) return;
+      if (!val) { _grpChips.forEach(c => { c.style.border = ''; }); return; }
+      const _allRules = [...(Array.isArray(this.plugin.rules)?this.plugin.rules:[]), ...(Array.isArray(this.plugin.globalRules)?this.plugin.globalRules:[])];
+      const _matchRules = _allRules.filter(r => { const _p = _splitRegexPipes(r.regex); return _p.some(p => val.includes(p)) || r.regex === val || _regexMatch(val, r.regex); });
+      const _grps = this.plugin.config?.globalRuleGroups || {};
+      const _matchedGroups = new Set();
+      for (const r of _matchRules) { for (const g in _grps) { if (Array.isArray(_grps[g]) && _grps[g].includes(r.regex)) { _matchedGroups.add(g); break; } } }
+      _grpChips.forEach(c => { c.style.border = _matchedGroups.has(c.getAttribute('data-group')) ? '2px solid var(--interactive-accent)' : ''; });
+    });
     inputWrapper.appendChild(inputEl);
 
     const editingChip = document.createElement("span");
@@ -10448,7 +10504,7 @@ class AddRegexRuleModal {
       {
 
       // 如果规则分组处于折叠状态，处理分组内规则按钮的显示
-      if (this.plugin.settings?.isRuleGroupCollapsed !== false && inputValue) {
+      if (this.plugin.settings?.isRuleGroupCollapsed !== false && inputValue && !this._noFilterHighlight) {
         const currentActiveGroup = this.plugin?.settings?.activeGlobalGroup;
         const groupGridsInDom = this.contentEl.querySelectorAll('.global-rules-section [data-rule-group]');
         groupGridsInDom.forEach(grid => {
@@ -10485,7 +10541,7 @@ class AddRegexRuleModal {
             }
           }
         });
-      } else if (this.plugin.settings?.isRuleGroupCollapsed !== false && !inputValue) {
+      } else if (this.plugin.settings?.isRuleGroupCollapsed !== false && !inputValue && !this._noFilterHighlight) {
         const groupGridsInDom = this.contentEl.querySelectorAll('.global-rules-section [data-rule-group]');
         groupGridsInDom.forEach(grid => {
           grid.style.display = 'none';
@@ -10495,6 +10551,12 @@ class AddRegexRuleModal {
           c.style.border = '1px solid var(--background-modifier-border)';
           c.style.background = 'rgba(var(--mono-rgb-0),0.5)';
           c.style.color = 'var(--text-muted)';
+        });
+      } else if (this._noFilterHighlight) {
+        const _noFilterGrids = this.contentEl.querySelectorAll('.global-rules-section [data-rule-group]');
+        _noFilterGrids.forEach(_grid => {
+          _grid.style.display = 'flex';
+          _grid.querySelectorAll('[data-rule-regex]').forEach(_btn => { _btn.style.display = 'flex'; });
         });
       } else if (this.plugin.isGlobalHistoryCollapsed) {
         const globalRules = Array.isArray(this.plugin.globalRules) ? this.plugin.globalRules : [];
@@ -11939,6 +12001,21 @@ class AddRegexRuleModal {
               return;
             }
 
+            // 手机端：点击样式按钮弹出互动提示（与桌面版悬停一致）
+            if (!_isDesktop) {
+              e.preventDefault();
+              e.stopPropagation();
+              styleOption.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false }));
+              const _mobileTooltipClose = (ev) => {
+                if (_styleOptionTooltip && ev.target instanceof Element && !ev.target.closest('.chip-tooltip') && !styleOption.contains(ev.target)) {
+                  _removeStyleOptionTooltip();
+                  document.removeEventListener('click', _mobileTooltipClose, true);
+                }
+              };
+              setTimeout(() => document.addEventListener('click', _mobileTooltipClose, true), 0);
+              return;
+            }
+
             // 获取当前样式按钮所在的分组
             const buttonGroup = e.target.closest('[data-category]');
 
@@ -11978,6 +12055,7 @@ class AddRegexRuleModal {
             } else {
               if (currentRegexValue && currentRegexValue.trim() !== '') {
                 await this.plugin.addRule(currentRegexValue, className, false, this.remark);
+
                 const message = t('main.ruleStyleApplied') + ` "${currentRegexValue}" ` + t('main.styleClass') + ` .${className}`;
                 this.showSuccessMessage(message);
                 const newRuleIndex = this.plugin.rules.findIndex(r => r.regex === currentRegexValue && r.cssClass === className);
@@ -14051,9 +14129,11 @@ class AddRegexRuleModal {
 
           const updateDisplay = () => {
             const activeChip = pinnedChip || hoveredChip;
+            const curRules = getRulesContent();
+
 
             const curStyle = getStyleContent();
-            const curRules = getRulesContent();
+
             const fnWasHidden = fnContainer.style.display === 'none';
             if (activeChip === styleChip) {
               curStyle.forEach(el => { el.style.display = ''; const _cc = chipBar.closest('.chip-content-section'); if (_cc && !_cc.contains(el)) _cc.appendChild(el); });
@@ -14089,6 +14169,7 @@ class AddRegexRuleModal {
               this.highlightMatchingRuleButtons();
             }
           };
+          this._updateChipDisplay = updateDisplay;
 
           const scheduleHide = () => {
             clearTimeout(hideTimer);
@@ -14148,6 +14229,7 @@ class AddRegexRuleModal {
               cancelHide();
               if (pinnedChip === chip) { pinnedChip = null; if (hoveredChip === chip) hoveredChip = null; }
               else { pinnedChip = chip; }
+
               updateDisplay();
             });
             contentEl.addEventListener('mouseover', (e) => {
@@ -14202,6 +14284,7 @@ class AddRegexRuleModal {
           _styleEls.forEach(el => { if (el.parentNode === contentEl) chipContentSection.appendChild(el); });
           const _rulesEls = contentEl.querySelectorAll('.global-rules-section');
           _rulesEls.forEach(el => { if (el.parentNode === contentEl) chipContentSection.appendChild(el); });
+
 
           const remarkSections = contentEl.querySelectorAll('.inline-remark-section, .inline-related-notes-section, .inline-related-highlights-section');
           remarkSections.forEach(s => { contentEl.appendChild(s); });
@@ -15928,6 +16011,21 @@ class AddRegexRuleModal {
     hidePopupWhenSidebarOpenLabel.style.fontSize = "14px";
     hidePopupWhenSidebarOpenLabel.style.cursor = "pointer";
 
+    const hoverKeywordNoPopupRow = popupSettingsContent.createDiv();
+    hoverKeywordNoPopupRow.style.display = "flex";
+    hoverKeywordNoPopupRow.style.alignItems = "center";
+    hoverKeywordNoPopupRow.style.marginBottom = "5px";
+
+    const hoverKeywordNoPopupCheckbox = hoverKeywordNoPopupRow.createEl("input");
+    hoverKeywordNoPopupCheckbox.type = "checkbox";
+    hoverKeywordNoPopupCheckbox.checked = this.plugin.settings?.hoverKeywordNoPopup || false;
+    hoverKeywordNoPopupCheckbox.style.marginRight = "8px";
+    hoverKeywordNoPopupCheckbox.style.cursor = "pointer";
+
+    const hoverKeywordNoPopupLabel = hoverKeywordNoPopupRow.createEl("span", { text: t('settings.hoverKeywordNoPopup') });
+    hoverKeywordNoPopupLabel.style.fontSize = "14px";
+    hoverKeywordNoPopupLabel.style.cursor = "pointer";
+
 
     // 添加备注调试日志开关
     const remarkDebugLogRow = popupSettingsContent.createDiv();
@@ -15973,7 +16071,7 @@ class AddRegexRuleModal {
         if (!this.plugin.settings) {
           this.plugin.settings = {};
         }
-        this.plugin.settings.popupFontSize = parseInt(fontSizeInput.value);
+        this.plugin.settings.popupFontSize = this.fontSizeInput ? parseInt(this.fontSizeInput.value) : (this.plugin.settings.popupFontSize || 14);
         this.plugin.settings.popupSpacing = parseInt(spacingInput.value);
 
         this.plugin.settings.popupWidth = parseInt(popupWidthInput.value) || 600;
@@ -15982,15 +16080,41 @@ class AddRegexRuleModal {
         this.plugin.settings.remarkPopupHideOnSelection = remarkPopupHideOnSelectionCheckbox.checked;
         this.plugin.settings.mobileRemarkInSidebar = mobileRemarkInSidebarCheckbox.checked;
         this.plugin.settings.hidePopupWhenSidebarOpen = hidePopupWhenSidebarOpenCheckbox.checked;
+        this.plugin.settings.hoverKeywordNoPopup = hoverKeywordNoPopupCheckbox.checked;
 
         this.plugin.settings.remarkDebugLog = remarkDebugLogCheckbox.checked;
         this.plugin.settings.popupHoverDelay = parseInt(popupHoverDelayInput.value) || 0;
+        // 预检：尝试序列化 settings，提前发现循环引用等问题
+        let _serialized;
+        try {
+          _serialized = JSON.stringify(this.plugin.settings);
+        } catch (serErr) {
+          const _msg = `[SG Save] JSON.stringify 失败: ${serErr.message}\nStack: ${serErr.stack}\nTime: ${new Date().toISOString()}`;
+          console.error(_msg);
+          try { await this.plugin.app.vault.adapter.write('日志.md', `# SwiftGlossa 保存错误日志\n\n## ${new Date().toISOString()}\n\n${_msg}\n`); } catch(_e) {}
+          new Notice(t('settings.saveFailedDetail') + ': ' + serErr.message);
+          return;
+        }
         await this.plugin.saveData(this.plugin.settings);
         new Notice(t('settings.remarkPopupSaved'));
         this.plugin.refreshCurrentView();
       } catch (error) {
+        const _errMsg = `[SG Save] saveData 失败: ${error.message}\nStack: ${error.stack}\nTime: ${new Date().toISOString()}\nSettings keys: ${Object.keys(this.plugin.settings || {}).join(', ')}`;
         console.error("保存备注弹窗设置时出错:", error);
-        new Notice(t('settings.saveFailedDetail'));
+        console.error(_errMsg);
+        // 将错误写入库文件夹下日志.md文件
+        try {
+          const _existing = await this.plugin.app.vault.adapter.exists('日志.md');
+          let _content = '';
+          if (_existing) {
+            _content = await this.plugin.app.vault.adapter.read('日志.md');
+          }
+          _content += `\n## ${new Date().toISOString()}\n\n${_errMsg}\n`;
+          await this.plugin.app.vault.adapter.write('日志.md', _content);
+        } catch (_e) {
+          console.error('[SG Save] 写入日志.md失败:', _e);
+        }
+        new Notice(t('settings.saveFailedDetail') + ': ' + error.message);
       }
     });
 
@@ -17244,6 +17368,8 @@ class AddRegexRuleModal {
       contentEl.appendChild(globalSection);
     }
 
+
+
      const globalTitle = globalSection.createEl("h3", { text: t('main.highlightRules') });
      globalTitle.style.margin = "0 0 4px 0";
      globalTitle.style.fontSize = "14px";
@@ -17636,7 +17762,7 @@ class AddRegexRuleModal {
         addGlobalGroupChip.style.color = 'var(--text-muted)';
       });
 
-      let isRuleGroupCollapsed = this.plugin.settings?.isRuleGroupCollapsed !== false;
+      let isRuleGroupCollapsed = _isDesktop && (this.plugin.settings?.isRuleGroupCollapsed !== false);
 
 
       let ruleGroupToggleBtn = null;
@@ -17744,7 +17870,7 @@ class AddRegexRuleModal {
 
       globalChipsRow.style.display = 'flex';
 
-      let activeGlobalGroup = this.plugin.settings?.activeGlobalGroup || null;
+      let activeGlobalGroup = _isDesktop ? (this.plugin.settings?.activeGlobalGroup || null) : null;
       const activateGlobalGroup = (grp) => {
         if (isRuleGroupCollapsed) {
           isRuleGroupCollapsed = false;
@@ -17982,7 +18108,9 @@ class AddRegexRuleModal {
             // 同步更新样式预览按钮的文字
             this.updateStyleButtonsPreview(rule.regex);
             // 高亮匹配的样式按钮
+            this._noFilterHighlight = true;
             this.highlightMatchingRuleButtons();
+            this._noFilterHighlight = false;
             // 记录当前正在编辑的全局规则
             this.currentEditingRule = { index: ruleIndex, regex: rule.regex, cssClass: rule.cssClass, isGlobal: !isLocal, remark: rule.remark || "" };
                 this.inputModifiedSinceEdit = false;
@@ -18481,18 +18609,25 @@ class AddRegexRuleModal {
 
     // 同步chipBar的显示状态到新创建的section
     const chipBar = contentEl.querySelector('.rch-top-chip-bar');
+
     if (chipBar) {
-      const activeChip = chipBar.querySelector('[data-active="true"]');
       const rulesChip = chipBar.querySelector('.rch-rules-chip');
       const styleChip = chipBar.querySelector('.rch-style-chip');
       const newRulesEl = contentEl.querySelector('.global-rules-section');
       const newStyleEl = contentEl.querySelector('.rch-style-container');
       const newHeadingEl = contentEl.querySelector('.heading-styles-section');
-      if (activeChip === rulesChip && newRulesEl) {
+      const _ccSection = contentEl.querySelector('.chip-content-section');
+      if (_ccSection && newRulesEl && !_ccSection.contains(newRulesEl)) _ccSection.appendChild(newRulesEl);
+      const _rulesActive = rulesChip && rulesChip.dataset.active === 'true';
+      const _styleActive = styleChip && styleChip.dataset.active === 'true';
+
+      if (_rulesActive && newRulesEl) {
         newRulesEl.style.display = '';
         if (newStyleEl) newStyleEl.style.display = 'none';
         if (newHeadingEl) newHeadingEl.style.display = 'none';
-      } else if (activeChip === styleChip) {
+        const _grids = newRulesEl.querySelectorAll('[data-rule-group]');
+        _grids.forEach(_g => { _g.style.display = 'flex'; _g.querySelectorAll('[data-rule-regex]').forEach(_b => { _b.style.display = 'flex'; }); });
+      } else if (_styleActive) {
         if (newRulesEl) newRulesEl.style.display = 'none';
         if (newStyleEl) newStyleEl.style.display = '';
         if (newHeadingEl) newHeadingEl.style.display = '';
@@ -19173,23 +19308,29 @@ class AddRegexRuleModal {
         const savedRemark = rule.remark || '';
         const savedIsGlobal = this.plugin.globalRules?.some(r => r.regex === rule.regex && r.cssClass === rule.cssClass) || false;
         this.refreshModalContent().then(() => {
-          if (this.regexInput) {
-            this.regexInput.setValue(savedRegex);
-            this.regexInput.inputEl.focus();
-            this.regexInput.inputEl.select();
-            this.updateStyleButtonsPreview(savedRegex);
-            this.highlightMatchingRuleButtons();
-          }
-          const ruleIndex = savedIsGlobal
-            ? this.plugin.globalRules.findIndex(r => r.regex === savedRegex && r.cssClass === savedCssClass)
-            : this.plugin.rules.findIndex(r => r.regex === savedRegex && r.cssClass === savedCssClass);
-          if (ruleIndex !== -1) {
-            this.currentEditingRule = { index: ruleIndex, regex: savedRegex, cssClass: savedCssClass, isGlobal: savedIsGlobal, remark: savedRemark };
+          requestAnimationFrame(() => {
+            const _allR = [...(Array.isArray(this.plugin.globalRules)?this.plugin.globalRules:[]), ...(Array.isArray(this.plugin.rules)?this.plugin.rules:[])];
+            const _matchR = _allR.filter(r => { const _p = _splitRegexPipes(r.regex); return _p.includes(savedRegex) || r.regex === savedRegex || r.regex.includes(savedRegex); });
+            const _uniqRx = [...new Set(_matchR.map(r => r.regex))];
+            if (_uniqRx.length > 0 && this._showKwChips) { this._showKwChips(_uniqRx, savedRegex, savedRegex); } else if (this._hideKwChips) { this._hideKwChips(); }
+            if (this.regexInput) {
+              this.regexInput.setValue(savedRegex);
+              this.regexInput.inputEl.focus();
+              this.regexInput.inputEl.select();
+              this.updateStyleButtonsPreview(savedRegex);
+              this.highlightMatchingRuleButtons();
+            }
+            const ruleIndex = savedIsGlobal
+              ? this.plugin.globalRules.findIndex(r => r.regex === savedRegex && r.cssClass === savedCssClass)
+              : this.plugin.rules.findIndex(r => r.regex === savedRegex && r.cssClass === savedCssClass);
+            if (ruleIndex !== -1) {
+              this.currentEditingRule = { index: ruleIndex, regex: savedRegex, cssClass: savedCssClass, isGlobal: savedIsGlobal, remark: savedRemark };
                 this.inputModifiedSinceEdit = false;
-            this.remark = savedRemark;
-            if (this._refreshUpdateChip) this._refreshUpdateChip();
-          }
-          this.toggleInlineRemark(ruleId, rule, forceRefresh);
+              this.remark = savedRemark;
+              if (this._refreshUpdateChip) this._refreshUpdateChip();
+            }
+            this.toggleInlineRemark(ruleId, rule, forceRefresh);
+          });
         });
         return;
       }
@@ -19789,7 +19930,7 @@ class AddRegexRuleModal {
   }
 
   showInlineRemarkForRegex(regex) {
-    if (!this.contentEl || !_isInAnyDoc(this.contentEl)) return;
+    if (!this.contentEl || !_isInAnyDoc(this.contentEl)) { return; }
     if (this._needsRefresh) {
       this._needsRefresh = false;
       if (this._skipRefreshOnInteraction) {
@@ -19797,9 +19938,15 @@ class AddRegexRuleModal {
       } else {
         this._preservedScrollTop = this.contentEl.scrollTop;
         this.refreshModalContent().then(() => {
-          if (this.regexInput) this.regexInput.setValue(regex);
-          if (this.highlightMatchingRuleButtons) this.highlightMatchingRuleButtons();
-          this.showInlineRemarkForRegex(regex);
+          const _allR = [...(Array.isArray(plugin.globalRules)?plugin.globalRules:[]), ...(Array.isArray(plugin.rules)?plugin.rules:[])];
+          const _matchR = _allR.filter(r => { const _p = _splitRegexPipes(r.regex); return _p.includes(regex) || r.regex === regex || r.regex.includes(regex); });
+          const _uniqRx = [...new Set(_matchR.map(r => r.regex))];
+          requestAnimationFrame(() => {
+            if (_uniqRx.length > 0 && this._showKwChips) { this._showKwChips(_uniqRx, regex, regex); } else if (this._hideKwChips) { this._hideKwChips(); }
+            if (this.regexInput) this.regexInput.setValue(regex);
+            if (this.highlightMatchingRuleButtons) this.highlightMatchingRuleButtons();
+            this.showInlineRemarkForRegex(regex);
+          });
         });
         return;
       }
@@ -20285,9 +20432,17 @@ class AddRegexRuleModal {
     const section = document.createElement('div');
     section.className = 'info-section';
     section.style.cssText = 'margin-top:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:8px;';
-    const _infoSectionBg = plugin.settings?.infoSectionBg || 'rgba(250,240,205,0.75)';
-    const _infoCardBg = plugin.settings?.infoCardBg || 'rgba(236,216,154,0.90)';
+    const _isDarkMode = document.body.classList.contains('theme-dark');
+    const _nightPreset = {secBg:'rgba(38,40,46,0.85)', cardBg:'rgba(54,58,68,0.92)', textColor:'rgba(220,220,230,0.92)'};
+    const _infoSectionBg = plugin.settings?.infoSectionBg || (_isDarkMode ? _nightPreset.secBg : 'rgba(250,240,205,0.75)');
+    const _infoCardBg = plugin.settings?.infoCardBg || (_isDarkMode ? _nightPreset.cardBg : 'rgba(236,216,154,0.90)');
+    const _infoTextColor = plugin.settings?.infoTextColor || (_isDarkMode ? _nightPreset.textColor : undefined);
     section.style.background = _infoSectionBg;
+    if (_infoTextColor) {
+      section.style.color = _infoTextColor;
+      section.style.setProperty('--text-normal', _infoTextColor);
+      section.style.setProperty('--text-muted', _infoTextColor);
+    }
     const _applyInfoCardStyles = () => {
       const cardBg = plugin.settings?.infoCardBg || 'rgba(236,216,154,0.90)';
       const showGrid = plugin.settings?.infoCardGrid === true;
@@ -20330,12 +20485,12 @@ class AddRegexRuleModal {
         colorLabel.style.cssText = 'color:var(--text-muted);font-weight:600;margin:6px 0 4px;font-size:11px;';
         menu.appendChild(colorLabel);
         const _infoPresets = [
-          {name:t('main.infoPresetKraft'), secBg:'rgba(250,240,205,0.75)', cardBg:'rgba(236,216,154,0.90)'},
-          {name:t('main.infoPresetInk'), secBg:'rgba(238,236,230,0.80)', cardBg:'rgba(212,208,196,0.92)'},
-          {name:t('main.infoPresetNight'), secBg:'rgba(38,40,46,0.85)', cardBg:'rgba(54,58,68,0.92)'},
-          {name:t('main.infoPresetMint'), secBg:'rgba(222,240,232,0.78)', cardBg:'rgba(190,224,208,0.90)'},
-          {name:t('main.infoPresetOchre'), secBg:'rgba(238,216,194,0.78)', cardBg:'rgba(220,186,156,0.90)'},
-          {name:t('main.infoPresetIndigo'), secBg:'rgba(228,228,240,0.78)', cardBg:'rgba(200,200,224,0.90)'},
+          {name:t('main.infoPresetKraft'), secBg:'rgba(250,240,205,0.75)', cardBg:'rgba(236,216,154,0.90)', textColor:'rgba(70,50,30,0.92)'},
+          {name:t('main.infoPresetInk'), secBg:'rgba(238,236,230,0.80)', cardBg:'rgba(212,208,196,0.92)', textColor:'rgba(40,40,40,0.92)'},
+          {name:t('main.infoPresetNight'), secBg:'rgba(38,40,46,0.85)', cardBg:'rgba(54,58,68,0.92)', textColor:'rgba(220,220,230,0.92)'},
+          {name:t('main.infoPresetMint'), secBg:'rgba(222,240,232,0.78)', cardBg:'rgba(190,224,208,0.90)', textColor:'rgba(24,62,48,0.92)'},
+          {name:t('main.infoPresetOchre'), secBg:'rgba(238,216,194,0.78)', cardBg:'rgba(220,186,156,0.90)', textColor:'rgba(80,46,16,0.92)'},
+          {name:t('main.infoPresetIndigo'), secBg:'rgba(228,228,240,0.78)', cardBg:'rgba(200,200,224,0.90)', textColor:'rgba(40,40,80,0.92)'},
         ];
         const presetGrid = document.createElement('div');
         presetGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-bottom:6px;';
@@ -20351,9 +20506,18 @@ class AddRegexRuleModal {
           nm.style.cssText = 'color:var(--text-normal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
           chip.appendChild(dot1); chip.appendChild(dot2); chip.appendChild(nm);
           chip.addEventListener('click', () => {
-            _s.infoSectionBg = p.secBg; _s.infoCardBg = p.cardBg;
+            _s.infoSectionBg = p.secBg; _s.infoCardBg = p.cardBg; _s.infoTextColor = p.textColor;
             plugin.saveData(plugin.settings);
             section.style.background = p.secBg;
+            if (p.textColor) {
+              section.style.color = p.textColor;
+              section.style.setProperty('--text-normal', p.textColor);
+              section.style.setProperty('--text-muted', p.textColor);
+            } else {
+              section.style.color = '';
+              section.style.removeProperty('--text-normal');
+              section.style.removeProperty('--text-muted');
+            }
             _applyInfoCardStyles();
             presetGrid.querySelectorAll(':scope > div').forEach(c => c.style.borderColor = 'transparent');
             chip.style.borderColor = 'var(--interactive-accent)';
@@ -20413,6 +20577,18 @@ class AddRegexRuleModal {
         };
         menu.appendChild(mkColorRow(t('main.infoSectionBg'), 'infoSectionBg', 'rgba(250,240,205,0.75)', () => { section.style.background = _s.infoSectionBg || 'rgba(250,240,205,0.75)'; }));
         menu.appendChild(mkColorRow(t('main.infoCardBg'), 'infoCardBg', 'rgba(236,216,154,0.90)', () => { _applyInfoCardStyles(); }));
+        menu.appendChild(mkColorRow(t('main.infoTextColor'), 'infoTextColor', 'rgba(70,50,30,0.92)', () => {
+          const _tc = _s.infoTextColor;
+          if (_tc) {
+            section.style.color = _tc;
+            section.style.setProperty('--text-normal', _tc);
+            section.style.setProperty('--text-muted', _tc);
+          } else {
+            section.style.color = '';
+            section.style.removeProperty('--text-normal');
+            section.style.removeProperty('--text-muted');
+          }
+        }));
         const gridRow = document.createElement('div');
         gridRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin:3px 0;';
         const gridLbl = document.createElement('span');
@@ -20675,7 +20851,7 @@ class AddRegexRuleModal {
       aiBtn.title = t('main.infoAiGenerate');
       aiBtn.style.cssText = 'cursor:pointer;opacity:0.5;display:inline-flex;align-items:center;flex-shrink:0;margin-left:4px;transition:opacity 0.15s;';
       let _aiPopup = null;
-      const _closeAiPopup = () => { if (_aiPopup) { _aiPopup.remove(); _aiPopup = null; } };
+      const _closeAiPopup = () => { if (_aiPopup) { if (_aiPopup._dragAb) _aiPopup._dragAb.abort(); _aiPopup.remove(); _aiPopup = null; } };
       const _openAiPopup = () => {
         if (_aiPopup) { _closeAiPopup(); return; }
         const kwName = fileName.replace(/\.md$/, '').replace(/_\d+$/, '');
@@ -20691,12 +20867,24 @@ class AddRegexRuleModal {
         _aiPopup = document.createElement('div');
         _aiPopup.style.cssText = 'position:fixed;z-index:9999;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:14px;padding:14px;box-shadow:0 4px 16px rgba(0,0,0,0.08);font-size:11px;width:340px;';
         const panelHead = document.createElement('div');
-        panelHead.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;';
+        panelHead.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:move;user-select:none;-webkit-user-select:none;touch-action:none;';
         const headLabel = document.createElement('span');
         headLabel.textContent = t('main.aiPromptTitle');
         headLabel.style.cssText = 'font-size:12px;color:var(--text-muted);font-weight:500;';
         panelHead.appendChild(headLabel);
         _aiPopup.appendChild(panelHead);
+        _aiPopup._dragAb = new AbortController();
+        { const _dAb = _aiPopup._dragAb; let _dragging = false, _dx = 0, _dy = 0;
+          const _dStart = (ev) => { _dragging = true; const r = _aiPopup.getBoundingClientRect(); const px = ev.touches ? ev.touches[0].clientX : ev.clientX; const py = ev.touches ? ev.touches[0].clientY : ev.clientY; _dx = px - r.left; _dy = py - r.top; if (ev.cancelable) ev.preventDefault(); };
+          const _dMove = (ev) => { if (!_dragging || !_aiPopup) return; const px = ev.touches ? ev.touches[0].clientX : ev.clientX; const py = ev.touches ? ev.touches[0].clientY : ev.clientY; _aiPopup.style.left = Math.max(0, Math.min(window.innerWidth - 40, px - _dx)) + 'px'; _aiPopup.style.top = Math.max(0, Math.min(window.innerHeight - 40, py - _dy)) + 'px'; };
+          const _dEnd = () => { _dragging = false; };
+          panelHead.addEventListener('mousedown', _dStart, { signal: _dAb.signal });
+          document.addEventListener('mousemove', _dMove, { signal: _dAb.signal });
+          document.addEventListener('mouseup', _dEnd, { signal: _dAb.signal });
+          panelHead.addEventListener('touchstart', _dStart, { passive: false, signal: _dAb.signal });
+          document.addEventListener('touchmove', _dMove, { passive: false, signal: _dAb.signal });
+          document.addEventListener('touchend', _dEnd, { signal: _dAb.signal });
+        }
         const chipRow = document.createElement('div');
         chipRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;';
         _aiPopup.appendChild(chipRow);
@@ -20742,17 +20930,19 @@ class AddRegexRuleModal {
         sendBtn.addEventListener('click', async () => {
           const p = promptTa.value.trim();
           if (!p) return;
-          sendBtn.textContent = '...'; sendBtn.disabled = true;
+          _closeAiPopup();
           aiBtn.style.opacity = '0.5';
+          cardContent.innerHTML = '';
+          const streamEl = document.createElement('div');
+          streamEl.style.cssText = 'white-space:pre-wrap;word-break:break-word;padding:8px;font-size:12px;line-height:1.6;color:var(--text-normal);';
+          cardContent.appendChild(streamEl);
+          let accumulated = '';
           try {
-            const reply = await plugin.callAI(p);
-            if (reply && reply.trim()) {
-              await writeInfoFile(fileName, reply.trim());
-              await renderMd(cardContent, reply.trim());
-              _closeAiPopup();
-            }
-          } catch (err) { new Notice(t('main.infoAiFailed') + ': ' + (err.message || t('main.infoUnknownError'))); }
-          finally { sendBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' + t('main.aiSend'); sendBtn.disabled = false; aiBtn.style.opacity = '1'; }
+            const reply = await plugin.callAIStream(p, (delta, full) => { accumulated = full; streamEl.textContent = full; cardContent.scrollTop = cardContent.scrollHeight; });
+            if (reply && reply.trim()) { await writeInfoFile(fileName, reply.trim()); await renderMd(cardContent, reply.trim()); }
+            else if (accumulated) { await writeInfoFile(fileName, accumulated); await renderMd(cardContent, accumulated); }
+          } catch (err) { new Notice(t('main.infoAiFailed') + ': ' + (err.message || t('main.infoUnknownError'))); if (accumulated) { try { await writeInfoFile(fileName, accumulated); await renderMd(cardContent, accumulated); } catch(e){} } }
+          finally { aiBtn.style.opacity = '1'; }
         });
         const _onDocDown = (ev) => { if (_aiPopup && !_aiPopup.contains(ev.target) && !aiBtn.contains(ev.target)) { _closeAiPopup(); document.removeEventListener('mousedown', _onDocDown); } };
         setTimeout(() => document.addEventListener('mousedown', _onDocDown), 0);
@@ -20765,7 +20955,7 @@ class AddRegexRuleModal {
       const delBtn = document.createElement('span');
       delBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>';
       delBtn.title = t('main.infoDeleteCard') || '删除';
-      delBtn.style.cssText = 'cursor:pointer;opacity:0.5;display:inline-flex;align-items:center;flex-shrink:0;margin-left:2px;transition:opacity 0.15s;';
+      delBtn.style.cssText = 'cursor:pointer;opacity:0.5;display:inline-flex;align-items:center;flex-shrink:0;margin-left:10px;transition:opacity 0.15s;';
       delBtn.addEventListener('mouseenter', () => { delBtn.style.opacity = '1'; });
       delBtn.addEventListener('mouseleave', () => { delBtn.style.opacity = '0.5'; });
       delBtn.addEventListener('click', async (de) => {
@@ -23797,6 +23987,7 @@ class AddRegexRuleModal {
   onClose() {
 
     this._locked = false;
+    if (this._rulesRefreshTimer) { clearTimeout(this._rulesRefreshTimer); this._rulesRefreshTimer = null; }
     if (this._rulesUpdateHandler && this.plugin.rulesUpdateEmitter) {
       this.plugin.rulesUpdateEmitter.removeEventListener('update', this._rulesUpdateHandler);
       this._rulesUpdateHandler = null;
@@ -24073,7 +24264,7 @@ class SwiftGlossaSidebarView extends ItemView {
       if (!modal || !modal.regexInput) return;
       if (_sidebarSelDebounce) clearTimeout(_sidebarSelDebounce);
       _sidebarSelDebounce = setTimeout(() => {
-        if (modal._chipIgnoreSelUntil && Date.now() < modal._chipIgnoreSelUntil) return;
+        if (modal._chipIgnoreSelUntil && Date.now() < modal._chipIgnoreSelUntil) { return; }
         const selection = window.getSelection();
         if (selection && selection.toString().trim()) {
           const selectedText = selection.toString().trim();
@@ -24088,6 +24279,7 @@ class SwiftGlossaSidebarView extends ItemView {
 
             if (modal.updateStyleButtonsPreview) modal.updateStyleButtonsPreview(selectedText);
             if (modal.highlightMatchingRuleButtons) modal.highlightMatchingRuleButtons();
+            modal._needsRefresh = false;
             if (modal.showInlineRemarkForRegex) modal.showInlineRemarkForRegex(selectedText);
             this.plugin._addKeywordHistory(selectedText);
           }
@@ -24116,6 +24308,7 @@ class SwiftGlossaSidebarView extends ItemView {
 
         if (modal.updateStyleButtonsPreview) modal.updateStyleButtonsPreview(ruleRegex);
         if (modal.highlightMatchingRuleButtons) modal.highlightMatchingRuleButtons();
+        modal._needsRefresh = false;
         if (modal.showInlineRemarkForRegex) modal.showInlineRemarkForRegex(ruleRegex);
         const _matchRule = _matchRules[0];
         if (_matchRule) { const _ri = _allRules.indexOf(_matchRule); const _isG = _ri >= this.plugin.rules.length; modal.currentEditingRule = { index: _isG ? _ri - this.plugin.rules.length : _ri, regex: _matchRule.regex, cssClass: _matchRule.cssClass, isGlobal: _isG, remark: _matchRule.remark || '' }; modal.inputModifiedSinceEdit = false; if (modal._refreshUpdateChip) modal._refreshUpdateChip(); }
@@ -24206,6 +24399,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
   async onload() {
     const { MarkdownView, Notice } = require('obsidian');
 
+
     this.registerView(SWIFTGLOSSA_SIDEBAR_VIEW_TYPE, (leaf) => new SwiftGlossaSidebarView(leaf, this));
     const { addIcon } = require('obsidian');
     addIcon('swiftglossa-icon', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="68" text-anchor="middle" font-size="52" font-weight="bold" font-family="sans-serif" fill="currentColor">SG</text></svg>');
@@ -24214,7 +24408,9 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
 
     const loadDataPromise = this.loadData();
     const loadFloatPromise = this.loadFloatButtonData();
-    this.settings = await loadDataPromise || {};
+    const _loadedData = await loadDataPromise;
+    const _isFirstInstall = !_loadedData;
+    this.settings = _loadedData || {};
     await loadFloatPromise;
 
     const floatButtonKeys = [
@@ -24266,7 +24462,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       popupOpacity: 1,
       remarkPopupOnlyOnSelection: false,
       remarkPopupHideOnSelection: false,
-      mobileRemarkInSidebar: false,
+      mobileRemarkInSidebar: true,
       inNoteAlign: 'center',
       popupLineHeight: 1.5,
 
@@ -24614,7 +24810,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
         if (!highlightEl) return;
         const clickedRegex = highlightEl.dataset?.ruleRegex;
         if (!clickedRegex) return;
-        const _lv = this.app?.workspace?.getLeavesOfType?.('swiftglossa-sidebar'); const _v = _lv?.[0]?.view; const _mMain = (this._regexHighlightModal && this._regexHighlightModal._isOpen && this._regexHighlightModal.modalEl && _isInAnyDoc(this._regexHighlightModal.modalEl)) ? this._regexHighlightModal : null; const _m = _mMain || (_v?._sidebarModal); if (_m) { const _allRules = [...(Array.isArray(this.rules)?this.rules:[]), ...(Array.isArray(this.globalRules)?this.globalRules:[])]; const _matchRules = _allRules.filter(r => { const _p = _splitRegexPipes(r.regex); return _p.includes(clickedRegex) || r.regex === clickedRegex || r.regex.includes(clickedRegex); }); const _uniqueRegexes = [...new Set(_matchRules.map(r => r.regex))]; if (_uniqueRegexes.length > 0 && _m._showKwChips) { _m._showKwChips(_uniqueRegexes, clickedRegex, clickedRegex); } else if (_m._hideKwChips) { _m._hideKwChips(); } if (_m.regexInput) _m.regexInput.setValue(clickedRegex); if (_m.updateStyleButtonsPreview) _m.updateStyleButtonsPreview(clickedRegex); if (_m.highlightMatchingRuleButtons) _m.highlightMatchingRuleButtons(); if (_m.showInlineRemarkForRegex) _m.showInlineRemarkForRegex(clickedRegex); const _matchRule = _matchRules[0]; if (_matchRule) { const _ri = _allRules.indexOf(_matchRule); const _isG = _ri >= this.rules.length; _m.currentEditingRule = { index: _isG ? _ri - this.rules.length : _ri, regex: _matchRule.regex, cssClass: _matchRule.cssClass, isGlobal: _isG, remark: _matchRule.remark || '' }; _m.inputModifiedSinceEdit = false; if (_m._refreshUpdateChip) _m._refreshUpdateChip(); } }
+        const _lv = this.app?.workspace?.getLeavesOfType?.('swiftglossa-sidebar'); const _v = _lv?.[0]?.view; const _mMain = (this._regexHighlightModal && this._regexHighlightModal._isOpen && this._regexHighlightModal.modalEl && _isInAnyDoc(this._regexHighlightModal.modalEl)) ? this._regexHighlightModal : null; const _m = _mMain || (_v?._sidebarModal); if (_m) { const _allRules = [...(Array.isArray(this.rules)?this.rules:[]), ...(Array.isArray(this.globalRules)?this.globalRules:[])]; const _matchRules = _allRules.filter(r => { const _p = _splitRegexPipes(r.regex); return _p.includes(clickedRegex) || r.regex === clickedRegex || r.regex.includes(clickedRegex); }); const _uniqueRegexes = [...new Set(_matchRules.map(r => r.regex))]; if (_uniqueRegexes.length > 0 && _m._showKwChips) { _m._showKwChips(_uniqueRegexes, clickedRegex, clickedRegex); } else if (_m._hideKwChips) { _m._hideKwChips(); } if (_m.regexInput) _m.regexInput.setValue(clickedRegex); if (_m.updateStyleButtonsPreview) _m.updateStyleButtonsPreview(clickedRegex); if (_m.highlightMatchingRuleButtons) _m.highlightMatchingRuleButtons(); if (_m.showInlineRemarkForRegex) { _m._needsRefresh = false; _m.showInlineRemarkForRegex(clickedRegex); } const _matchRule = _matchRules[0]; if (_matchRule) { const _ri = _allRules.indexOf(_matchRule); const _isG = _ri >= this.rules.length; _m.currentEditingRule = { index: _isG ? _ri - this.rules.length : _ri, regex: _matchRule.regex, cssClass: _matchRule.cssClass, isGlobal: _isG, remark: _matchRule.remark || '' }; _m.inputModifiedSinceEdit = false; if (_m._refreshUpdateChip) _m._refreshUpdateChip(); } }
         this._addKeywordHistory(clickedRegex);
         const floatingBall = document.getElementById('regex-highlighter-floating-ball');
         if (floatingBall) {
@@ -24856,9 +25052,9 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     // 注册插件设置页（提示用户设置在主面板底部）
     this.addSettingTab(new RegexHighlightSettingTab(this.app, this));
 
-    // 新装插件时在右侧面板显示SG图标
+    // 仅首次安装时在手机端打开右侧面板
     this.app.workspace.onLayoutReady(() => {
-      this.ensureSidebarView();
+      if (_isFirstInstall) this.ensureSidebarView();
     });
 
     this._highlightDb = [];
@@ -28262,6 +28458,16 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     container.id = 'rule-action-buttons';
     container.style.cssText = `position:fixed;display:flex;flex-direction:column;gap:5px;z-index:9998;`;
 
+    // 手机端点击 g/l 按钮时，touchstart/mousedown 会导致编辑器失焦 → selectionchange
+    // → 按钮可能被重建且 selectedText 变为不完整（仅1个字）。
+    // 设置 _keepRuleActionButtons 阻止 selectionchange 重建按钮，保留完整的 selectedText。
+    const _keepButtons = () => {
+      this._keepRuleActionButtons = true;
+      setTimeout(() => { this._keepRuleActionButtons = false; }, 600);
+    };
+    container.addEventListener('touchstart', _keepButtons, { passive: true });
+    container.addEventListener('mousedown', _keepButtons);
+
     if (floatingBall) {
       const ballRect = floatingBall.getBoundingClientRect();
       _isRightSide = ballRect.left > window.innerWidth / 2;
@@ -28365,7 +28571,11 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         const styles = this.getUnusedStyles();
         if (!styles || styles.length === 0) { new Notice(t('main.noUnusedStyle')); return; }
         const style = styles[Math.floor(Math.random() * styles.length)];
-        const regex = selectedText;
+        // 重新获取选中文本：手机端 selectionchange 可能捕获到不完整的中间状态，
+        // 点击时再次查询，取更长的值确保完整
+        let regex = selectedText;
+        const freshSel = this.getSelectedText().trim();
+        if (freshSel && freshSel.length > regex.length) regex = freshSel;
         if (isGlobal) {
           if (!this.globalRules) this.globalRules = [];
           const exist = this.globalRules.find(r => r.regex === regex);
@@ -32596,23 +32806,28 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   }
 
   async ensureSidebarView() {
+    const _mobile = !_isDesktop;
     const existing = this.app.workspace.getLeavesOfType(SWIFTGLOSSA_SIDEBAR_VIEW_TYPE);
     if (existing.length > 0) {
       const view = existing[0].view;
       if (!this._regexHighlightModal && view && typeof view.onOpen === 'function') {
         await view.onOpen();
       }
-      await existing[0].setViewState({ type: SWIFTGLOSSA_SIDEBAR_VIEW_TYPE, active: false });
+      await existing[0].setViewState({ type: SWIFTGLOSSA_SIDEBAR_VIEW_TYPE, active: _mobile });
+      if (_mobile) this.app.workspace.revealLeaf(existing[0]);
       return;
     }
     const rightLeaf = this.app.workspace.getRightLeaf(false);
     if (rightLeaf) {
-      await rightLeaf.setViewState({ type: SWIFTGLOSSA_SIDEBAR_VIEW_TYPE, active: false });
+      await rightLeaf.setViewState({ type: SWIFTGLOSSA_SIDEBAR_VIEW_TYPE, active: _mobile });
+      if (_mobile) this.app.workspace.revealLeaf(rightLeaf);
     }
   }
 
   onunload() {
     this._closeAllNotePopouts();
+    if (this._alwaysModeTouchCleanup) { this._alwaysModeTouchCleanup(); this._alwaysModeTouchCleanup = null; }
+    if (this._alwaysModeRuleActionsListener) { document.removeEventListener('selectionchange', this._alwaysModeRuleActionsListener); this._alwaysModeRuleActionsListener = null; }
     if (this._fileRulesWriteTimer) {
       clearTimeout(this._fileRulesWriteTimer);
       this._flushFileRulesWrite();
@@ -33455,6 +33670,66 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
 
       console.error('❌ API调用失败(初始):', error);
+      throw error;
+    }
+  }
+
+  async callAIStream(prompt, onChunk, options) {
+    const settings = this.settings || {};
+    const currentAI = settings.currentAI || 0;
+    const aiConfigs = settings.aiConfigs || [];
+    const currentAIConfig = aiConfigs[currentAI] || {};
+    const apiUrl = currentAIConfig.base_url || "https://api.openai.com/v1/chat/completions";
+    const apiKey = currentAIConfig.apiKey;
+    const model = currentAIConfig.model || "gpt-3.5-turbo";
+    if (!apiKey) throw new Error("API密钥未配置，请在插件设置中设置");
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000);
+    const requestBody = {
+      model: model,
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: options?.maxTokens || 3000,
+      temperature: 1,
+      stream: true
+    };
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(t('main.apiRequestFailed') + `: ${response.status} - ${errorData}`);
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+      let full = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith('data:')) continue;
+          const data = trimmed.slice(5).trim();
+          if (data === '[DONE]') continue;
+          try {
+            const json = JSON.parse(data);
+            const delta = json.choices?.[0]?.delta?.content;
+            if (delta) { full += delta; if (onChunk) onChunk(delta, full); }
+          } catch (e) {}
+        }
+      }
+      return full;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') throw new Error('请求超时,请稍后重试');
       throw error;
     }
   }
@@ -37841,7 +38116,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const modal = this._regexHighlightModal;
     if (modal) {
       modal._needsRefresh = true;
-      modal._skipRefreshOnInteraction = true;
+
     }
 
     const { MarkdownView } = require('obsidian');
@@ -38358,7 +38633,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           this._defaultFnGroup = data.defaultFnGroup || null;
         }
       } else {
-        this.globalNotes = [{ id: Date.now().toString(), text: '悬浮笔记操作方式 / Floating Note Controls：\n• Shift + 滚轮 → 切换配色 / Shift+Scroll → Change color scheme\n• Ctrl + 滚轮 → 调整透明度 / Ctrl+Scroll → Adjust opacity\n• Alt + 滚轮 → 调整字号 / Alt+Scroll → Adjust font size\n• 双击 → 编辑内容 / Double-click → Edit content\n• 点击调色盘按钮 → 选择配色方案 / Click palette button → Choose color scheme\n\n添加笔记：在悬浮球选项中点击"+"按钮\nAdd notes: Click the "+" button in the floating ball options', _createdAt: Date.now(), _hidden: true }, { id: (Date.now() + 2).toString(), text: '这是 SwiftGlossa 插件的悬浮笔记。单击右上角"X"按钮关闭;中键点击删除(添加悬浮笔记方式在"SG"悬浮球选项中);中键点击笔记内容部分可折叠显示。\n\n以下是本插件的简单介绍及基础用法:\n\n插件从 2025 年年底开始建造,至今(2026-08-03)经过多次转向发展成当前功能布局,总耗时 1000+ 小时。\n\n插件通过 CSS 样式个性化高亮关键词。关键词可以是人名、地名、学科术语等任何你觉得重要的词(根据二八定律,建议只将 20% 的关键词进行个性化高亮,余下的用简单下划线,否则整体观感会很乱)。\n\n关键词被高亮后可以添加「计数」(统计该词在当前文档中出现的次数)、显示在关键词上方的「行间注释」(比如添加人物的生辰、角色...)。\n\n首次安装插件,在 Obsidian 启动后约 30 秒会自动构建库中 Obsidian 格式的高亮「==高亮文本==」,之后每次添加新高亮都会自动更新。\n\n点击关键词后,会搜索高亮数据库,将匹配的高亮条目显示在面板中(主面板、右侧面板、独立窗口);或者折叠右侧面板,鼠标悬停到关键词上也会显示相关高亮(可关闭)——当你有大量高亮时这通常会带给你意想不到的收获。\n\n每条高亮都可以添加备注/记号,这能让你记得更牢(后续有这些备注/记号的附加功能)。\n\n对于名词术语,提供了「info」版块,可将关于该关键词的事实性知识显示在这里(支持 AI 根据提示词自动生成)。\n\n其他功能请自行探索。本插件免费,提供付费咨询,vx: jtugqivi\n\n--- English ---\n\nThis is a floating note of the SwiftGlossa plugin. Click the "X" button in the top-right corner to close; middle-click to delete (add floating notes via the "SG" floating ball options); middle-click the note content area to collapse it.\n\nBelow is a brief introduction and basic usage of the plugin:\n\nThe plugin has been in development since late 2025. As of 2026-08-03, after several pivots, it has evolved into its current feature layout, with 1000+ hours invested.\n\nThe plugin highlights keywords with personalized CSS styles. Keywords can be names, places, subject-specific terms, or any words you consider important (based on the 80/20 rule, it is recommended to apply personalized highlighting to only 20% of keywords and use simple underlines for the rest, otherwise the overall appearance will be cluttered).\n\nAfter a keyword is highlighted, you can add a "count" (tracking its occurrences in the current document) and "interlinear notes" displayed above the keyword (e.g., a character birthdate, role...).\n\nOn first install, about 30 seconds after Obsidian starts, the plugin automatically builds Obsidian-format highlights ("==highlighted text==") from the vault. After that, every new highlight auto-updates.\n\nClick a keyword to search the highlight database and display matching entries in the panel (main panel, right sidebar, or standalone window). Alternatively, collapse the right sidebar and hover over a keyword to see related highlights (can be disabled) — this often brings unexpected insights when you have many highlights.\n\nEach highlight can have a remark/marker added, helping you remember better (additional features for remarks/markers are planned).\n\nFor noun terms, an "info" section displays factual knowledge about the keyword (supports AI auto-generation from prompts).\n\nExplore other features on your own. This plugin is free; paid consultations available, vx: jtugqivi', _createdAt: Date.now() + 2, _hidden: false, collapsed: false, _inPanel: false, _floatPos: { left: 'calc(50vw - 220px)', top: '60px' }, _floatSize: { width: '440px', height: 'auto' } }];
+        this.globalNotes = [{ id: Date.now().toString(), text: '悬浮笔记操作方式 / Floating Note Controls：\n• Shift + 滚轮 → 切换配色 / Shift+Scroll → Change color scheme\n• Ctrl + 滚轮 → 调整透明度 / Ctrl+Scroll → Adjust opacity\n• Alt + 滚轮 → 调整字号 / Alt+Scroll → Adjust font size\n• 双击 → 编辑内容 / Double-click → Edit content\n• 点击调色盘按钮 → 选择配色方案 / Click palette button → Choose color scheme\n\n添加笔记：在悬浮球选项中点击"+"按钮\nAdd notes: Click the "+" button in the floating ball options', _createdAt: Date.now(), _hidden: true }, { id: (Date.now() + 2).toString(), text: '这是 SwiftGlossa 插件的悬浮笔记。单击右上角"X"按钮关闭;中键点击删除(添加悬浮笔记方式在"SG"悬浮球选项中);中键点击笔记内容部分可折叠显示。\n\n以下是本插件的简单介绍及基础用法:\n\n插件从 2025 年年底开始建造,至今(2026-08-03)经过多次转向发展成当前功能布局,总耗时 1000+ 小时。\n\n插件通过 CSS 样式个性化高亮关键词。关键词可以是人名、地名、学科术语等任何你觉得重要的词(根据二八定律,建议只将 20% 的关键词进行个性化高亮,余下的用简单下划线,否则整体观感会很乱)。\n\n关键词被高亮后可以添加「计数」(统计该词在当前文档中出现的次数)、显示在关键词上方的「行间注释」(比如添加人物的生辰、角色...)。\n\n首次安装插件,在 Obsidian 启动后约 30 秒会自动构建库中 Obsidian 格式的高亮「==高亮文本==」,之后每次添加新高亮都会自动更新。\n\n点击关键词后,会搜索高亮数据库,将匹配的高亮条目显示在面板中(主面板、右侧面板、独立窗口);或者折叠右侧面板,鼠标悬停到关键词上也会显示相关高亮(可关闭)——当你有大量高亮时这通常会带给你意想不到的收获。\n\n每条高亮都可以添加备注/记号,这能让你记得更牢(后续有这些备注/记号的附加功能)。\n\n对于名词术语,提供了「info」版块,可将关于该关键词的事实性知识显示在这里(支持 AI 根据提示词自动生成)。\n\n其他功能请自行探索。本插件免费,提供付费咨询,vx: jtugqivi\n\n--- English ---\n\nThis is a floating note of the SwiftGlossa plugin. Click the "X" button in the top-right corner to close; middle-click to delete (add floating notes via the "SG" floating ball options); middle-click the note content area to collapse it.\n\nBelow is a brief introduction and basic usage of the plugin:\n\nThe plugin has been in development since late 2025. As of 2026-08-03, after several pivots, it has evolved into its current feature layout, with 1000+ hours invested.\n\nThe plugin highlights keywords with personalized CSS styles. Keywords can be names, places, subject-specific terms, or any words you consider important (based on the 80/20 rule, it is recommended to apply personalized highlighting to only 20% of keywords and use simple underlines for the rest, otherwise the overall appearance will be cluttered).\n\nAfter a keyword is highlighted, you can add a "count" (tracking its occurrences in the current document) and "interlinear notes" displayed above the keyword (e.g., a character birthdate, role...).\n\nOn first install, about 30 seconds after Obsidian starts, the plugin automatically builds Obsidian-format highlights ("==highlighted text==") from the vault. After that, every new highlight auto-updates.\n\nClick a keyword to search the highlight database and display matching entries in the panel (main panel, right sidebar, or standalone window). Alternatively, collapse the right sidebar and hover over a keyword to see related highlights (can be disabled) — this often brings unexpected insights when you have many highlights.\n\nEach highlight can have a remark/marker added, helping you remember better (additional features for remarks/markers are planned).\n\nFor noun terms, an "info" section displays factual knowledge about the keyword (supports AI auto-generation from prompts).\n\nExplore other features on your own. This plugin is free; paid consultations available, vx: jtugqivi', _createdAt: Date.now() + 2, _hidden: false, _collapsed: true, _collapsedPos: { left: 'calc(50vw - 60px)', top: '60px' }, _inPanel: false, _floatPos: { left: 'calc(50vw - 220px)', top: '60px' }, _floatSize: { width: '440px', height: 'auto' } }];
       }
       // 删除旧版咨询笔记（已安装用户）
       const _oldConsultIdx = this.globalNotes.findIndex(n => n.text === '插件免费, 使用方法提供有偿咨询-vx:jtugqivi (giantPigeon)');
@@ -38368,7 +38643,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
     } catch (error) {
       console.error('Error loading global notes:', error);
-      this.globalNotes = [{ id: Date.now().toString(), text: '悬浮笔记操作方式 / Floating Note Controls：\n• Shift + 滚轮 → 切换配色 / Shift+Scroll → Change color scheme\n• Ctrl + 滚轮 → 调整透明度 / Ctrl+Scroll → Adjust opacity\n• Alt + 滚轮 → 调整字号 / Alt+Scroll → Adjust font size\n• 双击 → 编辑内容 / Double-click → Edit content\n• 点击调色盘按钮 → 选择配色方案 / Click palette button → Choose color scheme\n\n添加笔记：在悬浮球选项中点击"+"按钮\nAdd notes: Click the "+" button in the floating ball options', _createdAt: Date.now(), _hidden: true }, { id: (Date.now() + 2).toString(), text: '这是 SwiftGlossa 插件的悬浮笔记。单击右上角"X"按钮关闭;中键点击删除(添加悬浮笔记方式在"SG"悬浮球选项中);中键点击笔记内容部分可折叠显示。\n\n以下是本插件的简单介绍及基础用法:\n\n插件从 2025 年年底开始建造,至今(2026-08-03)经过多次转向发展成当前功能布局,总耗时 1000+ 小时。\n\n插件通过 CSS 样式个性化高亮关键词。关键词可以是人名、地名、学科术语等任何你觉得重要的词(根据二八定律,建议只将 20% 的关键词进行个性化高亮,余下的用简单下划线,否则整体观感会很乱)。\n\n关键词被高亮后可以添加「计数」(统计该词在当前文档中出现的次数)、显示在关键词上方的「行间注释」(比如添加人物的生辰、角色...)。\n\n首次安装插件,在 Obsidian 启动后约 30 秒会自动构建库中 Obsidian 格式的高亮「==高亮文本==」,之后每次添加新高亮都会自动更新。\n\n点击关键词后,会搜索高亮数据库,将匹配的高亮条目显示在面板中(主面板、右侧面板、独立窗口);或者折叠右侧面板,鼠标悬停到关键词上也会显示相关高亮(可关闭)——当你有大量高亮时这通常会带给你意想不到的收获。\n\n每条高亮都可以添加备注/记号,这能让你记得更牢(后续有这些备注/记号的附加功能)。\n\n对于名词术语,提供了「info」版块,可将关于该关键词的事实性知识显示在这里(支持 AI 根据提示词自动生成)。\n\n其他功能请自行探索。本插件免费,提供付费咨询,vx: jtugqivi\n\n--- English ---\n\nThis is a floating note of the SwiftGlossa plugin. Click the "X" button in the top-right corner to close; middle-click to delete (add floating notes via the "SG" floating ball options); middle-click the note content area to collapse it.\n\nBelow is a brief introduction and basic usage of the plugin:\n\nThe plugin has been in development since late 2025. As of 2026-08-03, after several pivots, it has evolved into its current feature layout, with 1000+ hours invested.\n\nThe plugin highlights keywords with personalized CSS styles. Keywords can be names, places, subject-specific terms, or any words you consider important (based on the 80/20 rule, it is recommended to apply personalized highlighting to only 20% of keywords and use simple underlines for the rest, otherwise the overall appearance will be cluttered).\n\nAfter a keyword is highlighted, you can add a "count" (tracking its occurrences in the current document) and "interlinear notes" displayed above the keyword (e.g., a character birthdate, role...).\n\nOn first install, about 30 seconds after Obsidian starts, the plugin automatically builds Obsidian-format highlights ("==highlighted text==") from the vault. After that, every new highlight auto-updates.\n\nClick a keyword to search the highlight database and display matching entries in the panel (main panel, right sidebar, or standalone window). Alternatively, collapse the right sidebar and hover over a keyword to see related highlights (can be disabled) — this often brings unexpected insights when you have many highlights.\n\nEach highlight can have a remark/marker added, helping you remember better (additional features for remarks/markers are planned).\n\nFor noun terms, an "info" section displays factual knowledge about the keyword (supports AI auto-generation from prompts).\n\nExplore other features on your own. This plugin is free; paid consultations available, vx: jtugqivi', _createdAt: Date.now() + 2, _hidden: false, collapsed: false, _inPanel: false, _floatPos: { left: 'calc(50vw - 220px)', top: '60px' }, _floatSize: { width: '440px', height: 'auto' } }];
+      this.globalNotes = [{ id: Date.now().toString(), text: '悬浮笔记操作方式 / Floating Note Controls：\n• Shift + 滚轮 → 切换配色 / Shift+Scroll → Change color scheme\n• Ctrl + 滚轮 → 调整透明度 / Ctrl+Scroll → Adjust opacity\n• Alt + 滚轮 → 调整字号 / Alt+Scroll → Adjust font size\n• 双击 → 编辑内容 / Double-click → Edit content\n• 点击调色盘按钮 → 选择配色方案 / Click palette button → Choose color scheme\n\n添加笔记：在悬浮球选项中点击"+"按钮\nAdd notes: Click the "+" button in the floating ball options', _createdAt: Date.now(), _hidden: true }, { id: (Date.now() + 2).toString(), text: '这是 SwiftGlossa 插件的悬浮笔记。单击右上角"X"按钮关闭;中键点击删除(添加悬浮笔记方式在"SG"悬浮球选项中);中键点击笔记内容部分可折叠显示。\n\n以下是本插件的简单介绍及基础用法:\n\n插件从 2025 年年底开始建造,至今(2026-08-03)经过多次转向发展成当前功能布局,总耗时 1000+ 小时。\n\n插件通过 CSS 样式个性化高亮关键词。关键词可以是人名、地名、学科术语等任何你觉得重要的词(根据二八定律,建议只将 20% 的关键词进行个性化高亮,余下的用简单下划线,否则整体观感会很乱)。\n\n关键词被高亮后可以添加「计数」(统计该词在当前文档中出现的次数)、显示在关键词上方的「行间注释」(比如添加人物的生辰、角色...)。\n\n首次安装插件,在 Obsidian 启动后约 30 秒会自动构建库中 Obsidian 格式的高亮「==高亮文本==」,之后每次添加新高亮都会自动更新。\n\n点击关键词后,会搜索高亮数据库,将匹配的高亮条目显示在面板中(主面板、右侧面板、独立窗口);或者折叠右侧面板,鼠标悬停到关键词上也会显示相关高亮(可关闭)——当你有大量高亮时这通常会带给你意想不到的收获。\n\n每条高亮都可以添加备注/记号,这能让你记得更牢(后续有这些备注/记号的附加功能)。\n\n对于名词术语,提供了「info」版块,可将关于该关键词的事实性知识显示在这里(支持 AI 根据提示词自动生成)。\n\n其他功能请自行探索。本插件免费,提供付费咨询,vx: jtugqivi\n\n--- English ---\n\nThis is a floating note of the SwiftGlossa plugin. Click the "X" button in the top-right corner to close; middle-click to delete (add floating notes via the "SG" floating ball options); middle-click the note content area to collapse it.\n\nBelow is a brief introduction and basic usage of the plugin:\n\nThe plugin has been in development since late 2025. As of 2026-08-03, after several pivots, it has evolved into its current feature layout, with 1000+ hours invested.\n\nThe plugin highlights keywords with personalized CSS styles. Keywords can be names, places, subject-specific terms, or any words you consider important (based on the 80/20 rule, it is recommended to apply personalized highlighting to only 20% of keywords and use simple underlines for the rest, otherwise the overall appearance will be cluttered).\n\nAfter a keyword is highlighted, you can add a "count" (tracking its occurrences in the current document) and "interlinear notes" displayed above the keyword (e.g., a character birthdate, role...).\n\nOn first install, about 30 seconds after Obsidian starts, the plugin automatically builds Obsidian-format highlights ("==highlighted text==") from the vault. After that, every new highlight auto-updates.\n\nClick a keyword to search the highlight database and display matching entries in the panel (main panel, right sidebar, or standalone window). Alternatively, collapse the right sidebar and hover over a keyword to see related highlights (can be disabled) — this often brings unexpected insights when you have many highlights.\n\nEach highlight can have a remark/marker added, helping you remember better (additional features for remarks/markers are planned).\n\nFor noun terms, an "info" section displays factual knowledge about the keyword (supports AI auto-generation from prompts).\n\nExplore other features on your own. This plugin is free; paid consultations available, vx: jtugqivi', _createdAt: Date.now() + 2, _hidden: false, _collapsed: true, _collapsedPos: { left: 'calc(50vw - 60px)', top: '60px' }, _inPanel: false, _floatPos: { left: 'calc(50vw - 220px)', top: '60px' }, _floatSize: { width: '440px', height: 'auto' } }];
       this.noteGroups = [];
     }
   }
@@ -41532,6 +41807,7 @@ content.addEventListener('auxclick', (e) => {
       if (e.target.closest('.inline-remark-section')) return;
       if (e.target.closest('.swiftglossa-sidebar')) return;
       if (this._sidebarView && this._sidebarView.isVisible() && this.settings?.hidePopupWhenSidebarOpen && !this._forceShowPopup) return;
+      if (this.settings?.hoverKeywordNoPopup && !this._forceShowPopup) return;
       if (!_isDesktop && this.settings?.mobileRemarkInSidebar) return;
 
       // 检查事件目标或其祖先是否带有highlight-tooltip-text类
@@ -42223,6 +42499,7 @@ content.addEventListener('auxclick', (e) => {
 
           this.onRulesUpdate = () => {
             this.needsDecoratorUpdate = true;
+            if (this.view) this.view.dispatch({});
           };
 
           this.onPinyinUpdate = () => {
@@ -45930,6 +46207,7 @@ ${fullContext}`;
       }
 
       if (plugin._sidebarView && plugin._sidebarView.isVisible() && plugin.settings?.hidePopupWhenSidebarOpen && !plugin._forceShowPopup) return;
+      if (plugin.settings?.hoverKeywordNoPopup && !plugin._forceShowPopup) return;
       if (!_isDesktop && plugin.settings?.mobileRemarkInSidebar) return;
 
       // 检查是否在弹窗内，如果在则不处理（优先检查，避免弹窗内部触发新弹窗）
@@ -46138,6 +46416,8 @@ ${fullContext}`;
           // 深色模式下的增强样式
           if (document.body.classList.contains('theme-dark')) {
             popup.style.boxShadow = '0 12px 40px rgba(0,0,0,0.5)';
+            popup.style.background = 'rgba(var(--mono-rgb-0),0.94)';
+            popup.style.border = '1px solid rgba(255,255,255,0.15)';
           }
 
           // 计算位置
@@ -46191,7 +46471,7 @@ ${fullContext}`;
           }
 
           popup.style.left = left + 'px';
-          if (!_isDesktop && top < 100) top = 100;
+          if (!_isDesktop && top < 120) top = 120;
           popup.style.top = top + 'px';
 
           // 动态计算弹窗最大高度：基于关键词到视口边缘的可用空间
@@ -47520,6 +47800,7 @@ ${fullContext}`;
             }
 
             popup.style.left = left + 'px';
+            if (!_isDesktop && newTop < 120) newTop = 120;
             popup.style.top = newTop + 'px';
 
             // 动态更新弹窗最大高度
@@ -48224,8 +48505,18 @@ ${fullContext}`;
       this.registerDomEvent(document, 'click', async (e) => {
         if (!(e.target instanceof Element)) return;
 
+
         // 点击非高亮区域时隐藏
-        const target = e.target.closest('.highlight-regex-text');
+        let target = e.target.closest('.highlight-regex-text');
+        if (!target) {
+          const range = document.caretRangeFromPoint?.(e.clientX, e.clientY);
+          if (range) {
+            const node = range.startContainer instanceof Element ? range.startContainer : range.startContainer.parentElement;
+            if (node) target = node.closest('.highlight-regex-text, [data-rule-regex]');
+          }
+          if (!target && e.target.querySelector) target = e.target.querySelector('.highlight-regex-text, [data-rule-regex]');
+
+        }
         if (!target) {
           hideMobileHighlightActions();
           return;
@@ -48240,6 +48531,7 @@ ${fullContext}`;
         const ruleSource = target.dataset.ruleSource;
         const ruleRegex = target.dataset.ruleRegex || '';
         const isCounted = ruleRegex && plugin.countedRegexes.has(ruleRegex);
+        if (ruleRegex) plugin._addKeywordHistory(ruleRegex);
 
         if (plugin.settings?.mobileRemarkInSidebar && ruleRegex) {
           e.preventDefault();
@@ -48255,21 +48547,18 @@ ${fullContext}`;
             plugin._showRuleActionButtons(floatingBall2, ruleRegex);
           }
 
-          await plugin.ensureSidebarView();
-          const retryShowRemark = async (attempts) => {
-            const modal = plugin._regexHighlightModal;
-            if (modal && modal.regexInput && modal.showInlineRemarkForRegex) {
-              modal.regexInput.setValue(ruleRegex);
-              if (modal.highlightMatchingRuleButtons) modal.highlightMatchingRuleButtons();
-              modal.showInlineRemarkForRegex(ruleRegex);
-              return;
-            }
-            if (attempts > 0) {
-              await new Promise(r => setTimeout(r, 100));
-              await retryShowRemark(attempts - 1);
-            }
-          };
-          await retryShowRemark(20);
+          // 仅当主面板/侧边栏已打开时才显示备注，不自动打开侧边栏
+          const modal = plugin._regexHighlightModal;
+          if (modal && modal.regexInput && modal.showInlineRemarkForRegex) {
+            const _allR = [...(Array.isArray(plugin.rules)?plugin.rules:[]), ...(Array.isArray(plugin.globalRules)?plugin.globalRules:[])];
+            const _matchR = _allR.filter(r => { const _p = _splitRegexPipes(r.regex); return _p.includes(ruleRegex) || r.regex === ruleRegex || r.regex.includes(ruleRegex); });
+            const _uniqRx = [...new Set(_matchR.map(r => r.regex))];
+            if (_uniqRx.length > 0 && modal._showKwChips) { modal._showKwChips(_uniqRx, ruleRegex, ruleRegex); } else if (modal._hideKwChips) { modal._hideKwChips(); }
+            modal.regexInput.setValue(ruleRegex);
+            if (modal.highlightMatchingRuleButtons) modal.highlightMatchingRuleButtons();
+            modal._needsRefresh = false;
+            modal.showInlineRemarkForRegex(ruleRegex);
+          }
           return;
         }
 

@@ -2,7 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v2.0.6 (2026-08-03)
+## 🆕 v2.0.7 (2026-08-04)
+
+- **Info Font Color / Info字体颜色** — Added text color setting to info section color scheme (covers title, button, chip text); dark mode auto-uses "深夜" preset for proper contrast / Info板块配色方案新增字体颜色设定（覆盖标题、按钮、chip文字）；深色模式自动对应"深夜"预设
+- **Mobile CSS Style Preview / 手机端CSS样式预览** — Tapping a style button under CSS tab now pops up a floating style preview (same as desktop pin button) instead of directly applying as a file rule / 手机端CSS tab下点击样式按钮弹出悬浮样式预览（与桌面版pin按钮一致），不再直接应用为当前文件规则
+- **Mobile Reading Mode g/l / 手机阅读模式g/l** — Selecting non-keyword text in reading mode now shows g/l button; removed broken touch-tracking check / 阅读模式下选中非关键词文本显示g/l按钮；移除失效的触摸追踪检查
+- **Preset Prompt Length / 预设提示词字数** — Added "150字内 / within 150 chars" suffix to all 4 preset prompts / 4个预设提示词末尾添加"150字内"
+- **First Install Collapsed Note / 首装折叠笔记** — Intro floating note now appears in collapsed/thumbnail state on first install / 首次安装介绍悬浮笔记以折叠/缩略状态显示
+- **First Install Sidebar Only / 仅首装打开侧边栏** — Right sidebar auto-opens only on first install (mobile), not every reload / 右侧面板仅在首次安装时自动打开（手机端），不再每次重载都打开
+- **Save Error Fix / 保存错误修复** — Fixed "fontSizeInput is not defined" error when saving popup settings / 修复弹窗设置保存时"fontSizeInput is not defined"错误
+- **Long-press Scroll Restore / 移除长按限制恢复滑动** — Removed document-level touchmove preventDefault that blocked scrolling on mobile / 移除document级touchmove阻止默认行为，恢复手机端正常滑动
+- **Keyword Group Chip Highlight / 输入关键词高亮分组chip** — Input box keyword highlights its corresponding group chip for quick identification / 输入框关键词高亮对应分组chip，便于快速识别
+
+## v2.0.6 (2026-08-03)
 
 - **Sidebar/Main Panel Init Guard / 侧边栏与主面板初始化守卫** — onOpen now waits for plugin onload (settings/rulesUpdateEmitter) to finish before rendering, fixing sidebar "Cannot read properties of undefined" error and empty main panel on fresh install/update (view restored before async onload completes) / onOpen 现在等待插件 onload（settings/rulesUpdateEmitter）完成后再渲染，修复新装/更新时侧边栏报错和主面板空白（view 在 async onload 完成前被恢复）
 - **Intro Floating Note / 介绍悬浮笔记** — New install auto-pops a bilingual (CN/EN) intro floating note with usage guide; removed old consultation note (also cleaned for existing users on update) / 新装自动弹出中英双语介绍悬浮笔记（含用法指南）；移除旧版咨询笔记（已安装用户更新后也清除）

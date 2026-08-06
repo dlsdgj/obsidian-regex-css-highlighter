@@ -19,6 +19,24 @@ const _SVG_PIN_OFF = '<svg width="14" height="14" viewBox="0 0 24 24" fill="curr
 const _SVG_REMARK_HAS = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
 const _SVG_REMARK_NO = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>';
 const _SVG_QUESTION = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+const _SVG_OPEN = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>';
+function _showHelpFloat(btn, contentText) {
+  const existing = document.querySelector('.sg-help-float');
+  if (existing) { existing.remove(); return; }
+  const float = document.createElement('div');
+  float.className = 'sg-help-float';
+  float.style.cssText = 'position:fixed;z-index:9999;max-width:400px;max-height:500px;overflow-y:auto;font-size:11px;color:var(--text-normal);background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,0.15);line-height:1.6;';
+  contentText.split('\n').forEach(p => {
+    if (p.trim()) { const d = document.createElement('div'); d.textContent = p; d.style.marginBottom = '4px'; float.appendChild(d); }
+    else { const s = document.createElement('div'); s.style.height = '6px'; float.appendChild(s); }
+  });
+  const rect = btn.getBoundingClientRect();
+  float.style.left = Math.min(rect.left, window.innerWidth - 420) + 'px';
+  float.style.top = (rect.bottom + 4) + 'px';
+  document.body.appendChild(float);
+  const closeHandler = (e) => { if (!float.contains(e.target) && !btn.contains(e.target)) { float.remove(); document.removeEventListener('mousedown', closeHandler); } };
+  setTimeout(() => document.addEventListener('mousedown', closeHandler), 0);
+}
 const _TOGGLE_DOWN = '▽';
 const _TOGGLE_RIGHT = '▷';
 const _SG_PALETTE_CSS = `.sg-theme-01 .sg-related-source{color:rgba(140,108,50,0.85) !important}.sg-theme-01 .sg-related-text{color:rgba(60,46,24,0.90) !important}.sg-theme-01 .sg-highlight-item{background:rgba(250,240,205,0.75) !important}.sg-theme-01 .sg-highlight-item.has-comment{background:rgba(236,216,154,0.90) !important}.sg-theme-01 .sg-comment-panel{background:rgba(224,198,128,0.85) !important;color:rgba(66,48,16,0.92) !important}.sg-theme-02 .sg-related-source{color:rgba(90,90,96,0.85) !important}.sg-theme-02 .sg-related-text{color:rgba(34,34,36,0.90) !important}.sg-theme-02 .sg-highlight-item{background:rgba(238,236,230,0.80) !important}.sg-theme-02 .sg-highlight-item.has-comment{background:rgba(212,208,196,0.92) !important}.sg-theme-02 .sg-comment-panel{background:rgba(44,44,46,0.90) !important;color:rgba(224,222,214,0.92) !important}.sg-theme-03 .sg-related-source{color:rgba(70,92,116,0.85) !important}.sg-theme-03 .sg-related-text{color:rgba(32,40,48,0.90) !important}.sg-theme-03 .sg-highlight-item{background:rgba(224,232,240,0.75) !important}.sg-theme-03 .sg-highlight-item.has-comment{background:rgba(190,208,224,0.90) !important}.sg-theme-03 .sg-comment-panel{background:rgba(150,176,200,0.90) !important;color:rgba(20,32,44,0.92) !important}.sg-theme-04 .sg-related-source{color:rgba(180,108,30,0.85) !important}.sg-theme-04 .sg-related-text{color:rgba(70,44,12,0.90) !important}.sg-theme-04 .sg-highlight-item{background:rgba(255,234,200,0.78) !important}.sg-theme-04 .sg-highlight-item.has-comment{background:rgba(250,206,140,0.92) !important}.sg-theme-04 .sg-comment-panel{background:rgba(240,176,90,0.90) !important;color:rgba(64,34,4,0.92) !important}.sg-theme-05 .sg-related-source{color:rgba(170,180,196,0.85) !important}.sg-theme-05 .sg-related-text{color:rgba(216,220,226,0.90) !important}.sg-theme-05 .sg-highlight-item{background:rgba(38,40,46,0.85) !important}.sg-theme-05 .sg-highlight-item.has-comment{background:rgba(54,58,68,0.92) !important}.sg-theme-05 .sg-comment-panel{background:rgba(70,76,90,0.92) !important;color:rgba(224,228,234,0.92) !important}.sg-theme-06 .sg-related-source{color:rgba(50,116,96,0.85) !important}.sg-theme-06 .sg-related-text{color:rgba(24,50,42,0.90) !important}.sg-theme-06 .sg-highlight-item{background:rgba(222,240,232,0.78) !important}.sg-theme-06 .sg-highlight-item.has-comment{background:rgba(176,220,200,0.90) !important}.sg-theme-06 .sg-comment-panel{background:rgba(130,196,168,0.90) !important;color:rgba(14,44,32,0.92) !important}.sg-theme-07 .sg-related-source{color:rgba(150,82,46,0.85) !important}.sg-theme-07 .sg-related-text{color:rgba(64,36,20,0.90) !important}.sg-theme-07 .sg-highlight-item{background:rgba(238,216,194,0.78) !important}.sg-theme-07 .sg-highlight-item.has-comment{background:rgba(214,168,130,0.92) !important}.sg-theme-07 .sg-comment-panel{background:rgba(178,116,74,0.90) !important;color:rgba(255,246,236,0.94) !important}.sg-theme-08 .sg-related-source{color:rgba(90,100,160,0.85) !important}.sg-theme-08 .sg-related-text{color:rgba(30,32,46,0.90) !important}.sg-theme-08 .sg-highlight-item{background:rgba(228,228,240,0.78) !important}.sg-theme-08 .sg-highlight-item.has-comment{background:rgba(172,176,210,0.90) !important}.sg-theme-08 .sg-comment-panel{background:rgba(64,70,120,0.92) !important;color:rgba(232,232,240,0.94) !important}.sg-theme-09 .sg-related-source{color:rgba(170,60,60,0.85) !important}.sg-theme-09 .sg-related-text{color:rgba(60,24,20,0.90) !important}.sg-theme-09 .sg-highlight-item{background:rgba(250,224,220,0.78) !important}.sg-theme-09 .sg-highlight-item.has-comment{background:rgba(232,168,158,0.92) !important}.sg-theme-09 .sg-comment-panel{background:rgba(196,90,78,0.90) !important;color:rgba(255,244,240,0.94) !important}.sg-theme-10 .sg-related-source{color:rgba(110,110,114,0.85) !important}.sg-theme-10 .sg-related-text{color:rgba(38,38,40,0.90) !important}.sg-theme-10 .sg-highlight-item{background:rgba(240,240,241,0.78) !important}.sg-theme-10 .sg-highlight-item.has-comment{background:rgba(206,206,209,0.92) !important}.sg-theme-10 .sg-comment-panel{background:rgba(96,96,100,0.90) !important;color:rgba(240,240,242,0.94) !important}.sg-theme-01 .sg-comment-panel .hl-remark-text{color:rgba(66,48,16,0.92) !important}.sg-theme-02 .sg-comment-panel .hl-remark-text{color:rgba(224,222,214,0.92) !important}.sg-theme-03 .sg-comment-panel .hl-remark-text{color:rgba(20,32,44,0.92) !important}.sg-theme-04 .sg-comment-panel .hl-remark-text{color:rgba(64,34,4,0.92) !important}.sg-theme-05 .sg-comment-panel .hl-remark-text{color:rgba(224,228,234,0.92) !important}.sg-theme-06 .sg-comment-panel .hl-remark-text{color:rgba(14,44,32,0.92) !important}.sg-theme-07 .sg-comment-panel .hl-remark-text{color:rgba(255,246,236,0.94) !important}.sg-theme-08 .sg-comment-panel .hl-remark-text{color:rgba(232,232,240,0.94) !important}.sg-theme-09 .sg-comment-panel .hl-remark-text{color:rgba(255,244,240,0.94) !important}.sg-theme-10 .sg-comment-panel .hl-remark-text{color:rgba(240,240,242,0.94) !important}.sg-comment-panel{margin-top:4px;padding:4px 8px;border-radius:4px}.sg-related-source{margin-bottom:2px}.sg-related-text{line-height:1.5}`;
@@ -664,6 +682,28 @@ const i18n = {
     'settings.addPrompt': '+ 添加提示词',
     'main.aiPromptTitle': '提示词',
     'main.aiSend': '发送',
+    'main.settings': '设置',
+    'main.pluginHelpContent': '这是 SwiftGlossa 插件的悬浮笔记。单击右上角"X"按钮关闭;中键点击删除(添加悬浮笔记方式在"SG"悬浮球选项中);中键点击笔记内容部分可折叠显示。\n\n以下是本插件的简单介绍及基础用法:\n\n插件从 2025 年年底开始建造,至今(2026-08-03)经过多次转向发展成当前功能布局,总耗时 1000+ 小时。\n\n插件通过 CSS 样式个性化高亮关键词。关键词可以是人名、地名、学科术语等任何你觉得重要的词(根据二八定律,建议只将 20% 的关键词进行个性化高亮,余下的用简单下划线,否则整体观感会很乱)。\n\n关键词被高亮后可以添加「计数」(统计该词在当前文档中出现的次数)、显示在关键词上方的「行间注释」(比如添加人物的生辰、角色...)。\n\n首次安装插件,在 Obsidian 启动后约 30 秒会自动构建库中 Obsidian 格式的高亮「==高亮文本==」,之后每次添加新高亮都会自动更新。\n\n点击关键词后,会搜索高亮数据库,将匹配的高亮条目显示在面板中(主面板、右侧面板、独立窗口);或者折叠右侧面板,鼠标悬停到关键词上也会显示相关高亮(可关闭)——当你有大量高亮时这通常会带给你意想不到的收获。\n\n每条高亮都可以添加备注/记号,这能让你记得更牢(后续有这些备注/记号的附加功能)。\n\n对于名词术语,提供了「info」版块,可将关于该关键词的事实性知识显示在这里(支持 AI 根据提示词自动生成)。\n\n其他功能请自行探索。本插件免费,提供付费咨询,vx: jtugqivi',
+    'main.threadsSection': '脉络',
+    'main.parkingLotSection': '停车场',
+    'main.threadsEmpty': '（空）点击 + 添加脉络',
+    'main.threadsAddPlaceholder': '输入脉络内容...',
+        'main.hlHelpContent': '相关高亮\n▸ 显示逻辑：根据关键词规则匹配文档中的 ==高亮== 文本和句子规则，同时匹配高亮备注中包含搜索词的条目\n▸ 建议用法：给高亮添加评论/记号以加深记忆，当选中文本时，高亮中没有提及但评论中提及的词也会匹配并显示对应高亮\n▸ 备注样式：由配色方案控制\n▸ 双击备注可直接编辑\n▸ 点击高亮中的关键词可打开详情弹窗',
+    'main.threadsHelpContent': '一份专门用来记录"关键词之间关系"的笔记文件，不需要先选中文字或创建高亮规则。\n想到两个(或多个)词之间有联系时，直接在这份笔记里写一行，比如:\n\n朱温与拉齐是同时期人物\n朱温是后梁开国皇帝终结唐朝\n907年，朱温逼迫唐哀帝李柷禅位，唐朝正式灭亡\n\n写完之后，点击关键词"拉齐"会显示第一行，点击"朱温"会显示上面3行——脉络不属于某一个词，而是被所包含的关键词共享。\n\n和"高亮备注"的区别: 高亮备注是针对某一处具体高亮写的笔记；脉络不需要先有高亮，只要文字里提到了已建档的关键词就能被找到。',
+    'main.parkingLotHelpContent': '一个常驻显示的笔记区域，展示指定文件夹里的所有笔记——不需要点击某个关键词才能看到，也不会因为切换关键词而消失。\n适合放那些"还没想清楚该归到哪里"的零散笔记:一闪而过的念头、没展开的半成品想法、暂时找不到合适位置的草稿。\n\n和其他板块的区别: 备注、脉络都是"因为提到了某个关键词才被找到"；停车场里的笔记不需要提到任何关键词，只要放进指定文件夹，就会一直显示在这里，方便你随时想起、随手继续。',
+    'main.parkingLotSectionBg': '版块背景',
+    'main.parkingLotCardBg': '卡片背景',
+    'main.parkingLotTextColor': '字体颜色',
+    'main.parkingLotCardGrid': '卡片网格',
+    'main.parkingLotAll': '全部',
+    'main.parkingLotAddFile': '添加停车场笔记',
+    'main.parkingLotEmpty': '暂无停车场笔记，点击 + 添加',
+    'main.parkingLotHeight': '高度',
+    'settings.parkingLotFolders': '停车场文件夹',
+    'settings.parkingLotFoldersDesc': '文件夹路径，每行一个',
+    'settings.parkingLotFiles': '特定文档',
+    'settings.parkingLotFilesDesc': '文件路径，每行一个',
+    'settings.parkingLotCustomPrompts': '自定义提示词',
     'main.infoSection': 'Info',
     'main.infoEmpty': '点击关键词 chip 查看 Info（从 info 文件夹读取 关键词.md）',
     'main.infoNotFound': '未找到该关键词的 Info 文件',
@@ -1197,6 +1237,7 @@ const i18n = {
     'main.openMainPanelFirst': '请先打开主面板',
     'main.regexLabel': '正则表达式',
     'main.searchOrAdd': '搜索或添加',
+    'main.pressEnterAgainToAdd': '再按一次 Enter 添加为规则',
     'main.fullText': '全句',
     'main.edit': '编辑',
     'main.dblClickEdit': '双击编辑',
@@ -1748,6 +1789,28 @@ const i18n = {
     'settings.addPrompt': '+ Add Prompt',
     'main.aiPromptTitle': 'Prompts',
     'main.aiSend': 'Send',
+    'main.settings': 'Settings',
+    'main.pluginHelpContent': 'This is a floating note of the SwiftGlossa plugin. Click the "X" button in the top-right corner to close; middle-click to delete (add floating notes via the "SG" floating ball options); middle-click the note content area to collapse it.\n\nBelow is a brief introduction and basic usage of the plugin:\n\nThe plugin has been in development since late 2025. As of 2026-08-03, after several pivots, it has evolved into its current feature layout, with 1000+ hours invested.\n\nThe plugin highlights keywords with personalized CSS styles. Keywords can be names, places, subject-specific terms, or any words you consider important (based on the 80/20 rule, it is recommended to apply personalized highlighting to only 20% of keywords and use simple underlines for the rest, otherwise the overall appearance will be cluttered).\n\nAfter a keyword is highlighted, you can add a "count" (tracking its occurrences in the current document) and "interlinear notes" displayed above the keyword (e.g., a character birthdate, role...).\n\nOn first install, about 30 seconds after Obsidian starts, the plugin automatically builds Obsidian-format highlights ("==highlighted text==") from the vault. After that, every new highlight auto-updates.\n\nClick a keyword to search the highlight database and display matching entries in the panel (main panel, right sidebar, or standalone window). Alternatively, collapse the right sidebar and hover over a keyword to see related highlights (can be disabled) — this often brings unexpected insights when you have many highlights.\n\nEach highlight can have a remark/marker added, helping you remember better (additional features for remarks/markers are planned).\n\nFor noun terms, an "info" section displays factual knowledge about the keyword (supports AI auto-generation from prompts).\n\nExplore other features on your own. This plugin is free; paid consultations available, vx: jtugqivi',
+    'main.threadsSection': 'Threads',
+    'main.parkingLotSection': 'Parking Lot',
+    'main.threadsEmpty': '(empty) click + to add',
+    'main.threadsAddPlaceholder': 'Enter thread content...',
+        'main.hlHelpContent': 'Related Highlights\n▸ Display logic: Matches keyword rules against highlighted text and sentence rules, also matches highlights whose remarks contain the search term\n▸ Suggested usage: Add comments/markers to highlights for deeper memory; when selecting text, terms mentioned only in remarks will also match and show related highlights\n▸ Remark style: Controlled by color palette\n▸ Double-click remark to edit\n▸ Click keyword in highlight to open detail popup',
+    'main.threadsHelpContent': 'A note file dedicated to recording "relationships between keywords" — no need to select text or create highlight rules first.\nWhen you realize two (or more) words are connected, just write a line in this note, e.g.:\n\nZhu Wen and al-Khwarizmi were contemporaries\nZhu Wen founded Later Liang and ended the Tang Dynasty\nIn 907, Zhu Wen forced Emperor Ai of Tang to abdicate, formally ending the Tang\n\nAfter writing, clicking the keyword "al-Khwarizmi" shows the first line, clicking "Zhu Wen" shows all 3 lines above — a thread does not belong to one word, but is shared by all keywords it contains.\n\nDifference from "highlight remarks": highlight remarks are notes for a specific highlight; threads do not require a highlight first — as long as the text mentions an indexed keyword, it can be found.',
+    'main.parkingLotHelpContent': 'A always-visible note area showing all notes in a specified folder — no need to click a keyword to see them, and they do not disappear when switching keywords.\nSuitable for scattered notes that "you are not sure where to put yet": fleeting thoughts, half-formed ideas, drafts with no proper place.\n\nDifference from other sections: remarks and threads are "found because a keyword is mentioned"; notes in the parking lot do not need to mention any keyword — just put them in the specified folder and they will always show here, ready for you to recall and continue anytime.',
+    'main.parkingLotSectionBg': 'Section Background',
+    'main.parkingLotCardBg': 'Card Background',
+    'main.parkingLotTextColor': 'Text Color',
+    'main.parkingLotCardGrid': 'Card Grid',
+    'main.parkingLotAll': 'All',
+    'main.parkingLotAddFile': 'Add Parking Lot Note',
+    'main.parkingLotEmpty': 'No parking lot notes, click + to add',
+    'main.parkingLotHeight': 'Height',
+    'settings.parkingLotFolders': 'Parking Lot Folders',
+    'settings.parkingLotFoldersDesc': 'Folder paths, one per line',
+    'settings.parkingLotFiles': 'Specific Documents',
+    'settings.parkingLotFilesDesc': 'File paths, one per line',
+    'settings.parkingLotCustomPrompts': 'Custom Prompts',
     'main.infoSection': 'Info',
     'main.infoEmpty': 'Click a keyword chip to view Info (reads keyword.md from info folder)',
     'main.infoNotFound': 'No Info file found for this keyword',
@@ -2281,6 +2344,7 @@ const i18n = {
     'main.openMainPanelFirst': 'Please open the main panel first',
     'main.regexLabel': 'Regex',
     'main.searchOrAdd': 'Search or Add',
+    'main.pressEnterAgainToAdd': 'Press Enter again to add as rule',
     'main.fullText': 'Full',
     'main.edit': 'Edit',
     'main.dblClickEdit': 'dbl-click to edit',
@@ -9849,6 +9913,19 @@ class AddRegexRuleModal {
     titleEl.textContent = titleText;
     titleEl.style.cssText = "margin:0;font-size:14px;display:inline;flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
     mainTitleContainer.appendChild(titleEl);
+    const titleHelpBtn = document.createElement('span');
+    titleHelpBtn.innerHTML = _SVG_QUESTION;
+    titleHelpBtn.style.cssText = 'cursor:pointer;opacity:0.4;display:inline-flex;align-items:center;margin-left:4px;transition:opacity 0.15s;';
+    titleHelpBtn.addEventListener('mouseenter', () => { titleHelpBtn.style.opacity = '0.8'; });
+    titleHelpBtn.addEventListener('mouseleave', () => { titleHelpBtn.style.opacity = '0.4'; });
+    titleHelpBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const notes = this.plugin.globalNotes || [];
+      const helpNote = notes.find(n => n.text && n.text.includes('SwiftGlossa'));
+      if (helpNote) { const _ht = helpNote.text; const _em = _ht.indexOf('--- English ---'); const _en = (typeof _currentLang !== 'undefined' && _currentLang === 'en'); _showHelpFloat(titleHelpBtn, _em >= 0 ? (_en ? _ht.substring(_em + 16).trim() : _ht.substring(0, _em).trim()) : _ht); }
+      else { _showHelpFloat(titleHelpBtn, t('main.pluginHelpContent')); }
+    });
+    mainTitleContainer.appendChild(titleHelpBtn);
 
     // 右侧按钮区域
     const titleRightBtns = document.createElement('div');
@@ -10370,7 +10447,9 @@ class AddRegexRuleModal {
     };
 
     // 添加Enter键监听器
-    inputEl.addEventListener("keydown", (e) => {
+    let _enterCount = 0;
+    let _enterHintEl = null;
+    inputEl.addEventListener("keydown", async (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
         const newRegexValue = inputEl.value;
@@ -10382,10 +10461,66 @@ class AddRegexRuleModal {
             if (matchRule) { this._showKwChips([newRegexValue], newRegexValue); } else { hideKwChips(); }
           });
         } else {
-          this.updateStyleButtonsPreview(newRegexValue);
+          const trimmedVal = newRegexValue.trim();
+          if (!trimmedVal) { _enterCount = 0; return; }
+          const allRules = [...(Array.isArray(this.plugin.rules)?this.plugin.rules:[]), ...(Array.isArray(this.plugin.globalRules)?this.plugin.globalRules:[])];
+          const matchRule = allRules.find(r => { const _p = _splitRegexPipes(r.regex); return _p.includes(trimmedVal) || r.regex === trimmedVal; });
+          if (matchRule) {
+            _enterCount = 0;
+            if (_enterHintEl) { _enterHintEl.remove(); _enterHintEl = null; }
+            const allIdx = allRules.indexOf(matchRule);
+            const isGlobal = allIdx >= (Array.isArray(this.plugin.rules)?this.plugin.rules.length:0);
+            this.currentEditingRule = { index: isGlobal ? allIdx - (Array.isArray(this.plugin.rules)?this.plugin.rules.length:0) : allIdx, regex: matchRule.regex, cssClass: matchRule.cssClass, isGlobal: isGlobal, remark: matchRule.remark || '' };
+            this.inputModifiedSinceEdit = false;
+            showKwChips([matchRule.regex], matchRule.regex, trimmedVal);
+            if (this._refreshUpdateChip) this._refreshUpdateChip();
+            this.updateStyleButtonsPreview(trimmedVal);
+            if (this.highlightMatchingRuleButtons) this.highlightMatchingRuleButtons();
+          } else {
+            _enterCount++;
+            if (_enterCount >= 2) {
+              _enterCount = 0;
+              if (_enterHintEl) { _enterHintEl.remove(); _enterHintEl = null; }
+              const categories = this.plugin.config?.styleCategories || {};
+              const groupFilter = this.plugin.floatButtonData?.randomHighlightGroups?.trim();
+              let candidateStyles = [];
+              if (groupFilter) { const groupNames = groupFilter.split(/[,，]/).map(g => g.trim()).filter(g => g); for (const gn of groupNames) { if (categories[gn]) candidateStyles.push(...categories[gn]); } }
+              if (candidateStyles.length === 0) { for (const cat in categories) { if (cat === '标题样式') continue; if (categories[cat]) candidateStyles.push(...categories[cat]); } }
+              if (candidateStyles.length === 0) { candidateStyles = Array.from(this.cssStyles.keys()); }
+              if (candidateStyles.length > 0) {
+                const randomClass = candidateStyles[Math.floor(Math.random() * candidateStyles.length)];
+                try {
+                  await this.plugin.addRule(trimmedVal, randomClass, false, this.remark || '');
+                  this.showSuccessMessage(t('main.ruleStyleApplied') + ` "${trimmedVal}" ` + t('main.styleClass') + ` .${randomClass}`);
+                  const newRuleIndex = this.plugin.rules.findIndex(r => r.regex === trimmedVal && r.cssClass === randomClass);
+                  if (newRuleIndex !== -1) { this.currentEditingRule = { index: newRuleIndex, regex: trimmedVal, cssClass: randomClass, isGlobal: false, remark: this.remark || '' }; this.inputModifiedSinceEdit = false; }
+                  this.clearHistorySection(); this.clearGlobalRulesSection(); this.clearRemarkSection();
+                  this.addHistorySection(this.contentEl); this.addGlobalRulesSection(this.contentEl); this.addHeadingStylesSection(this.contentEl); this.addRemarkSection(this.contentEl);
+                  this.updateStyleButtonState(trimmedVal, randomClass, true);
+                  if (typeof this.plugin.reloadStyles === 'function') await this.plugin.reloadStyles();
+                  this.plugin.checkAndApplyHighlights();
+                  if (typeof this.highlightMatchingRuleButtons === 'function') this.highlightMatchingRuleButtons();
+                  this._needsRefresh = false;
+                  this._skipRefreshOnInteraction = true;
+                  inputEl.value = trimmedVal;
+                  if (this._refreshUpdateChip) this._refreshUpdateChip();
+                } catch (err) { console.error('添加规则失败:', err); }
+              }
+            } else {
+              this.updateStyleButtonsPreview(trimmedVal);
+              if (_enterHintEl) _enterHintEl.remove();
+              _enterHintEl = document.createElement('div');
+              _enterHintEl.style.cssText = 'position:absolute;bottom:-20px;left:0;font-size:11px;color:var(--text-muted);pointer-events:none;';
+              _enterHintEl.textContent = t('main.pressEnterAgainToAdd');
+              inputWrapper.appendChild(_enterHintEl);
+              setTimeout(() => { if (_enterHintEl) { _enterHintEl.remove(); _enterHintEl = null; } }, 3000);
+            }
+          }
         }
       }
     });
+
+    inputEl.addEventListener('input', () => { _enterCount = 0; if (_enterHintEl) { _enterHintEl.remove(); _enterHintEl = null; } });
 
     // 添加自动匹配规则的功能
     let previousInputValue = '';
@@ -13457,6 +13592,8 @@ class AddRegexRuleModal {
         this.addHeadingStylesSection(contentEl);
         this.addRemarkSection(contentEl);
         this.addInfoSection(contentEl);
+        this.addParkingLotSection(contentEl);
+        this.addThreadsSection(contentEl);
         this.addWidthSettingsSection(contentEl);
 
         // 将样式分组和高亮规则包裹在可折叠chip中（互斥）
@@ -14187,7 +14324,7 @@ class AddRegexRuleModal {
           const hoverModeSettingBtn = chipBar.createEl('span');
           hoverModeSettingBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
           hoverModeSettingBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;cursor:pointer;transition:all 0.15s ease;color:var(--text-muted);margin-left:2px;';
-          hoverModeSettingBtn.title = '设置';
+          hoverModeSettingBtn.title = t('main.settings');
           let _chipHoverMode = this.plugin?.settings?.chipHoverMode !== false;
           hoverModeSettingBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -19500,6 +19637,7 @@ class AddRegexRuleModal {
       }
     }
     if (matches.length === 0 && sgSentences.length === 0) return;
+
     const totalCount = matches.length + sgSentences.length;
     const section = document.createElement('div');
     section.className = 'inline-related-highlights-section';
@@ -19520,23 +19658,12 @@ class AddRegexRuleModal {
     hlHelpIcon.addEventListener('mouseleave', () => { hlHelpIcon.style.opacity = '0.4'; });
     hlHelpIcon.addEventListener('click', (he) => {
       he.preventDefault(); he.stopPropagation();
-      const existingTip = section.querySelector('.hl-help-tip');
-      if (existingTip) { existingTip.remove(); return; }
-      const tip = document.createElement('div');
-      tip.className = 'hl-help-tip';
-      tip.style.cssText = 'font-size:11px;color:var(--text-muted);line-height:1.5;padding:6px 8px;margin-top:4px;border-radius:6px;background:rgba(var(--mono-rgb-0),0.1);border:1px dashed var(--background-modifier-border);';
-      tip.innerHTML = '<div style="font-weight:600;margin-bottom:4px;">相关高亮 / Related Highlights</div>' +
-        '<div style="margin-bottom:3px;">▸ 显示逻辑 / Display logic：根据关键词规则匹配文档中的 <mark style="background:rgba(255,200,0,0.5);padding:0 2px;">==高亮==</mark> 文本和句子规则，同时匹配高亮备注中包含搜索词的条目 / Matches keyword rules against highlighted text and sentence rules, also matches highlights whose remarks contain the search term</div>' +
-        '<div style="margin-bottom:3px;">▸ 建议用法 / Suggested usage：给高亮添加评论/记号以加深记忆，当选中文本时，高亮中没有提及但评论中提及的词也会匹配并显示对应高亮 / Add comments/markers to highlights for deeper memory; when selecting text, terms mentioned only in remarks will also match and show related highlights</div>' +
-        '<div style="margin-bottom:3px;">▸ 备注样式 / Remark style：由配色方案控制 / Controlled by color palette</div>' +
-        '<div style="margin-bottom:3px;">▸ 双击备注可直接编辑 / Double-click remark to edit</div>' +
-        '<div>▸ 点击高亮中的关键词可打开详情弹窗 / Click keyword in highlight to open detail popup</div>';
-      headerRow.after(tip);
+      _showHelpFloat(hlHelpIcon, t('main.hlHelpContent'));
     });
     headerRow.appendChild(hlHelpIcon);
     const hlSettingIcon = document.createElement('span');
     hlSettingIcon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
-    hlSettingIcon.title = '设置';
+    hlSettingIcon.title = t('main.settings');
     hlSettingIcon.style.cssText = 'cursor:pointer;opacity:0.4;display:inline-flex;align-items:center;margin-left:2px;transition:opacity 0.15s;';
     hlSettingIcon.addEventListener('mouseenter', () => { hlSettingIcon.style.opacity = '0.8'; });
     hlSettingIcon.addEventListener('mouseleave', () => { hlSettingIcon.style.opacity = '0.4'; });
@@ -20192,7 +20319,7 @@ class AddRegexRuleModal {
         popupSpacing,
         popupFontSize,
         popupLineHeight: this.plugin.settings.popupLineHeight !== undefined ? this.plugin.settings.popupLineHeight : 1.5,
-        onRefresh: () => { this._showInlineRemarkForRules(ruleId, rules); },
+        onRefresh: () => { this._skipRefreshOnInteraction = true; this._showInlineRemarkForRules(ruleId, rules); },
         onReposition: null,
         onDirty: null,
         keepOpenRef: null,
@@ -20865,6 +20992,7 @@ class AddRegexRuleModal {
         const _allPrompts = (plugin.settings.infoCustomPrompts || []).filter(p => p.label && p.text);
         const _selected = new Set([0]);
         _aiPopup = document.createElement('div');
+        _aiPopup.className = 'info-ai-popup';
         _aiPopup.style.cssText = 'position:fixed;z-index:9999;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:14px;padding:14px;box-shadow:0 4px 16px rgba(0,0,0,0.08);font-size:11px;width:340px;';
         const panelHead = document.createElement('div');
         panelHead.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:move;user-select:none;-webkit-user-select:none;touch-action:none;';
@@ -21096,7 +21224,7 @@ class AddRegexRuleModal {
       if (!chipRow) return;
       chipRow.innerHTML = '';
       const curKw = this.regexInput?.getValue?.()?.trim() || this.currentEditingRule?.regex || '';
-      if (!curKw) { const hint = document.createElement('span'); hint.textContent = t('main.infoEmpty'); hint.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;'; chipRow.appendChild(hint); return; }
+      if (!curKw) { return; }
       const allChip = document.createElement('span');
       allChip.textContent = t('main.infoAll');
       allChip.style.cssText = chipBaseStyle;
@@ -21133,6 +21261,994 @@ class AddRegexRuleModal {
     else contentEl.appendChild(section);
   }
 
+  _loadThreads() {
+    try {
+      const adapter = this.app.vault.adapter;
+      const lang = (typeof _currentLang !== 'undefined' && _currentLang === 'en') ? 'en' : 'zh';
+      const path = '.obsidian/plugins/Regex-Css-Highlighter/threads.md';
+      return adapter.exists(path).then(ex => ex ? adapter.read(path) : '').then(c => c.split('\n').map(l => l.trim()).filter(l => l)).catch(() => []);
+    } catch(e) {}
+    return Promise.resolve([]);
+  }
+
+  _saveThreads(lines) {
+    try {
+      const adapter = this.app.vault.adapter;
+      const lang = (typeof _currentLang !== 'undefined' && _currentLang === 'en') ? 'en' : 'zh';
+      const path = '.obsidian/plugins/Regex-Css-Highlighter/threads.md';
+      if (adapter.write) adapter.write(path, lines.join('\n')).catch(() => {});
+    } catch(e) {}
+  }
+
+  addThreadsSection(contentEl) {
+    const existing = contentEl.querySelector('.threads-section');
+    if (existing) existing.remove();
+    const plugin = this;
+    const _pluginInst = this.plugin || plugin.plugin || plugin;
+    const section = document.createElement('div');
+    section.className = 'threads-section';
+    section.style.cssText = 'margin-top:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:8px;';
+    if (typeof _SG_APPLY_PALETTE === 'function') _SG_APPLY_PALETTE(section, (_pluginInst.settings || plugin.settings), 'threadsPalette');
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
+    const headerLeft = document.createElement('div');
+    headerLeft.style.cssText = 'display:flex;align-items:center;gap:4px;';
+    const titleEl = document.createElement('span');
+    titleEl.textContent = t('main.threadsSection');
+    titleEl.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-muted);';
+    headerLeft.appendChild(titleEl);
+    const helpBtn = document.createElement('span');
+    helpBtn.textContent = '?';
+    helpBtn.style.cssText = 'cursor:pointer;color:var(--text-faint);font-size:10px;padding:0 3px;';
+    helpBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      _showHelpFloat(helpBtn, t('main.threadsHelpContent'));
+    });
+    headerLeft.appendChild(helpBtn);
+    const threadsSettingIcon = document.createElement('span');
+    threadsSettingIcon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+    threadsSettingIcon.title = t('main.settings');
+    threadsSettingIcon.style.cssText = 'cursor:pointer;opacity:0.4;display:inline-flex;align-items:center;margin-left:2px;transition:opacity 0.15s;';
+    threadsSettingIcon.addEventListener('mouseenter', () => { threadsSettingIcon.style.opacity = '0.8'; });
+    threadsSettingIcon.addEventListener('mouseleave', () => { threadsSettingIcon.style.opacity = '0.4'; });
+    threadsSettingIcon.addEventListener('click', async (se) => {
+      se.preventDefault(); se.stopPropagation();
+      const existingPanel = section.querySelector('.threads-settings-panel');
+      if (existingPanel) { existingPanel.remove(); return; }
+      const panel = document.createElement('div');
+      panel.className = 'threads-settings-panel';
+      panel.style.cssText = 'background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:11px;margin-top:4px;';
+      const paletteLabel = document.createElement('div');
+      paletteLabel.textContent = t('settings.hlPalette');
+      paletteLabel.style.cssText = 'color:var(--text-muted);font-weight:600;margin:0 0 4px;font-size:11px;';
+      panel.appendChild(paletteLabel);
+      const grid = document.createElement('div');
+      grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:8px;';
+      const _threadsSettings = _pluginInst.settings || {};
+      const currentPalette = _threadsSettings.threadsPalette || 'sg-theme-01';
+      _SG_PALETTES.forEach(p => {
+        const chip = document.createElement('div');
+        chip.style.cssText = `display:flex;align-items:center;gap:4px;padding:3px 6px;border-radius:6px;cursor:pointer;font-size:10px;border:1.5px solid ${p.id===currentPalette?'var(--interactive-accent)':'transparent'};background:${p.id===currentPalette?'rgba(var(--mono-rgb-0),0.08)':'transparent'};transition:border-color 0.15s,background 0.15s;`;
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = (typeof _currentLang !== 'undefined' && _currentLang === 'en' && p.nameEn) ? p.nameEn : p.name;
+        nameSpan.style.cssText = 'color:var(--text-normal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;';
+        chip.appendChild(nameSpan);
+        const dotRow = document.createElement('span');
+        dotRow.style.cssText = 'display:inline-flex;gap:2px;align-items:center;margin-left:auto;';
+        const bgDot = document.createElement('span');
+        bgDot.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.bg};border:1px solid rgba(0,0,0,0.1);flex-shrink:0;`;
+        dotRow.appendChild(bgDot);
+        const fgDot = document.createElement('span');
+        fgDot.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.fg};border:1px solid rgba(0,0,0,0.1);flex-shrink:0;`;
+        dotRow.appendChild(fgDot);
+        chip.appendChild(dotRow);
+        chip.addEventListener('click', () => {
+          _threadsSettings.threadsPalette = p.id;
+          if (_pluginInst.saveData) _pluginInst.saveData(_pluginInst.settings);
+          _SG_APPLY_PALETTE(section, _pluginInst.settings, 'threadsPalette');
+          grid.querySelectorAll(':scope > div').forEach(c => { c.style.borderColor='transparent'; c.style.background='transparent'; });
+          chip.style.borderColor='var(--interactive-accent)'; chip.style.background='rgba(var(--mono-rgb-0),0.08)';
+        });
+        grid.appendChild(chip);
+      });
+      panel.appendChild(grid);
+      const fileLabel = document.createElement('div');
+      fileLabel.textContent = 'Threads.md';
+      fileLabel.style.cssText = 'color:var(--text-muted);font-weight:600;margin:0 0 4px;font-size:11px;';
+      panel.appendChild(fileLabel);
+      const ta = document.createElement('textarea');
+      ta.style.cssText = 'width:100%;height:200px;font-size:12px;line-height:1.6;resize:vertical;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);padding:4px 6px;box-sizing:border-box;font-family:inherit;';
+      const _threadsPath = '.obsidian/plugins/Regex-Css-Highlighter/threads.md';
+      const _adapter = plugin.app.vault.adapter;
+      try { const _ex = await _adapter.exists(_threadsPath); ta.value = _ex ? await _adapter.read(_threadsPath) : ''; } catch(e) {}
+      let _saveTimer = null;
+      ta.addEventListener('input', () => { clearTimeout(_saveTimer); _saveTimer = setTimeout(async () => { try { await _adapter.write(_threadsPath, ta.value); } catch(e) {} }, 500); });
+      panel.appendChild(ta);
+      header.after(panel);
+      const closeMenu = (ev) => { if (!panel.contains(ev.target) && !threadsSettingIcon.contains(ev.target)) { panel.remove(); document.removeEventListener('mousedown', closeMenu); } };
+      setTimeout(() => document.addEventListener('mousedown', closeMenu), 0);
+    });
+    headerLeft.appendChild(threadsSettingIcon);
+    header.appendChild(headerLeft);
+    const addBtn = document.createElement('button');
+    addBtn.textContent = '+';
+    addBtn.title = t('main.threadsAddPlaceholder');
+    addBtn.style.cssText = 'padding:0 6px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);font-size:12px;font-weight:700;line-height:16px;height:18px;';
+    header.appendChild(addBtn);
+    section.appendChild(header);
+    const body = document.createElement('div');
+    body.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
+    section.appendChild(body);
+    contentEl.appendChild(section);
+    const renderLines = (allLines) => {
+      body.innerHTML = '';
+      const _p = _pluginInst;
+      const _allRules = [...(_p.globalRules || []), ...(Array.isArray(_p.rules) ? _p.rules : [])].filter(r => r && !r.disabled && r.regex && typeof r.regex === 'string' && r.regex.length > 0);
+      const allKeywords = _allRules.map(r => r.regex);
+      const _filterKw = this._threadsFilterKw || null;
+      if (!_filterKw) {
+        const hint = document.createElement('div');
+        hint.textContent = t('main.threadsEmpty');
+        hint.style.cssText = 'color:var(--text-faint);font-size:11px;font-style:italic;';
+        body.appendChild(hint);
+        return;
+      }
+      const lines = allLines.filter(line => {
+        try { return _regexMatch(line, _filterKw) || line.includes(_filterKw); } catch(e) { return line.includes(_filterKw); }
+      });
+
+      if (lines.length === 0) {
+        const empty = document.createElement('div');
+        empty.textContent = t('main.threadsEmpty');
+        empty.style.cssText = 'color:var(--text-faint);font-size:11px;font-style:italic;';
+        body.appendChild(empty);
+        return;
+      }
+      lines.forEach((line) => {
+        const item = document.createElement('div');
+        item.className = 'sg-highlight-item has-comment';
+        item.textContent = line;
+        item.style.cssText = 'font-size:12px;padding:4px 6px;border-radius:4px;cursor:text;';
+        item.addEventListener('dblclick', (ev) => {
+          ev.stopPropagation();
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = line;
+          input.style.cssText = 'width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--border-color);border-radius:4px;background:var(--background-primary);color:var(--text-normal);box-sizing:border-box;';
+          item.replaceWith(input);
+          input.focus(); input.select();
+          let saved = false;
+          const save = async () => {
+            if (saved) return; saved = true;
+            const newLines = await plugin._loadThreads();
+            const matchIdx = newLines.indexOf(line);
+            if (matchIdx >= 0) { newLines[matchIdx] = input.value.trim(); if (!input.value.trim()) newLines.splice(matchIdx, 1); }
+            plugin._saveThreads(newLines);
+            renderLines(newLines);
+          };
+          input.addEventListener('blur', save);
+          input.addEventListener('keydown', (ke) => { if (ke.key === 'Enter') save(); if (ke.key === 'Escape') { saved = true; plugin._loadThreads().then(renderLines); } });
+        });
+        body.appendChild(item);
+      });
+    };
+    addBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = t('main.threadsAddPlaceholder');
+      input.style.cssText = 'width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--border-color);border-radius:4px;background:var(--background-primary);color:var(--text-normal);box-sizing:border-box;margin-bottom:4px;';
+      body.insertBefore(input, body.firstChild);
+      input.focus();
+      let saved = false;
+      const save = async () => {
+        if (saved) return; saved = true;
+        const val = input.value.trim();
+        if (val) { const lines = await plugin._loadThreads(); lines.push(val); plugin._saveThreads(lines); renderLines(lines); }
+        else { input.remove(); }
+      };
+      input.addEventListener('blur', save);
+      input.addEventListener('keydown', (ke) => { if (ke.key === 'Enter') save(); if (ke.key === 'Escape') { saved = true; input.remove(); } });
+    });
+    this._loadThreads().then(renderLines);
+    this._threadsRenderLines = renderLines;
+    this._threadsReload = () => this._loadThreads().then(renderLines);
+  }
+
+
+  clearParkingLotSection() {
+    if (this._plGrid) { try { this._plGrid.destroy(false); } catch(e){} }
+    if (this._plGridResizeObserver) { try { this._plGridResizeObserver.disconnect(); } catch(e){} this._plGridResizeObserver = null; }
+    if (this._plGridWaitObserver) { try { this._plGridWaitObserver.disconnect(); } catch(e){} this._plGridWaitObserver = null; }
+    this._plSection = null; this._plChipRow = null; this._plCardGrid = null; this._plPlaceholder = null;
+    this._plActiveChip = null; this._plGrid = null; this._plGridReady = false; this._plGridQueue = [];
+  }
+
+  addParkingLotSection(contentEl) {
+    this.clearParkingLotSection();
+    if (this.plugin.settings?.showParkingLot === false) return;
+    const plugin = this.plugin;
+    const _existingPl = contentEl.querySelector('.parking-lot-section');
+    const _plNextSibling = _existingPl ? _existingPl.nextSibling : null;
+    if (_existingPl) _existingPl.remove();
+    const _plLang = (typeof _currentLang !== 'undefined' && _currentLang === 'en') ? 'en' : 'zh';
+    try { this.app.vault.adapter.mkdir('.obsidian/plugins/Regex-Css-Highlighter/parking-lot').catch(() => {}); } catch (e) {}
+    const _plFolders = (plugin.settings?.parkingLotFolders || []).map(f => f.trim().replace(/^\/+|\/+$/g, '')).filter(f => f);
+    const _plFiles = (plugin.settings?.parkingLotFiles || []).map(f => f.trim()).filter(f => f);
+    const pluginPlDir = '.obsidian/plugins/Regex-Css-Highlighter/parking-lot';
+    this._plResizeObservers = [];
+
+    const sanitizeFileName = (kw) => {
+      const parts = _splitRegexPipes(kw);
+      const name = parts.find(p => p.length <= 30) || parts[0] || kw;
+      return name.replace(/[\\/:*?"<>|]/g, '_').trim();
+    };
+    const readPlFile = async (fileName) => {
+      const adapter = this.app.vault.adapter;
+      for (const folder of _plFolders) { const p = folder + '/' + fileName; try { if (await adapter.exists(p)) return { content: await adapter.read(p), path: p }; } catch(e) {} }
+      for (const fp of _plFiles) { if (fp.endsWith('/' + fileName) || fp.endsWith(fileName)) { try { if (await adapter.exists(fp)) return { content: await adapter.read(fp), path: fp }; } catch(e) {} } }
+      const pluginPath = pluginPlDir + '/' + fileName;
+      try { if (await adapter.exists(pluginPath)) return { content: await adapter.read(pluginPath), path: pluginPath }; } catch(e) {}
+      return null;
+    };
+    const writePlFile = async (fileName, content) => {
+      const existing = await readPlFile(fileName);
+      if (existing) { try { await this.app.vault.adapter.write(existing.path, content); return existing.path; } catch(e) {} }
+      const targetDir = _plFolders[0] || pluginPlDir;
+      const path = targetDir + '/' + fileName;
+      try { await this.app.vault.adapter.write(path, content); } catch (e) { console.warn('[PL] write failed:', e); }
+      return path;
+    };
+    const listPlFiles = async () => {
+      const adapter = this.app.vault.adapter;
+      const result = [];
+      for (const folder of _plFolders) { try { const r = await adapter.list(folder); if (r && r.files) r.files.filter(f => f.endsWith('.md')).forEach(f => result.push({ name: f.split('/').pop(), source: folder })); } catch (e) {} }
+      for (const filePath of _plFiles) { if (filePath.endsWith('.md')) { try { if (await adapter.exists(filePath)) result.push({ name: filePath.split('/').pop(), source: filePath }); } catch(e) {} } }
+      try { const r = await adapter.list(pluginPlDir); if (r && r.files) r.files.filter(f => f.endsWith('.md')).forEach(f => result.push({ name: f.split('/').pop(), source: pluginPlDir })); } catch (e) {}
+      const seen = new Set();
+      return result.filter(f => { if (seen.has(f.name)) return false; seen.add(f.name); return true; });
+    };
+    const matchKw = (fileName, keywords) => true;
+    const getRelatedKeywords = () => [];
+
+    const section = document.createElement('div');
+    section.className = 'parking-lot-section';
+    section.style.cssText = 'margin-top:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:8px;position:relative;';
+    const _plHeight = plugin.settings?.parkingLotHeight || 300;
+    section.style.height = _plHeight + 'px';
+    section.style.display = 'flex';
+    section.style.flexDirection = 'column';
+    section.style.overflow = 'hidden';
+    const _isDarkMode = document.body.classList.contains('theme-dark');
+    const _nightPreset = {secBg:'rgba(38,40,46,0.85)', cardBg:'rgba(54,58,68,0.92)', textColor:'rgba(220,220,230,0.92)'};
+    const _parkingLotSectionBg = plugin.settings?.parkingLotSectionBg || (_isDarkMode ? _nightPreset.secBg : 'rgba(250,240,205,0.75)');
+    const _parkingLotCardBg = plugin.settings?.parkingLotCardBg || (_isDarkMode ? _nightPreset.cardBg : 'rgba(236,216,154,0.90)');
+    const _parkingLotTextColor = plugin.settings?.parkingLotTextColor || (_isDarkMode ? _nightPreset.textColor : undefined);
+    section.style.background = _parkingLotSectionBg;
+    if (_parkingLotTextColor) {
+      section.style.color = _parkingLotTextColor;
+      section.style.setProperty('--text-normal', _parkingLotTextColor);
+      section.style.setProperty('--text-muted', _parkingLotTextColor);
+    }
+    const _applyInfoCardStyles = () => {
+      const cardBg = plugin.settings?.parkingLotCardBg || 'rgba(236,216,154,0.90)';
+      const showGrid = plugin.settings?.parkingLotCardGrid === true;
+      cardGrid.querySelectorAll('.info-card').forEach(c => { c.style.background = cardBg; c.style.backgroundImage = ''; c.style.backgroundSize = ''; });
+      if (showGrid) {
+        const cw = this._plGrid?.cellWidth?.() || (cardGrid.offsetWidth / 24);
+        const ch = 20;
+        cardGrid.style.backgroundImage = 'linear-gradient(rgba(128,128,128,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(128,128,128,0.2) 1px, transparent 1px)';
+        cardGrid.style.backgroundSize = `${cw}px ${ch}px`;
+      } else {
+        cardGrid.style.backgroundImage = '';
+        cardGrid.style.backgroundSize = '';
+      }
+    };
+    const headerRow = document.createElement('div');
+    headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
+    const headerLeft = document.createElement('div');
+    headerLeft.style.cssText = 'display:flex;align-items:center;gap:4px;';
+    const titleEl = document.createElement('span');
+    titleEl.textContent = t('main.parkingLotSection');
+    titleEl.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-muted);';
+    headerLeft.appendChild(titleEl);
+    const plHelpBtn = document.createElement('span');
+    plHelpBtn.textContent = '?';
+    plHelpBtn.style.cssText = 'cursor:pointer;color:var(--text-faint);font-size:10px;padding:0 3px;';
+    plHelpBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      _showHelpFloat(plHelpBtn, t('main.parkingLotHelpContent'));
+    });
+    headerLeft.appendChild(plHelpBtn);
+    const infoSettingIcon = document.createElement('span');
+    infoSettingIcon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+    infoSettingIcon.title = t('main.infoSettings');
+    infoSettingIcon.style.cssText = 'cursor:pointer;opacity:0.4;display:inline-flex;align-items:center;transition:opacity 0.15s;';
+    infoSettingIcon.addEventListener('mouseenter', () => { infoSettingIcon.style.opacity = '0.8'; });
+    infoSettingIcon.addEventListener('mouseleave', () => { infoSettingIcon.style.opacity = '0.4'; });
+    infoSettingIcon.addEventListener('click', (se) => {
+      se.preventDefault(); se.stopPropagation();
+      const existingMenu = section.querySelector('.info-settings-menu');
+      if (existingMenu) { existingMenu.remove(); section.style.height = (plugin.settings?.parkingLotHeight || 300) + 'px'; section.style.overflow = 'hidden'; return; }
+      section.style.height = 'auto';
+      section.style.overflow = 'visible';
+      const menu = document.createElement('div');
+      menu.className = 'info-settings-menu';
+      menu.style.cssText = 'background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:11px;min-width:240px;margin-top:4px;';
+      const _s = plugin.settings || {};
+      {
+        const colorLabel = document.createElement('div');
+        colorLabel.textContent = t('main.infoColorScheme');
+        colorLabel.style.cssText = 'color:var(--text-muted);font-weight:600;margin:6px 0 4px;font-size:11px;';
+        menu.appendChild(colorLabel);
+        const _infoPresets = [
+          {name:t('main.infoPresetKraft'), secBg:'rgba(250,240,205,0.75)', cardBg:'rgba(236,216,154,0.90)', textColor:'rgba(70,50,30,0.92)'},
+          {name:t('main.infoPresetInk'), secBg:'rgba(238,236,230,0.80)', cardBg:'rgba(212,208,196,0.92)', textColor:'rgba(40,40,40,0.92)'},
+          {name:t('main.infoPresetNight'), secBg:'rgba(38,40,46,0.85)', cardBg:'rgba(54,58,68,0.92)', textColor:'rgba(220,220,230,0.92)'},
+          {name:t('main.infoPresetMint'), secBg:'rgba(222,240,232,0.78)', cardBg:'rgba(190,224,208,0.90)', textColor:'rgba(24,62,48,0.92)'},
+          {name:t('main.infoPresetOchre'), secBg:'rgba(238,216,194,0.78)', cardBg:'rgba(220,186,156,0.90)', textColor:'rgba(80,46,16,0.92)'},
+          {name:t('main.infoPresetIndigo'), secBg:'rgba(228,228,240,0.78)', cardBg:'rgba(200,200,224,0.90)', textColor:'rgba(40,40,80,0.92)'},
+        ];
+        const presetGrid = document.createElement('div');
+        presetGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-bottom:6px;';
+        _infoPresets.forEach(p => {
+          const chip = document.createElement('div');
+          chip.style.cssText = `display:flex;align-items:center;gap:3px;padding:3px 4px;border-radius:4px;cursor:pointer;font-size:9px;border:1px solid transparent;`;
+          const dot1 = document.createElement('span');
+          dot1.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.secBg};border:1px solid rgba(0,0,0,0.1);flex-shrink:0;`;
+          const dot2 = document.createElement('span');
+          dot2.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.cardBg};border:1px solid rgba(0,0,0,0.1);flex-shrink:0;`;
+          const nm = document.createElement('span');
+          nm.textContent = p.name;
+          nm.style.cssText = 'color:var(--text-normal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+          chip.appendChild(dot1); chip.appendChild(dot2); chip.appendChild(nm);
+          chip.addEventListener('click', () => {
+            _s.parkingLotSectionBg = p.secBg; _s.parkingLotCardBg = p.cardBg; _s.parkingLotTextColor = p.textColor;
+            plugin.saveData(plugin.settings);
+            section.style.background = p.secBg;
+            if (p.textColor) {
+              section.style.color = p.textColor;
+              section.style.setProperty('--text-normal', p.textColor);
+              section.style.setProperty('--text-muted', p.textColor);
+            } else {
+              section.style.color = '';
+              section.style.removeProperty('--text-normal');
+              section.style.removeProperty('--text-muted');
+            }
+            _applyInfoCardStyles();
+            presetGrid.querySelectorAll(':scope > div').forEach(c => c.style.borderColor = 'transparent');
+            chip.style.borderColor = 'var(--interactive-accent)';
+            menu.querySelectorAll('input[type="color"]').forEach(ci => {
+              const row = ci.closest('div');
+              if (!row) return;
+              const lbl = row.querySelector('span');
+              if (!lbl) return;
+              const sk = lbl.dataset.key;
+              if (!sk) return;
+              const m2 = (_s[sk]||'').match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+              if (m2) ci.value = '#' + [parseInt(m2[1]),parseInt(m2[2]),parseInt(m2[3])].map(v=>v.toString(16).padStart(2,'0')).join('');
+            });
+          });
+          presetGrid.appendChild(chip);
+        });
+        menu.appendChild(presetGrid);
+        const mkColorRow = (labelText, settingKey, defaultVal, onApply) => {
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin:3px 0;';
+          const lbl = document.createElement('span');
+          lbl.textContent = labelText;
+          lbl.dataset.key = settingKey;
+          lbl.style.cssText = 'color:var(--text-normal);font-size:10px;';
+          row.appendChild(lbl);
+          const inp = document.createElement('input');
+          inp.type = 'color';
+          const cur = _s[settingKey] || defaultVal;
+          const m = cur.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+          if (m) inp.value = '#' + [parseInt(m[1]),parseInt(m[2]),parseInt(m[3])].map(v=>v.toString(16).padStart(2,'0')).join('');
+          inp.style.cssText = 'width:28px;height:18px;border:1px solid var(--background-modifier-border);border-radius:4px;cursor:pointer;background:transparent;padding:0;';
+          inp.addEventListener('input', () => {
+            const hex = inp.value;
+            const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+            const aMatch = (_s[settingKey]||defaultVal).match(/rgba?\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/);
+            const a = aMatch ? parseFloat(aMatch[1]) : 0.85;
+            _s[settingKey] = `rgba(${r},${g},${b},${a})`;
+            plugin.saveData(plugin.settings);
+            onApply();
+          });
+          row.appendChild(inp);
+          const aInp = document.createElement('input');
+          aInp.type = 'range';
+          aInp.min = '0'; aInp.max = '1'; aInp.step = '0.05';
+          const aMatch2 = cur.match(/rgba?\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/);
+          aInp.value = aMatch2 ? parseFloat(aMatch2[1]) : 0.85;
+          aInp.style.cssText = 'width:50px;height:14px;cursor:pointer;';
+          aInp.addEventListener('input', () => {
+            const hex = inp.value;
+            const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+            _s[settingKey] = `rgba(${r},${g},${b},${aInp.value})`;
+            plugin.saveData(plugin.settings);
+            onApply();
+          });
+          row.appendChild(aInp);
+          return row;
+        };
+        menu.appendChild(mkColorRow(t('main.parkingLotSectionBg'), 'parkingLotSectionBg', 'rgba(250,240,205,0.75)', () => { section.style.background = _s.parkingLotSectionBg || 'rgba(250,240,205,0.75)'; }));
+        menu.appendChild(mkColorRow(t('main.parkingLotCardBg'), 'parkingLotCardBg', 'rgba(236,216,154,0.90)', () => { _applyInfoCardStyles(); }));
+        menu.appendChild(mkColorRow(t('main.parkingLotTextColor'), 'parkingLotTextColor', 'rgba(70,50,30,0.92)', () => {
+          const _tc = _s.parkingLotTextColor;
+          if (_tc) {
+            section.style.color = _tc;
+            section.style.setProperty('--text-normal', _tc);
+            section.style.setProperty('--text-muted', _tc);
+          } else {
+            section.style.color = '';
+            section.style.removeProperty('--text-normal');
+            section.style.removeProperty('--text-muted');
+          }
+        }));
+        const gridRow = document.createElement('div');
+        gridRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin:3px 0;';
+        const gridLbl = document.createElement('span');
+        gridLbl.textContent = t('main.parkingLotCardGrid');
+        gridLbl.style.cssText = 'color:var(--text-normal);font-size:10px;';
+        gridRow.appendChild(gridLbl);
+        const gridCb = document.createElement('input');
+        gridCb.type = 'checkbox';
+        gridCb.checked = _s.parkingLotCardGrid === true;
+        gridCb.style.cssText = 'cursor:pointer;';
+        gridCb.addEventListener('change', () => { _s.parkingLotCardGrid = gridCb.checked; plugin.saveData(plugin.settings); _applyInfoCardStyles(); });
+        gridRow.appendChild(gridCb);
+        menu.appendChild(gridRow);
+      }
+      const vfLabel = document.createElement('div');
+      vfLabel.textContent = t('settings.parkingLotFolders');
+      vfLabel.style.cssText = 'color:var(--text-muted);font-weight:600;margin:6px 0 4px;font-size:11px;';
+      menu.appendChild(vfLabel);
+      const vfInput = document.createElement('textarea');
+      vfInput.value = (_s.parkingLotFolders || []).join('\n');
+      vfInput.style.cssText = 'width:100%;font-size:10px;padding:3px 4px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);resize:vertical;min-height:40px;box-sizing:border-box;';
+      vfInput.placeholder = t('settings.parkingLotFoldersDesc');
+      vfInput.addEventListener('change', () => { _s.parkingLotFolders = vfInput.value.split('\n').map(s => s.trim()).filter(s => s); plugin.saveData(plugin.settings); this.addParkingLotSection(this.contentEl); });
+      menu.appendChild(vfInput);
+      const sfLabel = document.createElement('div');
+      sfLabel.textContent = t('settings.parkingLotFiles');
+      sfLabel.style.cssText = 'color:var(--text-muted);font-weight:600;margin:6px 0 4px;font-size:11px;';
+      menu.appendChild(sfLabel);
+      const sfInput = document.createElement('textarea');
+      sfInput.value = (_s.parkingLotFiles || []).join('\n');
+      sfInput.style.cssText = 'width:100%;font-size:10px;padding:3px 4px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);resize:vertical;min-height:40px;box-sizing:border-box;';
+      sfInput.placeholder = t('settings.parkingLotFilesDesc');
+      sfInput.addEventListener('change', () => { _s.parkingLotFiles = sfInput.value.split('\n').map(s => s.trim()).filter(s => s); plugin.saveData(plugin.settings); this.addParkingLotSection(this.contentEl); });
+      menu.appendChild(sfInput);
+      const cpLabel = document.createElement('div');
+      cpLabel.textContent = t('settings.parkingLotCustomPrompts');
+      cpLabel.style.cssText = 'color:var(--text-muted);font-weight:600;margin:6px 0 4px;font-size:11px;';
+      menu.appendChild(cpLabel);
+      const _presetPrompts = [
+        { label: t('settings.presetPlainExplain'), text: t('settings.presetPlainExplainText'), _isPreset: true, _presetKey: 'plainExplain' },
+        { label: t('settings.presetOneLineDef'), text: t('settings.presetOneLineDefText'), _isPreset: true, _presetKey: 'oneLineDef' },
+        { label: t('settings.presetExample'), text: t('settings.presetExampleText'), _isPreset: true, _presetKey: 'example' },
+        { label: t('settings.presetCompare'), text: t('settings.presetCompareText'), _isPreset: true, _presetKey: 'compare' },
+      ];
+      const _presetKeyMap = { plainExplain: ['settings.presetPlainExplain', 'settings.presetPlainExplainText'], oneLineDef: ['settings.presetOneLineDef', 'settings.presetOneLineDefText'], example: ['settings.presetExample', 'settings.presetExampleText'], compare: ['settings.presetCompare', 'settings.presetCompareText'] };
+      if (!_s.parkingLotCustomPrompts) _s.parkingLotCustomPrompts = [];
+      else { _s.parkingLotCustomPrompts.forEach(p => { if (p._isPreset && _presetKeyMap[p._presetKey]) { p.label = t(_presetKeyMap[p._presetKey][0]); p.text = t(_presetKeyMap[p._presetKey][1]); } }); }
+      const cpList = document.createElement('div');
+      cpList.style.cssText = 'margin-bottom:6px;';
+      menu.appendChild(cpList);
+      const _renderCustomPrompts = () => {
+        cpList.innerHTML = '';
+        _s.parkingLotCustomPrompts.forEach((p, i) => {
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:4px;margin:3px 0;';
+          const lblInp = document.createElement('input');
+          lblInp.type = 'text'; lblInp.value = p.label; lblInp.placeholder = t('settings.promptLabelPlaceholder');
+          lblInp.style.cssText = 'flex:1;font-size:10px;padding:2px 4px;border:1px solid var(--background-modifier-border);border-radius:3px;';
+          const txtInp = document.createElement('input');
+          txtInp.type = 'text'; txtInp.value = p.text; txtInp.placeholder = t('settings.promptTextPlaceholder');
+          txtInp.style.cssText = 'flex:2;font-size:10px;padding:2px 4px;border:1px solid var(--background-modifier-border);border-radius:3px;';
+          const delBtn = document.createElement('span');
+          delBtn.textContent = '×'; delBtn.style.cssText = 'cursor:pointer;color:var(--text-error);font-size:14px;flex-shrink:0;padding:0 2px;';
+          lblInp.addEventListener('change', () => { p.label = lblInp.value; delete p._isPreset; delete p._presetKey; plugin.saveData(plugin.settings); });
+          txtInp.addEventListener('change', () => { p.text = txtInp.value; delete p._isPreset; delete p._presetKey; plugin.saveData(plugin.settings); });
+          delBtn.addEventListener('click', () => { _s.parkingLotCustomPrompts.splice(i, 1); plugin.saveData(plugin.settings); _renderCustomPrompts(); });
+          row.appendChild(lblInp); row.appendChild(txtInp); row.appendChild(delBtn);
+          cpList.appendChild(row);
+        });
+      };
+      _renderCustomPrompts();
+      const addPromptBtn = document.createElement('button');
+      addPromptBtn.textContent = t('settings.addPrompt');
+      addPromptBtn.style.cssText = 'margin-top:2px;padding:3px 8px;cursor:pointer;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);font-size:10px;';
+      addPromptBtn.addEventListener('click', () => { _s.parkingLotCustomPrompts.push({ label: '', text: '' }); plugin.saveData(plugin.settings); _renderCustomPrompts(); });
+      menu.appendChild(addPromptBtn);
+      headerRow.after(menu);
+      const closeMenu = (ev) => { if (!menu.contains(ev.target) && !infoSettingIcon.contains(ev.target)) { menu.remove(); document.removeEventListener('mousedown', closeMenu); } };
+      setTimeout(() => document.addEventListener('mousedown', closeMenu), 0);
+    });
+    headerLeft.appendChild(infoSettingIcon);
+    headerRow.appendChild(headerLeft);
+    const addBtn = document.createElement('button');
+    addBtn.textContent = '+';
+    addBtn.title = t('main.infoAddFile');
+    addBtn.style.cssText = 'padding:0 6px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:18px;line-height:0;font-size:13px;font-weight:700;';
+    headerRow.appendChild(addBtn);
+    section.appendChild(headerRow);
+    const chipRow = document.createElement('div');
+    chipRow.className = 'info-chip-row';
+    chipRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;align-items:center;';
+    section.appendChild(chipRow);
+    const cardGrid = document.createElement('div');
+    cardGrid.className = 'info-card-grid';
+    cardGrid.style.cssText = 'min-height:60px;flex:1;overflow-y:auto;';
+    section.appendChild(cardGrid);
+    const resizeHandle = document.createElement('div');
+    resizeHandle.style.cssText = 'position:absolute;bottom:0;right:0;width:16px;height:16px;cursor:nwse-resize;z-index:10;opacity:0.3;transition:opacity 0.15s;';
+    resizeHandle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 3v6h-6M3 21v-6h6M21 3l-9 9M3 21l9-9"/></svg>';
+    resizeHandle.addEventListener('mouseenter', () => { resizeHandle.style.opacity = '1'; });
+    resizeHandle.addEventListener('mouseleave', () => { resizeHandle.style.opacity = '0.3'; });
+    let _plResizeTimer = null;
+    resizeHandle.addEventListener('mousedown', (ev) => {
+      ev.preventDefault(); ev.stopPropagation();
+      const startY = ev.clientY;
+      const startH = section.offsetHeight;
+      const onMove = (e2) => { const nh = Math.max(120, Math.min(800, startH + e2.clientY - startY)); section.style.height = nh + 'px'; if (this._plGrid) { try { this._plGrid.onResize(); } catch(e){} } clearTimeout(_plResizeTimer); _plResizeTimer = setTimeout(() => { plugin.settings.parkingLotHeight = section.offsetHeight; plugin.saveData(plugin.settings); }, 500); };
+      const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); plugin.settings.parkingLotHeight = section.offsetHeight; plugin.saveData(plugin.settings); };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+    section.style.position = 'relative';
+    section.appendChild(resizeHandle);
+    const placeholder = document.createElement('div');
+    placeholder.className = 'info-placeholder';
+    placeholder.textContent = t('main.parkingLotEmpty');
+    placeholder.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;';
+    cardGrid.appendChild(placeholder);
+    this._plSection = section; this._plChipRow = chipRow; this._plCardGrid = cardGrid; this._plPlaceholder = placeholder;
+    this._plActiveChip = 'all';
+    this._plGrid = null;
+    this._plGridReady = false;
+    this._plGridQueue = [];
+
+    const _saveGridLayout = () => {
+      if (!this._plGrid || !this._plGridReady) return;
+      try {
+        if (!plugin.settings.parkingLotGridLayout) plugin.settings.parkingLotGridLayout = {};
+        for (const n of (this._plGrid.engine?.nodes || [])) {
+          const cardEl = n.el?.querySelector?.('.info-card');
+          const fn = cardEl?.dataset?.file;
+          if (fn) plugin.settings.parkingLotGridLayout[fn] = { x: n.x, y: n.y, w: n.w, h: n.h };
+        }
+        plugin.saveData(plugin.settings);
+      } catch(e) {}
+    };
+
+    _loadGridStack(this.app).then((GridStack) => {
+      try {
+        if (!document.getElementById('info-grid-mobile-handle-style')) {
+          const mh = document.createElement('style');
+          mh.id = 'info-grid-mobile-handle-style';
+          mh.textContent = `.info-card-grid .grid-stack-item>.ui-resizable-handle{opacity:0;transition:opacity .15s;}.info-card-grid .grid-stack-item:hover>.ui-resizable-handle{opacity:1;}.info-card-grid .grid-stack-item>.ui-resizable-se{width:14px;height:14px;bottom:0;right:0;}@media (pointer:coarse){.info-card-grid .grid-stack-item>.ui-resizable-handle{width:20px!important;height:20px!important;z-index:5;opacity:1!important;}.info-card-grid .grid-stack-item>.ui-resizable-se{right:0!important;bottom:0!important;}}`;
+          document.head.appendChild(mh);
+        }
+        if (!document.getElementById('info-grid-col24-css')) {
+          const colCss = document.createElement('style');
+          colCss.id = 'info-grid-col24-css';
+          let rules = '';
+          for (let n = 1; n <= 24; n++) {
+            const pct = (n / 24 * 100);
+            rules += `.gs-24>.grid-stack-item[gs-w="${n}"]{width:${pct}%}`;
+            rules += `.gs-24>.grid-stack-item[gs-x="${n}"]{left:${pct}%}`;
+          }
+          colCss.textContent = rules;
+          document.head.appendChild(colCss);
+        }
+        const savedLayout = plugin.settings?.parkingLotGridLayout || {};
+        const _newCol = 24;
+        const _oldCol = savedLayout.__colVersion || 12;
+        if (_oldCol !== _newCol) {
+          const _ratio = _newCol / _oldCol;
+          for (const k of Object.keys(savedLayout)) {
+            if (k.startsWith('__')) continue;
+            const v = savedLayout[k];
+            if (v && typeof v === 'object') {
+              v.x = Math.round((v.x || 0) * _ratio);
+              v.w = Math.round((v.w || 0) * _ratio);
+            }
+          }
+          savedLayout.__colVersion = _newCol;
+          plugin.saveData(plugin.settings);
+        }
+        const _doInit = () => {
+          const grid = GridStack.init({
+            column: 24,
+            cellHeight: 20,
+            margin: 2,
+            draggable: { handle: '.info-card-drag-handle', scroll: false, appendTo: 'parent' },
+            resizable: { handles: 'se' },
+            animate: true,
+            float: true,
+            disableOneColumnMode: true,
+            alwaysShowResizeHandle: true,
+          }, cardGrid);
+          this._plGrid = grid;
+          this._plGridReady = true;
+          const _reflowNodes = () => {
+            try {
+              if (grid.engine?.nodes?.length) { grid.column(24, 'move'); }
+            } catch(e) {}
+          };
+          const _ro = new ResizeObserver(() => {
+            if (this._plGrid && this._plGridReady && cardGrid.offsetWidth > 0) {
+              clearTimeout(this._plGridColTimer);
+              this._plGridColTimer = setTimeout(() => { _reflowNodes(); _applyInfoCardStyles(); }, 50);
+            }
+          });
+          _ro.observe(cardGrid);
+          this._plGridResizeObserver = _ro;
+          grid.on('change', () => { clearTimeout(this._plGridSaveTimer); this._plGridSaveTimer = setTimeout(_saveGridLayout, 500); });
+          grid.on('dragstop', () => { clearTimeout(this._plGridSaveTimer); this._plGridSaveTimer = setTimeout(_saveGridLayout, 300); });
+          grid.on('resizestop', () => { clearTimeout(this._plGridSaveTimer); this._plGridSaveTimer = setTimeout(_saveGridLayout, 300); });
+          while (this._plGridQueue.length > 0) { const fn = this._plGridQueue.shift(); if (typeof fn === 'function') fn(grid); }
+        };
+        if (cardGrid.offsetWidth > 0) { _doInit(); }
+        else {
+          const _waitRo = new ResizeObserver(() => {
+            if (cardGrid.offsetWidth > 0) { _waitRo.disconnect(); _doInit(); }
+          });
+          _waitRo.observe(cardGrid);
+          this._plGridWaitObserver = _waitRo;
+        }
+      } catch(e) { console.warn('[GridStack] init failed:', e); }
+    }).catch((e) => { console.warn('[GridStack] load failed:', e); });
+
+    const clearCards = () => {
+      if (this._plGrid && this._plGridReady) {
+        try { this._plGrid.removeAll(true); } catch(e) {}
+      }
+      cardGrid.innerHTML = '';
+      placeholder.textContent = t('main.parkingLotEmpty');
+      cardGrid.appendChild(placeholder);
+    };
+
+    const renderMd = async (container, mdContent) => {
+      container.innerHTML = '';
+      try { const { MarkdownRenderer, Component } = require('obsidian'); const comp = new Component(); comp.load(); const srcPath = plugin.app.workspace.getActiveFile()?.path || plugin.currentFilePath || ''; await MarkdownRenderer.renderMarkdown(mdContent, container, srcPath, comp); if (plugin.renderImagesManually) await plugin.renderImagesManually(mdContent, container, plugin); }
+      catch (e) { container.textContent = mdContent; }
+    };
+
+    this._addPlCard = (filePath, fileName, kw, editMode) => {
+      if (!fileName || !cardGrid) return null;
+      if (cardGrid.querySelector(`.info-card[data-file="${fileName.replace(/"/g, '&quot;')}"]`)) return null;
+      placeholder.remove();
+      const card = document.createElement('div');
+      card.className = 'info-card sg-highlight-item has-comment';
+      card.dataset.file = fileName;
+      card.dataset.kw = kw || '';
+      card.style.cssText = 'width:100%;height:100%;border:1px solid var(--background-modifier-border);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;';
+      const layout = plugin.settings?.parkingLotGridLayout?.[fileName];
+      const cardHeader = document.createElement('div');
+      cardHeader.className = 'info-card-header';
+      cardHeader.style.cssText = 'display:flex;align-items:center;padding:4px 8px 4px 8px;padding-right:20px;border-bottom:1px solid var(--background-modifier-border);cursor:default;touch-action:none;background:transparent;';
+      ['mousedown', 'touchstart', 'pointerdown'].forEach(evt => {
+        cardHeader.addEventListener(evt, (e) => {
+          if (!e.target.closest('.info-card-drag-handle')) { e.stopPropagation(); }
+        });
+      });
+      const dragHandle = document.createElement('span');
+      dragHandle.className = 'info-card-drag-handle';
+      dragHandle.innerHTML = '<svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="2" cy="2" r="1.2"/><circle cx="8" cy="2" r="1.2"/><circle cx="2" cy="7" r="1.2"/><circle cx="8" cy="7" r="1.2"/><circle cx="2" cy="12" r="1.2"/><circle cx="8" cy="12" r="1.2"/></svg>';
+      dragHandle.title = '拖动移动';
+      dragHandle.style.cssText = 'cursor:grab;flex-shrink:0;margin-right:5px;color:var(--text-muted);display:inline-flex;align-items:center;user-select:none;-webkit-user-select:none;touch-action:none;';
+      cardHeader.appendChild(dragHandle);
+      const cardTitle = document.createElement('span');
+      cardTitle.className = 'sg-related-source';
+      cardTitle.textContent = fileName.replace(/\.md$/, '');
+      cardTitle.style.cssText = 'font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;cursor:text;';
+      cardTitle.title = t('main.infoDblClickEditTitle');
+      cardTitle.addEventListener('dblclick', (ev) => {
+        ev.preventDefault(); ev.stopPropagation();
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = fileName.replace(/\.md$/, '');
+        input.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-normal);flex:1;border:1px solid var(--interactive-accent);border-radius:3px;padding:1px 4px;background:var(--background-primary);';
+        cardTitle.replaceWith(input); input.focus(); input.select();
+        const finish = async () => {
+          const newBase = sanitizeFileName(input.value.trim()) || fileName.replace(/\.md$/, '');
+          const newName = newBase + '.md';
+          input.replaceWith(cardTitle);
+          if (newName === fileName) return;
+          const r = await readPlFile(fileName);
+          if (r) { await writePlFile(newName, r.content); try { await this.app.vault.adapter.remove(r.path); } catch(e){} }
+          card.dataset.file = newName;
+          cardTitle.textContent = newBase;
+          if (plugin.settings.parkingLotGridLayout && plugin.settings.parkingLotGridLayout[fileName]) { plugin.settings.parkingLotGridLayout[newName] = plugin.settings.parkingLotGridLayout[fileName]; delete plugin.settings.parkingLotGridLayout[fileName]; plugin.saveData(plugin.settings); }
+          fileName = newName;
+        };
+        input.addEventListener('blur', finish);
+        input.addEventListener('keydown', (ke) => { if (ke.key === 'Enter') input.blur(); if (ke.key === 'Escape') { input.value = fileName.replace(/\.md$/, ''); input.blur(); } });
+      });
+      cardHeader.appendChild(cardTitle);
+      const aiBtn = document.createElement('span');
+      aiBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/><circle cx="12" cy="12" r="3"/></svg>';
+      aiBtn.title = t('main.infoAiGenerate');
+      aiBtn.style.cssText = 'cursor:pointer;opacity:0.5;display:inline-flex;align-items:center;flex-shrink:0;margin-left:4px;transition:opacity 0.15s;';
+      let _aiPopup = null;
+      const _closeAiPopup = () => { if (_aiPopup) { if (_aiPopup._dragAb) _aiPopup._dragAb.abort(); _aiPopup.remove(); _aiPopup = null; } };
+      const _openAiPopup = () => {
+        if (_aiPopup) { _closeAiPopup(); return; }
+        const kwName = fileName.replace(/\.md$/, '').replace(/_\d+$/, '');
+        const _presetKeyMap = { plainExplain: ['settings.presetPlainExplain', 'settings.presetPlainExplainText'], oneLineDef: ['settings.presetOneLineDef', 'settings.presetOneLineDefText'], example: ['settings.presetExample', 'settings.presetExampleText'], compare: ['settings.presetCompare', 'settings.presetCompareText'] };
+        if (!plugin.settings.parkingLotCustomPrompts) plugin.settings.parkingLotCustomPrompts = [];
+        else { plugin.settings.parkingLotCustomPrompts.forEach(p => { if (p._isPreset && _presetKeyMap[p._presetKey]) { p.label = t(_presetKeyMap[p._presetKey][0]); p.text = t(_presetKeyMap[p._presetKey][1]); } }); }
+        const _allPrompts = (plugin.settings.parkingLotCustomPrompts || []).filter(p => p.label && p.text);
+        const _selected = new Set([0]);
+        _aiPopup = document.createElement('div');
+        _aiPopup.className = 'info-ai-popup';
+        _aiPopup.style.cssText = 'position:fixed;z-index:9999;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:14px;padding:14px;box-shadow:0 4px 16px rgba(0,0,0,0.08);font-size:11px;width:340px;';
+        const panelHead = document.createElement('div');
+        panelHead.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:move;user-select:none;-webkit-user-select:none;touch-action:none;';
+        const headLabel = document.createElement('span');
+        headLabel.textContent = t('main.aiPromptTitle');
+        headLabel.style.cssText = 'font-size:12px;color:var(--text-muted);font-weight:500;';
+        panelHead.appendChild(headLabel);
+        _aiPopup.appendChild(panelHead);
+        _aiPopup._dragAb = new AbortController();
+        { const _dAb = _aiPopup._dragAb; let _dragging = false, _dx = 0, _dy = 0;
+          const _dStart = (ev) => { _dragging = true; const r = _aiPopup.getBoundingClientRect(); const px = ev.touches ? ev.touches[0].clientX : ev.clientX; const py = ev.touches ? ev.touches[0].clientY : ev.clientY; _dx = px - r.left; _dy = py - r.top; if (ev.cancelable) ev.preventDefault(); };
+          const _dMove = (ev) => { if (!_dragging || !_aiPopup) return; const px = ev.touches ? ev.touches[0].clientX : ev.clientX; const py = ev.touches ? ev.touches[0].clientY : ev.clientY; _aiPopup.style.left = Math.max(0, Math.min(window.innerWidth - 40, px - _dx)) + 'px'; _aiPopup.style.top = Math.max(0, Math.min(window.innerHeight - 40, py - _dy)) + 'px'; };
+          const _dEnd = () => { _dragging = false; };
+          panelHead.addEventListener('mousedown', _dStart, { signal: _dAb.signal });
+          document.addEventListener('mousemove', _dMove, { signal: _dAb.signal });
+          document.addEventListener('mouseup', _dEnd, { signal: _dAb.signal });
+          panelHead.addEventListener('touchstart', _dStart, { passive: false, signal: _dAb.signal });
+          document.addEventListener('touchmove', _dMove, { passive: false, signal: _dAb.signal });
+          document.addEventListener('touchend', _dEnd, { signal: _dAb.signal });
+        }
+        const chipRow = document.createElement('div');
+        chipRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;';
+        _aiPopup.appendChild(chipRow);
+        const _renderChips = () => {
+          chipRow.innerHTML = '';
+          _allPrompts.forEach((p, i) => {
+            const chip = document.createElement('div');
+            const isSel = _selected.has(i);
+            chip.style.cssText = `font-size:11px;padding:5px 11px;border-radius:14px;cursor:pointer;user-select:none;display:flex;align-items:center;gap:4px;transition:all 0.15s;border:1px solid ${isSel?'#b3a1ec':'var(--background-modifier-border)'};background:${isSel?'#f1ecfd':'var(--background-secondary)'};color:${isSel?'#6c4fd4':'var(--text-normal)'};`;
+            if (isSel) {
+              const check = document.createElement('span');
+              check.textContent = '✓';
+              check.style.fontSize = '11px';
+              chip.appendChild(check);
+            }
+            const lbl = document.createElement('span');
+            lbl.textContent = p.label;
+            chip.appendChild(lbl);
+            chip.addEventListener('click', () => {
+              if (_selected.has(i)) _selected.delete(i); else _selected.add(i);
+              _renderChips(); _updatePrompt();
+            });
+            chipRow.appendChild(chip);
+          });
+        };
+        const promptTa = document.createElement('textarea');
+        promptTa.style.cssText = 'width:100%;box-sizing:border-box;min-height:64px;border-radius:10px;border:1px solid var(--background-modifier-border);background:var(--background-secondary);padding:10px 12px;font-size:12px;color:var(--text-normal);line-height:1.6;resize:vertical;font-family:inherit;margin-bottom:8px;';
+        _aiPopup.appendChild(promptTa);
+        const sendBtn = document.createElement('button');
+        sendBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' + t('main.aiSend');
+        sendBtn.style.cssText = 'width:100%;padding:9px;border:none;border-radius:10px;background:linear-gradient(135deg,#9b7ee8,#8266d6);color:#fff;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;';
+        _aiPopup.appendChild(sendBtn);
+        const _updatePrompt = () => {
+          const sortedIdx = Array.from(_selected).sort((a, b) => a - b).filter(i => _allPrompts[i]);
+          promptTa.value = sortedIdx.map(i => _allPrompts[i].text.replace(/\{keyword\}/g, kwName)).join('');
+        };
+        _renderChips();
+        _updatePrompt();
+        document.body.appendChild(_aiPopup);
+        const btnRect = aiBtn.getBoundingClientRect();
+        _aiPopup.style.left = Math.min(btnRect.left, window.innerWidth - 360) + 'px';
+        _aiPopup.style.top = (btnRect.bottom + 4) + 'px';
+        sendBtn.addEventListener('click', async () => {
+          const p = promptTa.value.trim();
+          if (!p) return;
+          _closeAiPopup();
+          aiBtn.style.opacity = '0.5';
+          cardContent.innerHTML = '';
+          const streamEl = document.createElement('div');
+          streamEl.style.cssText = 'white-space:pre-wrap;word-break:break-word;padding:8px;font-size:12px;line-height:1.6;color:var(--text-normal);';
+          cardContent.appendChild(streamEl);
+          let accumulated = '';
+          try {
+            const reply = await plugin.callAIStream(p, (delta, full) => { accumulated = full; streamEl.textContent = full; cardContent.scrollTop = cardContent.scrollHeight; });
+            if (reply && reply.trim()) { await writePlFile(fileName, reply.trim()); await renderMd(cardContent, reply.trim()); }
+            else if (accumulated) { await writePlFile(fileName, accumulated); await renderMd(cardContent, accumulated); }
+          } catch (err) { new Notice(t('main.infoAiFailed') + ': ' + (err.message || t('main.infoUnknownError'))); if (accumulated) { try { await writePlFile(fileName, accumulated); await renderMd(cardContent, accumulated); } catch(e){} } }
+          finally { aiBtn.style.opacity = '1'; }
+        });
+        const _onDocDown = (ev) => { if (_aiPopup && !_aiPopup.contains(ev.target) && !aiBtn.contains(ev.target)) { _closeAiPopup(); document.removeEventListener('mousedown', _onDocDown); } };
+        setTimeout(() => document.addEventListener('mousedown', _onDocDown), 0);
+      };
+
+      aiBtn.addEventListener('mouseenter', () => { aiBtn.style.opacity = '1'; });
+      aiBtn.addEventListener('mouseleave', () => { aiBtn.style.opacity = '0.5'; });
+      aiBtn.addEventListener('click', (ce) => { ce.stopPropagation(); ce.preventDefault(); _openAiPopup(); });
+      cardHeader.appendChild(aiBtn);
+      const delBtn = document.createElement('span');
+      delBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>';
+      delBtn.title = t('main.infoDeleteCard') || '删除';
+      delBtn.style.cssText = 'cursor:pointer;opacity:0.5;display:inline-flex;align-items:center;flex-shrink:0;margin-left:10px;transition:opacity 0.15s;';
+      delBtn.addEventListener('mouseenter', () => { delBtn.style.opacity = '1'; });
+      delBtn.addEventListener('mouseleave', () => { delBtn.style.opacity = '0.5'; });
+      delBtn.addEventListener('click', async (de) => {
+        de.preventDefault(); de.stopPropagation();
+        const r = await readPlFile(fileName);
+        if (r) { try { await this.app.vault.adapter.remove(r.path); } catch(e){} }
+        if (plugin.settings.parkingLotGridLayout && plugin.settings.parkingLotGridLayout[fileName]) { delete plugin.settings.parkingLotGridLayout[fileName]; plugin.saveData(plugin.settings); }
+        const widgetEl = card.closest('.grid-stack-item');
+        if (widgetEl && this._plGrid && this._plGridReady) { try { this._plGrid.removeWidget(widgetEl, true); } catch(e) { card.remove(); } }
+        else { card.remove(); }
+        if (cardGrid.querySelectorAll('.info-card').length === 0) { cardGrid.appendChild(placeholder); }
+      });
+      cardHeader.appendChild(delBtn);
+      card.appendChild(cardHeader);
+      const cardContent = document.createElement('div');
+      cardContent.className = 'info-card-content sg-related-text';
+      cardContent.style.cssText = 'padding:6px 8px;font-size:13px;line-height:1.5;user-select:text;-webkit-user-select:text;overflow-y:auto;flex:1;touch-action:pan-y;';
+      ['mousedown', 'touchstart', 'pointerdown'].forEach(evt => {
+        cardContent.addEventListener(evt, (e) => {
+          if (!e.target.closest('.info-card-drag-handle') && !e.target.closest('button') && !e.target.closest('a')) {
+            e.stopPropagation();
+          }
+        });
+      });
+      card.appendChild(cardContent);
+      const _addToGrid = (grid) => {
+        const wOpts = { w: layout?.w || 12, h: layout?.h || 4, minW: 2, minH: 2, autoPosition: !layout };
+        if (layout) { wOpts.x = layout.x; wOpts.y = layout.y; }
+        const widgetEl = grid.addWidget(wOpts);
+        const itemContent = widgetEl.querySelector('.grid-stack-item-content') || widgetEl;
+        itemContent.appendChild(card);
+        itemContent.style.overflow = 'hidden';
+      };
+      if (this._plGrid && this._plGridReady) { _addToGrid(this._plGrid); }
+      else { cardGrid.appendChild(card); this._plGridQueue.push((grid) => { try { card.remove(); _addToGrid(grid); } catch(e) {} }); }
+      _applyInfoCardStyles();
+      const startEdit = async () => {
+        const r = await readPlFile(fileName);
+        const raw = r ? r.content : '';
+        cardContent.innerHTML = '';
+        const ta = document.createElement('textarea');
+        ta.value = raw;
+        ta.style.cssText = 'width:100%;height:calc(100% - 4px);border:none;resize:none;font-size:13px;line-height:1.5;padding:4px 6px;background:var(--background-primary);color:var(--text-normal);font-family:var(--font-monospace);';
+        cardContent.appendChild(ta);
+        ta.focus();
+        const save = async () => {
+          await writePlFile(fileName, ta.value);
+          await renderMd(cardContent, ta.value);
+        };
+        ta.addEventListener('blur', save);
+        ta.addEventListener('keydown', (ke) => { if (ke.key === 'Enter' && (ke.ctrlKey || ke.metaKey)) { ke.preventDefault(); ta.blur(); } });
+        ta.addEventListener('paste', async (pe) => {
+          const items = pe.clipboardData?.items;
+          if (!items) return;
+          let imgItem = null;
+          for (const it of items) { if (it.type.startsWith('image/')) { imgItem = it; break; } }
+          if (!imgItem) return;
+          pe.preventDefault();
+          const blob = imgItem.getAsFile();
+          if (!blob) return;
+          const ext = blob.type.split('/')[1] || 'png';
+          const ts = Date.now();
+          const imgName = `${fileName.replace(/\.md$/, '')}_${ts}.${ext}`;
+          try {
+            const buf = await blob.arrayBuffer();
+            const savedName = await plugin.saveImageToVault(new Uint8Array(buf), imgName);
+            const insertText = `\n![[${savedName}]]\n`;
+            const s = ta.selectionStart, e = ta.selectionEnd;
+            ta.value = ta.value.slice(0, s) + insertText + ta.value.slice(e);
+            ta.selectionStart = ta.selectionEnd = s + insertText.length;
+          } catch (err) { new Notice(t('main.infoAiFailed') + ': ' + (err.message || '')); }
+        });
+      };
+      cardContent.addEventListener('dblclick', (ev) => { ev.preventDefault(); ev.stopPropagation(); startEdit(); });
+      if (editMode) { startEdit(); }
+      else {
+        const loading = document.createElement('div');
+        loading.textContent = '...';
+        loading.style.color = 'var(--text-muted)';
+        cardContent.appendChild(loading);
+        (async () => {
+          const r = await readPlFile(fileName);
+          if (r) { await renderMd(cardContent, r.content); }
+          else { cardContent.innerHTML = ''; const nf1 = document.createElement('div'); nf1.textContent = t('main.infoEmptyCard'); nf1.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;'; cardContent.appendChild(nf1); }
+        })();
+      }
+      return card;
+    };
+
+    this._createPlFile = async (kw) => {
+      if (!kw) return;
+      const base = sanitizeFileName(kw);
+      let fileName = base + '.md';
+      let i = 1;
+      while (await readPlFile(fileName)) { fileName = base + '_' + i + '.md'; i++; }
+      await writePlFile(fileName, '');
+      this._addPlFile(fileName, kw, true);
+    };
+
+    this._addPlFile = (fileName, kw, editMode) => {
+      return this._addPlCard((_plFolders[0] || pluginPlDir) + '/' + fileName, fileName, kw, editMode);
+    };
+
+    this._showAllPlCards = async () => {
+      clearCards();
+      const files = await listPlFiles();
+      for (const f of files) { this._addPlCard(f.name, f.name, '', false); }
+    };
+
+    this._showKeywordPlCards = async (kw) => {
+      clearCards();
+      if (!kw) return;
+      const files = await listPlFiles();
+      const matched = files.filter(f => matchKw(f.name, [kw]));
+      if (matched.length === 0) {
+        placeholder.textContent = t('main.infoNoCardHint') + `（${kw}）`;
+      } else {
+        for (const f of matched) { this._addPlCard(f.name, f.name, kw, false); }
+      }
+    };
+
+    addBtn.addEventListener('click', async () => {
+      const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      await this._createPlFile(ts);
+    });
+
+    const chipBaseStyle = 'display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;cursor:pointer;user-select:none;white-space:nowrap;border:1px solid var(--background-modifier-border);background:rgba(var(--mono-rgb-0),0.3);color:var(--text-muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;';
+    const activeChipStyle = 'border-color:var(--interactive-accent);color:var(--interactive-accent);';
+    const setChipActive = (chipEl) => {
+      chipRow.querySelectorAll('.info-kw-chip').forEach(c => { c.style.borderColor = 'var(--background-modifier-border)'; c.style.color = 'var(--text-muted)'; });
+      if (chipEl) { chipEl.style.borderColor = 'var(--interactive-accent)'; chipEl.style.color = 'var(--interactive-accent)'; }
+    };
+
+    this._showSourcePlCards = async (source) => {
+      clearCards();
+      const files = await listPlFiles();
+      const matched = files.filter(f => f.source === source);
+      for (const f of matched) { this._addPlCard(f.name, f.name, '', false); }
+    };
+
+    this._refreshPlChips = () => {
+      if (!chipRow) return;
+      chipRow.innerHTML = '';
+      const allChip = document.createElement('span');
+      allChip.textContent = t('main.parkingLotAll');
+      allChip.style.cssText = chipBaseStyle + activeChipStyle;
+      allChip.classList.add('info-kw-chip');
+      allChip.addEventListener('click', () => { setChipActive(allChip); this._showAllPlCards(); });
+      chipRow.appendChild(allChip);
+      const sources = [..._plFolders, ..._plFiles];
+      sources.forEach(src => {
+        const chip = document.createElement('span');
+        const label = src.includes('/') ? src.split('/').pop() : src;
+        chip.textContent = label;
+        chip.style.cssText = chipBaseStyle;
+        chip.classList.add('info-kw-chip');
+        chip.title = src;
+        chip.addEventListener('click', () => { setChipActive(chip); this._showSourcePlCards(src); });
+        chipRow.appendChild(chip);
+      });
+      const editing = cardGrid.querySelector('textarea');
+      if (!editing) this._showAllPlCards();
+    };
+
+    this._refreshPlChips();
+    if (_plNextSibling && _plNextSibling.parentNode === contentEl) {
+      contentEl.insertBefore(section, _plNextSibling);
+    } else {
+      const threadsSec = contentEl.querySelector('.threads-section');
+      if (threadsSec) threadsSec.before(section);
+      else contentEl.appendChild(section);
+    }
+  }
   addHistorySection(contentEl) {
     return;
     // 先清理已存在的历史记录容器
@@ -23876,7 +24992,7 @@ class AddRegexRuleModal {
             buttonContainer.style.transform = "scale(1)";
           }, 200);
 
-          console.log(`Marked button as applied for .${className} with regex: ${regexValue}`);
+          if (this.plugin?.settings?.enableDebugLog) console.log(`Marked button as applied for .${className} with regex: ${regexValue}`);
         } else {
           // 恢复为未应用状态
           // 不设置backgroundColor，避免影响styleExample的背景色
@@ -23884,7 +25000,7 @@ class AddRegexRuleModal {
           buttonContainer.style.fontWeight = "normal";
 
 
-          console.log(`Marked button as not applied for .${className} with regex: ${regexValue}`);
+          if (this.plugin?.settings?.enableDebugLog) console.log(`Marked button as not applied for .${className} with regex: ${regexValue}`);
         }
       }
     });
@@ -24265,6 +25381,9 @@ class SwiftGlossaSidebarView extends ItemView {
       if (_sidebarSelDebounce) clearTimeout(_sidebarSelDebounce);
       _sidebarSelDebounce = setTimeout(() => {
         if (modal._chipIgnoreSelUntil && Date.now() < modal._chipIgnoreSelUntil) { return; }
+        const _activeEl = document.activeElement;
+        if (_activeEl instanceof Element && (modal.modalEl.contains(_activeEl) || (this.plugin?._regexHighlightModal?.modalEl?.contains(_activeEl)))) { return; }
+        if (window._sgIgnoreSelUntil && Date.now() < window._sgIgnoreSelUntil) { return; }
         const selection = window.getSelection();
         if (selection && selection.toString().trim()) {
           const selectedText = selection.toString().trim();
@@ -24313,6 +25432,11 @@ class SwiftGlossaSidebarView extends ItemView {
         const _matchRule = _matchRules[0];
         if (_matchRule) { const _ri = _allRules.indexOf(_matchRule); const _isG = _ri >= this.plugin.rules.length; modal.currentEditingRule = { index: _isG ? _ri - this.plugin.rules.length : _ri, regex: _matchRule.regex, cssClass: _matchRule.cssClass, isGlobal: _isG, remark: _matchRule.remark || '' }; modal.inputModifiedSinceEdit = false; if (modal._refreshUpdateChip) modal._refreshUpdateChip(); }
         this.plugin._addKeywordHistory(ruleRegex);
+        const _mainModal = this.plugin._regexHighlightModal;
+        if (_mainModal && _mainModal._threadsReload) {
+          _mainModal._threadsFilterKw = ruleRegex;
+          _mainModal._threadsReload();
+        }
       }
     };
     document.addEventListener('click', this._sidebarClickHandler, true);
@@ -24806,12 +25930,14 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     if (_isDesktop) {
       this.registerDomEvent(document, 'click', (e) => {
         if (!(e.target instanceof Element)) return;
-        const highlightEl = e.target.closest('.highlight-tooltip-text, .highlight-regex-text');
-        if (!highlightEl) return;
+      const highlightEl = e.target.closest('.highlight-tooltip-text, .highlight-regex-text');
+      if (!highlightEl) return;
+      if (highlightEl.closest('[data-remark-source], .threads-section, .remark-content-container')) { return; }
         const clickedRegex = highlightEl.dataset?.ruleRegex;
         if (!clickedRegex) return;
         const _lv = this.app?.workspace?.getLeavesOfType?.('swiftglossa-sidebar'); const _v = _lv?.[0]?.view; const _mMain = (this._regexHighlightModal && this._regexHighlightModal._isOpen && this._regexHighlightModal.modalEl && _isInAnyDoc(this._regexHighlightModal.modalEl)) ? this._regexHighlightModal : null; const _m = _mMain || (_v?._sidebarModal); if (_m) { const _allRules = [...(Array.isArray(this.rules)?this.rules:[]), ...(Array.isArray(this.globalRules)?this.globalRules:[])]; const _matchRules = _allRules.filter(r => { const _p = _splitRegexPipes(r.regex); return _p.includes(clickedRegex) || r.regex === clickedRegex || r.regex.includes(clickedRegex); }); const _uniqueRegexes = [...new Set(_matchRules.map(r => r.regex))]; if (_uniqueRegexes.length > 0 && _m._showKwChips) { _m._showKwChips(_uniqueRegexes, clickedRegex, clickedRegex); } else if (_m._hideKwChips) { _m._hideKwChips(); } if (_m.regexInput) _m.regexInput.setValue(clickedRegex); if (_m.updateStyleButtonsPreview) _m.updateStyleButtonsPreview(clickedRegex); if (_m.highlightMatchingRuleButtons) _m.highlightMatchingRuleButtons(); if (_m.showInlineRemarkForRegex) { _m._needsRefresh = false; _m.showInlineRemarkForRegex(clickedRegex); } const _matchRule = _matchRules[0]; if (_matchRule) { const _ri = _allRules.indexOf(_matchRule); const _isG = _ri >= this.rules.length; _m.currentEditingRule = { index: _isG ? _ri - this.rules.length : _ri, regex: _matchRule.regex, cssClass: _matchRule.cssClass, isGlobal: _isG, remark: _matchRule.remark || '' }; _m.inputModifiedSinceEdit = false; if (_m._refreshUpdateChip) _m._refreshUpdateChip(); } }
         this._addKeywordHistory(clickedRegex);
+        if (_mMain && _mMain._threadsReload) { _mMain._threadsFilterKw = clickedRegex; _mMain._threadsReload(); }
         const floatingBall = document.getElementById('regex-highlighter-floating-ball');
         if (floatingBall) {
           this._keepRuleActionButtons = true;
@@ -38643,7 +39769,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           this._defaultFnGroup = data.defaultFnGroup || null;
         }
       } else {
-        this.globalNotes = [{ id: Date.now().toString(), text: '悬浮笔记操作方式 / Floating Note Controls：\n• Shift + 滚轮 → 切换配色 / Shift+Scroll → Change color scheme\n• Ctrl + 滚轮 → 调整透明度 / Ctrl+Scroll → Adjust opacity\n• Alt + 滚轮 → 调整字号 / Alt+Scroll → Adjust font size\n• 双击 → 编辑内容 / Double-click → Edit content\n• 点击调色盘按钮 → 选择配色方案 / Click palette button → Choose color scheme\n\n添加笔记：在悬浮球选项中点击"+"按钮\nAdd notes: Click the "+" button in the floating ball options', _createdAt: Date.now(), _hidden: true }, { id: (Date.now() + 2).toString(), text: '这是 SwiftGlossa 插件的悬浮笔记。单击右上角"X"按钮关闭;中键点击删除(添加悬浮笔记方式在"SG"悬浮球选项中);中键点击笔记内容部分可折叠显示。\n\n以下是本插件的简单介绍及基础用法:\n\n插件从 2025 年年底开始建造,至今(2026-08-03)经过多次转向发展成当前功能布局,总耗时 1000+ 小时。\n\n插件通过 CSS 样式个性化高亮关键词。关键词可以是人名、地名、学科术语等任何你觉得重要的词(根据二八定律,建议只将 20% 的关键词进行个性化高亮,余下的用简单下划线,否则整体观感会很乱)。\n\n关键词被高亮后可以添加「计数」(统计该词在当前文档中出现的次数)、显示在关键词上方的「行间注释」(比如添加人物的生辰、角色...)。\n\n首次安装插件,在 Obsidian 启动后约 30 秒会自动构建库中 Obsidian 格式的高亮「==高亮文本==」,之后每次添加新高亮都会自动更新。\n\n点击关键词后,会搜索高亮数据库,将匹配的高亮条目显示在面板中(主面板、右侧面板、独立窗口);或者折叠右侧面板,鼠标悬停到关键词上也会显示相关高亮(可关闭)——当你有大量高亮时这通常会带给你意想不到的收获。\n\n每条高亮都可以添加备注/记号,这能让你记得更牢(后续有这些备注/记号的附加功能)。\n\n对于名词术语,提供了「info」版块,可将关于该关键词的事实性知识显示在这里(支持 AI 根据提示词自动生成)。\n\n其他功能请自行探索。本插件免费,提供付费咨询,vx: jtugqivi\n\n--- English ---\n\nThis is a floating note of the SwiftGlossa plugin. Click the "X" button in the top-right corner to close; middle-click to delete (add floating notes via the "SG" floating ball options); middle-click the note content area to collapse it.\n\nBelow is a brief introduction and basic usage of the plugin:\n\nThe plugin has been in development since late 2025. As of 2026-08-03, after several pivots, it has evolved into its current feature layout, with 1000+ hours invested.\n\nThe plugin highlights keywords with personalized CSS styles. Keywords can be names, places, subject-specific terms, or any words you consider important (based on the 80/20 rule, it is recommended to apply personalized highlighting to only 20% of keywords and use simple underlines for the rest, otherwise the overall appearance will be cluttered).\n\nAfter a keyword is highlighted, you can add a "count" (tracking its occurrences in the current document) and "interlinear notes" displayed above the keyword (e.g., a character birthdate, role...).\n\nOn first install, about 30 seconds after Obsidian starts, the plugin automatically builds Obsidian-format highlights ("==highlighted text==") from the vault. After that, every new highlight auto-updates.\n\nClick a keyword to search the highlight database and display matching entries in the panel (main panel, right sidebar, or standalone window). Alternatively, collapse the right sidebar and hover over a keyword to see related highlights (can be disabled) — this often brings unexpected insights when you have many highlights.\n\nEach highlight can have a remark/marker added, helping you remember better (additional features for remarks/markers are planned).\n\nFor noun terms, an "info" section displays factual knowledge about the keyword (supports AI auto-generation from prompts).\n\nExplore other features on your own. This plugin is free; paid consultations available, vx: jtugqivi', _createdAt: Date.now() + 2, _hidden: false, _collapsed: true, _collapsedPos: { left: 'calc(50vw - 60px)', top: '60px' }, _inPanel: false, _floatPos: { left: 'calc(50vw - 220px)', top: '60px' }, _floatSize: { width: '440px', height: 'auto' } }];
+        this.globalNotes = [];
       }
       // 删除旧版咨询笔记（已安装用户）
       const _oldConsultIdx = this.globalNotes.findIndex(n => n.text === '插件免费, 使用方法提供有偿咨询-vx:jtugqivi (giantPigeon)');
@@ -38653,7 +39779,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
     } catch (error) {
       console.error('Error loading global notes:', error);
-      this.globalNotes = [{ id: Date.now().toString(), text: '悬浮笔记操作方式 / Floating Note Controls：\n• Shift + 滚轮 → 切换配色 / Shift+Scroll → Change color scheme\n• Ctrl + 滚轮 → 调整透明度 / Ctrl+Scroll → Adjust opacity\n• Alt + 滚轮 → 调整字号 / Alt+Scroll → Adjust font size\n• 双击 → 编辑内容 / Double-click → Edit content\n• 点击调色盘按钮 → 选择配色方案 / Click palette button → Choose color scheme\n\n添加笔记：在悬浮球选项中点击"+"按钮\nAdd notes: Click the "+" button in the floating ball options', _createdAt: Date.now(), _hidden: true }, { id: (Date.now() + 2).toString(), text: '这是 SwiftGlossa 插件的悬浮笔记。单击右上角"X"按钮关闭;中键点击删除(添加悬浮笔记方式在"SG"悬浮球选项中);中键点击笔记内容部分可折叠显示。\n\n以下是本插件的简单介绍及基础用法:\n\n插件从 2025 年年底开始建造,至今(2026-08-03)经过多次转向发展成当前功能布局,总耗时 1000+ 小时。\n\n插件通过 CSS 样式个性化高亮关键词。关键词可以是人名、地名、学科术语等任何你觉得重要的词(根据二八定律,建议只将 20% 的关键词进行个性化高亮,余下的用简单下划线,否则整体观感会很乱)。\n\n关键词被高亮后可以添加「计数」(统计该词在当前文档中出现的次数)、显示在关键词上方的「行间注释」(比如添加人物的生辰、角色...)。\n\n首次安装插件,在 Obsidian 启动后约 30 秒会自动构建库中 Obsidian 格式的高亮「==高亮文本==」,之后每次添加新高亮都会自动更新。\n\n点击关键词后,会搜索高亮数据库,将匹配的高亮条目显示在面板中(主面板、右侧面板、独立窗口);或者折叠右侧面板,鼠标悬停到关键词上也会显示相关高亮(可关闭)——当你有大量高亮时这通常会带给你意想不到的收获。\n\n每条高亮都可以添加备注/记号,这能让你记得更牢(后续有这些备注/记号的附加功能)。\n\n对于名词术语,提供了「info」版块,可将关于该关键词的事实性知识显示在这里(支持 AI 根据提示词自动生成)。\n\n其他功能请自行探索。本插件免费,提供付费咨询,vx: jtugqivi\n\n--- English ---\n\nThis is a floating note of the SwiftGlossa plugin. Click the "X" button in the top-right corner to close; middle-click to delete (add floating notes via the "SG" floating ball options); middle-click the note content area to collapse it.\n\nBelow is a brief introduction and basic usage of the plugin:\n\nThe plugin has been in development since late 2025. As of 2026-08-03, after several pivots, it has evolved into its current feature layout, with 1000+ hours invested.\n\nThe plugin highlights keywords with personalized CSS styles. Keywords can be names, places, subject-specific terms, or any words you consider important (based on the 80/20 rule, it is recommended to apply personalized highlighting to only 20% of keywords and use simple underlines for the rest, otherwise the overall appearance will be cluttered).\n\nAfter a keyword is highlighted, you can add a "count" (tracking its occurrences in the current document) and "interlinear notes" displayed above the keyword (e.g., a character birthdate, role...).\n\nOn first install, about 30 seconds after Obsidian starts, the plugin automatically builds Obsidian-format highlights ("==highlighted text==") from the vault. After that, every new highlight auto-updates.\n\nClick a keyword to search the highlight database and display matching entries in the panel (main panel, right sidebar, or standalone window). Alternatively, collapse the right sidebar and hover over a keyword to see related highlights (can be disabled) — this often brings unexpected insights when you have many highlights.\n\nEach highlight can have a remark/marker added, helping you remember better (additional features for remarks/markers are planned).\n\nFor noun terms, an "info" section displays factual knowledge about the keyword (supports AI auto-generation from prompts).\n\nExplore other features on your own. This plugin is free; paid consultations available, vx: jtugqivi', _createdAt: Date.now() + 2, _hidden: false, _collapsed: true, _collapsedPos: { left: 'calc(50vw - 60px)', top: '60px' }, _inPanel: false, _floatPos: { left: 'calc(50vw - 220px)', top: '60px' }, _floatSize: { width: '440px', height: 'auto' } }];
+      this.globalNotes = [];
       this.noteGroups = [];
     }
   }
@@ -38843,12 +39969,13 @@ if (note._collapsed) {
       actionbar.style.cssText = `display:flex;align-items:center;justify-content:space-between;padding:2px 2px;position:absolute;top:0;left:0;right:0;z-index:2;opacity:0;transition:opacity 0.15s;pointer-events:none;background:rgba(128,128,128,0.12);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);border-radius:0 0 4px 4px;color:${_cardTheme.text};`;
       card.addEventListener('mouseenter', () => { actionbar.style.opacity = '1'; actionbar.style.pointerEvents = 'auto'; });
       if (!_isDesktop) {
-        let _actionBarTimer = null;
         card.addEventListener('touchstart', (te) => {
           if (te.target.closest('.note-action-bar')) return;
-          clearTimeout(_actionBarTimer);
-          actionbar.style.opacity = '1'; actionbar.style.pointerEvents = 'auto';
-          _actionBarTimer = setTimeout(() => { actionbar.style.opacity = '0'; actionbar.style.pointerEvents = 'none'; }, 3000);
+          if (actionbar.style.opacity === '1') {
+            actionbar.style.opacity = '0'; actionbar.style.pointerEvents = 'none';
+          } else {
+            actionbar.style.opacity = '1'; actionbar.style.pointerEvents = 'auto';
+          }
         }, { passive: true });
       }
       card.addEventListener('mouseleave', () => { actionbar.style.opacity = '0'; actionbar.style.pointerEvents = 'none'; });
@@ -43183,8 +44310,131 @@ content.addEventListener('auxclick', (e) => {
     return backlinks;
   }
 
+  _loadThreads() {
+    try {
+      const adapter = this.app.vault.adapter;
+      const lang = (typeof _currentLang !== 'undefined' && _currentLang === 'en') ? 'en' : 'zh';
+      const path = '.obsidian/plugins/Regex-Css-Highlighter/threads.md';
+      return adapter.exists(path).then(ex => ex ? adapter.read(path) : '').then(c => c.split('\n').map(l => l.trim()).filter(l => l)).catch(() => []);
+    } catch(e) {}
+    return Promise.resolve([]);
+  }
+
+  _saveThreads(lines) {
+    try {
+      const adapter = this.app.vault.adapter;
+      const lang = (typeof _currentLang !== 'undefined' && _currentLang === 'en') ? 'en' : 'zh';
+      const path = '.obsidian/plugins/Regex-Css-Highlighter/threads.md';
+      if (adapter.write) adapter.write(path, lines.join('\n')).catch(() => {});
+    } catch(e) {}
+  }
+
+  _renderThreadsSection(container, keywordRegex, keepOpenRef) {
+    const plugin = this;
+    const section = document.createElement('div');
+    section.className = 'threads-section';
+    section.style.cssText = 'margin-top:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:8px;';
+    if (typeof _SG_APPLY_PALETTE === 'function') _SG_APPLY_PALETTE(section, plugin.settings);
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
+    const headerLeft = document.createElement('div');
+    headerLeft.style.cssText = 'display:flex;align-items:center;gap:4px;';
+    const titleEl = document.createElement('span');
+    titleEl.textContent = t('main.threadsSection');
+    titleEl.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-muted);';
+    headerLeft.appendChild(titleEl);
+    const helpBtn = document.createElement('span');
+    helpBtn.textContent = '?';
+    helpBtn.style.cssText = 'cursor:pointer;color:var(--text-faint);font-size:10px;padding:0 3px;';
+    helpBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      _showHelpFloat(helpBtn, t('main.threadsHelpContent'));
+    });
+    headerLeft.appendChild(helpBtn);
+    header.appendChild(headerLeft);
+    const addBtn = document.createElement('button');
+    addBtn.textContent = '+';
+    addBtn.title = t('main.threadsAddPlaceholder');
+    addBtn.style.cssText = 'padding:0 6px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);font-size:12px;font-weight:700;line-height:16px;height:18px;';
+    header.appendChild(addBtn);
+    section.appendChild(header);
+    const body = document.createElement('div');
+    body.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
+    section.appendChild(body);
+    container.appendChild(section);
+    const renderLines = (lines) => {
+      body.innerHTML = '';
+      const matched = lines.filter(line => {
+        if (!keywordRegex) return true;
+        try { return _regexMatch(line, keywordRegex) || line.includes(keywordRegex); } catch(e) { return line.includes(keywordRegex); }
+      });
+      if (matched.length === 0) {
+        const empty = document.createElement('div');
+        empty.textContent = t('main.threadsEmpty');
+        empty.style.cssText = 'color:var(--text-faint);font-size:11px;font-style:italic;';
+        body.appendChild(empty);
+        return;
+      }
+      matched.forEach((line, idx) => {
+        const item = document.createElement('div');
+        item.className = 'sg-comment-panel';
+        item.textContent = line;
+        item.style.cssText = 'font-size:12px;padding:4px 6px;border-radius:4px;cursor:text;';
+        item.addEventListener('mousedown', () => { if (keepOpenRef) keepOpenRef.val = true; });
+        item.addEventListener('focusin', () => { if (keepOpenRef) keepOpenRef.val = true; });
+        item.addEventListener('dblclick', (ev) => {
+          ev.stopPropagation();
+          if (keepOpenRef) keepOpenRef.val = true;
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = line;
+          input.style.cssText = 'width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--border-color);border-radius:4px;background:var(--background-primary);color:var(--text-normal);box-sizing:border-box;';
+          item.replaceWith(input);
+          input.focus(); input.select();
+          let saved = false;
+          const save = async () => {
+            if (saved) return; saved = true;
+            const newLines = await plugin._loadThreads();
+            const matchIdx = newLines.indexOf(line);
+            if (matchIdx >= 0) { newLines[matchIdx] = input.value.trim(); if (!input.value.trim()) newLines.splice(matchIdx, 1); }
+            plugin._saveThreads(newLines);
+            renderLines(newLines);
+          };
+          input.addEventListener('blur', save);
+          input.addEventListener('keydown', (ke) => { if (ke.key === 'Enter') save(); if (ke.key === 'Escape') { saved = true; renderLines(newLines); } });
+        });
+        body.appendChild(item);
+      });
+    };
+    addBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (keepOpenRef) keepOpenRef.val = true;
+      const input = document.createElement('input');
+      input.type = 'text';
+      let prefill = '';
+      try { prefill = (keywordRegex || '').replace(/[\\^$.*+?()|[\]{}]/g, ' ').trim(); } catch(e) { prefill = keywordRegex || ''; }
+      input.value = prefill ? prefill + ' ' : '';
+      input.placeholder = t('main.threadsAddPlaceholder');
+      input.style.cssText = 'width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--border-color);border-radius:4px;background:var(--background-primary);color:var(--text-normal);box-sizing:border-box;margin-bottom:4px;';
+      body.insertBefore(input, body.firstChild);
+      input.focus();
+      let saved = false;
+      const save = async () => {
+        if (saved) return; saved = true;
+        const val = input.value.trim();
+        if (val) { const lines = await plugin._loadThreads(); lines.push(val); plugin._saveThreads(lines); renderLines(lines); }
+        else { input.remove(); }
+      };
+      input.addEventListener('blur', save);
+      input.addEventListener('keydown', (ke) => { if (ke.key === 'Enter') save(); if (ke.key === 'Escape') { saved = true; input.remove(); } });
+    });
+    section.addEventListener('mousedown', () => { if (keepOpenRef) keepOpenRef.val = true; });
+    this._loadThreads().then(renderLines);
+  }
+
   renderRemarkContent(container, opts) {
     const plugin = this;
+    container.addEventListener('mousedown', () => { window._sgIgnoreSelUntil = Date.now() + 600; }, true);
     const {
       links,
       rule,
@@ -43391,23 +44641,12 @@ content.addEventListener('auxclick', (e) => {
           hlHelpIcon2.addEventListener('mouseleave', () => { hlHelpIcon2.style.opacity = '0.4'; });
           hlHelpIcon2.addEventListener('click', (he) => {
             he.preventDefault(); he.stopPropagation();
-            const existingTip = hlSection.querySelector('.hl-help-tip');
-            if (existingTip) { existingTip.remove(); return; }
-            const tip = document.createElement('div');
-            tip.className = 'hl-help-tip';
-            tip.style.cssText = 'font-size:11px;color:var(--text-muted);line-height:1.5;padding:6px 8px;margin-top:4px;border-radius:6px;background:rgba(var(--mono-rgb-0),0.1);border:1px dashed var(--background-modifier-border);';
-            tip.innerHTML = '<div style="font-weight:600;margin-bottom:4px;">相关高亮 / Related Highlights</div>' +
-              '<div style="margin-bottom:3px;">▸ 显示逻辑 / Display logic：根据关键词规则匹配文档中的 <mark style="background:rgba(255,200,0,0.5);padding:0 2px;">==高亮==</mark> 文本和句子规则，同时匹配高亮备注中包含搜索词的条目 / Matches keyword rules against highlighted text and sentence rules, also matches highlights whose remarks contain the search term</div>' +
-              '<div style="margin-bottom:3px;">▸ 建议用法 / Suggested usage：给高亮添加评论/记号以加深记忆，当选中文本时，高亮中没有提及但评论中提及的词也会匹配并显示对应高亮 / Add comments/markers to highlights for deeper memory; when selecting text, terms mentioned only in remarks will also match and show related highlights</div>' +
-              '<div style="margin-bottom:3px;">▸ 备注样式 / Remark style：由配色方案控制 / Controlled by color palette</div>' +
-              '<div style="margin-bottom:3px;">▸ 双击备注可直接编辑 / Double-click remark to edit</div>' +
-              '<div>▸ 点击高亮中的关键词可打开详情弹窗 / Click keyword in highlight to open detail popup</div>';
-            hlHeader.after(tip);
+            _showHelpFloat(hlHelpIcon2, t('main.hlHelpContent'));
           });
           hlHeader.appendChild(hlHelpIcon2);
           const hlSettingIcon2 = document.createElement('span');
           hlSettingIcon2.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
-          hlSettingIcon2.title = '设置';
+          hlSettingIcon2.title = t('main.settings');
           hlSettingIcon2.style.cssText = 'cursor:pointer;opacity:0.4;display:inline-flex;align-items:center;margin-left:2px;transition:opacity 0.15s;';
           hlSettingIcon2.addEventListener('mouseenter', () => { hlSettingIcon2.style.opacity = '0.8'; });
           hlSettingIcon2.addEventListener('mouseleave', () => { hlSettingIcon2.style.opacity = '0.4'; });
@@ -43775,6 +45014,7 @@ content.addEventListener('auxclick', (e) => {
       }
     }
 
+
     const remarkBlock = document.createElement('div');
     remarkBlock.className = 'remark-content-block';
     remarkBlock.style.cssText = 'margin-bottom:8px;';
@@ -43788,7 +45028,7 @@ content.addEventListener('auxclick', (e) => {
     // 关键词备注设置按钮（字体大小、行距）
     const remarkSettingIcon = document.createElement('span');
     remarkSettingIcon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
-    remarkSettingIcon.title = '设置';
+    remarkSettingIcon.title = t('main.settings');
     remarkSettingIcon.style.cssText = 'cursor:pointer;opacity:0.4;display:inline-flex;align-items:center;margin-left:2px;transition:opacity 0.15s;';
     remarkSettingIcon.addEventListener('mouseenter', () => { remarkSettingIcon.style.opacity = '0.8'; });
     remarkSettingIcon.addEventListener('mouseleave', () => { remarkSettingIcon.style.opacity = '0.4'; });
@@ -45658,7 +46898,7 @@ ${fullContext}`;
 
     // 点击外部关闭（拖动后由x按钮关闭）
     const onDocClick = (e) => {
-      if (!win.contains(e.target)) {
+      if (!win.contains(e.target) && !(e.target instanceof Element && e.target.closest('.info-ai-popup'))) {
         win.remove();
         document.removeEventListener('mousedown', onDocClick);
       }
@@ -45702,6 +46942,35 @@ ${fullContext}`;
     const linksByFile = renderResult.linksByFile;
 
     win.appendChild(content);
+
+    // 渲染 info 板块（复用主面板 addInfoSection，与悬停弹窗一致）
+    let _kwWinInfoDisrupted = false;
+    if (plugin.settings?.showInfoSection === true) {
+      const _modal = plugin._regexHighlightModal;
+      if (_modal && _modal.addInfoSection) {
+        try {
+          if (_modal.regexInput) _modal.regexInput.setValue(keywordRegex);
+          _modal._infoActiveChip = keywordRegex;
+          _modal.addInfoSection(content);
+          const _infoSec = content.querySelector('.info-section');
+          if (_infoSec && content.firstChild) content.insertBefore(_infoSec, content.firstChild);
+          _kwWinInfoDisrupted = true;
+        } catch(e) { console.warn('[kw-win-info] failed:', e); }
+      }
+    }
+    if (_kwWinInfoDisrupted) {
+      const _restoreMainInfo = () => {
+        const _m = plugin._regexHighlightModal;
+        if (_m && _m.contentEl && plugin.settings?.showInfoSection === true && _isInAnyDoc(_m.contentEl)) {
+          const _existing = _m.contentEl.querySelector('.info-section');
+          if (!_existing) { try { _m.addInfoSection(_m.contentEl); } catch(e) {} }
+        }
+      };
+      const _infoRestoreObs = new MutationObserver((muts) => {
+        for (const m of muts) { if (m.type === 'childList' && !document.body.contains(win)) { _infoRestoreObs.disconnect(); _restoreMainInfo(); break; } }
+      });
+      _infoRestoreObs.observe(document.body, { childList: true });
+    }
 
     // 双击编辑
     content.addEventListener('dblclick', (e) => {
@@ -47088,13 +48357,37 @@ ${fullContext}`;
                 versionLabel.textContent = 'SwiftGlossa' + (pluginVersion ? ' v' + pluginVersion : '');
                 versionLabel.style.cssText = 'font-size:8px;color:var(--text-faint);opacity:0.3;user-select:none;-webkit-user-select:none;line-height:1;margin-left:auto;align-self:center;';
                 chipsBar.appendChild(versionLabel);
+                const verHelpBtn = document.createElement('span');
+                verHelpBtn.innerHTML = _SVG_QUESTION;
+                verHelpBtn.style.cssText = 'cursor:pointer;opacity:0.3;display:inline-flex;align-items:center;margin-left:2px;transition:opacity 0.15s;';
+                verHelpBtn.addEventListener('mouseenter', () => { verHelpBtn.style.opacity = '0.8'; });
+                verHelpBtn.addEventListener('mouseleave', () => { verHelpBtn.style.opacity = '0.3'; });
+                verHelpBtn.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  const notes = plugin.globalNotes || [];
+                  const helpNote = notes.find(n => n.text && n.text.includes('SwiftGlossa'));
+                  if (helpNote) { const _ht = helpNote.text; const _em = _ht.indexOf('--- English ---'); const _en = (typeof _currentLang !== 'undefined' && _currentLang === 'en'); _showHelpFloat(verHelpBtn, _em >= 0 ? (_en ? _ht.substring(_em + 16).trim() : _ht.substring(0, _em).trim()) : _ht); }
+                });
+                chipsBar.appendChild(verHelpBtn);
               } else {
                 // 无 chips 时，版本标签固定在弹窗底部
                 const versionLabel = document.createElement('div');
                 const pluginVersion = plugin && plugin.manifest ? plugin.manifest.version : '';
                 versionLabel.textContent = 'SwiftGlossa' + (pluginVersion ? ' v' + pluginVersion : '');
-                versionLabel.style.cssText = 'position:absolute;bottom:2px;left:6px;font-size:8px;color:var(--text-faint);opacity:0.3;user-select:none;-webkit-user-select:none;line-height:1;pointer-events:none;';
+                versionLabel.style.cssText = 'position:absolute;bottom:2px;left:6px;font-size:8px;color:var(--text-faint);opacity:0.3;user-select:none;-webkit-user-select:none;line-height:1;';
                 popup.appendChild(versionLabel);
+                const verHelpBtn2 = document.createElement('span');
+                verHelpBtn2.innerHTML = _SVG_QUESTION;
+                verHelpBtn2.style.cssText = 'position:absolute;bottom:1px;left:60px;cursor:pointer;opacity:0.3;display:inline-flex;align-items:center;transition:opacity 0.15s;';
+                verHelpBtn2.addEventListener('mouseenter', () => { verHelpBtn2.style.opacity = '0.8'; });
+                verHelpBtn2.addEventListener('mouseleave', () => { verHelpBtn2.style.opacity = '0.3'; });
+                verHelpBtn2.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  const notes = plugin.globalNotes || [];
+                  const helpNote = notes.find(n => n.text && n.text.includes('SwiftGlossa'));
+                  if (helpNote) { const _ht = helpNote.text; const _em = _ht.indexOf('--- English ---'); const _en = (typeof _currentLang !== 'undefined' && _currentLang === 'en'); _showHelpFloat(verHelpBtn2, _em >= 0 ? (_en ? _ht.substring(_em + 16).trim() : _ht.substring(0, _em).trim()) : _ht); }
+                });
+                popup.appendChild(verHelpBtn2);
                 // 即使没有关联词，也要插入 AI 提问块
                 if (currentRenderResult?.aiQuestionBlock) {
                   if (currentRenderResult?.aiBtnContainer && currentRenderResult.container.contains(currentRenderResult.aiBtnContainer)) currentRenderResult.container.insertBefore(currentRenderResult.aiQuestionBlock, currentRenderResult.aiBtnContainer);
@@ -49783,4 +51076,6 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
 /* nosourcemap */
 
 /* nosourcemap */
+/* nosourcemap */
+
 /* nosourcemap */

@@ -2,7 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v2.0.9 (2026-08-04)
+## 🆕 v2.1.0 (2026-08-06)
+
+- **Input Box Enter Behavior / 输入框Enter行为** — Typing a keyword and pressing Enter shows it as a chip with applied style preview; typing a non-keyword and pressing Enter twice adds it as a rule with random highlight (respects random group filter setting) / 输入关键词按Enter显示为chip并预览样式；输入非关键词按两次Enter添加为规则并随机应用高亮（遵循随机分组设置）
+- **Threads Settings Popup / 脉络设置弹窗** — Threads settings gear button now opens a popup window with click-outside-to-dismiss (same as Info section) instead of inline expand / 脉络设置齿轮按钮改为弹窗式（点击外部自动关闭），与Info版块一致
+- **Threads Inline Settings / 脉络内联设置** — Threads settings expand palette scheme grid + editable threads.md textarea with 500ms debounced save / 脉络设置展开配色方案网格 + threads.md可编辑文本框，500ms防抖保存
+- **Threads Default Hidden / 脉络默认不显示** — Threads section only shows matching entries when a keyword is selected; shows placeholder text otherwise / 脉络版块仅在选中关键词时显示匹配条目，否则显示提示文字
+- **Threads Filter Fix / 脉络过滤器修复** — Fixed plugin instance reference; filter now excludes disabled rules and empty keywords / 修复插件实例引用；过滤器排除禁用规则和空关键词
+- **Threads Background Color / 脉络背景色** — Threads items use `sg-highlight-item has-comment` class for palette-controlled background / 脉络条目使用`sg-highlight-item has-comment`类名，背景色由配色方案控制
+- **Parking Lot Multi-Folder / 停车场多文件夹** — Settings panel supports multiple folders + specific files via textarea; chips show each source with click-to-toggle / 设置面板支持多文件夹+特定文档（textarea）；chip行显示每个来源可点击切换
+- **Parking Lot Height / 停车场高度** — Section has fixed height (default 300px) with drag-to-resize handle; height persisted to settings / 版块固定高度（默认300px）可拖拽调整，保存到设置
+- **Parking Lot No Preset / 停车场不预设提示词** — Initialization no longer auto-fills 4 preset prompts; starts empty / 初始化不再自动填充预设提示词，保持空数组
+- **Parking Lot Position Memory / 停车场位置记忆** — Section remembers its position relative to siblings on re-render; inserts before threads on first render / 版块重新渲染时保持原位置；首次渲染插入到脉络之前
+- **Preset Notes Removed / 移除预设笔记** — Removed two preset floating notes from loadGlobalNotes; new installs start with empty notes / 移除loadGlobalNotes中两条预设悬浮笔记；新安装从空笔记开始
+- **Mobile Floating Note Toolbar / 手机悬浮笔记操作栏** — Touch-to-toggle instead of timer-based auto-hide on mobile / 手机端改为点击切换操作栏，不再计时隐藏
+- **Help Button Unification / 帮助按钮统一** — All "?" buttons use `_showHelpFloat` floating note display with language-specific content / 所有"?"按钮统一用悬浮笔记显示，按语言区分内容
+- **Debug Log Reduction / 调试日志精简** — Guarded updateStyleButtonState console.log with enableDebugLog setting / updateStyleButtonState的console.log用enableDebugLog开关保护
+
+## v2.0.9 (2026-08-04)
 
 - **Release Assets Fix / 发布资源修复** — Re-release with proper GitHub release assets (main.js + manifest.json); previous v2.0.7/v2.0.8 releases had 0 assets causing Obsidian "missing files" error / 重新发布并附带正确的GitHub Release资源（main.js + manifest.json）；之前v2.0.7/v2.0.8版本发布时未上传资源文件，导致Obsidian提示"缺少文件"
 

@@ -91,6 +91,24 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 
 <details>
+<summary>v2.1.0 (2026-08-06)</summary>
+
+- **Input Box Enter Behavior / 输入框Enter行为** — Typing a keyword and pressing Enter shows it as a chip with applied style preview; typing a non-keyword and pressing Enter twice adds it as a rule with random highlight (respects random group filter) / 输入关键词按Enter显示为chip并预览样式；输入非关键词按两次Enter添加为规则并随机应用高亮（遵循随机分组设置）
+- **Threads Settings Popup / 脉络设置弹窗** — Threads settings gear button opens a popup window with click-outside-to-dismiss (same as Info) / 脉络设置齿轮按钮改为弹窗式（点击外部自动关闭），与Info版块一致
+- **Threads Inline Settings / 脉络内联设置** — Palette scheme grid + editable threads.md textarea with debounced save / 配色方案网格 + threads.md可编辑文本框，防抖保存
+- **Threads Default Hidden / 脉络默认不显示** — Threads only shows matching entries when a keyword is selected / 脉络仅在选中关键词时显示匹配条目
+- **Threads Filter & Background / 脉络过滤与背景** — Fixed plugin instance reference; filter excludes disabled rules; items use palette-controlled background / 修复插件实例引用；过滤器排除禁用规则；条目背景色由配色方案控制
+- **Parking Lot Multi-Folder / 停车场多文件夹** — Multiple folders + specific files via textarea; chips show each source with click-to-toggle / 多文件夹+特定文档；chip行显示每个来源可点击切换
+- **Parking Lot Height & Position / 停车场高度与位置** — Fixed height with drag-to-resize handle; remembers position on re-render / 固定高度可拖拽调整；重新渲染时保持原位置
+- **Parking Lot No Preset / 停车场不预设提示词** — Initialization starts empty instead of auto-filling presets / 初始化保持空数组，不自动填充预设
+- **Preset Notes Removed / 移除预设笔记** — Removed two preset floating notes; new installs start with empty notes / 移除两条预设悬浮笔记；新安装从空笔记开始
+- **Mobile Floating Note Toolbar / 手机悬浮笔记操作栏** — Touch-to-toggle instead of timer-based auto-hide / 点击切换操作栏，不再计时隐藏
+- **Help Button Unification / 帮助按钮统一** — All "?" buttons use floating note display with language-specific content / 所有"?"按钮统一用悬浮笔记显示，按语言区分内容
+- **Debug Log Reduction / 调试日志精简** — Guarded console.log with enableDebugLog setting / console.log用enableDebugLog开关保护
+
+</details>
+
+<details>
 <summary>v2.0.9 (2026-08-04)</summary>
 
 - **Release Assets Fix / 发布资源修复** — Re-release with proper GitHub release assets (main.js + manifest.json); previous v2.0.7/v2.0.8 releases had 0 assets causing Obsidian "missing files" error / 重新发布并附带正确的GitHub Release资源（main.js + manifest.json）；之前v2.0.7/v2.0.8版本发布时未上传资源文件，导致Obsidian提示"缺少文件"

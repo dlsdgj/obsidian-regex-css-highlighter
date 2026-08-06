@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v2.1.0 (2026-08-06)
+## 🆕 v2.1.1 (2026-08-06)
+
+- **Help Text Fix / 帮助文本修复** — Removed the floating note intro paragraph ("这是SwiftGlossa插件的悬浮笔记...") from the main panel "?" button help text in both Chinese and English / 移除主面板"?"按钮帮助文本中的悬浮笔记介绍段落（中英文）
+
+## v2.1.0 (2026-08-06)
 
 - **Input Box Enter Behavior / 输入框Enter行为** — Typing a keyword and pressing Enter shows it as a chip with applied style preview; typing a non-keyword and pressing Enter twice adds it as a rule with random highlight (respects random group filter setting) / 输入关键词按Enter显示为chip并预览样式；输入非关键词按两次Enter添加为规则并随机应用高亮（遵循随机分组设置）
 - **Threads Settings Popup / 脉络设置弹窗** — Threads settings gear button now opens a popup window with click-outside-to-dismiss (same as Info section) instead of inline expand / 脉络设置齿轮按钮改为弹窗式（点击外部自动关闭），与Info版块一致

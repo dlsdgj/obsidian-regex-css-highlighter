@@ -91,6 +91,13 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 
 <details>
+<summary>v2.1.1 (2026-08-06)</summary>
+
+- **Help Text Fix / 帮助文本修复** — Removed the floating note intro paragraph from the main panel "?" button help text in both Chinese and English / 移除主面板"?"按钮帮助文本中的悬浮笔记介绍段落（中英文）
+
+</details>
+
+<details>
 <summary>v2.1.0 (2026-08-06)</summary>
 
 - **Input Box Enter Behavior / 输入框Enter行为** — Typing a keyword and pressing Enter shows it as a chip with applied style preview; typing a non-keyword and pressing Enter twice adds it as a rule with random highlight (respects random group filter) / 输入关键词按Enter显示为chip并预览样式；输入非关键词按两次Enter添加为规则并随机应用高亮（遵循随机分组设置）

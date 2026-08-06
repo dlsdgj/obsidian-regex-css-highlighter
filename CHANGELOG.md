@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v2.1.1 (2026-08-06)
+## 🆕 v2.1.2 (2026-08-06)
+
+- **Keyword History Regex Fix / 历史关键词正则修复** — Keywords with regex patterns (e.g. "掌控|失控|控制", "(?<!后)现代") now correctly appear in keyword history; history filter uses `_extractPlainText` and `_regexMatch` to match plain-text keywords to their regex rules / 含正则的关键词（如"掌控|失控|控制"、"(?<!后)现代"）现在能正确显示在历史关键词中；历史过滤使用 `_extractPlainText` 和 `_regexMatch` 将纯文本关键词匹配到正则规则
+- **Threads Selection Clear / 脉络选区清空** — Selecting non-keyword text now clears the threads section; typing a matching keyword in the input box and pressing Enter updates threads / 选中非关键词文本时清空脉络版块；在输入框输入匹配关键词按Enter更新脉络
+- **Threads Settings Popup / 脉络设置弹窗** — Threads settings gear button opens a popup window with click-outside-to-dismiss (same as Info) / 脉络设置齿轮按钮改为弹窗式（点击外部自动关闭），与Info版块一致
+- **Display Settings / 显示设置** — Added "Show Parking Lot" and "Show Threads" toggles in Settings > Display / 设置>显示中新增"显示停车场"和"显示脉络"开关
+- **Input History Fix / 输入历史修复** — Typing a keyword in the input box and pressing Enter now adds it to keyword history (both matching and new rule cases) / 在输入框输入关键词按Enter现在会加入历史关键词（匹配已有规则和新增规则两种情况）
+
+## v2.1.1 (2026-08-06)
 
 - **Help Text Fix / 帮助文本修复** — Removed the floating note intro paragraph ("这是SwiftGlossa插件的悬浮笔记...") from the main panel "?" button help text in both Chinese and English / 移除主面板"?"按钮帮助文本中的悬浮笔记介绍段落（中英文）
 

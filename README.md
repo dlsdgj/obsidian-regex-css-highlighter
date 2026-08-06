@@ -91,6 +91,17 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 
 <details>
+<summary>v2.1.2 (2026-08-06)</summary>
+
+- **Keyword History Regex Fix / 历史关键词正则修复** — Keywords with regex patterns now correctly appear in keyword history; filter uses `_extractPlainText` and `_regexMatch` / 含正则的关键词现在能正确显示在历史关键词中；过滤使用 `_extractPlainText` 和 `_regexMatch`
+- **Threads Selection Clear / 脉络选区清空** — Selecting non-keyword text clears threads; typing matching keyword + Enter updates threads / 选中非关键词文本清空脉络；输入匹配关键词按Enter更新脉络
+- **Threads Settings Popup / 脉络设置弹窗** — Threads settings opens popup with click-outside-to-dismiss / 脉络设置改为弹窗式（点击外部关闭）
+- **Display Settings / 显示设置** — Added "Show Parking Lot" and "Show Threads" toggles / 新增"显示停车场"和"显示脉络"开关
+- **Input History Fix / 输入历史修复** — Typing keyword + Enter adds to history (matching and new rule cases) / 输入关键词按Enter加入历史关键词
+
+</details>
+
+<details>
 <summary>v2.1.1 (2026-08-06)</summary>
 
 - **Help Text Fix / 帮助文本修复** — Removed the floating note intro paragraph from the main panel "?" button help text in both Chinese and English / 移除主面板"?"按钮帮助文本中的悬浮笔记介绍段落（中英文）

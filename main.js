@@ -666,6 +666,10 @@ const i18n = {
     'settings.showRelatedNotesDesc': '选中/点击关键词时在备注区域上方显示相关笔记链接',
     'settings.showInfoSection': '显示 Info 板块',
     'settings.showInfoSectionDesc': '在面板中显示关键词 Info 板块（从 info 文件夹读取 关键词.md）',
+    'settings.showParkingLot': '显示停车场',
+    'settings.showParkingLotDesc': '在面板中显示停车场版块',
+    'settings.showThreads': '显示脉络',
+    'settings.showThreadsDesc': '在面板中显示脉络版块',
     'settings.infoVaultFolder': 'Info 库内文件夹',
     'settings.infoVaultFolderDesc': '可选：从库中指定文件夹读取 关键词.md（留空则仅读取插件 info 文件夹）',
     'settings.infoCustomPrompts': '自定义提示词',
@@ -1773,6 +1777,10 @@ const i18n = {
     'settings.showRelatedNotesDesc': 'Show related note links above remarks when selecting/clicking a keyword',
     'settings.showInfoSection': 'Show Info Section',
     'settings.showInfoSectionDesc': 'Show keyword Info section in panel (reads keyword.md from info folder)',
+    'settings.showParkingLot': 'Show Parking Lot',
+    'settings.showParkingLotDesc': 'Show parking lot section in panel',
+    'settings.showThreads': 'Show Threads',
+    'settings.showThreadsDesc': 'Show threads section in panel',
     'settings.infoVaultFolder': 'Info Vault Folder',
     'settings.infoVaultFolderDesc': 'Optional: read keyword.md from a vault folder (leave empty to use plugin info folder only)',
     'settings.infoCustomPrompts': 'Custom Prompts',
@@ -9763,6 +9771,10 @@ class AddRegexRuleModal {
             if (anchorNode && !this.modalEl.contains(anchorNode) && this.regexInput && _isInEditor(anchorNode)) {
               this.regexInput.setValue(selectedText);
               if (this.updateStyleButtonsPreview) this.updateStyleButtonsPreview(selectedText);
+              const _allR = [...(Array.isArray(this.plugin.rules)?this.plugin.rules:[]), ...(Array.isArray(this.plugin.globalRules)?this.plugin.globalRules:[])];
+              const _mR = _allR.find(r => { const _p = _splitRegexPipes(r.regex); return _p.includes(selectedText) || r.regex === selectedText; });
+              this._threadsFilterKw = _mR ? selectedText : null;
+              if (this._threadsReload) this._threadsReload();
             }
           }
         };
@@ -9822,6 +9834,10 @@ class AddRegexRuleModal {
             if (anchorNode && !this.modalEl.contains(anchorNode) && this.regexInput && _isInEditor(anchorNode)) {
               this.regexInput.setValue(selectedText);
               if (this.updateStyleButtonsPreview) this.updateStyleButtonsPreview(selectedText);
+              const _allR = [...(Array.isArray(this.plugin.rules)?this.plugin.rules:[]), ...(Array.isArray(this.plugin.globalRules)?this.plugin.globalRules:[])];
+              const _mR = _allR.find(r => { const _p = _splitRegexPipes(r.regex); return _p.includes(selectedText) || r.regex === selectedText; });
+              this._threadsFilterKw = _mR ? selectedText : null;
+              if (this._threadsReload) this._threadsReload();
             }
           }
         };
@@ -10464,7 +10480,7 @@ class AddRegexRuleModal {
           const trimmedVal = newRegexValue.trim();
           if (!trimmedVal) { _enterCount = 0; return; }
           const allRules = [...(Array.isArray(this.plugin.rules)?this.plugin.rules:[]), ...(Array.isArray(this.plugin.globalRules)?this.plugin.globalRules:[])];
-          const matchRule = allRules.find(r => { const _p = _splitRegexPipes(r.regex); return _p.includes(trimmedVal) || r.regex === trimmedVal; });
+          const matchRule = allRules.find(r => { const _p = _splitRegexPipes(r.regex); return _p.some(p => trimmedVal.includes(p)) || r.regex === trimmedVal || _regexMatch(trimmedVal, r.regex); });
           if (matchRule) {
             _enterCount = 0;
             if (_enterHintEl) { _enterHintEl.remove(); _enterHintEl = null; }
@@ -10476,6 +10492,10 @@ class AddRegexRuleModal {
             if (this._refreshUpdateChip) this._refreshUpdateChip();
             this.updateStyleButtonsPreview(trimmedVal);
             if (this.highlightMatchingRuleButtons) this.highlightMatchingRuleButtons();
+            this._threadsFilterKw = trimmedVal;
+            if (this._threadsReload) this._threadsReload();
+            if (this.plugin._addKeywordHistory) this.plugin._addKeywordHistory(trimmedVal);
+            if (typeof this._renderKeywordHistory === 'function') this._renderKeywordHistory();
           } else {
             _enterCount++;
             if (_enterCount >= 2) {
@@ -10504,6 +10524,8 @@ class AddRegexRuleModal {
                   this._skipRefreshOnInteraction = true;
                   inputEl.value = trimmedVal;
                   if (this._refreshUpdateChip) this._refreshUpdateChip();
+                  if (this.plugin._addKeywordHistory) this.plugin._addKeywordHistory(trimmedVal);
+                  if (typeof this._renderKeywordHistory === 'function') this._renderKeywordHistory();
                 } catch (err) { console.error('添加规则失败:', err); }
               }
             } else {
@@ -15581,6 +15603,56 @@ class AddRegexRuleModal {
       if (typeof this.refreshModalContent === 'function') await this.refreshModalContent();
     });
 
+    // 停车场板块开关
+    const showParkingLotRow = displayContent.createDiv();
+    showParkingLotRow.style.display = "flex";
+    showParkingLotRow.style.alignItems = "center";
+    showParkingLotRow.style.marginBottom = "5px";
+    showParkingLotRow.style.flexWrap = "wrap";
+    const showParkingLotLabel = showParkingLotRow.createEl("span");
+    showParkingLotLabel.textContent = t('settings.showParkingLot') + ": ";
+    showParkingLotLabel.style.marginRight = "10px";
+    showParkingLotLabel.style.fontSize = "14px";
+    const showParkingLotInput = showParkingLotRow.createEl("input");
+    showParkingLotInput.type = "checkbox";
+    showParkingLotInput.checked = this.plugin.settings?.showParkingLot !== false;
+    const showParkingLotHint = showParkingLotRow.createEl("span");
+    showParkingLotHint.textContent = t('settings.showParkingLotDesc');
+    showParkingLotHint.style.fontSize = "12px";
+    showParkingLotHint.style.color = "var(--text-muted)";
+    showParkingLotHint.style.marginLeft = "8px";
+    showParkingLotInput.addEventListener("change", async (e) => {
+      if (!this.plugin.settings) this.plugin.settings = {};
+      this.plugin.settings.showParkingLot = e.target.checked;
+      await this.plugin.saveData(this.plugin.settings);
+      if (typeof this.refreshModalContent === 'function') await this.refreshModalContent();
+    });
+
+    // 脉络板块开关
+    const showThreadsRow = displayContent.createDiv();
+    showThreadsRow.style.display = "flex";
+    showThreadsRow.style.alignItems = "center";
+    showThreadsRow.style.marginBottom = "5px";
+    showThreadsRow.style.flexWrap = "wrap";
+    const showThreadsLabel = showThreadsRow.createEl("span");
+    showThreadsLabel.textContent = t('settings.showThreads') + ": ";
+    showThreadsLabel.style.marginRight = "10px";
+    showThreadsLabel.style.fontSize = "14px";
+    const showThreadsInput = showThreadsRow.createEl("input");
+    showThreadsInput.type = "checkbox";
+    showThreadsInput.checked = this.plugin.settings?.showThreads !== false;
+    const showThreadsHint = showThreadsRow.createEl("span");
+    showThreadsHint.textContent = t('settings.showThreadsDesc');
+    showThreadsHint.style.fontSize = "12px";
+    showThreadsHint.style.color = "var(--text-muted)";
+    showThreadsHint.style.marginLeft = "8px";
+    showThreadsInput.addEventListener("change", async (e) => {
+      if (!this.plugin.settings) this.plugin.settings = {};
+      this.plugin.settings.showThreads = e.target.checked;
+      await this.plugin.saveData(this.plugin.settings);
+      if (typeof this.refreshModalContent === 'function') await this.refreshModalContent();
+    });
+
 
     const showRelatedHighlightsRow = displayContent.createDiv();
     showRelatedHighlightsRow.style.display = "flex";
@@ -20126,9 +20198,17 @@ class AddRegexRuleModal {
       ...(plugin.globalRules || []).map(r => r.regex),
       ...(plugin.rules || []).map(r => r.regex)
     ]);
-    const ruleKeywords = historyKeywords.filter(kw => allRuleRegexes.has(kw));
+    const _allRulesForHist = (plugin.globalRules || []).concat(plugin.rules || []);
+    const _kwMatchesRule = (kw) => {
+      if (allRuleRegexes.has(kw)) return true;
+      return _allRulesForHist.some(r => {
+        const _p = _splitRegexPipes(r.regex);
+        return _p.includes(kw) || r.regex === kw || _p.some(p => kw === _extractPlainText(p)) || _regexMatch(kw, r.regex);
+      });
+    };
+    const ruleKeywords = historyKeywords.filter(kw => _kwMatchesRule(kw));
     const currentKw = this.regexInput?.getValue?.()?.trim() || '';
-    if (currentKw && allRuleRegexes.has(currentKw) && !ruleKeywords.includes(currentKw)) {
+    if (currentKw && !ruleKeywords.includes(currentKw) && _kwMatchesRule(currentKw)) {
       ruleKeywords.unshift(currentKw);
     }
     if (ruleKeywords.length > 0) {
@@ -21281,6 +21361,7 @@ class AddRegexRuleModal {
   }
 
   addThreadsSection(contentEl) {
+    if (this.plugin?.settings?.showThreads === false) return;
     const existing = contentEl.querySelector('.threads-section');
     if (existing) existing.remove();
     const plugin = this;
@@ -25401,6 +25482,8 @@ class SwiftGlossaSidebarView extends ItemView {
             modal._needsRefresh = false;
             if (modal.showInlineRemarkForRegex) modal.showInlineRemarkForRegex(selectedText);
             this.plugin._addKeywordHistory(selectedText);
+            modal._threadsFilterKw = _matchRules.length > 0 ? selectedText : null;
+            if (modal._threadsReload) modal._threadsReload();
           }
         }
       }, 150);

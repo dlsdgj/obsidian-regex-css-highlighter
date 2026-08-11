@@ -91,6 +91,16 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 
 <details>
+<summary>v2.1.3 (2026-08-12)</summary>
+
+- **Popout Window Button Fix / 独立窗口按钮修复** — Hide "Pop Out" button in standalone window via `leaf.getRoot()` detection; removed CSS `!important` that persisted after popout close / 用 `leaf.getRoot()` 检测独立窗口并隐藏弹出按钮；移除关闭后残留的 CSS 规则
+- **Parking Lot Button Fix / 停车场按钮修复** — Parking lot +button always clickable without requiring a keyword / 停车场+按钮无需关键词即可点击
+- **Card Resize Fix / 卡片调整修复** — Vertical card resize no longer snaps back after releasing mouse / 纵向调整不再弹回
+- **Translation Fix / 翻译补全** — Added missing English translations for card labels, empty states, and lock layout / 补全卡片名称、空状态提示等英文翻译
+
+</details>
+
+<details>
 <summary>v2.1.2 (2026-08-06)</summary>
 
 - **Keyword History Regex Fix / 历史关键词正则修复** — Keywords with regex patterns now correctly appear in keyword history; filter uses `_extractPlainText` and `_regexMatch` / 含正则的关键词现在能正确显示在历史关键词中；过滤使用 `_extractPlainText` 和 `_regexMatch`

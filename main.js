@@ -21,21 +21,23 @@ const _SVG_REMARK_NO = '<svg width="12" height="12" viewBox="0 0 24 24" fill="no
 const _SVG_QUESTION = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
 const _SVG_OPEN = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>';
 function _showHelpFloat(btn, contentText) {
-  const existing = document.querySelector('.sg-help-float');
+  const _doc = btn.ownerDocument || document;
+  const _win = _doc.defaultView || window;
+  const existing = _doc.querySelector('.sg-help-float');
   if (existing) { existing.remove(); return; }
-  const float = document.createElement('div');
+  const float = _doc.createElement('div');
   float.className = 'sg-help-float';
   float.style.cssText = 'position:fixed;z-index:9999;max-width:400px;max-height:500px;overflow-y:auto;font-size:11px;color:var(--text-normal);background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,0.15);line-height:1.6;';
   contentText.split('\n').forEach(p => {
-    if (p.trim()) { const d = document.createElement('div'); d.textContent = p; d.style.marginBottom = '4px'; float.appendChild(d); }
-    else { const s = document.createElement('div'); s.style.height = '6px'; float.appendChild(s); }
+    if (p.trim()) { const d = _doc.createElement('div'); d.textContent = p; d.style.marginBottom = '4px'; float.appendChild(d); }
+    else { const s = _doc.createElement('div'); s.style.height = '6px'; float.appendChild(s); }
   });
   const rect = btn.getBoundingClientRect();
-  float.style.left = Math.min(rect.left, window.innerWidth - 420) + 'px';
+  float.style.left = Math.min(rect.left, _win.innerWidth - 420) + 'px';
   float.style.top = (rect.bottom + 4) + 'px';
-  document.body.appendChild(float);
-  const closeHandler = (e) => { if (!float.contains(e.target) && !btn.contains(e.target)) { float.remove(); document.removeEventListener('mousedown', closeHandler); } };
-  setTimeout(() => document.addEventListener('mousedown', closeHandler), 0);
+  _doc.body.appendChild(float);
+  const closeHandler = (e) => { if (!float.contains(e.target) && !btn.contains(e.target)) { float.remove(); _doc.removeEventListener('mousedown', closeHandler); } };
+  setTimeout(() => _doc.addEventListener('mousedown', closeHandler), 0);
 }
 const _TOGGLE_DOWN = '▽';
 const _TOGGLE_RIGHT = '▷';
@@ -670,6 +672,18 @@ const i18n = {
     'settings.showParkingLotDesc': '在面板中显示停车场版块',
     'settings.showThreads': '显示脉络',
     'settings.showThreadsDesc': '在面板中显示脉络版块',
+    'settings.showRelatedHighlightsSection': '显示关键词相关高亮板块',
+    'settings.showRelatedHighlightsSectionDesc': '在备注区域中显示关键词匹配的相关高亮板块',
+    'settings.showInlineRelatedHighlightsSection': '显示非关键词相关高亮板块',
+    'settings.showInlineRelatedHighlightsSectionDesc': '在面板中显示句子规则等非关键词匹配的相关高亮板块',
+    'settings.showRemarkContentBlock': '显示关键词备注板块',
+    'settings.showRemarkContentBlockDesc': '在备注区域中显示关键词备注内容板块',
+    'settings.showKeywordChipsBlock': '显示关联关键词Chips板块',
+    'settings.showKeywordChipsBlockDesc': '在备注区域中显示关联关键词反向链接chips板块',
+    'settings.showAiQuestionBlock': '显示AI提问板块',
+    'settings.showAiQuestionBlockDesc': '在备注区域中显示AI提问板块',
+    'settings.showRelatedNotesSection': '显示关键词相关文档板块',
+    'settings.showRelatedNotesSectionDesc': '在面板中作为独立版块显示文件名匹配关键词的相关文档链接',
     'settings.infoVaultFolder': 'Info 库内文件夹',
     'settings.infoVaultFolderDesc': '可选：从库中指定文件夹读取 关键词.md（留空则仅读取插件 info 文件夹）',
     'settings.infoCustomPrompts': '自定义提示词',
@@ -687,6 +701,23 @@ const i18n = {
     'main.aiPromptTitle': '提示词',
     'main.aiSend': '发送',
     'main.settings': '设置',
+    'main.unifiedCardBg': '底纹',
+    'main.unifiedCardBgOpacity': '透明度',
+    'main.unifiedCardBorder': '颜色',
+    'main.unifiedCardShowGrid': '网格',
+    'main.unifiedCardLockLayout': '锁定布局',
+    'main.noMatchHighlights': '（无匹配高亮）',
+    'main.cardLabelInfo': 'Info',
+    'main.cardLabelParkingLot': '停车场',
+    'main.cardLabelThreads': '脉络',
+    'main.cardLabelKeywordHistory': '历史关键词',
+    'main.cardLabelRelatedHighlights': '相关高亮',
+    'main.cardLabelRemarkContent': '备注',
+    'main.cardLabelKeywordChips': '关联词',
+    'main.cardLabelAiQuestion': 'AI提问',
+    'main.cardLabelRelatedNotes': '相关文档',
+    'main.infoAddBtnHint': '请先添加关键词或点击/搜索关键词',
+    'main.relatedNotesEmpty': '（无相关文档）',
     'main.pluginHelpContent': '以下是本插件的简单介绍及基础用法:\n\n插件从 2025 年年底开始建造,至今(2026-08-03)经过多次转向发展成当前功能布局,总耗时 1000+ 小时。\n\n插件通过 CSS 样式个性化高亮关键词。关键词可以是人名、地名、学科术语等任何你觉得重要的词(根据二八定律,建议只将 20% 的关键词进行个性化高亮,余下的用简单下划线,否则整体观感会很乱)。\n\n关键词被高亮后可以添加「计数」(统计该词在当前文档中出现的次数)、显示在关键词上方的「行间注释」(比如添加人物的生辰、角色...)。\n\n首次安装插件,在 Obsidian 启动后约 30 秒会自动构建库中 Obsidian 格式的高亮「==高亮文本==」,之后每次添加新高亮都会自动更新。\n\n点击关键词后,会搜索高亮数据库,将匹配的高亮条目显示在面板中(主面板、右侧面板、独立窗口);或者折叠右侧面板,鼠标悬停到关键词上也会显示相关高亮(可关闭)——当你有大量高亮时这通常会带给你意想不到的收获。\n\n每条高亮都可以添加备注/记号,这能让你记得更牢(后续有这些备注/记号的附加功能)。\n\n对于名词术语,提供了「info」版块,可将关于该关键词的事实性知识显示在这里(支持 AI 根据提示词自动生成)。\n\n其他功能请自行探索。本插件免费,提供付费咨询,vx: jtugqivi',
     'main.threadsSection': '脉络',
     'main.parkingLotSection': '停车场',
@@ -1781,6 +1812,18 @@ const i18n = {
     'settings.showParkingLotDesc': 'Show parking lot section in panel',
     'settings.showThreads': 'Show Threads',
     'settings.showThreadsDesc': 'Show threads section in panel',
+    'settings.showRelatedHighlightsSection': 'Show Keyword Related Highlights Section',
+    'settings.showRelatedHighlightsSectionDesc': 'Show keyword-matched related highlights section in remark area',
+    'settings.showInlineRelatedHighlightsSection': 'Show Non-Keyword Related Highlights Section',
+    'settings.showInlineRelatedHighlightsSectionDesc': 'Show sentence-rule matched related highlights section in panel',
+    'settings.showRemarkContentBlock': 'Show Remark Content Block',
+    'settings.showRemarkContentBlockDesc': 'Show keyword remark content block in remark area',
+    'settings.showKeywordChipsBlock': 'Show Keyword Chips Block',
+    'settings.showKeywordChipsBlockDesc': 'Show related keyword backlink chips block in remark area',
+    'settings.showAiQuestionBlock': 'Show AI Question Block',
+    'settings.showAiQuestionBlockDesc': 'Show AI question block in remark area',
+    'settings.showRelatedNotesSection': 'Show Related Notes Section',
+    'settings.showRelatedNotesSectionDesc': 'Show related notes links as independent section in panel',
     'settings.infoVaultFolder': 'Info Vault Folder',
     'settings.infoVaultFolderDesc': 'Optional: read keyword.md from a vault folder (leave empty to use plugin info folder only)',
     'settings.infoCustomPrompts': 'Custom Prompts',
@@ -1798,6 +1841,23 @@ const i18n = {
     'main.aiPromptTitle': 'Prompts',
     'main.aiSend': 'Send',
     'main.settings': 'Settings',
+    'main.unifiedCardBg': 'Background',
+    'main.unifiedCardBgOpacity': 'Opacity',
+    'main.unifiedCardBorder': 'Border',
+    'main.unifiedCardShowGrid': 'Grid',
+    'main.unifiedCardLockLayout': 'Lock Layout',
+    'main.noMatchHighlights': '(No matching highlights)',
+    'main.cardLabelInfo': 'Info',
+    'main.cardLabelParkingLot': 'Parking Lot',
+    'main.cardLabelThreads': 'Threads',
+    'main.cardLabelKeywordHistory': 'Keyword History',
+    'main.cardLabelRelatedHighlights': 'Related Highlights',
+    'main.cardLabelRemarkContent': 'Remarks',
+    'main.cardLabelKeywordChips': 'Keyword Chips',
+    'main.cardLabelAiQuestion': 'AI Question',
+    'main.cardLabelRelatedNotes': 'Related Notes',
+    'main.infoAddBtnHint': 'Please add a keyword first or click/search a keyword',
+    'main.relatedNotesEmpty': '(No related notes)',
     'main.pluginHelpContent': 'Below is a brief introduction and basic usage of the plugin:\n\nThe plugin has been in development since late 2025. As of 2026-08-03, after several pivots, it has evolved into its current feature layout, with 1000+ hours invested.\n\nThe plugin highlights keywords with personalized CSS styles. Keywords can be names, places, subject-specific terms, or any words you consider important (based on the 80/20 rule, it is recommended to apply personalized highlighting to only 20% of keywords and use simple underlines for the rest, otherwise the overall appearance will be cluttered).\n\nAfter a keyword is highlighted, you can add a "count" (tracking its occurrences in the current document) and "interlinear notes" displayed above the keyword (e.g., a character birthdate, role...).\n\nOn first install, about 30 seconds after Obsidian starts, the plugin automatically builds Obsidian-format highlights ("==highlighted text==") from the vault. After that, every new highlight auto-updates.\n\nClick a keyword to search the highlight database and display matching entries in the panel (main panel, right sidebar, or standalone window). Alternatively, collapse the right sidebar and hover over a keyword to see related highlights (can be disabled) — this often brings unexpected insights when you have many highlights.\n\nEach highlight can have a remark/marker added, helping you remember better (additional features for remarks/markers are planned).\n\nFor noun terms, an "info" section displays factual knowledge about the keyword (supports AI auto-generation from prompts).\n\nExplore other features on your own. This plugin is free; paid consultations available, vx: jtugqivi',
     'main.threadsSection': 'Threads',
     'main.parkingLotSection': 'Parking Lot',
@@ -8694,7 +8754,7 @@ class AddRegexRuleModal {
       this.modalEl.style.userSelect = 'none';
       this.modalEl.style.webkitUserSelect = 'none';
       this._mobileStyleEl = document.createElement('style');
-      this._mobileStyleEl.textContent = '.rch-popup, .rch-popup *:not(input):not(textarea):not(.inline-remark-section):not(.inline-remark-section *):not(.modal-resize-handle) { touch-action:manipulation!important; -webkit-touch-callout:none!important; user-select:none!important; -webkit-user-select:none!important; } .modal-resize-handle { touch-action:none!important; }';
+      this._mobileStyleEl.textContent = '.rch-popup, .rch-popup *:not(input):not(textarea):not(.remark-content-container):not(.remark-content-container *):not(.modal-resize-handle) { touch-action:manipulation!important; -webkit-touch-callout:none!important; user-select:none!important; -webkit-user-select:none!important; } .modal-resize-handle { touch-action:none!important; }';
       document.head.appendChild(this._mobileStyleEl);
       this._selectStartHandler = (e) => { if (e.target.closest('.modal-resize-handle')) return; e.preventDefault(); };
       this._contextMenuHandler = (e) => {
@@ -9990,6 +10050,7 @@ class AddRegexRuleModal {
     popoutBtn.title = t('main.popoutWindow');
     popoutBtn.className = 'rch-popout-btn';
     popoutBtn.style.cssText = 'cursor:pointer;color:var(--text-muted);padding:0 4px;border-radius:3px;transition:all 0.15s;line-height:0;display:inline-flex;align-items:center;';
+    if (this._isPopout || (this._popoutDoc && this._popoutDoc !== document)) { popoutBtn.style.display = 'none'; }
     popoutBtn.addEventListener('mouseenter', () => { popoutBtn.style.background = 'var(--background-modifier-hover)'; popoutBtn.style.color = 'var(--text-normal)'; });
     popoutBtn.addEventListener('mouseleave', () => { popoutBtn.style.background = ''; popoutBtn.style.color = 'var(--text-muted)'; });
     popoutBtn.addEventListener('click', () => {
@@ -13613,10 +13674,615 @@ class AddRegexRuleModal {
       requestAnimationFrame(() => {
         this.addHeadingStylesSection(contentEl);
         this.addRemarkSection(contentEl);
+
+        const _unifiedGrid = document.createElement('div');
+        _unifiedGrid.className = 'unified-card-grid';
+        _unifiedGrid.style.cssText = 'min-height:60px;';
+        contentEl.appendChild(_unifiedGrid);
+        _unifiedGrid.style.position = 'relative';
+        this._unifiedGridEl = _unifiedGrid;
+
+        const _gridDoc = this._popoutDoc || document;
+        const _isPopoutWin = this._isPopout || (_gridDoc !== document);
+        if (!_gridDoc.getElementById('unified-grid-lock-style')) {
+          const _ls = _gridDoc.createElement('style'); _ls.id = 'unified-grid-lock-style';
+          _ls.textContent = '.unified-grid-locked .ui-resizable-handle{display:none !important;}';
+          _gridDoc.head.appendChild(_ls);
+        }
+        if (_isPopoutWin) {
+          if (!_gridDoc.getElementById('gridstack-css')) {
+            const _gsStyle = _gridDoc.createElement('style');
+            _gsStyle.id = 'gridstack-css';
+            _gsStyle.textContent = _GS_EMBEDDED_CSS;
+            _gridDoc.head.appendChild(_gsStyle);
+          }
+          if (!_gridDoc.getElementById('unified-grid-style')) {
+            const _us = _gridDoc.createElement('style');
+            _us.id = 'unified-grid-style';
+            _us.textContent = `.unified-card-grid .grid-stack-item>.ui-resizable-handle{opacity:0;transition:opacity .15s;}.unified-card-grid .grid-stack-item:hover>.ui-resizable-handle{opacity:1;}.unified-card-grid .grid-stack-item>.ui-resizable-se{width:14px;height:14px;bottom:0;right:0;}@media (pointer:coarse){.unified-card-grid .grid-stack-item>.ui-resizable-handle{width:20px!important;height:20px!important;z-index:5;opacity:1!important;}.unified-card-grid .grid-stack-item>.ui-resizable-se{right:0!important;bottom:0!important;}}`;
+            _gridDoc.head.appendChild(_us);
+          }
+          if (!_gridDoc.getElementById('unified-grid-col24-css')) {
+            const _colCss = _gridDoc.createElement('style');
+            _colCss.id = 'unified-grid-col24-css';
+            let _rules = '';
+            for (let _n = 1; _n <= 24; _n++) {
+              const _pct = (_n / 24 * 100);
+              _rules += `.unified-card-grid.gs-24>.grid-stack-item[gs-w="${_n}"]{width:${_pct}%}`;
+              _rules += `.unified-card-grid.gs-24>.grid-stack-item[gs-x="${_n}"]{left:${_pct}%}`;
+            }
+            _colCss.textContent = _rules;
+            _gridDoc.head.appendChild(_colCss);
+          }
+        }
+
+        _unifiedGrid.addEventListener('mousedown', (e) => {
+          const isHandle = e.target.closest('.unified-card-drag-handle') || e.target.closest('.ui-resizable-handle');
+          const isCtrl = e.target.closest('.unified-card-ctrl, button, a, input, textarea, select, [contenteditable]');
+          const isLocked = this.plugin?.settings?.unifiedCardLockLayout === true;
+          console.log('[UNIFIED-GRID] mousedown on grid, target:', e.target.className, 'isHandle:', isHandle, 'isCtrl:', isCtrl, 'isLocked:', isLocked, 'button:', e.button);
+          if (isHandle && !isCtrl && !isLocked) {
+            e.preventDefault();
+            if (this._unifiedGrid) try { this._unifiedGrid.float(true); } catch(e2) {}
+            const _gridRoot = _unifiedGrid.getRootNode();
+            const _mainDoc = document;
+            const _isPopout = _gridRoot && _gridRoot.nodeType === 9 && _gridRoot !== _mainDoc;
+            let _dragOverlay = null;
+            let _fwdMM = null, _fwdMU = null, _blocker = null;
+            let _mmCount = 0;
+            if (_isPopout) {
+              console.log('[UNIFIED-GRID] popout mode, forwarding events');
+              _blocker = (ev) => { if (!ev._fwd) ev.stopImmediatePropagation(); };
+              _mainDoc.addEventListener('mousemove', _blocker, true);
+              _fwdMM = (ev) => {
+                _mmCount++; if (_mmCount <= 3) console.log('[UNIFIED-GRID] mousemove forwarded:', ev.clientX, ev.clientY, 'target:', ev.target.className);
+                const n = new MouseEvent('mousemove', { clientX: ev.clientX, clientY: ev.clientY, bubbles: true, cancelable: true });
+                n._fwd = true;
+                _mainDoc.body.dispatchEvent(n);
+              };
+              _fwdMU = (ev) => {
+                const n = new MouseEvent('mouseup', { clientX: ev.clientX, clientY: ev.clientY, bubbles: true, cancelable: true });
+                n._fwd = true;
+                _mainDoc.body.dispatchEvent(n);
+              };
+              _gridRoot.addEventListener('mousemove', _fwdMM, true);
+              _gridRoot.addEventListener('mouseup', _fwdMU, true);
+            } else {
+              _dragOverlay = document.createElement('div');
+              _dragOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;pointer-events:auto;background:transparent;touch-action:none;';
+              document.body.appendChild(_dragOverlay);
+              console.log('[UNIFIED-GRID] overlay created, body children:', document.body.children.length);
+            }
+            const _cleanup = () => {
+              if (_dragOverlay) _dragOverlay.remove();
+              if (_fwdMM) _gridRoot.removeEventListener('mousemove', _fwdMM, true);
+              if (_fwdMU) _gridRoot.removeEventListener('mouseup', _fwdMU, true);
+              if (_blocker) _mainDoc.removeEventListener('mousemove', _blocker, true);
+              _mainDoc.removeEventListener('mouseup', _cleanup, true);
+              setTimeout(() => { this._unifiedGridDragLock = false; }, 200);
+              console.log('[UNIFIED-GRID] cleanup done, mousemove count:', _mmCount);
+            };
+            this._unifiedGridDragLock = true;
+            _mainDoc.addEventListener('mouseup', _cleanup, true);
+          }
+        }, true);
+
+
+        const _unifiedSettingsBtn = document.createElement('div');
+        _unifiedSettingsBtn.style.cssText = 'position:absolute;top:2px;right:2px;z-index:100;cursor:pointer;opacity:0.4;transition:opacity .15s;display:flex;align-items:center;padding:2px;';
+        _unifiedSettingsBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+        _unifiedSettingsBtn.title = t('main.settings') || '设置';
+        _unifiedSettingsBtn.addEventListener('mouseenter', () => { _unifiedSettingsBtn.style.opacity = '1'; });
+        _unifiedSettingsBtn.addEventListener('mouseleave', () => { _unifiedSettingsBtn.style.opacity = '0.4'; });
+        _unifiedGrid.appendChild(_unifiedSettingsBtn);
+
+        const _applyUnifiedCardStyles = () => {
+          const _p = this.plugin;
+          const cardBg = _p.settings?.unifiedCardBg || '';
+          const cardBgOpacity = _p.settings?.unifiedCardBgOpacity !== undefined ? _p.settings.unifiedCardBgOpacity : 1;
+          const showGrid = _p.settings?.unifiedCardShowGrid === true;
+          const cardBorder = _p.settings?.unifiedCardBorder || '';
+          _unifiedGrid.querySelectorAll('.unified-card').forEach(c => {
+            if (cardBg) {
+              let _bg = cardBg;
+              if (cardBgOpacity < 1 && cardBg.startsWith('#')) {
+                let h = cardBg.replace('#', '');
+                if (h.length === 3) h = h.split('').map(ch => ch + ch).join('');
+                const r = parseInt(h.substring(0, 2), 16), g = parseInt(h.substring(2, 4), 16), b = parseInt(h.substring(4, 6), 16);
+                _bg = `rgba(${r}, ${g}, ${b}, ${cardBgOpacity})`;
+              }
+              c.style.background = _bg;
+            } else { c.style.background = ''; }
+            if (cardBorder) c.style.borderColor = cardBorder; else c.style.borderColor = '';
+          });
+          if (showGrid) {
+            const cw = this._unifiedGrid?.cellWidth?.() || (_unifiedGrid.offsetWidth / 24);
+            _unifiedGrid.style.backgroundImage = 'linear-gradient(rgba(128,128,128,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(128,128,128,0.2) 1px, transparent 1px)';
+            _unifiedGrid.style.backgroundSize = `${cw}px 20px`;
+          } else {
+            _unifiedGrid.style.backgroundImage = '';
+            _unifiedGrid.style.backgroundSize = '';
+          }
+          const lockLayout = _p.settings?.unifiedCardLockLayout === true;
+          _unifiedGrid.classList.toggle('unified-grid-locked', lockLayout);
+          _unifiedGrid.querySelectorAll('.unified-card-drag-handle').forEach(h => { h.style.cursor = lockLayout ? 'default' : 'move'; });
+          if (this._unifiedGrid && this._unifiedGridReady) {
+            try { this._unifiedGrid.enableMove(!lockLayout, false); } catch(e) {}
+            try { this._unifiedGrid.enableResize(!lockLayout, false); } catch(e) {}
+          }
+        };
+        this._applyUnifiedCardStyles = _applyUnifiedCardStyles;
+
+        _unifiedSettingsBtn.addEventListener('click', (e) => {
+          e.stopPropagation(); e.preventDefault();
+          const _p = this.plugin;
+          const existingPanel = _unifiedGrid.querySelector('.unified-settings-panel');
+          if (existingPanel) { existingPanel.remove(); return; }
+          const panel = document.createElement('div');
+          panel.className = 'unified-settings-panel';
+          panel.style.cssText = 'position:absolute;top:24px;right:2px;z-index:200;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:11px;min-width:180px;';
+          const _makeRow = (label, inputEl) => { const r = document.createElement('div'); r.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;'; const s = document.createElement('span'); s.textContent = label; r.appendChild(s); r.appendChild(inputEl); return r; };
+          const bgInput = document.createElement('input'); bgInput.type = 'color'; bgInput.value = _p.settings?.unifiedCardBg || '#ffffff'; bgInput.style.cssText = 'width:24px;height:18px;cursor:pointer;border:none;border-radius:4px;background:transparent;';
+          bgInput.addEventListener('input', () => { _p.settings.unifiedCardBg = bgInput.value; _p.saveData(_p.settings); _applyUnifiedCardStyles(); });
+          panel.appendChild(_makeRow(t('main.unifiedCardBg') || '底纹', bgInput));
+          const opacityInput = document.createElement('input'); opacityInput.type = 'range'; opacityInput.min = '0.1'; opacityInput.max = '1'; opacityInput.step = '0.1'; opacityInput.value = _p.settings?.unifiedCardBgOpacity !== undefined ? _p.settings.unifiedCardBgOpacity : 1; opacityInput.style.cssText = 'width:60px;cursor:pointer;';
+          opacityInput.addEventListener('input', () => { _p.settings.unifiedCardBgOpacity = parseFloat(opacityInput.value); _p.saveData(_p.settings); _applyUnifiedCardStyles(); });
+          panel.appendChild(_makeRow(t('main.unifiedCardBgOpacity') || '透明度', opacityInput));
+          const borderInput = document.createElement('input'); borderInput.type = 'color'; borderInput.value = _p.settings?.unifiedCardBorder || '#888888'; borderInput.style.cssText = 'width:24px;height:18px;cursor:pointer;border:none;border-radius:4px;background:transparent;';
+          borderInput.addEventListener('input', () => { _p.settings.unifiedCardBorder = borderInput.value; _p.saveData(_p.settings); _applyUnifiedCardStyles(); });
+          panel.appendChild(_makeRow(t('main.unifiedCardBorder') || '颜色', borderInput));
+          const gridToggle = document.createElement('input'); gridToggle.type = 'checkbox'; gridToggle.checked = _p.settings?.unifiedCardShowGrid === true; gridToggle.style.cursor = 'pointer';
+          gridToggle.addEventListener('change', () => { _p.settings.unifiedCardShowGrid = gridToggle.checked; _p.saveData(_p.settings); _applyUnifiedCardStyles(); });
+          panel.appendChild(_makeRow(t('main.unifiedCardShowGrid') || '网格', gridToggle));
+          const lockToggle = document.createElement('input'); lockToggle.type = 'checkbox'; lockToggle.checked = _p.settings?.unifiedCardLockLayout === true; lockToggle.style.cursor = 'pointer';
+          lockToggle.addEventListener('change', () => { _p.settings.unifiedCardLockLayout = lockToggle.checked; _p.saveData(_p.settings); _applyUnifiedCardStyles(); });
+          panel.appendChild(_makeRow(t('main.unifiedCardLockLayout') || '锁定布局', lockToggle));
+          const _sep = document.createElement('div'); _sep.style.cssText = 'border-top:1px solid var(--background-modifier-border);margin:4px 0;';
+          panel.appendChild(_sep);
+          const _sectionToggles = [
+            { key: 'showInfoSection', label: t('main.cardLabelInfo'), cardId: 'infoSection', defaultVal: true },
+            { key: 'showParkingLot', label: t('main.cardLabelParkingLot'), cardId: 'parkingLotSection', defaultVal: true },
+            { key: 'showThreads', label: t('main.cardLabelThreads'), cardId: 'threadsSection', defaultVal: true },
+            { key: 'showRelatedHighlightsSection', label: t('main.cardLabelRelatedHighlights'), cardId: 'relatedHighlights', defaultVal: true },
+            { key: 'showRemarkContentBlock', label: t('main.cardLabelRemarkContent'), cardId: 'remarkContent', defaultVal: true },
+            { key: 'showKeywordChipsBlock', label: t('main.cardLabelKeywordChips'), cardId: 'keywordChips', defaultVal: true },
+            { key: 'showAiQuestionBlock', label: t('main.cardLabelAiQuestion'), cardId: 'aiQuestion', defaultVal: true },
+            { key: 'showRelatedNotesSection', label: t('main.cardLabelRelatedNotes'), cardId: 'relatedNotes', defaultVal: true },
+          ];
+          for (const st of _sectionToggles) {
+            const toggle = document.createElement('input'); toggle.type = 'checkbox'; toggle.checked = _p.settings?.[st.key] !== false; toggle.style.cursor = 'pointer';
+            toggle.addEventListener('change', () => {
+              _p.settings[st.key] = toggle.checked; _p.saveData(_p.settings);
+              const _nodes = this._unifiedGrid?.engine?.nodes || [];
+              for (const n of _nodes) {
+                const _c = n.el?.querySelector?.('.unified-card');
+                if (_c?.dataset?.cardId === st.cardId) { n.el.style.display = toggle.checked ? '' : 'none'; }
+              }
+            });
+            panel.appendChild(_makeRow(st.label, toggle));
+          }
+          _unifiedGrid.appendChild(panel);
+          const _panelDoc = _unifiedSettingsBtn.ownerDocument || document;
+          const closePanel = (ev) => { if (!panel.contains(ev.target) && !_unifiedSettingsBtn.contains(ev.target)) { panel.remove(); _panelDoc.removeEventListener('mousedown', closePanel); } };
+          setTimeout(() => _panelDoc.addEventListener('mousedown', closePanel), 0);
+        });
+        this._unifiedGridEl = _unifiedGrid;
+        this._unifiedGrid = null;
+        this._unifiedGridReady = false;
+        this._unifiedGridQueue = [];
+        this._unifiedCardIds = new Set();
+        this._remarkCardIds = new Set(['relatedHighlights', 'remarkContent', 'keywordChips', 'aiQuestion', 'relatedNotes']);
+
+        this._getLayoutKey = () => {
+          if (!this._unifiedGridEl) return 'unifiedGridLayout';
+          if (this._isPopout) return 'popoutGridLayout';
+          const _root = this.modalEl.getRootNode();
+          if (_root && _root.nodeType === 9 && _root !== document) return 'popoutGridLayout';
+          if (this.modalEl.style.position === 'fixed' || this.modalEl.style.position === '') return 'unifiedGridLayout';
+          return 'sidebarGridLayout';
+        };
+
+        this._reapplyLayout = () => {
+          if (!this._unifiedGrid || !this._unifiedGridReady) return;
+          try {
+            const _lk = this._getLayoutKey();
+            const _saved = this.plugin.settings?.[_lk] || {};
+            for (const n of (this._unifiedGrid.engine?.nodes || [])) {
+              const cardEl = n.el?.querySelector?.('.unified-card');
+              const cid = cardEl?.dataset?.cardId;
+              if (cid && _saved[cid]) {
+                try { this._unifiedGrid.move(n, _saved[cid].x, _saved[cid].y); } catch(e) {}
+                try { this._unifiedGrid.resize(n, _saved[cid].w, _saved[cid].h); } catch(e) {}
+              }
+            }
+            try { this._unifiedGrid.float(true); } catch(e) {}
+          } catch(e) {}
+        };
+
+        this._recreateUnifiedGrid = () => {
+          if (!this._unifiedGrid || !this._unifiedGridReady || !this._unifiedGridEl) return;
+          const _gridEl = this._unifiedGridEl;
+          const _cards = [];
+          for (const n of (this._unifiedGrid.engine?.nodes || [])) {
+            const cardEl = n.el?.querySelector?.('.unified-card');
+            if (cardEl) _cards.push({ el: cardEl, id: cardEl.dataset.cardId, x: n.x, y: n.y, w: n.w, h: n.h });
+          }
+          try { this._unifiedGrid.destroy(false); } catch(e) {}
+          this._unifiedGrid = null;
+          this._unifiedGridReady = false;
+          _gridEl.innerHTML = '';
+          const GS = window.GridStack;
+          if (!GS) return;
+          const _doRecreate = () => {
+            const grid = GS.init({
+              column: 24, cellHeight: 20, margin: 2,
+              draggable: { handle: '.unified-card-drag-handle', scroll: false, appendTo: 'parent' },
+              resizable: { handles: 'se' },
+              animate: true, float: true, disableOneColumnMode: true, alwaysShowResizeHandle: true,
+            }, _gridEl);
+            this._unifiedGrid = grid;
+            this._unifiedGridReady = true;
+            this._unifiedGridDragLock = false;
+            grid.float(true);
+            const _lk = this._getLayoutKey();
+            const _saved = this.plugin.settings?.[_lk] || {};
+            for (const c of _cards) {
+              const sv = _saved[c.id];
+              const wOpts = { w: sv?.w || c.w, h: sv?.h || c.h, x: sv?.x ?? c.x, y: sv?.y ?? c.y, minW: 4, minH: 2, autoPosition: false };
+              const widgetEl = grid.addWidget(wOpts);
+              const itemContent = widgetEl.querySelector('.grid-stack-item-content') || widgetEl;
+              itemContent.appendChild(c.el);
+              itemContent.style.overflow = 'hidden';
+            }
+            grid.float(true);
+            // Force apply inline positions (bypass dynamic stylesheet issues in popout)
+            const _applyInlinePositions = () => {
+              const _ch = grid.opts.cellHeight || 20;
+              const _chu = grid.opts.cellHeightUnit || 'px';
+              const _mt = grid.opts.marginTop || 2;
+              const _mb = grid.opts.marginBottom || 2;
+              const _ml = grid.opts.marginLeft || 2;
+              const _mr = grid.opts.marginRight || 2;
+              const _mu = grid.opts.marginUnit || 'px';
+              for (const n of (grid.engine?.nodes || [])) {
+                if (!n.el) continue;
+                n.el.style.top = (n.y * _ch) + _chu;
+                n.el.style.height = (n.h * _ch) + _chu;
+                const ce = n.el.querySelector('.grid-stack-item-content');
+                if (ce) {
+                  ce.style.position = 'absolute';
+                  ce.style.top = _mt + _mu;
+                  ce.style.bottom = _mb + _mu;
+                  ce.style.left = _ml + _mu;
+                  ce.style.right = _mr + _mu;
+                }
+              }
+              const _row = grid.getRow();
+              _gridEl.style.minHeight = (_row * _ch) + _chu;
+            };
+            _applyInlinePositions();
+            grid.on('change', () => { clearTimeout(this._unifiedGridSaveTimer); this._unifiedGridSaveTimer = setTimeout(_saveUnifiedGridLayout, 500); _applyInlinePositions(); _syncGsStylesToPopout(); });
+            grid.on('dragstop', () => { clearTimeout(this._unifiedGridSaveTimer); this._unifiedGridSaveTimer = setTimeout(_saveUnifiedGridLayout, 300); _applyInlinePositions(); _syncGsStylesToPopout(); });
+            grid.on('resizestop', () => { clearTimeout(this._unifiedGridSaveTimer); _saveUnifiedGridLayout(); this._unifiedGridSaveTimer = setTimeout(_saveUnifiedGridLayout, 300); _applyInlinePositions(); _syncGsStylesToPopout(); requestAnimationFrame(() => { try { if (grid._updateStyles) grid._updateStyles(true); } catch(e){} _applyInlinePositions(); _syncGsStylesToPopout(); }); });
+            if (this._applyUnifiedCardStyles) this._applyUnifiedCardStyles();
+            const _ro = new ResizeObserver(() => {
+              if (this._unifiedGrid && this._unifiedGridReady && _gridEl.offsetWidth > 0 && !this._unifiedGridDragLock) {
+                clearTimeout(this._unifiedGridColTimer);
+                this._unifiedGridColTimer = setTimeout(() => { try { if (grid.engine?.nodes?.length && !this._unifiedGridDragLock) grid.float(true); } catch(e) {} }, 50);
+              }
+            });
+            _ro.observe(_gridEl);
+            this._unifiedGridResizeObserver = _ro;
+            _syncGsStylesToPopout();
+            // Force GridStack to regenerate dynamic stylesheet after browser layout
+            requestAnimationFrame(() => {
+              try {
+                if (grid._updateStyles) grid._updateStyles(true);
+                grid.float(true);
+                _applyInlinePositions();
+                _syncGsStylesToPopout();
+              } catch(e) {}
+            });
+            setTimeout(() => _applyInlinePositions(), 0);
+          };
+          if (_gridEl.offsetWidth > 0) { _doRecreate(); }
+          else {
+            const _waitRo = new ResizeObserver(() => {
+              if (_gridEl.offsetWidth > 0) { _waitRo.disconnect(); _doRecreate(); }
+            });
+            _waitRo.observe(_gridEl);
+          }
+        };
+
+        const _syncGsStylesToPopout = () => {
+          if (!this._unifiedGridEl) return;
+          const _root = this._unifiedGridEl.getRootNode();
+          if (!_root || _root.nodeType !== 9 || _root === document) return;
+          try {
+            // Sync GridStack dynamic stylesheets from main document to popout document
+            const _mainStyles = document.querySelectorAll('STYLE[gs-style-id]');
+            for (const s of _mainStyles) {
+              const sid = s.getAttribute('gs-style-id');
+              if (!sid) continue;
+              let popoutStyle = _root.querySelector(`STYLE[gs-style-id="${sid}"]`);
+              if (popoutStyle) {
+                if (popoutStyle.textContent !== s.textContent) popoutStyle.textContent = s.textContent;
+              } else {
+                const ns = _root.createElement('style');
+                ns.setAttribute('gs-style-id', sid);
+                ns.setAttribute('type', 'text/css');
+                ns.textContent = s.textContent;
+                _root.head.appendChild(ns);
+              }
+            }
+            // Fallback: manually set inline top/height for each grid item in popout
+            if (this._unifiedGrid && this._unifiedGridReady) {
+              const cellHeight = this._unifiedGrid.opts.cellHeight || 20;
+              const cellHeightUnit = this._unifiedGrid.opts.cellHeightUnit || 'px';
+              const marginTop = this._unifiedGrid.opts.marginTop || 2;
+              const marginBottom = this._unifiedGrid.opts.marginBottom || 2;
+              const marginLeft = this._unifiedGrid.opts.marginLeft || 2;
+              const marginRight = this._unifiedGrid.opts.marginRight || 2;
+              for (const n of (this._unifiedGrid.engine?.nodes || [])) {
+                if (!n.el) continue;
+                n.el.style.top = (n.y * cellHeight) + cellHeightUnit;
+                n.el.style.height = (n.h * cellHeight) + cellHeightUnit;
+                const contentEl = n.el.querySelector('.grid-stack-item-content');
+                if (contentEl) {
+                  contentEl.style.top = marginTop + this._unifiedGrid.opts.marginUnit;
+                  contentEl.style.bottom = marginBottom + this._unifiedGrid.opts.marginUnit;
+                  contentEl.style.left = marginLeft + this._unifiedGrid.opts.marginUnit;
+                  contentEl.style.right = marginRight + this._unifiedGrid.opts.marginUnit;
+                }
+              }
+              // Update container min-height
+              const row = this._unifiedGrid.getRow();
+              this._unifiedGridEl.style.minHeight = (row * cellHeight) + cellHeightUnit;
+            }
+          } catch(e) { console.warn('[GridStack] sync styles to popout failed:', e); }
+        };
+
+        const _saveUnifiedGridLayout = () => {
+          if (!this._unifiedGrid || !this._unifiedGridReady) return;
+          try {
+            const _lk = this._getLayoutKey();
+            if (!this.plugin.settings[_lk]) this.plugin.settings[_lk] = {};
+            for (const n of (this._unifiedGrid.engine?.nodes || [])) {
+              const cardEl = n.el?.querySelector?.('.unified-card');
+              const cid = cardEl?.dataset?.cardId;
+              if (cid) this.plugin.settings[_lk][cid] = { x: n.x, y: n.y, w: n.w, h: n.h };
+            }
+            this.plugin.saveData(this.plugin.settings);
+          } catch(e) {}
+        };
+
+        this._addUnifiedCard = (sectionEl, cardId, defaultOpts) => {
+          if (!sectionEl) return null;
+          const plugin = this.plugin;
+          const _lk = this._getLayoutKey();
+          const savedLayout = this.plugin.settings?.[_lk]?.[cardId];
+          const card = document.createElement('div');
+          card.className = 'unified-card';
+          card.dataset.cardId = cardId;
+          card.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;height:100%;';
+          const dragHandle = document.createElement('div');
+          dragHandle.className = 'unified-card-drag-handle';
+          const _cardLabels = { infoSection: t('main.cardLabelInfo'), parkingLotSection: t('main.cardLabelParkingLot'), threadsSection: t('main.cardLabelThreads'), keywordHistory: t('main.cardLabelKeywordHistory'), relatedHighlights: t('main.cardLabelRelatedHighlights'), remarkContent: t('main.cardLabelRemarkContent'), keywordChips: t('main.cardLabelKeywordChips'), aiQuestion: t('main.cardLabelAiQuestion'), relatedNotes: t('main.cardLabelRelatedNotes') };
+          dragHandle.style.cssText = 'cursor:move;font-size:10px;font-weight:600;color:var(--text-muted);padding:2px 6px;border-bottom:1px solid var(--background-modifier-border);opacity:0.7;transition:opacity .15s;display:flex;align-items:center;gap:4px;';
+          dragHandle.innerHTML = '<span style="font-size:12px;">\u263F</span><span class="unified-card-label">' + (_cardLabels[cardId] || cardId) + '</span>';
+          card.appendChild(dragHandle);
+          const cardContent = document.createElement('div');
+          cardContent.style.cssText = 'flex:1;overflow-y:auto;overflow-x:hidden;padding:4px;display:flex;flex-direction:column;';
+          sectionEl.style.width = '100%';
+          sectionEl.style.flex = '1';
+          cardContent.appendChild(sectionEl);
+          card.appendChild(cardContent);
+          const _mergeSectionHeader = () => {
+            const header = sectionEl.firstElementChild;
+            if (!header || header.tagName !== 'DIV') return;
+            const hStyle = header.style.cssText || '';
+            if (!hStyle.includes('flex') || !hStyle.includes('margin-bottom')) return;
+            const _flatEls = [];
+            const _flatten = (container) => {
+              for (const child of Array.from(container.childNodes)) {
+                if (child.nodeType !== 1) continue;
+                const cStyle = child.style.cssText || '';
+                if (cStyle.includes('flex') && !cStyle.includes('space-between') && child.children.length > 1) {
+                  _flatten(child);
+                } else {
+                  _flatEls.push(child);
+                }
+              }
+            };
+            _flatten(header);
+            if (_flatEls.length === 0) return;
+            let _titleEl = null;
+            let _titleText = '';
+            for (const el of _flatEls) {
+              const text = (el.textContent || '').trim();
+              if (text.length <= 2) continue;
+              if (el.querySelector('svg')) continue;
+              if (text === '✕' || text === '×' || text === '+' || text === '?') continue;
+              if (!_titleEl || text.length > _titleText.length) {
+                _titleEl = el;
+                _titleText = text;
+              }
+            }
+            if (_titleText) {
+              const _labelSpan = dragHandle.querySelector('.unified-card-label');
+              if (_labelSpan) _labelSpan.textContent = _titleText;
+            }
+            const _spacer = document.createElement('span');
+            _spacer.style.cssText = 'flex:1;';
+            dragHandle.appendChild(_spacer);
+            // Stop mousedown/touchstart from bubbling to dragHandle for non-title elements
+            // This prevents GridStack's _mouseDown from registering _mouseUp (which calls e.preventDefault() and blocks click)
+            const _blockGsDrag = (el) => {
+              el.classList.add('unified-card-ctrl');
+              ['mousedown', 'touchstart'].forEach(evt => {
+                el.addEventListener(evt, (e) => { e.stopPropagation(); });
+              });
+            };
+            for (const el of _flatEls) {
+              if (el === _titleEl) {
+                for (const sub of Array.from(el.childNodes)) {
+                  if (sub.nodeType === 1) {
+                    sub.style.flexShrink = '0';
+                    sub.style.marginLeft = '2px';
+                    dragHandle.appendChild(sub);
+                    _blockGsDrag(sub);
+                  }
+                }
+                continue;
+              }
+              el.style.flexShrink = '0';
+              el.style.marginLeft = '2px';
+              dragHandle.appendChild(el);
+              _blockGsDrag(el);
+            }
+            header.remove();
+          };
+          _mergeSectionHeader();
+          ['mousedown', 'touchstart', 'pointerdown'].forEach(evt => {
+            cardContent.addEventListener(evt, (e) => {
+              if (!e.target.closest('button') && !e.target.closest('a') && !e.target.closest('input') && !e.target.closest('textarea') && !e.target.closest('[contenteditable]')) {
+                e.stopPropagation();
+              }
+            });
+          });
+          this._unifiedCardIds.add(cardId);
+          const _cardSettingMap = { infoSection: 'showInfoSection', parkingLotSection: 'showParkingLot', threadsSection: 'showThreads', relatedHighlights: 'showRelatedHighlightsSection', remarkContent: 'showRemarkContentBlock', keywordChips: 'showKeywordChipsBlock', aiQuestion: 'showAiQuestionBlock', relatedNotes: 'showRelatedNotesSection' };
+          const _addToGrid = (grid) => {
+            const existing = grid.engine?.nodes?.find(n => n.el?.querySelector?.('.unified-card')?.dataset?.cardId === cardId);
+            if (existing) { try { grid.removeWidget(existing.el, true); } catch(e) {} }
+            const wOpts = { w: savedLayout?.w || defaultOpts?.w || 24, h: savedLayout?.h || defaultOpts?.h || 4, minW: 4, minH: 2, autoPosition: !savedLayout };
+            if (savedLayout) { wOpts.x = savedLayout.x; wOpts.y = savedLayout.y; }
+            const widgetEl = grid.addWidget(wOpts);
+            const itemContent = widgetEl.querySelector('.grid-stack-item-content') || widgetEl;
+            itemContent.appendChild(card);
+            itemContent.style.overflow = 'hidden';
+            const _settingKey = _cardSettingMap[cardId];
+            if (_settingKey && plugin.settings?.[_settingKey] === false) { widgetEl.style.display = 'none'; }
+            if (this._applyUnifiedCardStyles) this._applyUnifiedCardStyles();
+          };
+          if (this._unifiedGrid && this._unifiedGridReady) { _addToGrid(this._unifiedGrid); }
+          else { this._unifiedGridQueue.push((grid) => { try { _addToGrid(grid); } catch(e) {} }); }
+          return card;
+        };
+
+        this._removeUnifiedCard = (cardId) => {
+          if (!this._unifiedGrid || !this._unifiedGridReady) return;
+          const nodes = this._unifiedGrid.engine?.nodes || [];
+          for (const n of nodes) {
+            const cardEl = n.el?.querySelector?.('.unified-card');
+            if (cardEl?.dataset?.cardId === cardId) {
+              try { this._unifiedGrid.removeWidget(n.el, true); } catch(e) {}
+              this._unifiedCardIds.delete(cardId);
+              return;
+            }
+          }
+        };
+
+        _loadGridStack(this.app).then((GridStack) => {
+          try {
+            if (!document.getElementById('unified-grid-style')) {
+              const us = document.createElement('style');
+              us.id = 'unified-grid-style';
+              us.textContent = `.unified-card-grid .grid-stack-item>.ui-resizable-handle{opacity:0;transition:opacity .15s;}.unified-card-grid .grid-stack-item:hover>.ui-resizable-handle{opacity:1;}.unified-card-grid .grid-stack-item>.ui-resizable-se{width:14px;height:14px;bottom:0;right:0;}@media (pointer:coarse){.unified-card-grid .grid-stack-item>.ui-resizable-handle{width:20px!important;height:20px!important;z-index:5;opacity:1!important;}.unified-card-grid .grid-stack-item>.ui-resizable-se{right:0!important;bottom:0!important;}}`;
+              document.head.appendChild(us);
+            }
+            if (!document.getElementById('unified-grid-col24-css')) {
+              const colCss = document.createElement('style');
+              colCss.id = 'unified-grid-col24-css';
+              let rules = '';
+              for (let n = 1; n <= 24; n++) {
+                const pct = (n / 24 * 100);
+                rules += `.unified-card-grid.gs-24>.grid-stack-item[gs-w="${n}"]{width:${pct}%}`;
+                rules += `.unified-card-grid.gs-24>.grid-stack-item[gs-x="${n}"]{left:${pct}%}`;
+              }
+              colCss.textContent = rules;
+              document.head.appendChild(colCss);
+            }
+            const _doInit = () => {
+              const grid = GridStack.init({
+                column: 24, cellHeight: 20, margin: 2,
+                draggable: { handle: '.unified-card-drag-handle', scroll: false, appendTo: 'parent' },
+                resizable: { handles: 'se' },
+                animate: true, float: true, disableOneColumnMode: true, alwaysShowResizeHandle: true,
+              }, _unifiedGrid);
+              this._unifiedGrid = grid;
+              this._unifiedGridReady = true;
+              this._unifiedGridDragLock = false;
+              const _ro = new ResizeObserver(() => {
+                if (this._unifiedGrid && this._unifiedGridReady && _unifiedGrid.offsetWidth > 0 && !this._unifiedGridDragLock) {
+                  clearTimeout(this._unifiedGridColTimer);
+                  this._unifiedGridColTimer = setTimeout(() => { try { if (grid.engine?.nodes?.length && !this._unifiedGridDragLock) grid.float(true); } catch(e) {} }, 50);
+                }
+              });
+              _ro.observe(_unifiedGrid);
+              this._unifiedGridResizeObserver = _ro;
+              const _applyInitInlinePos = () => {
+                const _ch = grid.opts.cellHeight || 20;
+                const _chu = grid.opts.cellHeightUnit || 'px';
+                const _mt = grid.opts.marginTop || 2;
+                const _mb = grid.opts.marginBottom || 2;
+                const _ml = grid.opts.marginLeft || 2;
+                const _mr = grid.opts.marginRight || 2;
+                const _mu = grid.opts.marginUnit || 'px';
+                for (const n of (grid.engine?.nodes || [])) {
+                  if (!n.el) continue;
+                  n.el.style.top = (n.y * _ch) + _chu;
+                  n.el.style.height = (n.h * _ch) + _chu;
+                  const ce = n.el.querySelector('.grid-stack-item-content');
+                  if (ce) {
+                    ce.style.position = 'absolute';
+                    ce.style.top = _mt + _mu;
+                    ce.style.bottom = _mb + _mu;
+                    ce.style.left = _ml + _mu;
+                    ce.style.right = _mr + _mu;
+                  }
+                }
+                const _row = grid.getRow();
+                _unifiedGrid.style.minHeight = (_row * _ch) + _chu;
+              };
+              grid.on('change', () => { clearTimeout(this._unifiedGridSaveTimer); this._unifiedGridSaveTimer = setTimeout(_saveUnifiedGridLayout, 500); _applyInitInlinePos(); _syncGsStylesToPopout(); });
+              grid.on('dragstop', () => { clearTimeout(this._unifiedGridSaveTimer); this._unifiedGridSaveTimer = setTimeout(_saveUnifiedGridLayout, 300); _applyInitInlinePos(); _syncGsStylesToPopout(); });
+              grid.on('resizestop', () => { clearTimeout(this._unifiedGridSaveTimer); _saveUnifiedGridLayout(); this._unifiedGridSaveTimer = setTimeout(_saveUnifiedGridLayout, 300); _applyInitInlinePos(); _syncGsStylesToPopout(); requestAnimationFrame(() => { try { if (grid._updateStyles) grid._updateStyles(true); } catch(e){} _applyInitInlinePos(); _syncGsStylesToPopout(); }); });
+              while (this._unifiedGridQueue.length > 0) { const fn = this._unifiedGridQueue.shift(); if (typeof fn === 'function') fn(grid); }
+              _applyUnifiedCardStyles();
+              _applyInitInlinePos();
+              _syncGsStylesToPopout();
+              // Force GridStack to regenerate dynamic stylesheet after browser layout
+              requestAnimationFrame(() => {
+                try {
+                  if (grid._updateStyles) grid._updateStyles(true);
+                  grid.float(true);
+                  _applyInitInlinePos();
+                  _syncGsStylesToPopout();
+                } catch(e) {}
+              });
+              setTimeout(() => _applyInitInlinePos(), 0);
+            };
+            if (_unifiedGrid.offsetWidth > 0) { _doInit(); }
+            else {
+              const _waitRo = new ResizeObserver(() => {
+                if (_unifiedGrid.offsetWidth > 0) { _waitRo.disconnect(); _doInit(); }
+              });
+              _waitRo.observe(_unifiedGrid);
+              this._unifiedGridWaitObserver = _waitRo;
+            }
+          } catch(e) { console.warn('[GridStack] unified init failed:', e); }
+        }).catch((e) => { console.warn('[GridStack] load failed:', e); });
+
         this.addInfoSection(contentEl);
         this.addParkingLotSection(contentEl);
         this.addThreadsSection(contentEl);
         this.addWidthSettingsSection(contentEl);
+
+        const _initRegex = (this.plugin.currentFilePath || '').split('/').pop().replace(/\.md$/, '') || '';
+        if (_initRegex) {
+          requestAnimationFrame(() => { this.showInlineRemarkForRegex(_initRegex); });
+        }
 
         // 将样式分组和高亮规则包裹在可折叠chip中（互斥）
         contentEl.addEventListener('dblclick', (e) => {
@@ -13983,7 +14649,7 @@ class AddRegexRuleModal {
               panelPaletteBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 console.log('[Panel] paletteBtn clicked, presets:', this.plugin.colorSchemePresets?.length);
-                const ex = document.querySelector('.color-scheme-popup');
+                const ex = (panelPaletteBtn.ownerDocument || document).querySelector('.color-scheme-popup');
                 if (ex) { ex.remove(); return; }
                 const noteCard = card;
                 const cardText = noteCard.querySelector('span');
@@ -14196,14 +14862,15 @@ class AddRegexRuleModal {
                   }
                 });
                 popup.appendChild(scrollBody);
+                const _popupDoc = panelPaletteBtn.ownerDocument || document;
                 const closeOnOutside = (ev) => {
                   if (!popup.contains(ev.target) && ev.target !== panelPaletteBtn) {
                     popup.remove();
-                    document.removeEventListener('mousedown', closeOnOutside);
+                    _popupDoc.removeEventListener('mousedown', closeOnOutside);
                   }
                 };
-                setTimeout(() => document.addEventListener('mousedown', closeOnOutside), 0);
-                document.body.appendChild(popup);
+                setTimeout(() => _popupDoc.addEventListener('mousedown', closeOnOutside), 0);
+                _popupDoc.body.appendChild(popup);
               });
               btnBarLeft.appendChild(panelPaletteBtn);
               btnBar.appendChild(btnBarLeft);
@@ -14350,17 +15017,18 @@ class AddRegexRuleModal {
           let _chipHoverMode = this.plugin?.settings?.chipHoverMode !== false;
           hoverModeSettingBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const menu = document.createElement('div');
+            const _menuDoc = hoverModeSettingBtn.ownerDocument || document;
+            const menu = _menuDoc.createElement('div');
             menu.style.cssText = 'position:fixed;z-index:10000;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:8px 12px;box-shadow:0 4px 12px rgba(0,0,0,0.3);font-size:12px;min-width:180px;';
             const btnRect = hoverModeSettingBtn.getBoundingClientRect();
             menu.style.top = (btnRect.bottom + 4) + 'px';
             menu.style.left = Math.max(4, btnRect.left - 120) + 'px';
-            const row = document.createElement('div');
+            const row = _menuDoc.createElement('div');
             row.style.cssText = 'display:flex;align-items:center;gap:8px;cursor:pointer;';
-            const cb = document.createElement('input');
+            const cb = _menuDoc.createElement('input');
             cb.type = 'checkbox'; cb.checked = _chipHoverMode;
             cb.style.cursor = 'pointer';
-            const label = document.createElement('span');
+            const label = _menuDoc.createElement('span');
             label.textContent = t('settings.chipHoverMode');
             label.style.cursor = 'pointer';
             row.appendChild(cb); row.appendChild(label);
@@ -14372,9 +15040,9 @@ class AddRegexRuleModal {
               this.plugin.saveData(this.plugin.settings);
             });
             menu.appendChild(row);
-            document.body.appendChild(menu);
-            const closeMenu = (ev) => { if (!menu.contains(ev.target) && ev.target !== hoverModeSettingBtn) { menu.remove(); document.removeEventListener('mousedown', closeMenu); } };
-            setTimeout(() => document.addEventListener('mousedown', closeMenu), 0);
+            _menuDoc.body.appendChild(menu);
+            const closeMenu = (ev) => { if (!menu.contains(ev.target) && ev.target !== hoverModeSettingBtn) { menu.remove(); _menuDoc.removeEventListener('mousedown', closeMenu); } };
+            setTimeout(() => _menuDoc.addEventListener('mousedown', closeMenu), 0);
           });
           const bindChip = (chip, selector) => {
             chip.addEventListener('mouseenter', () => { if (!_isDesktop || !_chipHoverMode) return; cancelHide(); hoveredChip = chip; updateDisplay(); });
@@ -14445,7 +15113,7 @@ class AddRegexRuleModal {
           _rulesEls.forEach(el => { if (el.parentNode === contentEl) chipContentSection.appendChild(el); });
 
 
-          const remarkSections = contentEl.querySelectorAll('.inline-remark-section, .inline-related-notes-section, .inline-related-highlights-section');
+          const remarkSections = contentEl.querySelectorAll('.remark-content-container, .related-notes-section, .inline-related-highlights-section');
           remarkSections.forEach(s => { contentEl.appendChild(s); });
         }
 
@@ -14453,7 +15121,7 @@ class AddRegexRuleModal {
         this._renderKeywordHistory();
         const _historyEl = this._historySectionEl;
         if (_historyEl && this.contentEl.contains(_historyEl)) {
-          const _rn3 = this.contentEl.querySelector('.inline-related-notes-section');
+          const _rn3 = this.contentEl.querySelector('.remark-content-container');
           const _cc3 = this.contentEl.querySelector('.chip-content-section');
           if (_rn3 && _rn3.parentNode === this.contentEl) { _rn3.before(_historyEl); }
           else if (_cc3 && _cc3.parentNode === this.contentEl) { _cc3.after(_historyEl); }
@@ -15588,7 +16256,7 @@ class AddRegexRuleModal {
 
     const showInfoSectionInput = showInfoSectionRow.createEl("input");
     showInfoSectionInput.type = "checkbox";
-    showInfoSectionInput.checked = this.plugin.settings?.showInfoSection === true;
+    showInfoSectionInput.checked = this.plugin.settings?.showInfoSection !== false;
 
     const showInfoSectionHint = showInfoSectionRow.createEl("span");
     showInfoSectionHint.textContent = t('settings.showInfoSectionDesc');
@@ -15680,6 +16348,40 @@ class AddRegexRuleModal {
       this.plugin.settings.showRelatedHighlights = e.target.checked;
       await this.plugin.saveData(this.plugin.settings);
     });
+
+    const _sectionToggleConfigs = [
+      { key: 'showRelatedHighlightsSection', labelKey: 'settings.showRelatedHighlightsSection', descKey: 'settings.showRelatedHighlightsSectionDesc' },
+      { key: 'showInlineRelatedHighlightsSection', labelKey: 'settings.showInlineRelatedHighlightsSection', descKey: 'settings.showInlineRelatedHighlightsSectionDesc' },
+      { key: 'showRemarkContentBlock', labelKey: 'settings.showRemarkContentBlock', descKey: 'settings.showRemarkContentBlockDesc' },
+      { key: 'showKeywordChipsBlock', labelKey: 'settings.showKeywordChipsBlock', descKey: 'settings.showKeywordChipsBlockDesc' },
+      { key: 'showAiQuestionBlock', labelKey: 'settings.showAiQuestionBlock', descKey: 'settings.showAiQuestionBlockDesc' },
+      { key: 'showRelatedNotesSection', labelKey: 'settings.showRelatedNotesSection', descKey: 'settings.showRelatedNotesSectionDesc' },
+
+    ];
+    for (const _cfg of _sectionToggleConfigs) {
+      const _row = displayContent.createDiv();
+      _row.style.display = "flex";
+      _row.style.alignItems = "center";
+      _row.style.marginBottom = "5px";
+      _row.style.flexWrap = "wrap";
+      const _label = _row.createEl("span");
+      _label.textContent = t(_cfg.labelKey) + ": ";
+      _label.style.marginRight = "10px";
+      _label.style.fontSize = "14px";
+      const _input = _row.createEl("input");
+      _input.type = "checkbox";
+      _input.checked = this.plugin.settings?.[_cfg.key] !== false;
+      const _hint = _row.createEl("span");
+      _hint.textContent = t(_cfg.descKey);
+      _hint.style.fontSize = "12px";
+      _hint.style.color = "var(--text-muted)";
+      _hint.style.marginLeft = "8px";
+      _input.addEventListener("change", async (e) => {
+        if (!this.plugin.settings) this.plugin.settings = {};
+        this.plugin.settings[_cfg.key] = e.target.checked;
+        await this.plugin.saveData(this.plugin.settings);
+      });
+    }
 
     const sentenceThresholdRow = displayContent.createDiv();
     sentenceThresholdRow.style.display = "flex";
@@ -17563,7 +18265,7 @@ class AddRegexRuleModal {
       contentEl.removeChild(globalSection);
     }
 
-    const inlineRemark = contentEl.querySelector('.inline-remark-section');
+    const inlineRemark = contentEl.querySelector('.remark-content-container');
     const settingsPanel = contentEl.querySelector('.regex-highlighter-settings');
     const remarkSection = contentEl.querySelector('.remark-section');
 
@@ -18873,7 +19575,7 @@ class AddRegexRuleModal {
 
     const settingsPanel = contentEl.querySelector('.regex-highlighter-settings');
 
-    const inlineRemark = contentEl.querySelector('.inline-remark-section');
+    const inlineRemark = contentEl.querySelector('.remark-content-container');
     const remarkSection = contentEl.querySelector('.remark-section');
 
     if (inlineRemark) {
@@ -19544,7 +20246,7 @@ class AddRegexRuleModal {
         return;
       }
     }
-    const existing = this.contentEl.querySelector('.inline-remark-section');
+    const existing = this.contentEl.querySelector('.remark-content-container');
     if (existing && !forceRefresh && this._inlineRemarkRuleId === ruleId) {
       existing.remove();
       this._inlineRemarkRuleId = null;
@@ -19555,20 +20257,26 @@ class AddRegexRuleModal {
   }
 
 
-  _showRelatedNotesOnly(searchText) {
-    const plugin = this.plugin;
-    const existing = this.contentEl.querySelector('.inline-related-notes-section');
+  clearRelatedNotesSection() {
+    if (this._removeUnifiedCard) this._removeUnifiedCard('relatedNotes');
+    const existing = this.contentEl?.querySelector('.related-notes-section');
     if (existing) existing.remove();
-    const existingHl = this.contentEl.querySelector('.inline-related-highlights-section');
-    if (existingHl) existingHl.remove();
+    this._relatedNotesSection = null;
+  }
+
+  addRelatedNotesSection(contentEl, regex) {
+    const plugin = this.plugin;
+    this.clearRelatedNotesSection();
+    if (!plugin.settings || plugin.settings.showRelatedNotes === false || plugin.settings.showRelatedNotesSection === false) return;
+    if (!regex) return;
     const _excludedGroups = plugin.settings?.excludedRelatedNotesCategories || [];
     const _groups = plugin.config?.globalRuleGroups || {};
     if (_excludedGroups.length > 0) {
       for (const _grp in _groups) {
-        if (_excludedGroups.includes(_grp) && _groups[_grp].includes(searchText)) return;
+        if (_excludedGroups.includes(_grp) && _groups[_grp].includes(regex)) return;
       }
     }
-    const searchTerms = _splitRegexPipes(searchText).map(s => s.trim()).filter(s => s.length > 0);
+    const searchTerms = _splitRegexPipes(regex).map(s => s.trim()).filter(s => s.length > 0);
     if (searchTerms.length === 0) return;
     const allFiles = plugin.app.vault.getFiles();
     const mdFiles = allFiles.filter(f => f.extension === 'md');
@@ -19583,10 +20291,22 @@ class AddRegexRuleModal {
         }
       }
     }
-    if (relatedNotes.length === 0) return;
     const section = document.createElement('div');
-    section.className = 'inline-related-notes-section';
+    section.className = 'related-notes-section';
     section.style.cssText = 'margin-top:8px;';
+    if (relatedNotes.length === 0) {
+      const _emptyHint = document.createElement('div');
+      _emptyHint.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;padding:4px 0;';
+      _emptyHint.textContent = t('main.relatedNotesEmpty') || '（无相关文档）';
+      section.appendChild(_emptyHint);
+      this._relatedNotesSection = section;
+      if (this._addUnifiedCard) {
+        this._addUnifiedCard(section, 'relatedNotes', { w: 24, h: 3 });
+      } else {
+        contentEl.appendChild(section);
+      }
+      return;
+    }
     const headerRow = document.createElement('div');
     headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
     const titleDiv = document.createElement('div');
@@ -19594,14 +20314,13 @@ class AddRegexRuleModal {
     titleDiv.innerHTML = t('main.relatedNotes') + ' ' + relatedNotes.length;
     headerRow.appendChild(titleDiv);
     const closeBtn = document.createElement('span');
-    closeBtn.textContent = '✕';
+    closeBtn.textContent = '\u2715';
     closeBtn.style.cssText = 'cursor:pointer;font-size:14px;color:var(--text-muted);padding:0 4px;flex-shrink:0;';
     closeBtn.addEventListener('click', () => { section.remove(); });
     headerRow.appendChild(closeBtn);
     section.appendChild(headerRow);
     const relatedList = document.createElement('div');
     relatedList.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;overflow:hidden;';
-    // 添加折叠按钮
     _createSectionToggle(plugin, 'relatedNotes_sidebar', relatedList, titleDiv);
     for (const note of relatedNotes.slice(0, 10)) {
       const noteLink = document.createElement('span');
@@ -19618,7 +20337,6 @@ class AddRegexRuleModal {
         e.stopPropagation();
         plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
       });
-
       relatedList.appendChild(noteLink);
     }
     if (relatedNotes.length > 10) {
@@ -19654,7 +20372,12 @@ class AddRegexRuleModal {
       relatedList.appendChild(moreTag);
     }
     section.appendChild(relatedList);
-    this.contentEl.appendChild(section);
+    this._relatedNotesSection = section;
+    if (this._addUnifiedCard) {
+      this._addUnifiedCard(section, 'relatedNotes', { w: 24, h: 3 });
+    } else {
+      contentEl.appendChild(section);
+    }
   }
 
   async _showRelatedHighlights(searchText, sgRules, parentEl) {
@@ -19708,7 +20431,25 @@ class AddRegexRuleModal {
         } catch (err) {}
       }
     }
-    if (matches.length === 0 && sgSentences.length === 0) return;
+    if (matches.length === 0 && sgSentences.length === 0) {
+      const _emptySection = document.createElement('div');
+      _emptySection.className = 'inline-related-highlights-section';
+      _emptySection.style.cssText = 'margin-top:4px;user-select:text;-webkit-user-select:text;';
+      const _emptyHeader = document.createElement('div');
+      _emptyHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;';
+      _emptyHeader.textContent = t('main.nonKeywordRelatedHighlights') + ' (0)';
+      _emptySection.appendChild(_emptyHeader);
+      const _emptyHint = document.createElement('div');
+      _emptyHint.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;padding:4px 0;';
+      _emptyHint.textContent = t('main.noMatchHighlights');
+      _emptySection.appendChild(_emptyHint);
+      if (this._addUnifiedCard) {
+        this._addUnifiedCard(_emptySection, 'relatedHighlights', { w: 24, h: 6 });
+      } else {
+        container.appendChild(_emptySection);
+      }
+      return;
+    }
 
     const totalCount = matches.length + sgSentences.length;
     const section = document.createElement('div');
@@ -19755,7 +20496,7 @@ class AddRegexRuleModal {
         inp.addEventListener('input', () => { _s.relatedHlKwUniformClass = inp.value.trim(); this.plugin.saveData(this.plugin.settings); });
         row.appendChild(lbl); row.appendChild(inp); menu.appendChild(row); }
       _SG_FINISH_HL_SETTINGS(menu, _s, () => this.plugin.saveData(this.plugin.settings), section);
-            headerRow.after(menu);
+            section.insertBefore(menu, section.firstChild);
       const closeMenu = (ev) => { if (!menu.contains(ev.target) && !hlSettingIcon.contains(ev.target)) { menu.remove(); document.removeEventListener('mousedown', closeMenu); } };
       setTimeout(() => document.addEventListener('mousedown', closeMenu), 0);
     });
@@ -20037,7 +20778,7 @@ class AddRegexRuleModal {
           popup.style.left = Math.min(rect.left, window.innerWidth - 520) + 'px';
           popup.style.top = Math.max(10, rect.bottom + 6) + 'px';
           const isG = plugin.globalRules?.includes(_matchedRule);
-          plugin.renderRemarkContent(popup, {
+          const _rnResult = plugin.renderRemarkContent(popup, {
             links: _matchedRule.links || [],
             rule: _matchedRule,
             ruleRegex: _matchedRule.regex,
@@ -20050,6 +20791,9 @@ class AddRegexRuleModal {
             onDirty: () => {},
             cssScope: 'remark-custom-popup'
           });
+          if (_rnResult?.relatedHighlightsSection) popup.appendChild(_rnResult.relatedHighlightsSection);
+          if (_rnResult?.remarkContentBlock) popup.appendChild(_rnResult.remarkContentBlock);
+          if (_rnResult?.aiBtnContainer) popup.appendChild(_rnResult.aiBtnContainer);
           document.body.appendChild(popup);
           const closePopup = (e) => { if (!popup.contains(e.target)) { popup.remove(); document.removeEventListener('mousedown', closePopup, true); } };
           setTimeout(() => document.addEventListener('mousedown', closePopup, true), 100);
@@ -20125,11 +20869,19 @@ class AddRegexRuleModal {
     section.appendChild(hlList);
     // 添加折叠按钮
     _createSectionToggle(plugin, 'relatedHighlights_sidebar', hlList, titleDiv);
-    container.appendChild(section);
+    if (this._addUnifiedCard) {
+      this._addUnifiedCard(section, 'relatedHighlights', { w: 24, h: 6 });
+    } else {
+      container.appendChild(section);
+    }
   }
 
   showInlineRemarkForRegex(regex) {
     if (!this.contentEl || !_isInAnyDoc(this.contentEl)) { return; }
+    if (!this._addUnifiedCard) {
+      requestAnimationFrame(() => { if (this._addUnifiedCard) this.showInlineRemarkForRegex(regex); });
+      return;
+    }
     if (this._needsRefresh) {
       this._needsRefresh = false;
       if (this._skipRefreshOnInteraction) {
@@ -20160,15 +20912,16 @@ class AddRegexRuleModal {
       return ruleParts.includes(regex) || regex.includes(r.regex) || _regexMatch(regex, r.regex);
     });
     if (matchingRules.length === 0) {
-      const existing = this.contentEl.querySelector('.inline-remark-section');
+      this.clearRemarkSection();
+      const existing = this.contentEl.querySelector('.remark-content-container');
       if (existing) existing.remove();
       this._inlineRemarkRuleId = null;
-      if (this._infoSection) this._infoSection.style.display = 'none';
+      if (this._infoSection) this._infoSection.style.display = '';
+      this._infoActiveChip = regex;
+      if (typeof this._refreshInfoChips === 'function') this._refreshInfoChips();
       if (typeof this._refreshUpdateChip === 'function') this._refreshUpdateChip();
-      if (plugin.settings?.showRelatedNotes !== false && regex) {
-        this._showRelatedNotesOnly(regex);
-      }
-      if (plugin.settings?.showRelatedHighlights !== false && regex) {
+      this.addRelatedNotesSection(this.contentEl, regex);
+      if (plugin.settings?.showRelatedHighlights !== false && plugin.settings?.showInlineRelatedHighlightsSection !== false && regex) {
         const _exclGrps = plugin.settings?.excludedRelatedNotesCategories || [];
         const _grps = plugin.config?.globalRuleGroups || {};
         let _hlExcl = false;
@@ -20177,14 +20930,13 @@ class AddRegexRuleModal {
       }
       return;
     }
-    const existing = this.contentEl.querySelector('.inline-remark-section');
+    const existing = this.contentEl.querySelector('.remark-content-container');
     if (existing) existing.remove();
-    const existingRelated = this.contentEl.querySelector('.inline-related-notes-section');
-    if (existingRelated) existingRelated.remove();
     const existingHighlights = this.contentEl.querySelector('.inline-related-highlights-section');
     if (existingHighlights) existingHighlights.remove();
     const ruleId = 'regex-' + regex;
     this._showInlineRemarkForRules(ruleId, matchingRules);
+    this.addRelatedNotesSection(this.contentEl, regex);
     if (this._infoSection) this._infoSection.style.display = '';
     this._infoActiveChip = regex;
     if (typeof this._refreshInfoChips === 'function') this._refreshInfoChips();
@@ -20218,16 +20970,9 @@ class AddRegexRuleModal {
         historySection.className = 'keyword-history-section';
         historySection.style.cssText = 'margin-bottom:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:8px;background:var(--background-secondary);';
         this._historySectionEl = historySection;
-        { const _rn = this.contentEl.querySelector('.inline-related-notes-section'); const _cc = this.contentEl.querySelector('.chip-content-section'); if (_rn && _rn.parentNode === this.contentEl) { _rn.before(historySection); } else if (_cc && _cc.parentNode === this.contentEl) { _cc.after(historySection); } else { this.contentEl.appendChild(historySection); } }
+
       } else {
         historySection.innerHTML = '';
-        const _rn2 = this.contentEl.querySelector('.inline-related-notes-section');
-        const _cc2 = this.contentEl.querySelector('.chip-content-section');
-        if (_rn2 && _rn2.parentNode === this.contentEl) {
-          _rn2.before(historySection);
-        } else if (_cc2 && _cc2.parentNode === this.contentEl) {
-          _cc2.after(historySection);
-        }
       }
 
       const historyHeaderRow = document.createElement('div');
@@ -20264,6 +21009,11 @@ class AddRegexRuleModal {
       historyHeaderRow.appendChild(historyHeaderLeft);
       historyHeaderRow.appendChild(clearBtn);
       historySection.appendChild(historyHeaderRow);
+      if (this._addUnifiedCard) {
+        this._addUnifiedCard(historySection, 'keywordHistory', { w: 24, h: 4 });
+      } else if (!historySection.parentElement) {
+        this.contentEl.appendChild(historySection);
+      }
 
       const HISTORY_LIMIT = 10;
       const limitedKeywords = ruleKeywords.slice(0, HISTORY_LIMIT);
@@ -20308,11 +21058,14 @@ class AddRegexRuleModal {
 
       historySection.appendChild(chipRow);
 
-      historyHeaderLeft.addEventListener('click', () => {
+      const _historyToggleFn = () => {
         historyCollapsed.value = !historyCollapsed.value;
         historyToggle.textContent = historyCollapsed.value ? _TOGGLE_RIGHT : _TOGGLE_DOWN;
         chipRow.style.display = historyCollapsed.value ? 'none' : 'flex';
-      });
+      };
+      historyHeaderLeft.addEventListener('click', _historyToggleFn);
+      historyToggle.addEventListener('click', (e) => { e.stopPropagation(); _historyToggleFn(); });
+      historyTitle.addEventListener('click', (e) => { e.stopPropagation(); _historyToggleFn(); });
     } else {
       if (this._historySectionEl && this.contentEl.contains(this._historySectionEl)) {
         this._historySectionEl.remove();
@@ -20328,33 +21081,13 @@ class AddRegexRuleModal {
     // 渲染历史关键词区块
     this._renderKeywordHistory();
 
-    const existingSection = this.contentEl.querySelector('.inline-remark-section');
+    const existingSection = this.contentEl.querySelector('.remark-content-container');
     if (existingSection) existingSection.remove();
     const existingHl = this.contentEl.querySelector('.inline-related-highlights-section');
     if (existingHl) existingHl.remove();
     this._inlineRemarkRuleId = ruleId;
     const popupSpacing = this.plugin?.settings?.popupSpacing !== undefined ? this.plugin.settings.popupSpacing : 10;
     const popupFontSize = this.plugin?.settings?.popupFontSize !== undefined ? this.plugin.settings.popupFontSize : 14;
-
-    const section = document.createElement('div');
-    section.className = 'inline-remark-section';
-    section.style.cssText = 'margin-top:8px;user-select:text;-webkit-user-select:text;';
-
-    const headerRow = document.createElement('div');
-    headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
-
-
-    const closeBtn = document.createElement('span');
-    closeBtn.textContent = '✕';
-    closeBtn.style.cssText = 'cursor:pointer;font-size:14px;color:var(--text-muted);padding:0 4px;flex-shrink:0;';
-    closeBtn.addEventListener('click', () => {
-      section.remove();
-      const hlS = this.contentEl.querySelector('.inline-related-highlights-section');
-      if (hlS) hlS.remove();
-      this._inlineRemarkRuleId = null;
-    });
-    headerRow.appendChild(closeBtn);
-    section.appendChild(headerRow);
 
     // 关键词 chips：替代"|"分隔，点击切换备注和相关高亮
     const keywordRules = rules.filter(r => !_isSentenceRule(r.regex, this.plugin.settings));
@@ -20370,10 +21103,11 @@ class AddRegexRuleModal {
     // 内容容器：只显示当前激活关键词的备注
     const remarkContainer = document.createElement('div');
     remarkContainer.className = 'remark-content-container';
+    remarkContainer.style.cssText = 'margin-top:8px;user-select:text;-webkit-user-select:text;';
     remarkContainer.addEventListener('dblclick', (de) => {
       de.preventDefault(); de.stopPropagation();
     });
-    section.appendChild(remarkContainer);
+    this.contentEl.appendChild(remarkContainer);
 
     const renderActiveRule = (kwIdx) => {
 
@@ -20411,9 +21145,23 @@ class AddRegexRuleModal {
         showFileNameEdit: true,
         showImageRender: true,
         showFromFileRuleDelete: true,
-        cssScope: 'inline-remark-section',
+        cssScope: 'remark-content-container',
         masonry: _calcMasonry(activeRule.links, this.plugin)
       });
+      if (lastRenderResult?.aiBtnContainer) contentContainer.appendChild(lastRenderResult.aiBtnContainer);
+
+      for (const _cid of (this._remarkCardIds || [])) { if (this._removeUnifiedCard) this._removeUnifiedCard(_cid); }
+      if (this._addUnifiedCard) {
+        const _ensureSection = (el, label) => {
+          if (el) return el;
+          const _empty = document.createElement('div');
+          _empty.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;padding:4px 0;';
+          _empty.textContent = '（空）' + label;
+          return _empty;
+        };
+        this._addUnifiedCard(_ensureSection(lastRenderResult?.relatedHighlightsSection, '相关高亮'), 'relatedHighlights', { w: 24, h: 6 });
+        this._addUnifiedCard(_ensureSection(lastRenderResult?.remarkContentBlock, '备注'), 'remarkContent', { w: 24, h: 8 });
+      }
 
       // 关键词反向链接 chips
       const ruleRelatedKws = new Map();
@@ -20445,7 +21193,7 @@ class AddRegexRuleModal {
         }
       }
 
-      if (ruleRelatedKws.size > 0) {
+      if (ruleRelatedKws.size > 0 && this.plugin.settings?.showKeywordChipsBlock !== false) {
         const kwBlock = document.createElement('div');
         kwBlock.className = 'keyword-chips-block';
         kwBlock.style.cssText = 'margin-bottom:8px;';
@@ -20480,29 +21228,29 @@ class AddRegexRuleModal {
         // 添加折叠按钮
         _createSectionToggle(this.plugin, 'relatedKeywords_sidebar', chipsBar, kwBlockHeaderLeft);
         if (lastRenderResult?._existingMermaidGraph && lastRenderResult?._renderGraphSection) lastRenderResult._renderGraphSection(lastRenderResult._existingMermaidGraph, undefined, kwBlock);
-        if (lastRenderResult?.aiBtnContainer && lastRenderResult.container.contains(lastRenderResult.aiBtnContainer)) lastRenderResult.container.insertBefore(kwBlock, lastRenderResult.aiBtnContainer);
-        else contentContainer.appendChild(kwBlock);
-        // 插入 AI 提问块到关联词下方
-        if (lastRenderResult?.aiQuestionBlock) {
-          if (kwBlock.parentNode) {
-            kwBlock.after(lastRenderResult.aiQuestionBlock);
-          } else {
-            if (lastRenderResult?.aiBtnContainer && lastRenderResult.container.contains(lastRenderResult.aiBtnContainer)) lastRenderResult.container.insertBefore(lastRenderResult.aiQuestionBlock, lastRenderResult.aiBtnContainer);
-            else contentContainer.appendChild(lastRenderResult.aiQuestionBlock);
-          }
-        }
+        if (this._addUnifiedCard) this._addUnifiedCard(kwBlock, 'keywordChips', { w: 24, h: 3 });
+      } else if (this.plugin.settings?.showKeywordChipsBlock !== false && this._addUnifiedCard) {
+        const _emptyChips = document.createElement('div');
+        _emptyChips.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;padding:4px 0;';
+        _emptyChips.textContent = '（空）关联词';
+        this._addUnifiedCard(_emptyChips, 'keywordChips', { w: 24, h: 3 });
       }
 
-      // 即使没有关联词，也要插入 AI 提问块
-      if (ruleRelatedKws.size === 0 && lastRenderResult?.aiQuestionBlock) {
-        if (lastRenderResult?.aiBtnContainer && lastRenderResult.container.contains(lastRenderResult.aiBtnContainer)) lastRenderResult.container.insertBefore(lastRenderResult.aiQuestionBlock, lastRenderResult.aiBtnContainer);
-        else contentContainer.appendChild(lastRenderResult.aiQuestionBlock);
+      if (this._addUnifiedCard) {
+        const _aiEl = lastRenderResult?.aiQuestionBlock;
+        if (_aiEl) {
+          this._addUnifiedCard(_aiEl, 'aiQuestion', { w: 24, h: 4 });
+        } else if (this.plugin.settings?.showAiQuestionBlock !== false) {
+          const _emptyAi = document.createElement('div');
+          _emptyAi.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;padding:4px 0;';
+          _emptyAi.textContent = '（空）AI提问';
+          this._addUnifiedCard(_emptyAi, 'aiQuestion', { w: 24, h: 4 });
+        }
       }
 
 
     };
 
-    this.contentEl.appendChild(section);
 
     // 渲染第一个关键词
     renderActiveRule(0);
@@ -20551,10 +21299,13 @@ class AddRegexRuleModal {
   }
 
   clearRemarkSection() {
-    // 已备注文本功能已移除
+    if (this._removeUnifiedCard && this._remarkCardIds) {
+      for (const cid of this._remarkCardIds) { this._removeUnifiedCard(cid); }
+    }
   }
 
   clearInfoSection() {
+    if (this._removeUnifiedCard) this._removeUnifiedCard('infoSection');
     if (this._infoGrid) { try { this._infoGrid.destroy(false); } catch(e){} }
     if (this._infoResizeObservers) this._infoResizeObservers.forEach(ro => { try { ro.disconnect(); } catch(e){} });
     const existing = this.contentEl?.querySelector('.info-section');
@@ -20579,7 +21330,7 @@ class AddRegexRuleModal {
 
   addInfoSection(contentEl) {
     this.clearInfoSection();
-    if (this.plugin.settings?.showInfoSection !== true) return;
+    if (this.plugin.settings?.showInfoSection === false) return;
     const plugin = this.plugin;
     try { this.app.vault.adapter.mkdir('.obsidian/plugins/Regex-Css-Highlighter/info').catch(() => {}); } catch (e) {}
     const vaultFolder = (plugin.settings?.infoVaultFolder || '').trim().replace(/^\/+|\/+$/g, '');
@@ -20679,6 +21430,7 @@ class AddRegexRuleModal {
     infoSettingIcon.addEventListener('mouseenter', () => { infoSettingIcon.style.opacity = '0.8'; });
     infoSettingIcon.addEventListener('mouseleave', () => { infoSettingIcon.style.opacity = '0.4'; });
     infoSettingIcon.addEventListener('click', (se) => {
+      console.log('[SG] infoSettingIcon click fired', se.target);
       se.preventDefault(); se.stopPropagation();
       const existingMenu = section.querySelector('.info-settings-menu');
       if (existingMenu) { existingMenu.remove(); return; }
@@ -20863,9 +21615,10 @@ class AddRegexRuleModal {
       addPromptBtn.style.cssText = 'margin-top:2px;padding:3px 8px;cursor:pointer;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);font-size:10px;';
       addPromptBtn.addEventListener('click', () => { _s.infoCustomPrompts.push({ label: '', text: '' }); plugin.saveData(plugin.settings); _renderCustomPrompts(); });
       menu.appendChild(addPromptBtn);
-      headerRow.after(menu);
-      const closeMenu = (ev) => { if (!menu.contains(ev.target) && !infoSettingIcon.contains(ev.target)) { menu.remove(); document.removeEventListener('mousedown', closeMenu); } };
-      setTimeout(() => document.addEventListener('mousedown', closeMenu), 0);
+      section.insertBefore(menu, section.firstChild);
+      const _menuDoc = infoSettingIcon.ownerDocument || document;
+      const closeMenu = (ev) => { if (!menu.contains(ev.target) && !infoSettingIcon.contains(ev.target)) { menu.remove(); _menuDoc.removeEventListener('mousedown', closeMenu); } };
+      setTimeout(() => _menuDoc.addEventListener('mousedown', closeMenu), 0);
     });
     headerLeft.appendChild(infoSettingIcon);
     headerRow.appendChild(headerLeft);
@@ -20873,6 +21626,13 @@ class AddRegexRuleModal {
     addBtn.textContent = '+';
     addBtn.title = t('main.infoAddFile');
     addBtn.style.cssText = 'padding:0 6px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:18px;line-height:0;font-size:13px;font-weight:700;';
+    const _infoHasKw = !!(this.regexInput?.getValue?.()?.trim() || this.currentEditingRule?.regex);
+    if (!_infoHasKw) {
+      addBtn.disabled = true;
+      addBtn.style.opacity = '0.4';
+      addBtn.style.cursor = 'not-allowed';
+      addBtn.title = t('main.infoAddBtnHint');
+    }
     headerRow.appendChild(addBtn);
     section.appendChild(headerRow);
     const chipRow = document.createElement('div');
@@ -21289,6 +22049,7 @@ class AddRegexRuleModal {
     };
 
     addBtn.addEventListener('click', async () => {
+      console.log('[SG] info addBtn click fired', this);
       const curKw = this.regexInput?.getValue?.()?.trim() || this.currentEditingRule?.regex || '';
       if (curKw) await this._createInfoFile(curKw);
     });
@@ -21334,11 +22095,11 @@ class AddRegexRuleModal {
     };
 
     this._refreshInfoChips();
-    const relatedHl = contentEl.querySelector('.inline-related-highlights-section');
-    const remarkSec = contentEl.querySelector('.inline-remark-section');
-    if (relatedHl) relatedHl.after(section);
-    else if (remarkSec) remarkSec.after(section);
-    else contentEl.appendChild(section);
+    if (this._addUnifiedCard) {
+      this._addUnifiedCard(section, 'infoSection', { w: 24, h: 10 });
+    } else {
+      contentEl.appendChild(section);
+    }
   }
 
   _loadThreads() {
@@ -21362,6 +22123,7 @@ class AddRegexRuleModal {
 
   addThreadsSection(contentEl) {
     if (this.plugin?.settings?.showThreads === false) return;
+    if (this._removeUnifiedCard) this._removeUnifiedCard('threadsSection');
     const existing = contentEl.querySelector('.threads-section');
     if (existing) existing.remove();
     const plugin = this;
@@ -21382,6 +22144,7 @@ class AddRegexRuleModal {
     helpBtn.textContent = '?';
     helpBtn.style.cssText = 'cursor:pointer;color:var(--text-faint);font-size:10px;padding:0 3px;';
     helpBtn.addEventListener('click', (e) => {
+      console.log('[SG] helpBtn click fired', e.target);
       e.stopPropagation();
       _showHelpFloat(helpBtn, t('main.threadsHelpContent'));
     });
@@ -21445,7 +22208,7 @@ class AddRegexRuleModal {
       let _saveTimer = null;
       ta.addEventListener('input', () => { clearTimeout(_saveTimer); _saveTimer = setTimeout(async () => { try { await _adapter.write(_threadsPath, ta.value); } catch(e) {} }, 500); });
       panel.appendChild(ta);
-      header.after(panel);
+      section.insertBefore(panel, section.firstChild);
       const closeMenu = (ev) => { if (!panel.contains(ev.target) && !threadsSettingIcon.contains(ev.target)) { panel.remove(); document.removeEventListener('mousedown', closeMenu); } };
       setTimeout(() => document.addEventListener('mousedown', closeMenu), 0);
     });
@@ -21460,7 +22223,11 @@ class AddRegexRuleModal {
     const body = document.createElement('div');
     body.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
     section.appendChild(body);
-    contentEl.appendChild(section);
+    if (this._addUnifiedCard) {
+      this._addUnifiedCard(section, 'threadsSection', { w: 24, h: 6 });
+    } else {
+      contentEl.appendChild(section);
+    }
     const renderLines = (allLines) => {
       body.innerHTML = '';
       const _p = _pluginInst;
@@ -21538,6 +22305,7 @@ class AddRegexRuleModal {
 
 
   clearParkingLotSection() {
+    if (this._removeUnifiedCard) this._removeUnifiedCard('parkingLotSection');
     if (this._plGrid) { try { this._plGrid.destroy(false); } catch(e){} }
     if (this._plGridResizeObserver) { try { this._plGridResizeObserver.disconnect(); } catch(e){} this._plGridResizeObserver = null; }
     if (this._plGridWaitObserver) { try { this._plGridWaitObserver.disconnect(); } catch(e){} this._plGridWaitObserver = null; }
@@ -21648,6 +22416,7 @@ class AddRegexRuleModal {
     infoSettingIcon.addEventListener('mouseenter', () => { infoSettingIcon.style.opacity = '0.8'; });
     infoSettingIcon.addEventListener('mouseleave', () => { infoSettingIcon.style.opacity = '0.4'; });
     infoSettingIcon.addEventListener('click', (se) => {
+      console.log('[SG] infoSettingIcon click fired', se.target);
       se.preventDefault(); se.stopPropagation();
       const existingMenu = section.querySelector('.info-settings-menu');
       if (existingMenu) { existingMenu.remove(); section.style.height = (plugin.settings?.parkingLotHeight || 300) + 'px'; section.style.overflow = 'hidden'; return; }
@@ -21843,9 +22612,10 @@ class AddRegexRuleModal {
       addPromptBtn.style.cssText = 'margin-top:2px;padding:3px 8px;cursor:pointer;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);font-size:10px;';
       addPromptBtn.addEventListener('click', () => { _s.parkingLotCustomPrompts.push({ label: '', text: '' }); plugin.saveData(plugin.settings); _renderCustomPrompts(); });
       menu.appendChild(addPromptBtn);
-      headerRow.after(menu);
-      const closeMenu = (ev) => { if (!menu.contains(ev.target) && !infoSettingIcon.contains(ev.target)) { menu.remove(); document.removeEventListener('mousedown', closeMenu); } };
-      setTimeout(() => document.addEventListener('mousedown', closeMenu), 0);
+      section.insertBefore(menu, section.firstChild);
+      const _menuDoc = infoSettingIcon.ownerDocument || document;
+      const closeMenu = (ev) => { if (!menu.contains(ev.target) && !infoSettingIcon.contains(ev.target)) { menu.remove(); _menuDoc.removeEventListener('mousedown', closeMenu); } };
+      setTimeout(() => _menuDoc.addEventListener('mousedown', closeMenu), 0);
     });
     headerLeft.appendChild(infoSettingIcon);
     headerRow.appendChild(headerLeft);
@@ -21853,6 +22623,7 @@ class AddRegexRuleModal {
     addBtn.textContent = '+';
     addBtn.title = t('main.infoAddFile');
     addBtn.style.cssText = 'padding:0 6px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:18px;line-height:0;font-size:13px;font-weight:700;';
+
     headerRow.appendChild(addBtn);
     section.appendChild(headerRow);
     const chipRow = document.createElement('div');
@@ -22322,12 +23093,10 @@ class AddRegexRuleModal {
     };
 
     this._refreshPlChips();
-    if (_plNextSibling && _plNextSibling.parentNode === contentEl) {
-      contentEl.insertBefore(section, _plNextSibling);
+    if (this._addUnifiedCard) {
+      this._addUnifiedCard(section, 'parkingLotSection', { w: 24, h: 10 });
     } else {
-      const threadsSec = contentEl.querySelector('.threads-section');
-      if (threadsSec) threadsSec.before(section);
-      else contentEl.appendChild(section);
+      contentEl.appendChild(section);
     }
   }
   addHistorySection(contentEl) {
@@ -22993,6 +23762,7 @@ class AddRegexRuleModal {
   }
 
   clearHistorySection() {
+    if (this._removeUnifiedCard) this._removeUnifiedCard('keywordHistory');
     const historySections = this.contentEl.querySelectorAll('.history-section');
     historySections.forEach(section => section.remove());
 
@@ -25291,6 +26061,8 @@ class AddRegexRuleModal {
           const closeBtn = this.modalEl.querySelector('.rch-close-btn');
           if (sidebarBtn) sidebarBtn.style.display = 'none';
           if (closeBtn) closeBtn.style.display = 'none';
+          const _popoutBtnRefresh = this.modalEl.querySelector('.rch-popout-btn');
+          if (_popoutBtnRefresh && (this._isPopout || this._popoutDoc && this._popoutDoc !== document || this.modalEl.ownerDocument !== document)) _popoutBtnRefresh.style.display = 'none';
         }
       }
     } catch (error) {
@@ -25381,11 +26153,19 @@ class SwiftGlossaSidebarView extends ItemView {
     this.plugin._sidebarView = this;
 
     let modal = this.plugin._regexHighlightModal;
+    const _popoutDoc = this.containerEl.ownerDocument;
+    const _isPopoutLeaf = (() => { try { const _r = this.leaf?.getRoot?.(); return !!(_r && _r !== this.app.workspace.rootSplit && _r !== this.app.workspace.leftSplit && _r !== this.app.workspace.rightSplit); } catch(e) { return false; } })();
+    const _isPopout = _isPopoutLeaf || (_popoutDoc !== document);
     if (!modal || !modal.modalEl) {
 
       modal = new AddRegexRuleModal(this.app, this.plugin);
+      modal._popoutDoc = _popoutDoc;
+      modal._isPopout = _isPopout;
       modal.open();
       this.plugin._regexHighlightModal = modal;
+    } else {
+      modal._popoutDoc = _popoutDoc;
+      modal._isPopout = _isPopout;
     }
 
     if (!modal || !modal.modalEl) {
@@ -25393,11 +26173,42 @@ class SwiftGlossaSidebarView extends ItemView {
       return;
     }
 
+    if (_isPopout) {
+      if (!_popoutDoc.getElementById('gridstack-css')) {
+        const _gs = _popoutDoc.createElement('style'); _gs.id = 'gridstack-css'; _gs.textContent = _GS_EMBEDDED_CSS; _popoutDoc.head.appendChild(_gs);
+      }
+      {
+        let _us = _popoutDoc.getElementById('unified-grid-style');
+        if (!_us) { _us = _popoutDoc.createElement('style'); _us.id = 'unified-grid-style'; _popoutDoc.head.appendChild(_us); }
+        _us.textContent = `.unified-card-grid .grid-stack-item>.ui-resizable-handle{opacity:0;transition:opacity .15s;}.unified-card-grid .grid-stack-item:hover>.ui-resizable-handle{opacity:1;}.unified-card-grid .grid-stack-item>.ui-resizable-se{width:14px;height:14px;bottom:0;right:0;}@media (pointer:coarse){.unified-card-grid .grid-stack-item>.ui-resizable-handle{width:20px!important;height:20px!important;z-index:5;opacity:1!important;}.unified-card-grid .grid-stack-item>.ui-resizable-se{right:0!important;bottom:0!important;}}`;
+      }
+      if (!_popoutDoc.getElementById('unified-grid-col24-css')) {
+        const _col = _popoutDoc.createElement('style'); _col.id = 'unified-grid-col24-css';
+        let _r = ''; for (let _n = 1; _n <= 24; _n++) { const _p = (_n / 24 * 100); _r += `.unified-card-grid.gs-24>.grid-stack-item[gs-w="${_n}"]{width:${_p}%}`; _r += `.unified-card-grid.gs-24>.grid-stack-item[gs-x="${_n}"]{left:${_p}%}`; }
+        _col.textContent = _r; _popoutDoc.head.appendChild(_col);
+      }
+
+    }
+
     if (modal.modalEl.parentElement && modal.modalEl.parentElement !== container) {
       this._savedParent = modal.modalEl.parentElement;
     } else {
       this._savedParent = null;
     }
+
+    if (modal._unifiedGrid && modal._unifiedGridReady && modal._getLayoutKey) {
+      try {
+        const _oldLk = modal._getLayoutKey();
+        if (!modal.plugin.settings[_oldLk]) modal.plugin.settings[_oldLk] = {};
+        for (const n of (modal._unifiedGrid.engine?.nodes || [])) {
+          const cardEl = n.el?.querySelector?.('.unified-card');
+          const cid = cardEl?.dataset?.cardId;
+          if (cid) modal.plugin.settings[_oldLk][cid] = { x: n.x, y: n.y, w: n.w, h: n.h };
+        }
+        modal.plugin.saveData(modal.plugin.settings);
+      } catch(e) {}
+    }
+
     this._savedStyles = {};
     const propsToSave = ['position','left','top','transform','width','height','maxHeight','minWidth','maxWidth','borderRadius','zIndex','opacity','boxShadow','background','backdropFilter','webkitBackdropFilter','border'];
     for (const prop of propsToSave) {
@@ -25422,13 +26233,26 @@ class SwiftGlossaSidebarView extends ItemView {
     modal.modalEl.style.webkitBackdropFilter = 'none';
     modal.modalEl.style.border = 'none';
 
+    const _oldGridDoc = modal._unifiedGridEl?.ownerDocument || null;
+
     container.appendChild(modal.modalEl);
+
+    {
+      const _newDoc = container.ownerDocument;
+      if (_oldGridDoc && _oldGridDoc !== _newDoc && modal._recreateUnifiedGrid) {
+        modal._recreateUnifiedGrid();
+      } else if (modal._reapplyLayout) {
+        modal._reapplyLayout();
+      }
+    }
 
     if (modal._updateTitleBarCursor) modal._updateTitleBarCursor();
     const _sbBtn = modal.modalEl.querySelector('.rch-sidebar-btn');
     const closeBtn = modal.modalEl.querySelector('.rch-close-btn');
     if (_sbBtn) _sbBtn.style.display = 'none';
     if (closeBtn) closeBtn.style.display = 'none';
+    const _popoutBtn = modal.modalEl.querySelector('.rch-popout-btn');
+    if (_popoutBtn) _popoutBtn.style.display = _isPopout ? 'none' : '';
 
     // 清理浮动模式的resize handle
     if (modal._resizeHandle && document.body.contains(modal._resizeHandle)) {
@@ -25539,7 +26363,8 @@ class SwiftGlossaSidebarView extends ItemView {
     this.plugin._sidebarView = null;
     this._savedStyles = null;
     this._savedParent = null;
-    const _isPopout = this.containerEl && this.containerEl.ownerDocument !== document;
+    const _isPopoutLeaf = (() => { try { const _r = this.leaf?.getRoot?.(); return !!(_r && _r !== this.app.workspace.rootSplit && _r !== this.app.workspace.leftSplit && _r !== this.app.workspace.rightSplit); } catch(e) { return false; } })();
+    const _isPopout = _isPopoutLeaf || (this.containerEl && this.containerEl.ownerDocument !== document);
     if (modal) {
       try {
         if (_isPopout) {
@@ -25558,6 +26383,10 @@ class SwiftGlossaSidebarView extends ItemView {
       }
     }
     if (_isPopout) {
+      try {
+        const _oldHideCss = document.getElementById('rch-popout-hide-css');
+        if (_oldHideCss) _oldHideCss.remove();
+      } catch(e) {}
       setTimeout(() => {
         try { this.plugin.ensureSidebarView(); } catch(e) { console.warn('[SwiftGlossa] restore sidebar after popout failed:', e); }
       }, 100);
@@ -25679,6 +26508,23 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       showRelatedNotes: true,
       showRelatedHighlights: true,
       showInfoSection: true,
+      showRelatedHighlightsSection: true,
+      showInlineRelatedHighlightsSection: true,
+      showRemarkContentBlock: true,
+      showKeywordChipsBlock: true,
+      showAiQuestionBlock: true,
+      showRelatedNotesSection: true,
+
+      remarkGridLayout: {},
+      unifiedGridLayout: {},
+      sidebarGridLayout: {},
+      popoutGridLayout: {},
+      kwWindowGridLayout: {},
+      unifiedCardBg: '',
+      unifiedCardBgOpacity: 1,
+      unifiedCardShowGrid: false,
+      unifiedCardBorder: '',
+
       sentenceThresholdCN: 8,
       sentenceThresholdEN: 3,
 
@@ -40156,7 +41002,7 @@ if (note._collapsed) {
       paletteBtnInline.addEventListener('click', (e) => {
         e.stopPropagation();
         console.log('[FloatNote] paletteBtn clicked, presets:', plugin.colorSchemePresets?.length);
-        const ex = document.querySelector('.color-scheme-popup');
+        const ex = (paletteBtnInline.ownerDocument || document).querySelector('.color-scheme-popup');
         if (ex) { ex.remove(); return; }
         const noteCard = card;
         let curTheme = getNoteTheme(note);
@@ -40366,14 +41212,15 @@ if (note._collapsed) {
             }
           });
         popup.appendChild(scrollBody);
+        const _popupDoc = paletteBtnInline.ownerDocument || document;
         const closeOnOutside = (ev) => {
           if (!popup.contains(ev.target) && ev.target !== paletteBtnInline) {
             popup.remove();
-            document.removeEventListener('mousedown', closeOnOutside);
+            _popupDoc.removeEventListener('mousedown', closeOnOutside);
           }
         };
-        setTimeout(() => document.addEventListener('mousedown', closeOnOutside), 0);
-        document.body.appendChild(popup);
+        setTimeout(() => _popupDoc.addEventListener('mousedown', closeOnOutside), 0);
+        _popupDoc.body.appendChild(popup);
       });
       actionLeft.appendChild(paletteBtnInline);
       actionbar.appendChild(actionLeft);
@@ -43024,7 +43871,7 @@ content.addEventListener('auxclick', (e) => {
     // 鼠标进入事件处理函数
     const handleMouseOver = (e) => {
       if (!(e.target instanceof Element)) return;
-      if (e.target.closest('.inline-remark-section')) return;
+      if (e.target.closest('.remark-content-container')) return;
       if (e.target.closest('.swiftglossa-sidebar')) return;
       if (this._sidebarView && this._sidebarView.isVisible() && this.settings?.hidePopupWhenSidebarOpen && !this._forceShowPopup) return;
       if (this.settings?.hoverKeywordNoPopup && !this._forceShowPopup) return;
@@ -44430,6 +45277,7 @@ content.addEventListener('auxclick', (e) => {
     helpBtn.textContent = '?';
     helpBtn.style.cssText = 'cursor:pointer;color:var(--text-faint);font-size:10px;padding:0 3px;';
     helpBtn.addEventListener('click', (e) => {
+      console.log('[SG] helpBtn click fired', e.target);
       e.stopPropagation();
       _showHelpFloat(helpBtn, t('main.threadsHelpContent'));
     });
@@ -44517,6 +45365,7 @@ content.addEventListener('auxclick', (e) => {
 
   renderRemarkContent(container, opts) {
     const plugin = this;
+    let relatedHighlightsSection = null;
     container.addEventListener('mousedown', () => { window._sgIgnoreSelUntil = Date.now() + 600; }, true);
     const {
       links,
@@ -44580,105 +45429,11 @@ content.addEventListener('auxclick', (e) => {
     }
 
     const styleEl = document.createElement('style');
-    styleEl.textContent = `.${cssScope} .remark-popup-content p{margin:0;}.${cssScope} .remark-popup-content ul,.${cssScope} .remark-popup-content ol{margin:0;padding-left:20px;}.${cssScope} .remark-popup-content li{margin:0;}.${cssScope} .remark-popup-content h1,.${cssScope} .remark-popup-content h2,.${cssScope} .remark-popup-content h3,.${cssScope} .remark-popup-content h4,.${cssScope} .remark-popup-content h5,.${cssScope} .remark-popup-content h6{margin:0;}.${cssScope} .remark-popup-content blockquote{margin:0;}.${cssScope} .remark-popup-content hr{margin:5px 0;}.${cssScope} .remark-popup-content table{border-collapse:separate;border-spacing:0;margin:8px 0;width:100%;border-radius:6px;overflow:hidden;border:1px solid var(--border-color);font-size:11px;}.${cssScope} .remark-popup-content th,.${cssScope} .remark-popup-content td{padding:5px 10px;text-align:left;border-bottom:1px solid var(--border-color);border-right:1px solid var(--border-color);}.${cssScope} .remark-popup-content th:last-child,.${cssScope} .remark-popup-content td:last-child{border-right:none;}.${cssScope} .remark-popup-content tr:last-child td{border-bottom:none;}.${cssScope} .remark-popup-content th{background:linear-gradient(180deg,var(--background-modifier-hover),var(--background-secondary));font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);}.${cssScope} .remark-popup-content tr:nth-child(even) td{background-color:rgba(0,0,0,0.03);}.${cssScope} .remark-popup-content tr:hover td{background-color:var(--background-modifier-hover);}.${cssScope} .remark-popup-content img{max-width:100%;height:auto;border-radius:4px;margin:4px 0;}.${cssScope} .remark-popup-content .internal-embed{max-width:100%;}.${cssScope} .remark-popup-content .internal-embed img{max-width:100%;height:auto;border-radius:4px;margin:4px 0;}.inline-remark-section .remark-content-block{border:none;background:transparent;padding:0;margin:0;}.inline-remark-section .remark-content-block .remark-block-body{padding:0;}`;
+    styleEl.textContent = `.${cssScope} .remark-popup-content p{margin:0;}.${cssScope} .remark-popup-content ul,.${cssScope} .remark-popup-content ol{margin:0;padding-left:20px;}.${cssScope} .remark-popup-content li{margin:0;}.${cssScope} .remark-popup-content h1,.${cssScope} .remark-popup-content h2,.${cssScope} .remark-popup-content h3,.${cssScope} .remark-popup-content h4,.${cssScope} .remark-popup-content h5,.${cssScope} .remark-popup-content h6{margin:0;}.${cssScope} .remark-popup-content blockquote{margin:0;}.${cssScope} .remark-popup-content hr{margin:5px 0;}.${cssScope} .remark-popup-content table{border-collapse:separate;border-spacing:0;margin:8px 0;width:100%;border-radius:6px;overflow:hidden;border:1px solid var(--border-color);font-size:11px;}.${cssScope} .remark-popup-content th,.${cssScope} .remark-popup-content td{padding:5px 10px;text-align:left;border-bottom:1px solid var(--border-color);border-right:1px solid var(--border-color);}.${cssScope} .remark-popup-content th:last-child,.${cssScope} .remark-popup-content td:last-child{border-right:none;}.${cssScope} .remark-popup-content tr:last-child td{border-bottom:none;}.${cssScope} .remark-popup-content th{background:linear-gradient(180deg,var(--background-modifier-hover),var(--background-secondary));font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);}.${cssScope} .remark-popup-content tr:nth-child(even) td{background-color:rgba(0,0,0,0.03);}.${cssScope} .remark-popup-content tr:hover td{background-color:var(--background-modifier-hover);}.${cssScope} .remark-popup-content img{max-width:100%;height:auto;border-radius:4px;margin:4px 0;}.${cssScope} .remark-popup-content .internal-embed{max-width:100%;}.${cssScope} .remark-popup-content .internal-embed img{max-width:100%;height:auto;border-radius:4px;margin:4px 0;}.remark-content-container .remark-content-block{border:none;background:transparent;padding:0;margin:0;}.remark-content-container .remark-content-block .remark-block-body{padding:0;}`;
     container.appendChild(styleEl);
 
 
-    if (plugin.settings?.showRelatedNotes !== false && ruleRegex) {
-      const _excludedGroups = plugin.settings?.excludedRelatedNotesCategories || [];
-      const _groups = plugin.config?.globalRuleGroups || {};
-      let _isExcluded = false;
-      if (_excludedGroups.length > 0) {
-        for (const _grp in _groups) {
-          if (_excludedGroups.includes(_grp) && _groups[_grp].includes(ruleRegex)) { _isExcluded = true; break; }
-        }
-      }
-      if (!_isExcluded) {
-      const searchTerms = _splitRegexPipes(ruleRegex).map(s => s.trim()).filter(s => s.length > 0);
-      if (searchTerms.length > 0) {
-        const allFiles = plugin.app.vault.getFiles();
-        const mdFiles = allFiles.filter(f => f.extension === 'md');
-        const relatedNotes = [];
-        for (const term of searchTerms) {
-          for (const f of mdFiles) {
-            const nameWithoutExt = f.name.replace(/\.md$/, '');
-            if (_regexMatch(nameWithoutExt, term) && f.path !== plugin.currentFilePath) {
-              if (!relatedNotes.some(n => n.path === f.path)) {
-                relatedNotes.push(f);
-              }
-            }
-          }
-        }
-        if (relatedNotes.length > 0) {
-          const relatedSection = document.createElement('div');
-          relatedSection.className = 'related-notes-section';
-          relatedSection.style.cssText = 'margin-bottom:8px;';
-          const relatedHeader = document.createElement('div');
-          relatedHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;gap:4px;';
-          const relatedHeaderText = document.createElement('span');
-          relatedHeaderText.innerHTML = t('main.relatedNotes') + ' ' + relatedNotes.length;
-          relatedHeader.appendChild(relatedHeaderText);
-          relatedSection.appendChild(relatedHeader);
-          const relatedList = document.createElement('div');
-    relatedList.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;overflow:hidden;';
-          // 添加折叠按钮
-          _createSectionToggle(plugin, 'relatedNotes', relatedList, relatedHeader);
-          for (const note of relatedNotes.slice(0, 10)) {
-            const noteLink = document.createElement('span');
-            noteLink.className = 'related-note-link';
-            const nameWithoutExt = note.name.replace(/\.md$/, '');
-            noteLink.textContent = nameWithoutExt;
-            noteLink.title = note.path;
-            noteLink.dataset.path = note.path;
-            noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;max-width:100%;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;';
-            noteLink.addEventListener('mouseenter', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.5)'; });
-            noteLink.addEventListener('mouseleave', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
-            noteLink.addEventListener('click', (e) => {
-
-              e.preventDefault();
-              e.stopPropagation();
-              plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
-            });
-            relatedList.appendChild(noteLink);
-          }
-          if (relatedNotes.length > 10) {
-            const moreTag = document.createElement('span');
-            moreTag.textContent = `+${relatedNotes.length - 10}`;
-            moreTag.style.cssText = 'font-size:10px;color:var(--text-muted);padding:2px 4px;cursor:pointer;border-radius:4px;transition:background 0.15s ease;';
-            moreTag.addEventListener('mouseenter', () => { moreTag.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
-            moreTag.addEventListener('mouseleave', () => { moreTag.style.background = ''; });
-            moreTag.addEventListener('click', () => {
-              const existingLinks = relatedList.querySelectorAll('.related-note-link');
-              const shownPaths = new Set();
-              for (const link of existingLinks) { shownPaths.add(link.dataset.path); }
-              for (const note of relatedNotes) {
-                if (shownPaths.has(note.path)) continue;
-                const noteLink = document.createElement('span');
-                noteLink.className = 'related-note-link';
-                const nameWithoutExt = note.name.replace(/\.md$/, '');
-                noteLink.textContent = nameWithoutExt;
-                noteLink.title = note.path;
-                noteLink.dataset.path = note.path;
-                noteLink.style.cssText = 'font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(var(--mono-rgb-0),0.3);color:var(--text-accent);cursor:pointer;text-decoration:none;white-space:nowrap;border:1px solid rgba(var(--mono-rgb-0),0.2);transition:background 0.15s ease;max-width:100%;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;';
-                noteLink.addEventListener('mouseenter', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.5)'; });
-                noteLink.addEventListener('mouseleave', () => { noteLink.style.background = 'rgba(var(--mono-rgb-0),0.3)'; });
-                noteLink.addEventListener('click', (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  plugin.app.workspace.openLinkText(note.path, '', true, {active: false});
-                });
-                relatedList.insertBefore(noteLink, moreTag);
-              }
-              moreTag.remove();
-            });
-            relatedList.appendChild(moreTag);
-          }
-          relatedSection.appendChild(relatedList);
-          container.appendChild(relatedSection);
-        }
-      }
-      }
-    }    if (plugin.settings?.showRelatedHighlights !== false && ruleRegex) {
+    if (plugin.settings?.showRelatedHighlights !== false && plugin.settings?.showRelatedHighlightsSection !== false && ruleRegex) {
       const _excludedHlGroups = plugin.settings?.excludedRelatedNotesCategories || [];
       const _hlGroups = plugin.config?.globalRuleGroups || {};
       let _isHlExcluded = false;
@@ -44709,6 +45464,7 @@ content.addEventListener('auxclick', (e) => {
           const totalCount = hlMatches.length + sgSentences.length;
           const hlSection = document.createElement('div');
           hlSection.className = 'related-highlights-section';
+          hlSection.classList.add(cssScope);
             _SG_APPLY_PALETTE(hlSection, plugin.settings);
           hlSection.style.cssText = 'margin-bottom:8px;';
           const hlHeader = document.createElement('div');
@@ -44749,7 +45505,7 @@ content.addEventListener('auxclick', (e) => {
               inp.addEventListener('input', () => { _s.relatedHlKwUniformClass = inp.value.trim(); plugin.saveData(plugin.settings); });
               row.appendChild(lbl); row.appendChild(inp); menu.appendChild(row); }
             _SG_FINISH_HL_SETTINGS(menu, _s, () => plugin.saveData(plugin.settings), hlSection);
-                        hlHeader.after(menu);
+                        hlSection.insertBefore(menu, hlSection.firstChild);
             const closeMenu = (ev) => { if (!menu.contains(ev.target) && !hlSettingIcon2.contains(ev.target)) { menu.remove(); document.removeEventListener('mousedown', closeMenu); } };
             setTimeout(() => document.addEventListener('mousedown', closeMenu), 0);
           });
@@ -45091,7 +45847,7 @@ content.addEventListener('auxclick', (e) => {
           hlSection.appendChild(hlList);
           // 添加折叠按钮
           _createSectionToggle(plugin, 'relatedHighlights', hlList, hlHeader);
-          container.appendChild(hlSection);
+          relatedHighlightsSection = hlSection;
         }
       }
       }
@@ -45100,6 +45856,7 @@ content.addEventListener('auxclick', (e) => {
 
     const remarkBlock = document.createElement('div');
     remarkBlock.className = 'remark-content-block';
+    remarkBlock.classList.add(cssScope);
     remarkBlock.style.cssText = 'margin-bottom:8px;';
     const remarkBlockHeader = document.createElement('div');
     remarkBlockHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:4px;';
@@ -45133,14 +45890,14 @@ content.addEventListener('auxclick', (e) => {
         sl.addEventListener('input', () => {
           _s[key] = parseFloat(sl.value); val.textContent = sl.value + (unit||'');
           plugin.saveData(plugin.settings);
-          if (key === 'popupFontSize') container.style.fontSize = sl.value + 'px';
-          if (key === 'popupLineHeight') container.style.lineHeight = sl.value;
+          if (key === 'popupFontSize') { const fs = sl.value + 'px'; container.style.fontSize = fs; if (relatedHighlightsSection) relatedHighlightsSection.style.fontSize = fs; if (remarkBlock) remarkBlock.style.fontSize = fs; if (aiQuestionBlock) aiQuestionBlock.style.fontSize = fs; }
+          if (key === 'popupLineHeight') { const lh = sl.value; container.style.lineHeight = lh; if (relatedHighlightsSection) relatedHighlightsSection.style.lineHeight = lh; if (remarkBlock) remarkBlock.style.lineHeight = lh; if (aiQuestionBlock) aiQuestionBlock.style.lineHeight = lh; }
         });
         row.appendChild(lbl); row.appendChild(sl); row.appendChild(val); menu.appendChild(row);
       };
       addRemarkSlider(t('settings.remarkPopupFontSize') || '字体大小', 'popupFontSize', 10, 20, 1, 'px');
       addRemarkSlider(t('settings.remarkLineSpacing') || '行距', 'popupLineHeight', 1.0, 2.5, 0.1, '');
-      remarkBlockHeader.after(menu);
+      remarkBlock.insertBefore(menu, remarkBlock.firstChild);
       const closeMenu = (ev) => { if (!menu.contains(ev.target) && !remarkSettingIcon.contains(ev.target)) { menu.remove(); document.removeEventListener('mousedown', closeMenu); } };
       setTimeout(() => document.addEventListener('mousedown', closeMenu), 0);
     });
@@ -45296,10 +46053,11 @@ content.addEventListener('auxclick', (e) => {
     remarkBlock.appendChild(remarkBlockBody);
     // 添加折叠按钮
     _createSectionToggle(plugin, 'keywordRemarks', remarkBlockBody, remarkBlockHeaderLeft);
-    container.appendChild(remarkBlock);
+
 
     const aiQuestionBlock = document.createElement('div');
     aiQuestionBlock.className = 'ai-question-block';
+    aiQuestionBlock.classList.add(cssScope);
     aiQuestionBlock.style.cssText = 'margin-bottom:8px;';
     const aiQuestionBlockHeader = document.createElement('div');
     aiQuestionBlockHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:4px;';
@@ -46730,7 +47488,7 @@ ${fullContext}`;
 
     // aiBtnContainer 仅作为插入锚点，不再包含按钮
     aiBtnContainer.style.cssText = 'clear:both;height:0;overflow:hidden;';
-    container.appendChild(aiBtnContainer);
+
 
     if (savedScrollTop > 0) {
       requestAnimationFrame(() => { container.scrollTop = savedScrollTop; });
@@ -46835,11 +47593,95 @@ ${fullContext}`;
       });
     });
 
-    return { linksByFile, container, aiBtnContainer, aiGraphBtn, _existingMermaidGraph, _renderGraphSection, aiQuestionBlock };
+    for (const _sec of [relatedHighlightsSection, remarkBlock, aiQuestionBlock].filter(s => s)) {
+      _sec.addEventListener('mousedown', () => { window._sgIgnoreSelUntil = Date.now() + 600; }, true);
+    }
+    if (relatedHighlightsSection) {
+      let _sifEl = null;
+      relatedHighlightsSection.addEventListener('mouseenter', (e) => {
+        const img = e.target;
+        if (img.tagName !== 'IMG' || !img.closest('.masonry-card-body')) return;
+        if (img.naturalWidth > 0 && img.offsetWidth >= img.naturalWidth * 0.95) return;
+        if (_sifEl) _sifEl.remove();
+        _sifEl = document.createElement('div');
+        _sifEl.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.5);overflow:hidden;transition:opacity 0.15s ease;opacity:0;';
+        const floatImg = document.createElement('img');
+        floatImg.src = img.src;
+        floatImg.style.cssText = 'display:block;max-width:min(90vw, 800px);max-height:80vh;border-radius:8px;';
+        _sifEl.appendChild(floatImg);
+        document.body.appendChild(_sifEl);
+        const rect = img.getBoundingClientRect();
+        const fw = Math.min(window.innerWidth * 0.9, 800);
+        const fh = Math.min(window.innerHeight * 0.8, fw * (img.naturalHeight / img.naturalWidth));
+        _sifEl.style.left = Math.max(10, rect.left + rect.width / 2 - fw / 2) + 'px';
+        _sifEl.style.top = Math.max(10, rect.top + rect.height / 2 - fh / 2) + 'px';
+        requestAnimationFrame(() => { if (_sifEl) _sifEl.style.opacity = '1'; });
+      }, true);
+      relatedHighlightsSection.addEventListener('mouseleave', (e) => {
+        const img = e.target;
+        if (img.tagName !== 'IMG' || !img.closest('.masonry-card-body')) return;
+        if (_sifEl) { _sifEl.remove(); _sifEl = null; }
+      }, true);
+    }
+    if (remarkBlock) {
+      remarkBlock.addEventListener('dblclick', (e) => {
+        const remarkEl = e.target.closest('[data-remark-source="link"]');
+        if (!remarkEl) return;
+        e.stopPropagation();
+        e.preventDefault();
+        const fp = remarkEl.dataset.filePath;
+        const li = parseInt(remarkEl.dataset.linkIndex);
+        const fileLs = linksByFile.get(fp);
+        if (!fileLs || !fileLs[li]) return;
+        const linkRef = fileLs[li];
+        const editValue = linkRef.remark || '';
+        const linkTimestamp = linkRef.timestamp || 0;
+        if (keepOpenRef) keepOpenRef.val = true;
+        const origHeight = remarkEl.offsetHeight;
+        const textarea = document.createElement('textarea');
+        textarea.value = editValue;
+        textarea.dataset.source = 'link';
+        textarea.dataset.linkFilePath = fp;
+        textarea.dataset.linkTimestamp = String(linkTimestamp);
+        textarea.style.cssText = `width:100%;min-height:${Math.max(origHeight, 60)}px;padding:4px;border:1px solid var(--border-color);border-radius:4px;background:var(--background-secondary);color:var(--text-normal);font-size:12px;font-family:var(--font-family);resize:vertical;box-sizing:border-box;outline:none;line-height:1.5;`;
+        remarkEl.replaceWith(textarea);
+        textarea.focus();
+        textarea.select();
+        const _finishEdit = async () => {
+          const newVal = textarea.value.trim();
+          const targetEl2 = textarea;
+          const parentEl = targetEl2.parentNode;
+          if (!parentEl) return;
+          const newSpan = document.createElement('span');
+          newSpan.dataset.remarkSource = 'link';
+          newSpan.dataset.filePath = fp;
+          newSpan.dataset.linkIndex = String(li);
+          newSpan.dataset.linkTimestamp = String(linkTimestamp);
+          newSpan.className = 'remark-editable-text';
+          newSpan.style.cssText = 'cursor:text;display:inline;';
+          newSpan.textContent = newVal || editValue;
+          targetEl2.replaceWith(newSpan);
+          if (newVal !== editValue) {
+            linkRef.remark = newVal;
+            linkRef.timestamp = Date.now();
+            if (typeof onDirty === 'function') onDirty();
+            if (typeof onRefresh === 'function') onRefresh();
+          }
+        };
+        textarea.addEventListener('blur', _finishEdit);
+        textarea.addEventListener('keydown', (ke) => {
+          if (ke.key === 'Enter' && !ke.shiftKey) { ke.preventDefault(); _finishEdit(); }
+          if (ke.key === 'Escape') { textarea.value = editValue; _finishEdit(); }
+        });
+      });
+    }
+
+    return { linksByFile, container, relatedHighlightsSection, remarkContentBlock: plugin.settings?.showRemarkContentBlock !== false ? remarkBlock : null, aiBtnContainer, aiGraphBtn, _existingMermaidGraph, _renderGraphSection, aiQuestionBlock: plugin.settings?.showAiQuestionBlock !== false ? aiQuestionBlock : null };
   }
 
   // 打开关键词独立窗口（可拖动，可打开多个）
   openKeywordWindow(keywordRegex, preservedRect) {
+    console.log('[KW-GRID] openKeywordWindow called with:', keywordRegex);
     const plugin = this;
 
     // 优先精确匹配 regex，其次匹配包含该关键词的规则
@@ -46894,6 +47736,7 @@ ${fullContext}`;
     const offset = existingWins.length * 30;
     win.style.left = (100 + offset) + 'px';
     win.style.top = (100 + offset) + 'px';
+
 
     // 标题栏（可拖动）
     const titleBar = document.createElement('div');
@@ -47021,6 +47864,219 @@ ${fullContext}`;
       cssScope: 'keyword-detail-window',
       masonry: _calcMasonry(links, plugin)
     });
+    if (renderResult?.aiBtnContainer) content.appendChild(renderResult.aiBtnContainer);
+
+    const kwRemarkCardGrid = document.createElement('div');
+    kwRemarkCardGrid.className = 'remark-card-grid';
+    kwRemarkCardGrid.style.cssText = 'min-height:60px;flex:1;user-select:none;-webkit-user-select:none;position:relative;touch-action:none;';
+    content.appendChild(kwRemarkCardGrid);
+
+    kwRemarkCardGrid.addEventListener('mousedown', (e) => {
+      const isHandle = e.target.closest('.remark-card-drag-handle') || e.target.closest('.ui-resizable-handle');
+      const isCtrl = e.target.closest('.remark-card-ctrl, button, a, input, textarea, select, [contenteditable]');
+      console.log('[KW-GRID] mousedown on grid, target:', e.target.className, 'isHandle:', isHandle, 'isCtrl:', isCtrl, 'button:', e.button);
+      if (isHandle && !isCtrl) {
+        e.preventDefault();
+        const _prevOverflow = content.style.overflow;
+        const _prevUserSelect = content.style.userSelect;
+        const _prevWebkitUserSelect = content.style.webkitUserSelect;
+        content.style.overflow = 'hidden';
+        content.style.userSelect = 'none';
+        content.style.webkitUserSelect = 'none';
+        const _dragOverlay = document.createElement('div');
+        _dragOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;pointer-events:auto;background:transparent;touch-action:none;';
+        document.body.appendChild(_dragOverlay);
+        console.log('[KW-GRID] overlay created, body children:', document.body.children.length);
+        let _mmCount = 0;
+        const _debugMM = (ev) => { _mmCount++; if (_mmCount <= 3) console.log('[KW-GRID] mousemove on document capture:', ev.clientX, ev.clientY, 'target:', ev.target.className); };
+        document.addEventListener('mousemove', _debugMM, true);
+        const _cleanup = () => {
+          _dragOverlay.remove();
+          content.style.overflow = _prevOverflow;
+          content.style.userSelect = _prevUserSelect;
+          content.style.webkitUserSelect = _prevWebkitUserSelect;
+          document.removeEventListener('mouseup', _cleanup, true);
+          document.removeEventListener('mousemove', _debugMM, true);
+          console.log('[KW-GRID] cleanup done, mousemove count:', _mmCount);
+        };
+        document.addEventListener('mouseup', _cleanup, true);
+      }
+    }, true);
+
+    let _kwRemarkGrid = null, _kwRemarkGridReady = false, _kwRemarkGridQueue = [], _kwRemarkGridSaveTimer;
+    const _saveKwRemarkGridLayout = () => {
+      if (!_kwRemarkGrid || !_kwRemarkGridReady) return;
+      try {
+        if (!plugin.settings.kwWindowGridLayout) plugin.settings.kwWindowGridLayout = {};
+        for (const n of (_kwRemarkGrid.engine?.nodes || [])) {
+          const cardEl = n.el?.querySelector?.('.remark-card');
+          const cid = cardEl?.dataset?.cardId;
+          if (cid) plugin.settings.kwWindowGridLayout[cid] = { x: n.x, y: n.y, w: n.w, h: n.h };
+        }
+        plugin.saveData(plugin.settings);
+      } catch(e) {}
+    };
+
+    const _kwCardLabels = { infoSection: t('main.cardLabelInfo'), parkingLotSection: t('main.cardLabelParkingLot'), threadsSection: t('main.cardLabelThreads'), keywordHistory: t('main.cardLabelKeywordHistory'), relatedHighlights: t('main.cardLabelRelatedHighlights'), remarkContent: t('main.cardLabelRemarkContent'), keywordChips: t('main.cardLabelKeywordChips'), aiQuestion: t('main.cardLabelAiQuestion'), relatedNotes: t('main.cardLabelRelatedNotes') };
+    const _kwCardSettingMap = { infoSection: 'showInfoSection', parkingLotSection: 'showParkingLot', threadsSection: 'showThreads', relatedHighlights: 'showRelatedHighlightsSection', remarkContent: 'showRemarkContentBlock', keywordChips: 'showKeywordChipsBlock', aiQuestion: 'showAiQuestionBlock', relatedNotes: 'showRelatedNotesSection' };
+    const _addKwRemarkCard = (sectionEl, cardId, defaultOpts) => {
+      if (!sectionEl) return null;
+      const savedLayout = plugin.settings?.kwWindowGridLayout?.[cardId];
+      const card = document.createElement('div');
+      card.className = 'remark-card';
+      card.dataset.cardId = cardId;
+      card.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;height:100%;';
+      const dragHandle = document.createElement('div');
+      dragHandle.className = 'remark-card-drag-handle';
+      dragHandle.style.cssText = 'cursor:move;font-size:10px;font-weight:600;color:var(--text-muted);padding:2px 6px;border-bottom:1px solid var(--background-modifier-border);opacity:0.7;transition:opacity .15s;display:flex;align-items:center;gap:4px;';
+      dragHandle.innerHTML = '<span style="font-size:12px;">\u263F</span><span class="remark-card-label">' + (_kwCardLabels[cardId] || cardId) + '</span>';
+      card.appendChild(dragHandle);
+      const cardContent = document.createElement('div');
+      cardContent.style.cssText = 'flex:1;overflow-y:auto;overflow-x:hidden;padding:4px;display:flex;flex-direction:column;';
+      sectionEl.style.width = '100%';
+      sectionEl.style.flex = '1';
+      cardContent.appendChild(sectionEl);
+      card.appendChild(cardContent);
+      const _mergeHeader = () => {
+        const header = sectionEl.firstElementChild;
+        if (!header || header.tagName !== 'DIV') return;
+        const hStyle = header.style.cssText || '';
+        if (!hStyle.includes('flex') || !hStyle.includes('margin-bottom')) return;
+        const _flatEls = [];
+        const _flatten = (container) => {
+          for (const child of Array.from(container.childNodes)) {
+            if (child.nodeType !== 1) continue;
+            const cStyle = child.style.cssText || '';
+            if (cStyle.includes('flex') && !cStyle.includes('space-between') && child.children.length > 1) {
+              _flatten(child);
+            } else {
+              _flatEls.push(child);
+            }
+          }
+        };
+        _flatten(header);
+        if (_flatEls.length === 0) return;
+        let _titleEl = null;
+        let _titleText = '';
+        for (const el of _flatEls) {
+          const text = (el.textContent || '').trim();
+          if (text.length <= 2) continue;
+          if (el.querySelector('svg')) continue;
+          if (text === '✕' || text === '×' || text === '+' || text === '?') continue;
+          if (!_titleEl || text.length > _titleText.length) {
+            _titleEl = el;
+            _titleText = text;
+          }
+        }
+        if (_titleText) {
+          const _labelSpan = dragHandle.querySelector('.remark-card-label');
+          if (_labelSpan) _labelSpan.textContent = _titleText;
+        }
+        const _spacer = document.createElement('span');
+        _spacer.style.cssText = 'flex:1;';
+        dragHandle.appendChild(_spacer);
+        const _blockKwDrag = (el) => {
+          el.classList.add('remark-card-ctrl');
+          ['mousedown', 'touchstart'].forEach(evt => {
+            el.addEventListener(evt, (e) => { e.stopPropagation(); });
+          });
+        };
+        for (const el of _flatEls) {
+          if (el === _titleEl) {
+            for (const sub of Array.from(el.childNodes)) {
+              if (sub.nodeType === 1) {
+                sub.style.flexShrink = '0';
+                sub.style.marginLeft = '2px';
+                dragHandle.appendChild(sub);
+                _blockKwDrag(sub);
+              }
+            }
+            continue;
+          }
+          el.style.flexShrink = '0';
+          el.style.marginLeft = '2px';
+          dragHandle.appendChild(el);
+          _blockKwDrag(el);
+        }
+        header.remove();
+      };
+      _mergeHeader();
+      ['mousedown', 'touchstart', 'pointerdown'].forEach(evt => {
+        cardContent.addEventListener(evt, (e) => {
+          if (!e.target.closest('button') && !e.target.closest('a') && !e.target.closest('input') && !e.target.closest('textarea') && !e.target.closest('[contenteditable]')) {
+            e.stopPropagation();
+          }
+        });
+      });
+      const _addToGrid = (grid) => {
+        const existing = grid.engine?.nodes?.find(n => n.el?.querySelector?.('.remark-card')?.dataset?.cardId === cardId);
+        if (existing) { try { grid.removeWidget(existing.el, true); } catch(e) {} }
+        const wOpts = { w: savedLayout?.w || defaultOpts?.w || 24, h: savedLayout?.h || defaultOpts?.h || 4, minW: 4, minH: 2, autoPosition: !savedLayout };
+        if (savedLayout) { wOpts.x = savedLayout.x; wOpts.y = savedLayout.y; }
+        const widgetEl = grid.addWidget(wOpts);
+        const itemContent = widgetEl.querySelector('.grid-stack-item-content') || widgetEl;
+        itemContent.appendChild(card);
+        itemContent.style.overflow = 'hidden';
+        const _settingKey = _kwCardSettingMap[cardId];
+        if (_settingKey && plugin.settings?.[_settingKey] === false) { widgetEl.style.display = 'none'; }
+        console.log('[KW-GRID] card added:', cardId, 'widget:', widgetEl.className, 'dragHandle in DOM:', document.body.contains(dragHandle));
+        dragHandle.addEventListener('mousedown', () => { console.log('[KW-GRID] mousedown on dragHandle for card:', cardId); }, true);
+      };
+      if (_kwRemarkGrid && _kwRemarkGridReady) { _addToGrid(_kwRemarkGrid); }
+      else { _kwRemarkGridQueue.push((grid) => { try { _addToGrid(grid); } catch(e) {} }); }
+      return card;
+    };
+
+    _loadGridStack(plugin.app).then((GridStack) => {
+      try {
+        if (!document.getElementById('remark-grid-mobile-handle-style')) {
+          const mh = document.createElement('style');
+          mh.id = 'remark-grid-mobile-handle-style';
+          mh.textContent = `.remark-card-grid .grid-stack-item>.ui-resizable-handle{opacity:0;transition:opacity .15s;}.remark-card-grid .grid-stack-item:hover>.ui-resizable-handle{opacity:1;}.remark-card-grid .grid-stack-item>.ui-resizable-se{width:14px;height:14px;bottom:0;right:0;}@media (pointer:coarse){.remark-card-grid .grid-stack-item>.ui-resizable-handle{width:20px!important;height:20px!important;z-index:5;opacity:1!important;}.remark-card-grid .grid-stack-item>.ui-resizable-se{right:0!important;bottom:0!important;}}`;
+          document.head.appendChild(mh);
+        }
+        if (!document.getElementById('remark-grid-col24-css')) {
+          const colCss = document.createElement('style');
+          colCss.id = 'remark-grid-col24-css';
+          let rules = '';
+          for (let n = 1; n <= 24; n++) {
+            const pct = (n / 24 * 100);
+            rules += `.remark-card-grid.gs-24>.grid-stack-item[gs-w="${n}"]{width:${pct}%}`;
+            rules += `.remark-card-grid.gs-24>.grid-stack-item[gs-x="${n}"]{left:${pct}%}`;
+          }
+          colCss.textContent = rules;
+          document.head.appendChild(colCss);
+        }
+        const _doInit = () => {
+          console.log('[KW-GRID] _doInit called, offsetWidth:', kwRemarkCardGrid.offsetWidth);
+          const grid = GridStack.init({
+            column: 24, cellHeight: 20, margin: 2,
+            draggable: { handle: '.remark-card-drag-handle', scroll: false, appendTo: 'parent' },
+            resizable: { handles: 'se' },
+            animate: true, float: true, disableOneColumnMode: true, alwaysShowResizeHandle: true,
+          }, kwRemarkCardGrid);
+          _kwRemarkGrid = grid;
+          _kwRemarkGridReady = true;
+          console.log('[KW-GRID] GridStack init success, nodes:', grid.engine?.nodes?.length);
+          grid.on('change', () => { clearTimeout(_kwRemarkGridSaveTimer); _kwRemarkGridSaveTimer = setTimeout(_saveKwRemarkGridLayout, 500); });
+          grid.on('dragstart', (ev) => { console.log('[KW-GRID] dragstart', ev); });
+          grid.on('dragstop', (ev) => { console.log('[KW-GRID] dragstop', ev); clearTimeout(_kwRemarkGridSaveTimer); _kwRemarkGridSaveTimer = setTimeout(_saveKwRemarkGridLayout, 300); });
+          grid.on('resizestart', (ev) => { console.log('[KW-GRID] resizestart', ev); });
+          grid.on('resizestop', (ev) => { console.log('[KW-GRID] resizestop', ev); clearTimeout(_kwRemarkGridSaveTimer); _kwRemarkGridSaveTimer = setTimeout(_saveKwRemarkGridLayout, 300); });
+          while (_kwRemarkGridQueue.length > 0) { const fn = _kwRemarkGridQueue.shift(); if (typeof fn === 'function') fn(grid); }
+        };
+        if (kwRemarkCardGrid.offsetWidth > 0) { _doInit(); }
+        else {
+          const _waitRo = new ResizeObserver(() => {
+            if (kwRemarkCardGrid.offsetWidth > 0) { _waitRo.disconnect(); _doInit(); }
+          });
+          _waitRo.observe(kwRemarkCardGrid);
+        }
+      } catch(e) { console.warn('[GridStack] kw-remark init failed:', e); }
+    }).catch((e) => { console.warn('[GridStack] load failed:', e); });
+
+    _addKwRemarkCard(renderResult?.relatedHighlightsSection, 'relatedHighlights', { w: 24, h: 6 });
+    _addKwRemarkCard(renderResult?.remarkContentBlock, 'remarkContent', { w: 24, h: 8 });
 
     const linksByFile = renderResult.linksByFile;
 
@@ -47028,15 +48084,21 @@ ${fullContext}`;
 
     // 渲染 info 板块（复用主面板 addInfoSection，与悬停弹窗一致）
     let _kwWinInfoDisrupted = false;
-    if (plugin.settings?.showInfoSection === true) {
+    if (plugin.settings?.showInfoSection !== false) {
       const _modal = plugin._regexHighlightModal;
       if (_modal && _modal.addInfoSection) {
         try {
           if (_modal.regexInput) _modal.regexInput.setValue(keywordRegex);
           _modal._infoActiveChip = keywordRegex;
+          const _savedAddUnified = _modal._addUnifiedCard;
+          _modal._addUnifiedCard = null;
           _modal.addInfoSection(content);
+          _modal._addUnifiedCard = _savedAddUnified;
           const _infoSec = content.querySelector('.info-section');
-          if (_infoSec && content.firstChild) content.insertBefore(_infoSec, content.firstChild);
+          if (_infoSec) {
+            if (_addKwRemarkCard) _addKwRemarkCard(_infoSec, 'infoSection', { w: 24, h: 10 });
+            else if (content.firstChild) content.insertBefore(_infoSec, content.firstChild);
+          }
           _kwWinInfoDisrupted = true;
         } catch(e) { console.warn('[kw-win-info] failed:', e); }
       }
@@ -47044,7 +48106,7 @@ ${fullContext}`;
     if (_kwWinInfoDisrupted) {
       const _restoreMainInfo = () => {
         const _m = plugin._regexHighlightModal;
-        if (_m && _m.contentEl && plugin.settings?.showInfoSection === true && _isInAnyDoc(_m.contentEl)) {
+        if (_m && _m.contentEl && plugin.settings?.showInfoSection !== false && _isInAnyDoc(_m.contentEl)) {
           const _existing = _m.contentEl.querySelector('.info-section');
           if (!_existing) { try { _m.addInfoSection(_m.contentEl); } catch(e) {} }
         }
@@ -47186,7 +48248,7 @@ ${fullContext}`;
       }
     }
 
-    if (allRelatedKeywords.size > 0) {
+    if (allRelatedKeywords.size > 0 && plugin.settings?.showKeywordChipsBlock !== false) {
       const kwBlock = document.createElement('div');
       kwBlock.className = 'keyword-chips-block';
       kwBlock.style.cssText = 'margin-bottom:8px;';
@@ -47331,26 +48393,10 @@ ${fullContext}`;
       // 添加折叠按钮
       _createSectionToggle(plugin, 'relatedKeywords', chipsBar, kwBlockHeaderLeft);
       if (renderResult?._existingMermaidGraph && renderResult?._renderGraphSection) renderResult._renderGraphSection(renderResult._existingMermaidGraph, undefined, kwBlock);
-      if (renderResult?.aiBtnContainer && content.contains(renderResult.aiBtnContainer)) content.insertBefore(kwBlock, renderResult.aiBtnContainer);
-      else content.appendChild(kwBlock);
-      // 插入 AI 提问块到关联词下方
-      if (renderResult?.aiQuestionBlock) {
-        if (kwBlock.parentNode) {
-          // 关联词已插入，在其后插入
-          kwBlock.after(renderResult.aiQuestionBlock);
-        } else {
-          // 关联词未插入，在 aiBtnContainer 前插入
-          if (renderResult?.aiBtnContainer && content.contains(renderResult.aiBtnContainer)) content.insertBefore(renderResult.aiQuestionBlock, renderResult.aiBtnContainer);
-          else content.appendChild(renderResult.aiQuestionBlock);
-        }
-      }
+      _addKwRemarkCard(kwBlock, 'keywordChips', { w: 24, h: 3 });
     }
 
-    // 即使没有关联词，也要插入 AI 提问块（如果有的话）
-    if (allRelatedKeywords.size === 0 && renderResult?.aiQuestionBlock) {
-      if (renderResult?.aiBtnContainer && content.contains(renderResult.aiBtnContainer)) content.insertBefore(renderResult.aiQuestionBlock, renderResult.aiBtnContainer);
-      else content.appendChild(renderResult.aiQuestionBlock);
-    }
+    _addKwRemarkCard(renderResult?.aiQuestionBlock, 'aiQuestion', { w: 24, h: 4 });
 
     // 右下角 resize 手柄
     const resizeHandle = document.createElement('div');
@@ -47365,6 +48411,13 @@ ${fullContext}`;
     win.appendChild(resizeHandle);
 
     document.body.appendChild(win);
+
+    // 强制恢复 pointer-events（防止 Ctrl passthrough 残留导致事件穿透）
+    if (document.body.style.pointerEvents === 'none') document.body.style.pointerEvents = '';
+    win.style.pointerEvents = 'auto';
+    content.style.pointerEvents = 'auto';
+
+
 
     // 恢复用户手动调整的窗口尺寸和位置
     if (preservedRect) {
@@ -47556,7 +48609,7 @@ ${fullContext}`;
 
       const target = e.target;
 
-      if (target.closest('.inline-remark-section')) return;
+      if (target.closest('.remark-content-container')) return;
       if (target.closest('.swiftglossa-sidebar')) return;
 
       // 面板（主面板或侧边栏）可见时，悬停不激活弹窗（需点击激活）
@@ -48273,7 +49326,7 @@ ${fullContext}`;
                 }
               }
 
-              if (allRelatedKeywords.size > 0) {
+              if (allRelatedKeywords.size > 0 && plugin.settings?.showKeywordChipsBlock !== false) {
                 const kwBlock = document.createElement('div');
                 kwBlock.className = 'keyword-chips-block';
                 kwBlock.style.cssText = 'margin-bottom:8px;';
@@ -48422,15 +49475,13 @@ ${fullContext}`;
                 // 添加折叠按钮
                 _createSectionToggle(plugin, 'relatedKeywords', chipsBar, kwBlockHeaderLeft);
                 if (currentRenderResult?._existingMermaidGraph && currentRenderResult?._renderGraphSection) currentRenderResult._renderGraphSection(currentRenderResult._existingMermaidGraph, undefined, kwBlock);
-                if (currentRenderResult?.aiBtnContainer && currentRenderResult.container.contains(currentRenderResult.aiBtnContainer)) currentRenderResult.container.insertBefore(kwBlock, currentRenderResult.aiBtnContainer);
-                else contentContainer.appendChild(kwBlock);
+                contentContainer.appendChild(kwBlock);
                 // 插入 AI 提问块到关联词下方
                 if (currentRenderResult?.aiQuestionBlock) {
                   if (kwBlock.parentNode) {
                     kwBlock.after(currentRenderResult.aiQuestionBlock);
                   } else {
-                    if (currentRenderResult?.aiBtnContainer && currentRenderResult.container.contains(currentRenderResult.aiBtnContainer)) currentRenderResult.container.insertBefore(currentRenderResult.aiQuestionBlock, currentRenderResult.aiBtnContainer);
-                    else contentContainer.appendChild(currentRenderResult.aiQuestionBlock);
+                    contentContainer.appendChild(currentRenderResult.aiQuestionBlock);
                   }
                 }
 
@@ -48473,8 +49524,7 @@ ${fullContext}`;
                 popup.appendChild(verHelpBtn2);
                 // 即使没有关联词，也要插入 AI 提问块
                 if (currentRenderResult?.aiQuestionBlock) {
-                  if (currentRenderResult?.aiBtnContainer && currentRenderResult.container.contains(currentRenderResult.aiBtnContainer)) currentRenderResult.container.insertBefore(currentRenderResult.aiQuestionBlock, currentRenderResult.aiBtnContainer);
-                  else contentContainer.appendChild(currentRenderResult.aiQuestionBlock);
+                  contentContainer.appendChild(currentRenderResult.aiQuestionBlock);
                 }
               }
             }
@@ -48508,6 +49558,9 @@ ${fullContext}`;
               cssScope: 'remark-custom-popup',
               masonry: _calcMasonry(freshLinks, plugin)
             });
+            if (result?.relatedHighlightsSection) contentContainer.appendChild(result.relatedHighlightsSection);
+            if (result?.remarkContentBlock) contentContainer.appendChild(result.remarkContentBlock);
+            if (result?.aiBtnContainer) contentContainer.appendChild(result.aiBtnContainer);
             currentLinksByFile = result.linksByFile;
             currentRenderResult = result;
           };
@@ -48603,14 +49656,17 @@ ${fullContext}`;
 
           // 渲染 info 板块（与面板一致）
           let _hoverInfoDisrupted = false;
-          if (plugin.settings?.showInfoSection === true) {
+          if (plugin.settings?.showInfoSection !== false) {
             const _kw = targetEl.dataset.ruleRegex;
             const _modal = plugin._regexHighlightModal;
             if (_kw && _modal && _modal.addInfoSection) {
               try {
                 if (_modal.regexInput) _modal.regexInput.setValue(_kw);
                 _modal._infoActiveChip = _kw;
+                const _savedAddUnified2 = _modal._addUnifiedCard;
+                _modal._addUnifiedCard = null;
                 _modal.addInfoSection(contentContainer);
+                _modal._addUnifiedCard = _savedAddUnified2;
                 const _infoSec = contentContainer.querySelector('.info-section');
                 if (_infoSec) contentContainer.insertBefore(_infoSec, contentContainer.firstChild);
                 _hoverInfoDisrupted = true;
@@ -49075,7 +50131,7 @@ ${fullContext}`;
               // 恢复面板/侧边栏的 info 板块（悬停弹窗的 addInfoSection 会覆盖 modal 的闭包）
               if (_hoverInfoDisrupted) {
                 const _m = plugin._regexHighlightModal;
-                if (_m && _m.contentEl && plugin.settings?.showInfoSection === true && _isInAnyDoc(_m.contentEl)) {
+        if (_m && _m.contentEl && plugin.settings?.showInfoSection !== false && _isInAnyDoc(_m.contentEl)) {
                   const _existingInfo = _m.contentEl.querySelector('.info-section');
                   if (!_existingInfo) {
                     try { _m.addInfoSection(_m.contentEl); } catch(e) {}
@@ -50332,7 +51388,12 @@ ${fullContext}`;
             inputRow.appendChild(input);
             inputRow.appendChild(addBtn);
             win.appendChild(inputRow);
-            document.body.appendChild(win);
+    document.body.appendChild(win);
+
+    // 强制恢复 pointer-events（防止 Ctrl passthrough 残留导致事件穿透）
+    if (document.body.style.pointerEvents === 'none') document.body.style.pointerEvents = '';
+    win.style.pointerEvents = 'auto';
+    content.style.pointerEvents = 'auto';
 
             const ballRect = floatingBall ? floatingBall.getBoundingClientRect() : target.getBoundingClientRect();
             win.style.left = Math.max(10, Math.min(ballRect.left, window.innerWidth - 280)) + 'px';

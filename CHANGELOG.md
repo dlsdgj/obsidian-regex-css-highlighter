@@ -2,7 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v2.1.2 (2026-08-06)
+## 🆕 v2.1.3 (2026-08-12)
+
+- **Popout Window Button Fix / 独立窗口按钮修复** — Hide "Pop Out" button in standalone window using `leaf.getRoot()` detection; removed CSS `!important` that persisted after popout close and hid sidebar button / 用 `leaf.getRoot()` 检测独立窗口并隐藏弹出按钮；移除关闭后残留的 CSS `!important` 规则
+- **Parking Lot Button Fix / 停车场按钮修复** — Parking lot +button is always clickable without requiring a keyword / 停车场+按钮无需关键词即可点击
+- **Card Resize Fix / 卡片调整修复** — Vertical card resize no longer snaps back; resizestop now saves layout immediately and re-applies inline positions via `requestAnimationFrame` / 纵向调整不再弹回；resizestop 立即保存布局并通过 `requestAnimationFrame` 重新应用
+- **Translation Fix / 翻译补全** — Added missing English translations for card labels, empty states ("No related notes", "No matching highlights"), and lock layout / 补全卡片名称、空状态提示、锁定布局等英文翻译
+
+## v2.1.2 (2026-08-06)
 
 - **Keyword History Regex Fix / 历史关键词正则修复** — Keywords with regex patterns (e.g. "掌控|失控|控制", "(?<!后)现代") now correctly appear in keyword history; history filter uses `_extractPlainText` and `_regexMatch` to match plain-text keywords to their regex rules / 含正则的关键词（如"掌控|失控|控制"、"(?<!后)现代"）现在能正确显示在历史关键词中；历史过滤使用 `_extractPlainText` 和 `_regexMatch` 将纯文本关键词匹配到正则规则
 - **Threads Selection Clear / 脉络选区清空** — Selecting non-keyword text now clears the threads section; typing a matching keyword in the input box and pressing Enter updates threads / 选中非关键词文本时清空脉络版块；在输入框输入匹配关键词按Enter更新脉络

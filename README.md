@@ -1479,6 +1479,10 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 </details>
 
+## Credits / 致谢
+
+- [GridStack.js](https://github.com/gridstack/gridstack.js) (MIT) — Drag-and-drop resizable card layout / 拖拽调整大小的卡片布局
+
 ## Sponsor / 赞助
 
 If you find this plugin helpful, consider buying me a coffee! / 如果这个插件对你有帮助，请考虑支持我！

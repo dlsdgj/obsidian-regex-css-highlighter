@@ -91,6 +91,23 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 
 <details>
+<summary>v2.1.4 (2026-09-02)</summary>
+
+- **Card Move Bug Fix / 卡片移动修复** — Fixed card movement bugs in main panel, Info, and Parking Lot sections / 修复主面板、Info、停车场中卡片移动bug
+- **Main Panel Removal Fix / 主面板移除修复** — Fixed main panel not fully removed; fixed clicking keyword in Keywords tab expanding all keywords / 修复主面板未完全移除bug；修复点击关键词tab中的关键词展开了所有关键词bug
+- **New Sections / 新增版块** — Added Recently Created, Recent Focus, Random Review, Quick Note, and Stats Overview sections / 添加"最近创建文档"、"最近关注"、"随机回顾"、"快速笔记"、"统计概览"版块
+- **Tab Button Fix / 标签页按钮修复** — Fixed "Open in New Tab" button not working / 修复"在新标签页打开sg"按钮点击无效bug
+- **Keyword Click Sync / 关键词点击同步** — Clicking keyword in Keywords tab now updates related files, threads, and info / 关键词tab中的关键词点击后同步更新相关文件、脉络、info
+- **Settings Button Fix / 设置按钮修复** — Fixed settings button disappearing after grid recreation / 修复区域切换后设置按钮消失bug
+- **New Install Defaults / 新装默认设置** — Hover no-popup enabled, color theme defaults to Rouge, most sections disabled by default / 新装默认勾选"悬停关键词不触发弹窗"，配色默认"胭脂粉"，大部分版块默认不勾选
+- **Section Display Logic / 版块显示逻辑** — Changed visibility checks from `!== false` to `=== true`; placeholder cards respect section toggles / 版块显示判断改为 `=== true`；占位卡片遵循版块开关
+- **Duplicate Setting Removal / 重复设置移除** — Removed duplicate quick note folder setting from Obsidian settings panel / 移除设置面板中重复的快速笔记文件夹设置
+- **Instant Refresh / 即时刷新** — Section toggles refresh immediately; refreshModalContent destroys old grid before re-render / 版块开关即时刷新；重新渲染前销毁旧grid
+- **Background Pattern Removal / 底纹移除** — Removed background pattern setting from panel settings popup / 移除面板设置中的底纹选项
+
+</details>
+
+<details>
 <summary>v2.1.3 (2026-08-12)</summary>
 
 - **Popout Window Button Fix / 独立窗口按钮修复** — Hide "Pop Out" button in standalone window via `leaf.getRoot()` detection; removed CSS `!important` that persisted after popout close / 用 `leaf.getRoot()` 检测独立窗口并隐藏弹出按钮；移除关闭后残留的 CSS 规则

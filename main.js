@@ -103,48 +103,14 @@ const _loadGridStack = (app) => {
   return _GS_LIB_LOADED.promise;
 };
 const _SG_APPLY_PALETTE = (sectionEl, settings, settingKey) => {
+  // 统一配色：固定默认调色板类（仅影响版块内部元素样式），不再覆盖版块底色（底色由全局配色方案负责）
   settingKey = settingKey || 'relatedHlPalette';
-  const paletteId = settings?.[settingKey] || 'sg-theme-01';
+  const paletteId = 'sg-theme-01';
   _SG_PALETTES.forEach(p => sectionEl.classList.remove(p.id));
   sectionEl.classList.add(paletteId);
-  const pal = _SG_PALETTES.find(p => p.id === paletteId);
-  if (pal) sectionEl.style.background = pal.bg;
 };
-const _SG_ADD_PALETTE_PICKER = (menu, settings, saveFn, sectionEl, settingKey) => {
-  settingKey = settingKey || 'relatedHlPalette';
-  const label = document.createElement('div');
-  label.textContent = t('settings.hlPalette');
-  label.style.cssText = 'color:var(--text-muted);font-weight:600;margin:6px 0 4px;font-size:11px;';
-  menu.appendChild(label);
-  const grid = document.createElement('div');
-  grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:3px;';
-  const currentPalette = settings?.[settingKey] || 'sg-theme-01';
-  _SG_PALETTES.forEach(p => {
-    const chip = document.createElement('div');
-    chip.style.cssText = `display:flex;align-items:center;gap:4px;padding:3px 6px;border-radius:6px;cursor:pointer;font-size:10px;border:1.5px solid ${p.id===currentPalette?'var(--interactive-accent)':'transparent'};background:${p.id===currentPalette?'rgba(var(--mono-rgb-0),0.08)':'transparent'};transition:border-color 0.15s,background 0.15s;`;
-    const nameSpan = document.createElement('span');
-    nameSpan.textContent = (_currentLang === 'en' && p.nameEn) ? p.nameEn : p.name;
-    nameSpan.style.cssText = `color:var(--text-normal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;`;
-    chip.appendChild(nameSpan);
-    const colors = _SG_GET_PALETTE_COLORS(p.id);
-    const dotRow = document.createElement('span');
-    dotRow.style.cssText = 'display:inline-flex;gap:2px;align-items:center;margin-left:auto;';
-    colors.forEach(c => {
-      const dot = document.createElement('span');
-      dot.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:50%;background:${c};border:1px solid rgba(0,0,0,0.1);flex-shrink:0;`;
-      dotRow.appendChild(dot);
-    });
-    chip.appendChild(dotRow);
-    chip.addEventListener('click', () => {
-      settings[settingKey] = p.id; saveFn();
-      if (sectionEl) _SG_APPLY_PALETTE(sectionEl, settings, settingKey);
-      grid.querySelectorAll(':scope > div').forEach(c => { c.style.borderColor='transparent'; c.style.background='transparent'; });
-      chip.style.borderColor='var(--interactive-accent)'; chip.style.background='rgba(var(--mono-rgb-0),0.08)';
-    });
-    grid.appendChild(chip);
-  });
-  menu.appendChild(grid);
-};
+const _SG_ADD_PALETTE_PICKER = null; // 调色板选择器已移除（统一配色方案，见 SG_COLOR_THEMES）
+
 const _SG_ADD_DISPLAY_MODE = (menu, settings, saveFn) => {
   const row = document.createElement('div');
   row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;';
@@ -203,7 +169,6 @@ const _SG_CREATE_HL_SETTINGS = (menu, settings, saveFn, sectionEl) => {
 };
 const _SG_FINISH_HL_SETTINGS = (menu, settings, saveFn, sectionEl) => {
   _SG_ADD_DISPLAY_MODE(menu, settings, saveFn);
-  _SG_ADD_PALETTE_PICKER(menu, settings, saveFn, sectionEl);
 };
 const _attachRemarkEdit = (el, rPath, rText, _plugin) => {
   el.dataset.remarkPath = rPath;
@@ -716,6 +681,65 @@ const i18n = {
     'main.cardLabelKeywordChips': '关联词',
     'main.cardLabelAiQuestion': 'AI提问',
     'main.cardLabelRelatedNotes': '相关文档',
+    'main.cardLabelRecentFiles': '最近文件',
+    'main.recentFilesTitle': '最近文件',
+    'main.cardLabelRecentlyCreated': '最近创建文档',
+    'main.recentCreatedTitle': '最近创建文档',
+    'main.recentCreatedEmpty': '库中暂无文档',
+    'main.cardLabelFocus': '最近关注',
+    'main.focusTitle': '最近关注',
+    'main.focusEmpty': '拖动文件/文件夹到此版块',
+    'main.focusClear': '清空',
+    'main.focusRemove': '移除',
+    'main.remarkPlaceholderHint': '点击关键词后显示内容',
+    'main.bgPatternLabel': '底纹',
+    'main.bgpatNone': '无',
+    'main.bgpatGrid': '方格',
+    'main.bgpatDots': '点阵',
+    'main.bgpatDotsLg': '大点',
+    'main.bgpatDiag': '斜纹',
+    'main.bgpatDiag2': '反斜',
+    'main.bgpatHstripes': '横纹',
+    'main.bgpatVstripes': '竖纹',
+    'main.bgpatChecker': '棋盘',
+    'main.bgpatVignette': '渐晕',
+    'main.colorThemeLabel': '配色方案',
+    'main.themeNone': '跟随Obsidian',
+    'main.theme_inkjoss': '水墨朱砂',
+    'main.theme_rouge': '胭脂粉',
+    'main.theme_semantic': '语义分区',
+    'main.cardLabelRandomReview': '随机回顾',
+    'main.randomReviewTitle': '随机回顾',
+    'main.randomReviewEmpty': '暂无备注可回顾',
+    'main.randomReviewAnother': '换一条',
+    'main.cardLabelQuickNote': '快速笔记',
+    'main.quickNoteTitle': '快速笔记',
+    'main.quickNotePlaceholder': '输入内容，回车创建笔记',
+    'main.quickNoteCreated': '已创建笔记: ',
+    'main.quickNoteFailed': '创建失败: ',
+    'main.quickNoteDefaultName': '快速笔记',
+    'main.cardLabelStats': '统计概览',
+    'main.statsTitle': '统计概览',
+    'main.statsDocs': '文档',
+    'main.statsHighlights': '高亮',
+    'main.statsKeywords': '关键词',
+    'main.statsRemarks': '备注',
+    'main.statsRecent': '近7天新建',
+    'settings.quickNoteFolder': '快速笔记保存文件夹:',
+    'settings.quickNoteFolderHint': '留空 = 库根目录',
+    'settings.quickNoteOpenAfter': '快速笔记创建后打开文档:',
+    'settings.quickNoteOpenMode': '快速笔记打开位置:',
+    'settings.quickNoteOpenModeTab': '新标签页',
+    'settings.quickNoteOpenModeCurrent': '当前标签页',
+    'settings.quickNoteOpenModeSplit': '右侧分屏',
+    'main.recentFilesPinned': '已固定',
+    'main.recentFilesRecent': '最近',
+    'main.recentFilesExpand': '展开 (+{n})',
+    'main.recentFilesCollapse': '收起',
+    'main.recentFilesEmpty': '暂无最近文件',
+    'main.recentFilesClear': '清空',
+    'main.recentFilesPin': '固定',
+    'main.recentFilesUnpin': '取消固定',
     'main.infoAddBtnHint': '请先添加关键词或点击/搜索关键词',
     'main.relatedNotesEmpty': '（无相关文档）',
     'main.pluginHelpContent': '以下是本插件的简单介绍及基础用法:\n\n插件从 2025 年年底开始建造,至今(2026-08-03)经过多次转向发展成当前功能布局,总耗时 1000+ 小时。\n\n插件通过 CSS 样式个性化高亮关键词。关键词可以是人名、地名、学科术语等任何你觉得重要的词(根据二八定律,建议只将 20% 的关键词进行个性化高亮,余下的用简单下划线,否则整体观感会很乱)。\n\n关键词被高亮后可以添加「计数」(统计该词在当前文档中出现的次数)、显示在关键词上方的「行间注释」(比如添加人物的生辰、角色...)。\n\n首次安装插件,在 Obsidian 启动后约 30 秒会自动构建库中 Obsidian 格式的高亮「==高亮文本==」,之后每次添加新高亮都会自动更新。\n\n点击关键词后,会搜索高亮数据库,将匹配的高亮条目显示在面板中(主面板、右侧面板、独立窗口);或者折叠右侧面板,鼠标悬停到关键词上也会显示相关高亮(可关闭)——当你有大量高亮时这通常会带给你意想不到的收获。\n\n每条高亮都可以添加备注/记号,这能让你记得更牢(后续有这些备注/记号的附加功能)。\n\n对于名词术语,提供了「info」版块,可将关于该关键词的事实性知识显示在这里(支持 AI 根据提示词自动生成)。\n\n其他功能请自行探索。本插件免费,提供付费咨询,vx: jtugqivi',
@@ -1637,8 +1661,9 @@ const i18n = {
     'main.styleAndRemarkApplied': '样式和备注已应用！',
     'main.alreadyExistsInRules': '已存在于规则中',
     'settings.redirectTitle': 'Regex CSS Highlighter',
-    'settings.redirectMsg': '插件设置已转移到主面板底部，请点击下方按钮打开主面板设置。',
-    'settings.redirectBtn': '打开主面板设置',
+    'settings.redirectMsg': '插件设置在sg标签页/sg右侧面板底部',
+    'settings.openSidebarBtn': '打开右侧面板sg',
+    'settings.openTabBtn': '新标签页打开sg',
     'settings.manageSnippets': '管理 CSS Snippets',
     'settings.snippetEnabled': '已启用',
     'settings.snippetDisabled': '已禁用',
@@ -1856,6 +1881,65 @@ const i18n = {
     'main.cardLabelKeywordChips': 'Keyword Chips',
     'main.cardLabelAiQuestion': 'AI Question',
     'main.cardLabelRelatedNotes': 'Related Notes',
+    'main.cardLabelRecentFiles': 'Recent Files',
+    'main.recentFilesTitle': 'Recent Files',
+    'main.cardLabelRecentlyCreated': 'Recently Created',
+    'main.recentCreatedTitle': 'Recently Created',
+    'main.recentCreatedEmpty': 'No documents in vault',
+    'main.cardLabelFocus': 'Focus',
+    'main.focusTitle': 'Focus',
+    'main.focusEmpty': 'Drag files/folders here',
+    'main.focusClear': 'Clear',
+    'main.focusRemove': 'Remove',
+    'main.remarkPlaceholderHint': 'Content appears after clicking a keyword',
+    'main.bgPatternLabel': 'Pattern',
+    'main.bgpatNone': 'None',
+    'main.bgpatGrid': 'Grid',
+    'main.bgpatDots': 'Dots',
+    'main.bgpatDotsLg': 'Big Dots',
+    'main.bgpatDiag': 'Diagonal',
+    'main.bgpatDiag2': 'Reverse',
+    'main.bgpatHstripes': 'H-Stripe',
+    'main.bgpatVstripes': 'V-Stripe',
+    'main.bgpatChecker': 'Checker',
+    'main.bgpatVignette': 'Vignette',
+    'main.colorThemeLabel': 'Color Theme',
+    'main.themeNone': 'Follow Obsidian',
+    'main.theme_inkjoss': 'Ink & Cinnabar',
+    'main.theme_rouge': 'Rouge',
+    'main.theme_semantic': 'Semantic',
+    'main.cardLabelRandomReview': 'Random Review',
+    'main.randomReviewTitle': 'Random Review',
+    'main.randomReviewEmpty': 'No remarks to review yet',
+    'main.randomReviewAnother': 'Another',
+    'main.cardLabelQuickNote': 'Quick Note',
+    'main.quickNoteTitle': 'Quick Note',
+    'main.quickNotePlaceholder': 'Type and press Enter to create a note',
+    'main.quickNoteCreated': 'Note created: ',
+    'main.quickNoteFailed': 'Failed to create: ',
+    'main.quickNoteDefaultName': 'Quick Note',
+    'main.cardLabelStats': 'Stats',
+    'main.statsTitle': 'Stats',
+    'main.statsDocs': 'Docs',
+    'main.statsHighlights': 'Highlights',
+    'main.statsKeywords': 'Keywords',
+    'main.statsRemarks': 'Remarks',
+    'main.statsRecent': 'New (7d)',
+    'settings.quickNoteFolder': 'Quick note folder:',
+    'settings.quickNoteFolderHint': 'Empty = vault root',
+    'settings.quickNoteOpenAfter': 'Open note after creating:',
+    'settings.quickNoteOpenMode': 'Open location:',
+    'settings.quickNoteOpenModeTab': 'New tab',
+    'settings.quickNoteOpenModeCurrent': 'Current tab',
+    'settings.quickNoteOpenModeSplit': 'Split right',
+    'main.recentFilesPinned': 'Pinned',
+    'main.recentFilesRecent': 'Recent',
+    'main.recentFilesExpand': 'Expand (+{n})',
+    'main.recentFilesCollapse': 'Collapse',
+    'main.recentFilesEmpty': 'No recent files',
+    'main.recentFilesClear': 'Clear',
+    'main.recentFilesPin': 'Pin',
+    'main.recentFilesUnpin': 'Unpin',
     'main.infoAddBtnHint': 'Please add a keyword first or click/search a keyword',
     'main.relatedNotesEmpty': '(No related notes)',
     'main.pluginHelpContent': 'Below is a brief introduction and basic usage of the plugin:\n\nThe plugin has been in development since late 2025. As of 2026-08-03, after several pivots, it has evolved into its current feature layout, with 1000+ hours invested.\n\nThe plugin highlights keywords with personalized CSS styles. Keywords can be names, places, subject-specific terms, or any words you consider important (based on the 80/20 rule, it is recommended to apply personalized highlighting to only 20% of keywords and use simple underlines for the rest, otherwise the overall appearance will be cluttered).\n\nAfter a keyword is highlighted, you can add a "count" (tracking its occurrences in the current document) and "interlinear notes" displayed above the keyword (e.g., a character birthdate, role...).\n\nOn first install, about 30 seconds after Obsidian starts, the plugin automatically builds Obsidian-format highlights ("==highlighted text==") from the vault. After that, every new highlight auto-updates.\n\nClick a keyword to search the highlight database and display matching entries in the panel (main panel, right sidebar, or standalone window). Alternatively, collapse the right sidebar and hover over a keyword to see related highlights (can be disabled) — this often brings unexpected insights when you have many highlights.\n\nEach highlight can have a remark/marker added, helping you remember better (additional features for remarks/markers are planned).\n\nFor noun terms, an "info" section displays factual knowledge about the keyword (supports AI auto-generation from prompts).\n\nExplore other features on your own. This plugin is free; paid consultations available, vx: jtugqivi',
@@ -2777,8 +2861,9 @@ const i18n = {
     'main.styleAndRemarkApplied': 'Style and remark applied!',
     'main.alreadyExistsInRules': 'already exists in rules',
     'settings.redirectTitle': 'Regex CSS Highlighter',
-    'settings.redirectMsg': 'Plugin settings have been moved to the bottom of the main panel. Click the button below to open the main panel settings.',
-    'settings.redirectBtn': 'Open Main Panel Settings',
+    'settings.redirectMsg': 'Plugin settings are at the bottom of the SG tab / SG right sidebar panel',
+    'settings.openSidebarBtn': 'Open SG Right Sidebar',
+    'settings.openTabBtn': 'Open SG in New Tab',
     'settings.manageSnippets': 'Manage CSS Snippets',
     'settings.snippetEnabled': 'Enabled',
     'settings.snippetDisabled': 'Disabled',
@@ -3666,7 +3751,7 @@ class AddRemarkModal extends Modal {
     updatePosition();
   };
   document.addEventListener('touchmove', onResizeTouchMove, { passive: true });
-  document.addEventListener('touchend', onResizeTouchEnd);
+  document.addEventListener('touchend', onResizeTouchEnd, { passive: true });
 
     this._remarkResizeHandle = resizeHandle;
     this._remarkResizeListeners = { mousemove: onResizeMouseMove, mouseup: onResizeMouseUp };
@@ -4396,7 +4481,7 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
     updatePosition();
   };
   document.addEventListener('touchmove', onResizeTouchMove, { passive: true });
-  document.addEventListener('touchend', onResizeTouchEnd);
+  document.addEventListener('touchend', onResizeTouchEnd, { passive: true });
 
   modalInstance._resizeHandle = resizeHandle;
   modalInstance._resizeUpdatePosition = updatePosition;
@@ -4615,7 +4700,7 @@ class StyleShowcaseModal extends Modal {
       }
     };
 
-    this.modalEl.addEventListener("wheel", onWheel, { passive: false });
+    this.modalEl.addEventListener("wheel", onWheel, { passive: true });
 
     const originalOnClose = this.onClose.bind(this);
     this.onClose = () => {
@@ -4752,7 +4837,7 @@ class StyleShowcaseModal extends Modal {
     updatePosition();
   };
   document.addEventListener('touchmove', onResizeTouchMove, { passive: true });
-  document.addEventListener('touchend', onResizeTouchEnd);
+  document.addEventListener('touchend', onResizeTouchEnd, { passive: true });
 
     this._resizeHandle = resizeHandle;
     this._resizeUpdatePosition = updatePosition;
@@ -5344,7 +5429,7 @@ class StyleShowcaseModal extends Modal {
 
     this.tableContainer.addEventListener("scroll", () => {
       this.scrollPosition = this.tableContainer.scrollTop;
-    });
+    }, { passive: true });
 
     contentEl.style.display = "flex";
     contentEl.style.flexDirection = "column";
@@ -5889,7 +5974,7 @@ class EntityExtractionModal extends Modal {
     // 阻止标题行滚动
     titleContainer.addEventListener("wheel", (e) => {
       e.stopPropagation();
-    }, { passive: false });
+    }, { passive: true });
 
     // 透明度设置
     const opacityContainer = titleContainer.createDiv();
@@ -6108,7 +6193,6 @@ class EntityExtractionModal extends Modal {
         // 检查实体名称是否在样式文件中（精确匹配）
         if (entityStyles[entity.name]) {
           matchedStyle = entityStyles[entity.name];
-          console.log(`为实体 "${entity.name}" 找到精确匹配的样式: ${matchedStyle.className}`);
         } else {
           // 搜索样式文件中的regex字段，支持正则表达式匹配
           for (const [regexPattern, style] of Object.entries(entityStyles)) {
@@ -6118,7 +6202,6 @@ class EntityExtractionModal extends Modal {
               // 测试实体名称是否匹配正则表达式
               if (regex.test(entity.name)) {
                 matchedStyle = style;
-                console.log(`为实体 "${entity.name}" 找到正则匹配的样式: ${style.className} (正则: ${regexPattern})`);
                 break;
               }
             } catch (error) {
@@ -6126,7 +6209,6 @@ class EntityExtractionModal extends Modal {
               // 如果正则表达式无效，尝试精确匹配
               if (entity.name === regexPattern) {
                 matchedStyle = style;
-                console.log(`为实体 "${entity.name}" 找到精确匹配的样式: ${style.className}`);
                 break;
               }
             }
@@ -6455,7 +6537,6 @@ ${this.selectedText}
 
                 // 如果新regex与旧regex相同，不更新
                 if (oldRule.regex === newName) {
-                  console.log(`新regex与旧regex相同，不更新: ${newName}`);
                 } else {
                   // 更新规则的regex
                   oldRule.regex = newName;
@@ -6487,10 +6568,8 @@ ${this.selectedText}
                     this.plugin.refreshCurrentView();
                   }, 100);
 
-                  console.log(`规则已更新: ${oldName} -> ${newName}`);
                 }
               } else {
-                console.log(`未找到旧规则: ${oldName}`);
               }
             }
 
@@ -6557,7 +6636,6 @@ ${this.selectedText}
 
             // 如果有匹配的规则，在控制台输出
             if (matchedRules.length > 0) {
-              console.log('匹配的规则:', matchedRules);
               // 高亮显示匹配的样式按钮
               stylesContainer.querySelectorAll("span").forEach(styleBtn => {
                 // 移除之前的高亮状态
@@ -6614,7 +6692,6 @@ ${this.selectedText}
                     // 删除旧key，添加新key
                     this.entityStyleMap.delete(oldEntityName);
                     this.entityStyleMap.set(newEntityName, style);
-                    console.log(`entityStyleMap更新: ${oldEntityName} -> ${newEntityName}, 样式: ${style.className}`);
                   }
 
                   // 应用样式到文档
@@ -6723,7 +6800,6 @@ ${this.selectedText}
           entityExample.classList.add(appliedStyle);
           this.entityStyleMap.set(entity.name, { className: appliedStyle });
           appliedStyles.add(appliedStyle);
-          console.log(`为实体 "${entity.name}" 应用样式: ${appliedStyle}`);
         } else if (this.plugin.globalRules && this.plugin.globalRules.length > 0) {
           // 检查全局规则中是否存在该实体
           const globalRule = this.plugin.globalRules.find(rule => {
@@ -6746,7 +6822,6 @@ ${this.selectedText}
             entityExample.classList.add(globalRule.cssClass);
             this.entityStyleMap.set(entity.name, { className: globalRule.cssClass });
             appliedStyles.add(globalRule.cssClass);
-            console.log(`为实体 "${entity.name}" 应用全局规则样式: ${globalRule.cssClass}`);
           } else {
             entityExample.textContent = entity.name;
           }
@@ -7044,7 +7119,6 @@ ${this.selectedText}
       if (match && match[1]) {
         // 确保该样式类存在于文档中
         const styleClassName = match[1];
-        console.log(`为实体 "${entityName}" 找到已应用的样式: ${styleClassName}`);
         return styleClassName;
       }
 
@@ -7781,7 +7855,6 @@ ${currentCss}
         }
       }
     } catch (error) {
-      console.log('Failed to load heading style rule:', error.message);
     }
 
     return null;
@@ -8405,16 +8478,13 @@ ${currentCss}
     if (keyframesMatch && keyframesMatch.index > 0) {
       // 如果找到了@keyframes规则，在其前面插入新的CSS规则
       cssContent = cssContent.substring(0, keyframesMatch.index) + newCssRule + cssContent.substring(keyframesMatch.index);
-      console.log(`CSS rule for .${className} added before first @keyframes`);
     } else {
       // 如果没有找到@keyframes规则，将新规则添加到文件末尾
       cssContent += newCssRule;
-      console.log(`CSS rule for .${className} added to end of file (no @keyframes found)`);
     }
 
     // 保存CSS文件
     await this.app.vault.adapter.write(cssPath, cssContent);
-    console.log('Added new CSS rule for', className);
 
     // 直接更新动态样式元素，确保新样式立即生效
     appendCSSToDynamicStyle(newCssRule);
@@ -8444,7 +8514,6 @@ ${currentCss}
 
     // 保存CSS文件
     await this.app.vault.adapter.write(cssPath, cssContent);
-    console.log('Added CSS code directly to file');
 
     // 重新注入CSS内容，传入已知的cssContent避免读写不一致
     // 这会同时更新标题样式规则
@@ -8465,7 +8534,6 @@ ${currentCss}
       // 保存配置文件
       const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
       await this.app.vault.adapter.write(configPath, JSON.stringify(styleCategories, null, 2));
-      console.log(`Added ${className} to category ${category}`);
     }
   }
 
@@ -8497,7 +8565,6 @@ ${currentCss}
 
   async saveSortedStyles(draggedCategory, draggedIndex, targetCategory, targetIndex) {
     try {
-      console.log(`Saving sorted styles: moving from ${draggedIndex} in ${draggedCategory} to ${targetIndex} in ${targetCategory}`);
 
       // 确保styleCategories是对象且分类存在
       if (!styleCategories || typeof styleCategories !== 'object' ||
@@ -8522,7 +8589,6 @@ ${currentCss}
       // 处理相同分类内的移动
       if (draggedCategory === targetCategory) {
         if (draggedIndex === targetIndex) {
-          console.log('Same index and category, no sorting needed');
           return;
         }
 
@@ -8534,7 +8600,6 @@ ${currentCss}
 
         // 更新样式分类配置
         styleCategories[draggedCategory] = sourceClassNames;
-        console.log('Intra-category move completed, updated categories:', styleCategories);
       }
       // 处理跨分类移动
       else {
@@ -8548,33 +8613,26 @@ ${currentCss}
         styleCategories[draggedCategory] = sourceClassNames;
         styleCategories[targetCategory] = targetClassNames;
 
-        console.log(`Style moved across categories: ${draggedClassName} from ${draggedCategory} to ${targetCategory}`);
       }
 
       // 保存到配置文件 - 使用与addStyleToConfig相同的相对路径方式
       const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
-      console.log('Saving to config path:', configPath);
 
       // 先保存到文件
       await this.app.vault.adapter.write(configPath, JSON.stringify(styleCategories, null, 2));
-      console.log('Styles reordered successfully, saved to file');
 
       // 然后重新加载配置到全局变量，确保数据一致性
       if (this.plugin && typeof this.plugin.loadStyleCategories === 'function') {
-        console.log('Reloading style categories...');
         await this.plugin.loadStyleCategories();
-        console.log('Style categories reloaded:', Object.keys(styleCategories));
       }
 
       // 无论是否跨分类移动，都刷新索引，确保UI显示正确
       if (typeof this.refreshStyleButtonIndices === 'function') {
-        console.log('Refreshing style button indices...');
         this.refreshStyleButtonIndices();
       }
 
       // 刷新当前弹窗内容，确保立即显示最新的样式顺序
       if (typeof this.refreshModalContent === 'function') {
-        console.log('Refreshing modal content to show updated style order...');
         await this.refreshModalContent();
       }
 
@@ -8603,7 +8661,6 @@ ${currentCss}
             button.setAttribute('data-style-index', index);
           });
 
-          console.log(`Refreshed indices for ${categoryName}: ${styleButtons.length} buttons updated`);
         }
       });
     } catch (error) {
@@ -8614,6 +8671,7 @@ ${currentCss}
   async refreshModalContent() {
     try {
       if (this.contentEl) {
+        if (this._unifiedGrid) { try { this._unifiedGrid.destroy(false); } catch(e) {} this._unifiedGrid = null; this._unifiedGridReady = false; }
         while (this.contentEl.firstChild) {
           this.contentEl.removeChild(this.contentEl.firstChild);
         }
@@ -8984,7 +9042,6 @@ class AddRegexRuleModal {
 
     // 保存CSS文件
     await this.app.vault.adapter.write(cssPath, cssContent);
-    console.log('Added new CSS code directly to styles.css');
 
     // 重新注入CSS内容，传入已知的cssContent避免读写不一致
     // 这会同时更新标题样式规则
@@ -9600,7 +9657,6 @@ class AddRegexRuleModal {
 
     // 保存CSS文件
     await this.app.vault.adapter.write(cssPath, cssContent);
-    console.log('Added new CSS rule for', className);
 
     // 直接更新动态样式元素，确保新样式立即生效
     appendCSSToDynamicStyle(newCssRule);
@@ -9618,7 +9674,6 @@ class AddRegexRuleModal {
       // 保存配置文件
       const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
       await this.app.vault.adapter.write(configPath, JSON.stringify(styleCategories, null, 2));
-      console.log(`Added ${className} to category ${category}`);
     }
   }
 
@@ -9905,7 +9960,7 @@ class AddRegexRuleModal {
       }
       if (this._resizeUpdatePosition) this._resizeUpdatePosition();
     };
-    document.addEventListener("touchmove", this._dragTouchMoveHandler, { passive: false });
+    document.addEventListener("touchmove", this._dragTouchMoveHandler, { passive: true });
 
     this._dragTouchEndHandler = () => {
       if (isDragging) {
@@ -9923,7 +9978,7 @@ class AddRegexRuleModal {
         }
       }
     };
-    document.addEventListener("touchend", this._dragTouchEndHandler);
+    document.addEventListener("touchend", this._dragTouchEndHandler, { passive: true });
 
     dragCloseBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -10043,20 +10098,6 @@ class AddRegexRuleModal {
       this.plugin.openSidebarView();
     });
     titleRightBtns.appendChild(sidebarBtn);
-
-    // 独立窗口按钮（参考 floating notes 的独立窗口）
-    const popoutBtn = document.createElement('span');
-    popoutBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
-    popoutBtn.title = t('main.popoutWindow');
-    popoutBtn.className = 'rch-popout-btn';
-    popoutBtn.style.cssText = 'cursor:pointer;color:var(--text-muted);padding:0 4px;border-radius:3px;transition:all 0.15s;line-height:0;display:inline-flex;align-items:center;';
-    if (this._isPopout || (this._popoutDoc && this._popoutDoc !== document)) { popoutBtn.style.display = 'none'; }
-    popoutBtn.addEventListener('mouseenter', () => { popoutBtn.style.background = 'var(--background-modifier-hover)'; popoutBtn.style.color = 'var(--text-normal)'; });
-    popoutBtn.addEventListener('mouseleave', () => { popoutBtn.style.background = ''; popoutBtn.style.color = 'var(--text-muted)'; });
-    popoutBtn.addEventListener('click', () => {
-      if (typeof this.plugin.openPanelPopout === 'function') this.plugin.openPanelPopout();
-    });
-    titleRightBtns.appendChild(popoutBtn);
 
     titleRightBtns.appendChild(dragCloseBtn);
 
@@ -10301,6 +10342,11 @@ class AddRegexRuleModal {
           if (_mr) { const _ri = _allR.indexOf(_mr); const _isG = _ri >= this.plugin.rules.length; this.currentEditingRule = { index: _isG ? _ri - this.plugin.rules.length : _ri, regex: _mr.regex, cssClass: _mr.cssClass, isGlobal: _isG, remark: _mr.remark || '' }; this.inputModifiedSinceEdit = false; if (this._refreshUpdateChip) this._refreshUpdateChip(); }
           if (this.updateStyleButtonsPreview) this.updateStyleButtonsPreview(rx);
           if (this.highlightMatchingRuleButtons) this.highlightMatchingRuleButtons();
+          // 同步筛选脉络 / Info / 相关文档
+          this._threadsFilterKw = _mr ? rx : null;
+          if (this._threadsReload) this._threadsReload();
+          if (typeof this._renderKeywordHistory === 'function') this._renderKeywordHistory();
+          if (this.plugin?._addKeywordHistory) this.plugin._addKeywordHistory(rx);
           if (this.showInlineRemarkForRegex) this.showInlineRemarkForRegex(rx);
           const _grps2 = this.plugin.config?.globalRuleGroups || {};
           let _kwGrp = '';
@@ -10367,7 +10413,7 @@ class AddRegexRuleModal {
           const _opts = [];
           if (_kwGroupName) _opts.push({ label: _kwGroupName, hint: t('main.group') || '分组', action: () => { const _lv = this.app?.workspace?.getLeavesOfType?.('swiftglossa-sidebar'); const _v = _lv?.[0]?.view; const _m = _v?._sidebarModal; if (_m) { const _rulesChip = _m.contentEl?.querySelector('.rch-rules-chip'); if (_rulesChip) _rulesChip.click(); setTimeout(() => { const _grpChip = _m.contentEl?.querySelector(`.global-rules-section [data-group="${_kwGroupName}"]`); if (_grpChip) { _grpChip.click(); _grpChip.style.border = '2px solid var(--interactive-accent)'; } }, 100); } } });
           _opts.push({ label: t('main.edit') || '编辑', hint: t('main.dblClickEdit') || '双击编辑', action: () => { chip.dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); } });
-          _opts.push({ label: t('main.deleteKeyword') || '删除关键词', action: () => { if (_matchedRule) { const _allR = [...(Array.isArray(this.plugin.rules)?this.plugin.rules:[]), ...(Array.isArray(this.plugin.globalRules)?this.plugin.globalRules:[])]; const _ri = _allR.indexOf(_matchedRule); if (_ri >= 0) { if (_matchedRule.isGlobal || _ri >= this.plugin.rules.length) { const _gi = _ri - this.plugin.rules.length; if (typeof this.deleteGlobalRule === 'function') this.deleteGlobalRule(_gi); } else { if (typeof this.deleteRule === 'function') this.deleteRule(_ri); } hideKwChips(); } } } });
+          _opts.push({ label: t('main.deleteKeyword') || '删除关键词', action: () => { if (_matchedRule) { const _allR = [...(Array.isArray(this.plugin.rules)?this.plugin.rules:[]), ...(Array.isArray(this.plugin.globalRules)?this.plugin.globalRules:[])]; const _ri = _allR.indexOf(_matchedRule); if (_ri >= 0) { if (_matchedRule.isGlobal || _ri >= this.plugin.rules.length) { const _gi = _ri - this.plugin.rules.length; if (this.plugin && typeof this.plugin.removeGlobalRule === 'function') this.plugin.removeGlobalRule(_gi); } else { if (typeof this.deleteRule === 'function') this.deleteRule(_ri); } hideKwChips(); } } } });
 
           showChipTooltip(chip, _opts);
         });
@@ -10559,6 +10605,8 @@ class AddRegexRuleModal {
             if (typeof this._renderKeywordHistory === 'function') this._renderKeywordHistory();
           } else {
             _enterCount++;
+            this._threadsFilterKw = trimmedVal;
+            if (this._threadsReload) this._threadsReload();
             if (_enterCount >= 2) {
               _enterCount = 0;
               if (_enterHintEl) { _enterHintEl.remove(); _enterHintEl = null; }
@@ -10771,9 +10819,10 @@ class AddRegexRuleModal {
           c.style.color = 'var(--text-muted)';
         });
       } else if (this._noFilterHighlight) {
+        // 点击关键词时不过滤：仅取消"当前可见分组"内按钮的过滤，不展开其他分组
         const _noFilterGrids = this.contentEl.querySelectorAll('.global-rules-section [data-rule-group]');
         _noFilterGrids.forEach(_grid => {
-          _grid.style.display = 'flex';
+          if (_grid.style.display === 'none') return;
           _grid.querySelectorAll('[data-rule-regex]').forEach(_btn => { _btn.style.display = 'flex'; });
         });
       } else if (this.plugin.isGlobalHistoryCollapsed) {
@@ -12118,17 +12167,14 @@ class AddRegexRuleModal {
 
               // 确保索引有效
               if (isNaN(draggedIndex) || isNaN(targetIndex)) {
-                console.log('Invalid drag: invalid index');
                 return;
               }
 
               // 检查是否需要移动
               if (draggedCategory === targetCategory && draggedIndex === targetIndex) {
-                console.log('Same index and category, no sorting needed');
                 return;
               }
 
-              console.log(`Dragging from ${draggedIndex} in category ${draggedCategory} to ${targetIndex} in category ${targetCategory}`);
 
               // 统一的拖拽处理逻辑
               await this.handleDragMove(draggedCategory, draggedIndex, targetCategory, targetIndex, targetElement);
@@ -12198,7 +12244,6 @@ class AddRegexRuleModal {
               });
             }
           } catch (e) {
-            console.log('检查hover样式时出错:', e);
           }
 
           styleOption.addEventListener("click", async (e) => {
@@ -12355,7 +12400,6 @@ class AddRegexRuleModal {
               _activeContextMenuCleanup = null;
             }
 
-            console.log('Right-click on style button:', className);
             if (this.plugin.settings?.enableDebugLog) console.log('[多选调试] Right-click on style button (original):', className, 'isMultiSelectMode:', this.isMultiSelectMode);
 
             const menu = document.createElement('div');
@@ -13684,11 +13728,12 @@ class AddRegexRuleModal {
 
         const _gridDoc = this._popoutDoc || document;
         const _isPopoutWin = this._isPopout || (_gridDoc !== document);
+        // 幂等更新（reload后旧规则残留也会被覆盖）；手柄用>直接子级限定，避免命中info/停车场内部grid的手柄
         if (!_gridDoc.getElementById('unified-grid-lock-style')) {
           const _ls = _gridDoc.createElement('style'); _ls.id = 'unified-grid-lock-style';
-          _ls.textContent = '.unified-grid-locked .ui-resizable-handle{display:none !important;}';
           _gridDoc.head.appendChild(_ls);
         }
+        _gridDoc.getElementById('unified-grid-lock-style').textContent = '.unified-grid-locked > .grid-stack-item > .ui-resizable-handle{display:none !important;}';
         if (_isPopoutWin) {
           if (!_gridDoc.getElementById('gridstack-css')) {
             const _gsStyle = _gridDoc.createElement('style');
@@ -13720,7 +13765,6 @@ class AddRegexRuleModal {
           const isHandle = e.target.closest('.unified-card-drag-handle') || e.target.closest('.ui-resizable-handle');
           const isCtrl = e.target.closest('.unified-card-ctrl, button, a, input, textarea, select, [contenteditable]');
           const isLocked = this.plugin?.settings?.unifiedCardLockLayout === true;
-          console.log('[UNIFIED-GRID] mousedown on grid, target:', e.target.className, 'isHandle:', isHandle, 'isCtrl:', isCtrl, 'isLocked:', isLocked, 'button:', e.button);
           if (isHandle && !isCtrl && !isLocked) {
             e.preventDefault();
             if (this._unifiedGrid) try { this._unifiedGrid.float(true); } catch(e2) {}
@@ -13731,11 +13775,10 @@ class AddRegexRuleModal {
             let _fwdMM = null, _fwdMU = null, _blocker = null;
             let _mmCount = 0;
             if (_isPopout) {
-              console.log('[UNIFIED-GRID] popout mode, forwarding events');
               _blocker = (ev) => { if (!ev._fwd) ev.stopImmediatePropagation(); };
               _mainDoc.addEventListener('mousemove', _blocker, true);
               _fwdMM = (ev) => {
-                _mmCount++; if (_mmCount <= 3) console.log('[UNIFIED-GRID] mousemove forwarded:', ev.clientX, ev.clientY, 'target:', ev.target.className);
+                _mmCount++; if (_mmCount <= 3) void 0;
                 const n = new MouseEvent('mousemove', { clientX: ev.clientX, clientY: ev.clientY, bubbles: true, cancelable: true });
                 n._fwd = true;
                 _mainDoc.body.dispatchEvent(n);
@@ -13751,7 +13794,6 @@ class AddRegexRuleModal {
               _dragOverlay = document.createElement('div');
               _dragOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;pointer-events:auto;background:transparent;touch-action:none;';
               document.body.appendChild(_dragOverlay);
-              console.log('[UNIFIED-GRID] overlay created, body children:', document.body.children.length);
             }
             const _cleanup = () => {
               if (_dragOverlay) _dragOverlay.remove();
@@ -13760,7 +13802,6 @@ class AddRegexRuleModal {
               if (_blocker) _mainDoc.removeEventListener('mousemove', _blocker, true);
               _mainDoc.removeEventListener('mouseup', _cleanup, true);
               setTimeout(() => { this._unifiedGridDragLock = false; }, 200);
-              console.log('[UNIFIED-GRID] cleanup done, mousemove count:', _mmCount);
             };
             this._unifiedGridDragLock = true;
             _mainDoc.addEventListener('mouseup', _cleanup, true);
@@ -13775,24 +13816,15 @@ class AddRegexRuleModal {
         _unifiedSettingsBtn.addEventListener('mouseenter', () => { _unifiedSettingsBtn.style.opacity = '1'; });
         _unifiedSettingsBtn.addEventListener('mouseleave', () => { _unifiedSettingsBtn.style.opacity = '0.4'; });
         _unifiedGrid.appendChild(_unifiedSettingsBtn);
+        this._unifiedSettingsBtn = _unifiedSettingsBtn;
 
         const _applyUnifiedCardStyles = () => {
           const _p = this.plugin;
-          const cardBg = _p.settings?.unifiedCardBg || '';
-          const cardBgOpacity = _p.settings?.unifiedCardBgOpacity !== undefined ? _p.settings.unifiedCardBgOpacity : 1;
           const showGrid = _p.settings?.unifiedCardShowGrid === true;
           const cardBorder = _p.settings?.unifiedCardBorder || '';
+          // 旧全局卡片底色(unifiedCardBg/unifiedCardBgOpacity)已废弃：卡片底色回归主题默认，个性化由各版块配色方案/底纹负责
           _unifiedGrid.querySelectorAll('.unified-card').forEach(c => {
-            if (cardBg) {
-              let _bg = cardBg;
-              if (cardBgOpacity < 1 && cardBg.startsWith('#')) {
-                let h = cardBg.replace('#', '');
-                if (h.length === 3) h = h.split('').map(ch => ch + ch).join('');
-                const r = parseInt(h.substring(0, 2), 16), g = parseInt(h.substring(2, 4), 16), b = parseInt(h.substring(4, 6), 16);
-                _bg = `rgba(${r}, ${g}, ${b}, ${cardBgOpacity})`;
-              }
-              c.style.background = _bg;
-            } else { c.style.background = ''; }
+            c.style.background = '';
             if (cardBorder) c.style.borderColor = cardBorder; else c.style.borderColor = '';
           });
           if (showGrid) {
@@ -13810,6 +13842,9 @@ class AddRegexRuleModal {
             try { this._unifiedGrid.enableMove(!lockLayout, false); } catch(e) {}
             try { this._unifiedGrid.enableResize(!lockLayout, false); } catch(e) {}
           }
+          // 面板背景底纹（作用于modalEl整体背景）+ 统一配色方案
+          try { this._applyBgPattern(this.modalEl, 'panelBgPattern'); } catch(e) {}
+          try { this._applyColorTheme(); } catch(e) {}
         };
         this._applyUnifiedCardStyles = _applyUnifiedCardStyles;
 
@@ -13822,12 +13857,7 @@ class AddRegexRuleModal {
           panel.className = 'unified-settings-panel';
           panel.style.cssText = 'position:absolute;top:24px;right:2px;z-index:200;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:11px;min-width:180px;';
           const _makeRow = (label, inputEl) => { const r = document.createElement('div'); r.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;'; const s = document.createElement('span'); s.textContent = label; r.appendChild(s); r.appendChild(inputEl); return r; };
-          const bgInput = document.createElement('input'); bgInput.type = 'color'; bgInput.value = _p.settings?.unifiedCardBg || '#ffffff'; bgInput.style.cssText = 'width:24px;height:18px;cursor:pointer;border:none;border-radius:4px;background:transparent;';
-          bgInput.addEventListener('input', () => { _p.settings.unifiedCardBg = bgInput.value; _p.saveData(_p.settings); _applyUnifiedCardStyles(); });
-          panel.appendChild(_makeRow(t('main.unifiedCardBg') || '底纹', bgInput));
-          const opacityInput = document.createElement('input'); opacityInput.type = 'range'; opacityInput.min = '0.1'; opacityInput.max = '1'; opacityInput.step = '0.1'; opacityInput.value = _p.settings?.unifiedCardBgOpacity !== undefined ? _p.settings.unifiedCardBgOpacity : 1; opacityInput.style.cssText = 'width:60px;cursor:pointer;';
-          opacityInput.addEventListener('input', () => { _p.settings.unifiedCardBgOpacity = parseFloat(opacityInput.value); _p.saveData(_p.settings); _applyUnifiedCardStyles(); });
-          panel.appendChild(_makeRow(t('main.unifiedCardBgOpacity') || '透明度', opacityInput));
+          panel.appendChild(this._makeThemeRow());
           const borderInput = document.createElement('input'); borderInput.type = 'color'; borderInput.value = _p.settings?.unifiedCardBorder || '#888888'; borderInput.style.cssText = 'width:24px;height:18px;cursor:pointer;border:none;border-radius:4px;background:transparent;';
           borderInput.addEventListener('input', () => { _p.settings.unifiedCardBorder = borderInput.value; _p.saveData(_p.settings); _applyUnifiedCardStyles(); });
           panel.appendChild(_makeRow(t('main.unifiedCardBorder') || '颜色', borderInput));
@@ -13848,16 +13878,24 @@ class AddRegexRuleModal {
             { key: 'showKeywordChipsBlock', label: t('main.cardLabelKeywordChips'), cardId: 'keywordChips', defaultVal: true },
             { key: 'showAiQuestionBlock', label: t('main.cardLabelAiQuestion'), cardId: 'aiQuestion', defaultVal: true },
             { key: 'showRelatedNotesSection', label: t('main.cardLabelRelatedNotes'), cardId: 'relatedNotes', defaultVal: true },
+            { key: 'showRecentFilesSection', label: t('main.cardLabelRecentFiles'), cardId: 'recentFilesSection', defaultVal: true },
+            { key: 'showRecentlyCreatedSection', label: t('main.cardLabelRecentlyCreated'), cardId: 'recentlyCreatedSection', defaultVal: true },
+            { key: 'showFocusSection', label: t('main.cardLabelFocus'), cardId: 'focusSection', defaultVal: true },
+            { key: 'showRandomReviewSection', label: t('main.cardLabelRandomReview'), cardId: 'randomReviewSection', defaultVal: true },
+            { key: 'showQuickNoteSection', label: t('main.cardLabelQuickNote'), cardId: 'quickNoteSection', defaultVal: true },
+            { key: 'showStatsSection', label: t('main.cardLabelStats'), cardId: 'statsSection', defaultVal: true },
           ];
           for (const st of _sectionToggles) {
             const toggle = document.createElement('input'); toggle.type = 'checkbox'; toggle.checked = _p.settings?.[st.key] !== false; toggle.style.cursor = 'pointer';
             toggle.addEventListener('change', () => {
               _p.settings[st.key] = toggle.checked; _p.saveData(_p.settings);
               const _nodes = this._unifiedGrid?.engine?.nodes || [];
+              let _found = false;
               for (const n of _nodes) {
                 const _c = n.el?.querySelector?.('.unified-card');
-                if (_c?.dataset?.cardId === st.cardId) { n.el.style.display = toggle.checked ? '' : 'none'; }
+                if (_c?.dataset?.cardId === st.cardId) { n.el.style.display = toggle.checked ? '' : 'none'; _found = true; }
               }
+              if (!_found && toggle.checked && typeof this.refreshModalContent === 'function') { this.refreshModalContent(); }
             });
             panel.appendChild(_makeRow(st.label, toggle));
           }
@@ -13874,12 +13912,46 @@ class AddRegexRuleModal {
         this._remarkCardIds = new Set(['relatedHighlights', 'remarkContent', 'keywordChips', 'aiQuestion', 'relatedNotes']);
 
         this._getLayoutKey = () => {
-          if (!this._unifiedGridEl) return 'unifiedGridLayout';
-          if (this._isPopout) return 'popoutGridLayout';
-          const _root = this.modalEl.getRootNode();
-          if (_root && _root.nodeType === 9 && _root !== document) return 'popoutGridLayout';
-          if (this.modalEl.style.position === 'fixed' || this.modalEl.style.position === '') return 'unifiedGridLayout';
-          return 'sidebarGridLayout';
+          // 侧边栏（窄区域）与标签页/独立窗口（宽区域）分别保存布局
+          // 用网格容器实际宽度判断（不依赖 Obsidian DOM 类名，避免 shadow DOM 内 closest 失效）：窄于 600px 视为侧边栏
+          try {
+            const _w = this._unifiedGridEl?.offsetWidth || this.modalEl?.offsetWidth || 0;
+            if (_w > 0 && _w < 600) return 'sidebarGridLayout';
+          } catch (e) {}
+          return 'unifiedGridLayout';
+        };
+
+        // 检测载体区域变化（如把面板从侧边栏拖到主区域标签页），变化时完整重建网格以应用对应布局
+        this._checkLayoutZone = () => {
+          try {
+            const _zone = this._getLayoutKey();
+            if (this._layoutZone !== _zone) {
+              this._layoutZone = _zone;
+              clearTimeout(this._layoutZoneTimer);
+              this._layoutZoneTimer = setTimeout(() => {
+                console.log('[SG] layout zone changed ->', _zone);
+                // 完整重建（而非仅 reapply）：无保存数据的卡片会 autoPosition，避免旧位置残留导致"两区布局一样"
+                if (typeof this._recreateUnifiedGrid === 'function' && this._unifiedGrid && this._unifiedGridReady && !this._unifiedGridDragLock) {
+                  try { this._recreateUnifiedGrid(true); } catch (e) { console.warn('[SG] recreate outer failed:', e); try { this._reapplyLayout?.(); } catch (e2) {} }
+                } else {
+                  try { this._reapplyLayout?.(); } catch (e) {}
+                }
+                // 内部 grid（info/停车场）完整重建：与跨 document 路径相同的处理。
+                // 同 document 区域切换时旧实例的 DD 状态不可靠（拖拽失效），必须回到全新 init 状态。
+                setTimeout(() => {
+                  try {
+                    console.log('[SG] rebuild inner grids (info/parking lot)...');
+                    try { if (this._infoGrid) this._infoGrid.destroy(false); } catch(e){}
+                    try { if (this._plGrid) this._plGrid.destroy(false); } catch(e){}
+                    this._infoGrid = null; this._infoGridReady = false;
+                    this._plGrid = null; this._plGridReady = false;
+                    if (this.addInfoSection) { try { this.addInfoSection(this.contentEl); } catch(e){ console.warn('[rebuild info grid]', e); } }
+                    if (this.addParkingLotSection) { try { this.addParkingLotSection(this.contentEl); } catch(e){ console.warn('[rebuild pl grid]', e); } }
+                  } catch (e) { console.warn('[SG] inner rebuild failed:', e); }
+                }, 350);
+              }, 200);
+            }
+          } catch (e) {}
         };
 
         this._reapplyLayout = () => {
@@ -13896,11 +13968,27 @@ class AddRegexRuleModal {
               }
             }
             try { this._unifiedGrid.float(true); } catch(e) {}
+            // 内联定位兜底（GridStack 动态样式表失效时保证纵向位置正确）
+            try {
+              const _g = this._unifiedGrid;
+              const _ch = _g.opts.cellHeight || 20;
+              const _chu = _g.opts.cellHeightUnit || 'px';
+              for (const n of (_g.engine?.nodes || [])) {
+                if (!n.el) continue;
+                n.el.style.top = (n.y * _ch) + _chu;
+                n.el.style.height = (n.h * _ch) + _chu;
+                const ce = n.el.querySelector('.grid-stack-item-content');
+                if (ce) { ce.style.position = 'absolute'; ce.style.top = '2px'; ce.style.bottom = '2px'; ce.style.left = '2px'; ce.style.right = '2px'; }
+              }
+              const _row = _g.getRow();
+              this._unifiedGridEl.style.minHeight = (_row * _ch) + _chu;
+            } catch(e) {}
           } catch(e) {}
         };
 
-        this._recreateUnifiedGrid = () => {
-          if (!this._unifiedGrid || !this._unifiedGridReady || !this._unifiedGridEl) return;
+        this._recreateUnifiedGrid = (_dropUnsaved) => {
+          if (!this._unifiedGrid || !this._unifiedGridReady || !this._unifiedGridEl) { console.log('[recreate] SKIP: grid not ready', !!this._unifiedGrid, this._unifiedGridReady, !!this._unifiedGridEl); return; }
+          console.log('[recreate] CALLED, _isPopout:', this._isPopout, 'gridKey:', this._getLayoutKey?.());
           const _gridEl = this._unifiedGridEl;
           const _cards = [];
           for (const n of (this._unifiedGrid.engine?.nodes || [])) {
@@ -13911,6 +13999,7 @@ class AddRegexRuleModal {
           this._unifiedGrid = null;
           this._unifiedGridReady = false;
           _gridEl.innerHTML = '';
+          if (this._unifiedSettingsBtn) _gridEl.appendChild(this._unifiedSettingsBtn);
           const GS = window.GridStack;
           if (!GS) return;
           const _doRecreate = () => {
@@ -13926,9 +14015,14 @@ class AddRegexRuleModal {
             grid.float(true);
             const _lk = this._getLayoutKey();
             const _saved = this.plugin.settings?.[_lk] || {};
+            console.log('[recreate] _lk:', _lk, '_saved keys:', Object.keys(_saved), '_cards:', _cards.map(c => ({id: c.id, x: c.x, y: c.y})));
+
             for (const c of _cards) {
               const sv = _saved[c.id];
-              const wOpts = { w: sv?.w || c.w, h: sv?.h || c.h, x: sv?.x ?? c.x, y: sv?.y ?? c.y, minW: 4, minH: 2, autoPosition: false };
+              // 区域切换重建时（_dropUnsaved=true），无保存数据的卡片 autoPosition 重新排布，避免旧区域位置残留
+              const wOpts = (_dropUnsaved && !sv)
+                ? { w: c.w, h: c.h, minW: 4, minH: 2, autoPosition: true }
+                : { w: sv?.w || c.w, h: sv?.h || c.h, x: sv?.x ?? c.x, y: sv?.y ?? c.y, minW: 4, minH: 2, autoPosition: false };
               const widgetEl = grid.addWidget(wOpts);
               const itemContent = widgetEl.querySelector('.grid-stack-item-content') || widgetEl;
               itemContent.appendChild(c.el);
@@ -13962,13 +14056,16 @@ class AddRegexRuleModal {
             };
             _applyInlinePositions();
             grid.on('change', () => { clearTimeout(this._unifiedGridSaveTimer); this._unifiedGridSaveTimer = setTimeout(_saveUnifiedGridLayout, 500); _applyInlinePositions(); _syncGsStylesToPopout(); });
-            grid.on('dragstop', () => { clearTimeout(this._unifiedGridSaveTimer); this._unifiedGridSaveTimer = setTimeout(_saveUnifiedGridLayout, 300); _applyInlinePositions(); _syncGsStylesToPopout(); });
+            grid.on('dragstop', () => { clearTimeout(this._unifiedGridSaveTimer); this._unifiedGridSaveTimer = setTimeout(_saveUnifiedGridLayout, 300); _applyInlinePositions(); _syncGsStylesToPopout(); requestAnimationFrame(() => { try { if (grid._updateStyles) grid._updateStyles(true); } catch(e){} _applyInlinePositions(); _syncGsStylesToPopout(); }); });
+              grid.on('dragstart', () => { let _sc = this._unifiedGridEl?.parentElement; while (_sc) { const _st = getComputedStyle(_sc); if (_st.overflowY === 'auto' || _st.overflowY === 'scroll') break; _sc = _sc.parentElement; } if (_sc) { this._dragWheelHandler = (e) => { _sc.scrollTop += e.deltaY; e.preventDefault(); }; _sc.ownerDocument.addEventListener('wheel', this._dragWheelHandler, { passive: false, capture: true }); } });
+            grid.on('dragstop', () => { let _sc = this._unifiedGridEl?.parentElement; while (_sc) { const _st = getComputedStyle(_sc); if (_st.overflowY === 'auto' || _st.overflowY === 'scroll') break; _sc = _sc.parentElement; } if (_sc && this._dragWheelHandler) { _sc.ownerDocument.removeEventListener('wheel', this._dragWheelHandler, { capture: true }); this._dragWheelHandler = null; } });
             grid.on('resizestop', () => { clearTimeout(this._unifiedGridSaveTimer); _saveUnifiedGridLayout(); this._unifiedGridSaveTimer = setTimeout(_saveUnifiedGridLayout, 300); _applyInlinePositions(); _syncGsStylesToPopout(); requestAnimationFrame(() => { try { if (grid._updateStyles) grid._updateStyles(true); } catch(e){} _applyInlinePositions(); _syncGsStylesToPopout(); }); });
             if (this._applyUnifiedCardStyles) this._applyUnifiedCardStyles();
             const _ro = new ResizeObserver(() => {
+              this._checkLayoutZone?.();
               if (this._unifiedGrid && this._unifiedGridReady && _gridEl.offsetWidth > 0 && !this._unifiedGridDragLock) {
                 clearTimeout(this._unifiedGridColTimer);
-                this._unifiedGridColTimer = setTimeout(() => { try { if (grid.engine?.nodes?.length && !this._unifiedGridDragLock) grid.float(true); } catch(e) {} }, 50);
+                this._unifiedGridColTimer = setTimeout(() => { try { if (grid.engine?.nodes?.length && !this._unifiedGridDragLock) { grid.float(true); _applyInlinePositions(); } } catch(e) {} }, 50);
               }
             });
             _ro.observe(_gridEl);
@@ -14046,6 +14143,7 @@ class AddRegexRuleModal {
           if (!this._unifiedGrid || !this._unifiedGridReady) return;
           try {
             const _lk = this._getLayoutKey();
+
             if (!this.plugin.settings[_lk]) this.plugin.settings[_lk] = {};
             for (const n of (this._unifiedGrid.engine?.nodes || [])) {
               const cardEl = n.el?.querySelector?.('.unified-card');
@@ -14061,13 +14159,14 @@ class AddRegexRuleModal {
           const plugin = this.plugin;
           const _lk = this._getLayoutKey();
           const savedLayout = this.plugin.settings?.[_lk]?.[cardId];
+
           const card = document.createElement('div');
           card.className = 'unified-card';
           card.dataset.cardId = cardId;
           card.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;height:100%;';
           const dragHandle = document.createElement('div');
           dragHandle.className = 'unified-card-drag-handle';
-          const _cardLabels = { infoSection: t('main.cardLabelInfo'), parkingLotSection: t('main.cardLabelParkingLot'), threadsSection: t('main.cardLabelThreads'), keywordHistory: t('main.cardLabelKeywordHistory'), relatedHighlights: t('main.cardLabelRelatedHighlights'), remarkContent: t('main.cardLabelRemarkContent'), keywordChips: t('main.cardLabelKeywordChips'), aiQuestion: t('main.cardLabelAiQuestion'), relatedNotes: t('main.cardLabelRelatedNotes') };
+          const _cardLabels = { infoSection: t('main.cardLabelInfo'), parkingLotSection: t('main.cardLabelParkingLot'), threadsSection: t('main.cardLabelThreads'), keywordHistory: t('main.cardLabelKeywordHistory'), relatedHighlights: t('main.cardLabelRelatedHighlights'), remarkContent: t('main.cardLabelRemarkContent'), keywordChips: t('main.cardLabelKeywordChips'), aiQuestion: t('main.cardLabelAiQuestion'), relatedNotes: t('main.cardLabelRelatedNotes'), recentFilesSection: t('main.cardLabelRecentFiles'), recentlyCreatedSection: t('main.cardLabelRecentlyCreated'), focusSection: t('main.cardLabelFocus'), randomReviewSection: t('main.cardLabelRandomReview'), quickNoteSection: t('main.cardLabelQuickNote'), statsSection: t('main.cardLabelStats') };
           dragHandle.style.cssText = 'cursor:move;font-size:10px;font-weight:600;color:var(--text-muted);padding:2px 6px;border-bottom:1px solid var(--background-modifier-border);opacity:0.7;transition:opacity .15s;display:flex;align-items:center;gap:4px;';
           dragHandle.innerHTML = '<span style="font-size:12px;">\u263F</span><span class="unified-card-label">' + (_cardLabels[cardId] || cardId) + '</span>';
           card.appendChild(dragHandle);
@@ -14143,15 +14242,39 @@ class AddRegexRuleModal {
             header.remove();
           };
           _mergeSectionHeader();
+          // 无设置按钮的版块：在卡片标题栏自动添加底纹设置齿轮
+          const _autoBgIconIds = ['recentFilesSection', 'recentlyCreatedSection', 'focusSection', 'randomReviewSection', 'statsSection'];
+          if (_autoBgIconIds.includes(cardId)) {
+            const _bgIcon = document.createElement('span');
+            _bgIcon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+            _bgIcon.title = t('main.bgPatternLabel');
+            _bgIcon.style.cssText = 'margin-left:auto;cursor:pointer;opacity:0.4;display:inline-flex;align-items:center;transition:opacity 0.15s;';
+            _bgIcon.addEventListener('mouseenter', () => { _bgIcon.style.opacity = '0.8'; });
+            _bgIcon.addEventListener('mouseleave', () => { _bgIcon.style.opacity = '0.4'; });
+            _bgIcon.addEventListener('click', (ev) => {
+              ev.preventDefault(); ev.stopPropagation();
+              if (this._currentFloatingMenuAnchor === _bgIcon && this._currentFloatingMenu) { this._closeFloatingMenu(); return; }
+              const menu = document.createElement('div');
+              menu.className = 'info-settings-menu';
+              menu.style.cssText = 'background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:11px;min-width:190px;';
+              menu.appendChild(this._makeBgPatternRow('secBg_' + cardId, () => {
+                this._applyBgPattern(sectionEl, 'secBg_' + cardId);
+              }));
+              this._floatSettingsMenu(_bgIcon, menu);
+            });
+            dragHandle.appendChild(_bgIcon);
+          }
+          // 初始应用版块底纹（所有版块统一：无独立配色方案，底纹+全局主题双层控制）
+          try { this._applyBgPattern(sectionEl, 'secBg_' + cardId); } catch(e) {}
           ['mousedown', 'touchstart', 'pointerdown'].forEach(evt => {
             cardContent.addEventListener(evt, (e) => {
               if (!e.target.closest('button') && !e.target.closest('a') && !e.target.closest('input') && !e.target.closest('textarea') && !e.target.closest('[contenteditable]')) {
                 e.stopPropagation();
               }
-            });
+            }, { passive: true });
           });
           this._unifiedCardIds.add(cardId);
-          const _cardSettingMap = { infoSection: 'showInfoSection', parkingLotSection: 'showParkingLot', threadsSection: 'showThreads', relatedHighlights: 'showRelatedHighlightsSection', remarkContent: 'showRemarkContentBlock', keywordChips: 'showKeywordChipsBlock', aiQuestion: 'showAiQuestionBlock', relatedNotes: 'showRelatedNotesSection' };
+          const _cardSettingMap = { infoSection: 'showInfoSection', parkingLotSection: 'showParkingLot', threadsSection: 'showThreads', relatedHighlights: 'showRelatedHighlightsSection', remarkContent: 'showRemarkContentBlock', keywordChips: 'showKeywordChipsBlock', aiQuestion: 'showAiQuestionBlock', relatedNotes: 'showRelatedNotesSection', recentFilesSection: 'showRecentFilesSection', recentlyCreatedSection: 'showRecentlyCreatedSection', focusSection: 'showFocusSection', randomReviewSection: 'showRandomReviewSection', quickNoteSection: 'showQuickNoteSection', statsSection: 'showStatsSection' };
           const _addToGrid = (grid) => {
             const existing = grid.engine?.nodes?.find(n => n.el?.querySelector?.('.unified-card')?.dataset?.cardId === cardId);
             if (existing) { try { grid.removeWidget(existing.el, true); } catch(e) {} }
@@ -14214,13 +14337,16 @@ class AddRegexRuleModal {
               this._unifiedGridReady = true;
               this._unifiedGridDragLock = false;
               const _ro = new ResizeObserver(() => {
+                this._checkLayoutZone?.();
                 if (this._unifiedGrid && this._unifiedGridReady && _unifiedGrid.offsetWidth > 0 && !this._unifiedGridDragLock) {
                   clearTimeout(this._unifiedGridColTimer);
-                  this._unifiedGridColTimer = setTimeout(() => { try { if (grid.engine?.nodes?.length && !this._unifiedGridDragLock) grid.float(true); } catch(e) {} }, 50);
+                  this._unifiedGridColTimer = setTimeout(() => { try { if (grid.engine?.nodes?.length && !this._unifiedGridDragLock) { grid.float(true); _applyInitInlinePos(); } } catch(e) {} }, 50);
                 }
               });
               _ro.observe(_unifiedGrid);
               this._unifiedGridResizeObserver = _ro;
+              // 初始化区域标记，避免首次 RO 触发时误报"区域变化"导致多余重建
+              try { this._layoutZone = this._getLayoutKey?.(); } catch(e) {}
               const _applyInitInlinePos = () => {
                 const _ch = grid.opts.cellHeight || 20;
                 const _chu = grid.opts.cellHeightUnit || 'px';
@@ -14246,7 +14372,9 @@ class AddRegexRuleModal {
                 _unifiedGrid.style.minHeight = (_row * _ch) + _chu;
               };
               grid.on('change', () => { clearTimeout(this._unifiedGridSaveTimer); this._unifiedGridSaveTimer = setTimeout(_saveUnifiedGridLayout, 500); _applyInitInlinePos(); _syncGsStylesToPopout(); });
-              grid.on('dragstop', () => { clearTimeout(this._unifiedGridSaveTimer); this._unifiedGridSaveTimer = setTimeout(_saveUnifiedGridLayout, 300); _applyInitInlinePos(); _syncGsStylesToPopout(); });
+              grid.on('dragstop', () => { clearTimeout(this._unifiedGridSaveTimer); this._unifiedGridSaveTimer = setTimeout(_saveUnifiedGridLayout, 300); _applyInitInlinePos(); _syncGsStylesToPopout(); requestAnimationFrame(() => { try { if (grid._updateStyles) grid._updateStyles(true); } catch(e){} _applyInitInlinePos(); _syncGsStylesToPopout(); }); });
+            grid.on('dragstart', () => { let _sc = this._unifiedGridEl?.parentElement; while (_sc) { const _st = getComputedStyle(_sc); if (_st.overflowY === 'auto' || _st.overflowY === 'scroll') break; _sc = _sc.parentElement; } if (_sc) { this._dragWheelHandler = (e) => { _sc.scrollTop += e.deltaY; e.preventDefault(); }; _sc.ownerDocument.addEventListener('wheel', this._dragWheelHandler, { passive: false, capture: true }); } });
+              grid.on('dragstop', () => { let _sc = this._unifiedGridEl?.parentElement; while (_sc) { const _st = getComputedStyle(_sc); if (_st.overflowY === 'auto' || _st.overflowY === 'scroll') break; _sc = _sc.parentElement; } if (_sc && this._dragWheelHandler) { _sc.ownerDocument.removeEventListener('wheel', this._dragWheelHandler, { capture: true }); this._dragWheelHandler = null; } });
               grid.on('resizestop', () => { clearTimeout(this._unifiedGridSaveTimer); _saveUnifiedGridLayout(); this._unifiedGridSaveTimer = setTimeout(_saveUnifiedGridLayout, 300); _applyInitInlinePos(); _syncGsStylesToPopout(); requestAnimationFrame(() => { try { if (grid._updateStyles) grid._updateStyles(true); } catch(e){} _applyInitInlinePos(); _syncGsStylesToPopout(); }); });
               while (this._unifiedGridQueue.length > 0) { const fn = this._unifiedGridQueue.shift(); if (typeof fn === 'function') fn(grid); }
               _applyUnifiedCardStyles();
@@ -14277,6 +14405,13 @@ class AddRegexRuleModal {
         this.addInfoSection(contentEl);
         this.addParkingLotSection(contentEl);
         this.addThreadsSection(contentEl);
+        this.addRecentFilesSection(contentEl);
+        this.addRecentlyCreatedSection(contentEl);
+        this.addFocusSection(contentEl);
+        this.addRandomReviewSection(contentEl);
+        this.addQuickNoteSection(contentEl);
+        this.addStatsSection(contentEl);
+        this.addRemarkPlaceholderCards(contentEl);
         this.addWidthSettingsSection(contentEl);
 
         const _initRegex = (this.plugin.currentFilePath || '').split('/').pop().replace(/\.md$/, '') || '';
@@ -14648,7 +14783,6 @@ class AddRegexRuleModal {
               }, { passive: false });
               panelPaletteBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                console.log('[Panel] paletteBtn clicked, presets:', this.plugin.colorSchemePresets?.length);
                 const ex = (panelPaletteBtn.ownerDocument || document).querySelector('.color-scheme-popup');
                 if (ex) { ex.remove(); return; }
                 const noteCard = card;
@@ -14674,7 +14808,7 @@ class AddRegexRuleModal {
                 document.addEventListener('mouseup',()=>{pDrag=false;});
                 header.addEventListener('touchstart',(e)=>{const t=e.touches[0];pDrag=true;pDragX=t.clientX;pDragY=t.clientY;const r=popup.getBoundingClientRect();pStartX=r.left;pStartY=r.top;e.preventDefault();},{passive:false});
                 document.addEventListener('touchmove',(e)=>{if(!pDrag)return;const t=e.touches[0];popup.style.left=(pStartX+t.clientX-pDragX)+'px';popup.style.top=(pStartY+t.clientY-pDragY)+'px';e.preventDefault();},{passive:false});
-                document.addEventListener('touchend',()=>{pDrag=false;});
+                document.addEventListener('touchend',()=>{pDrag=false;}, { passive: true });
                 const scrollBody = document.createElement('div');
                 scrollBody.style.cssText = 'overflow-y:auto;padding:8px 10px;flex:1;';
                 const allSchemes = [...panelSchemePresets];
@@ -15145,16 +15279,23 @@ class AddRegexRuleModal {
             const selectedText = selection.toString().trim();
             const anchorNode = selection.anchorNode;
             if (anchorNode && !this.modalEl.contains(anchorNode) && _isInEditor(anchorNode)) {
-              const _allRules = [...(Array.isArray(this.plugin.rules)?this.plugin.rules:[]), ...(Array.isArray(this.plugin.globalRules)?this.plugin.globalRules:[])];
+              const _self = this;
+              requestAnimationFrame(() => {
+              const _allRules = [...(Array.isArray(_self.plugin.rules)?_self.plugin.rules:[]), ...(Array.isArray(_self.plugin.globalRules)?_self.plugin.globalRules:[])];
               const _matchRules = _allRules.filter(r => { const _p = _splitRegexPipes(r.regex); return _p.some(p => selectedText.includes(p)) || r.regex === selectedText || _regexMatch(selectedText, r.regex); });
               const _uniqueRegexes = [...new Set(_matchRules.map(r => r.regex))];
-              console.log('[kw-chip-sel] selectedText:', selectedText.substring(0,30), 'allRules:', _allRules.length, 'matchRules:', _matchRules.length, 'uniqueRegexes:', _uniqueRegexes);
-              if (_uniqueRegexes.length > 0 && this._showKwChips) { this._showKwChips(_uniqueRegexes, selectedText, selectedText); } else if (this._hideKwChips) { this._hideKwChips(); }
-              this.regexInput.setValue(selectedText);
-
-              if (this.updateStyleButtonsPreview) this.updateStyleButtonsPreview(selectedText);
-              if (this.highlightMatchingRuleButtons) this.highlightMatchingRuleButtons();
-              if (this.showInlineRemarkForRegex) this.showInlineRemarkForRegex(selectedText);
+              requestAnimationFrame(() => {
+              if (_uniqueRegexes.length > 0 && _self._showKwChips) { _self._showKwChips(_uniqueRegexes, selectedText, selectedText); } else if (_self._hideKwChips) { _self._hideKwChips(); }
+              _self.regexInput.setValue(selectedText);
+              requestAnimationFrame(() => {
+              if (_self.updateStyleButtonsPreview) _self.updateStyleButtonsPreview(selectedText);
+              if (_self.highlightMatchingRuleButtons) _self.highlightMatchingRuleButtons();
+              requestAnimationFrame(() => {
+              if (_self.showInlineRemarkForRegex) _self.showInlineRemarkForRegex(selectedText);
+              });
+              });
+              });
+              });
             }
           }
         }, 150);
@@ -15668,7 +15809,7 @@ class AddRegexRuleModal {
         const r = this.modalEl.getBoundingClientRect(); _sbModalStartX = r.left; _sbModalStartY = r.top;
       }, { passive: true });
       document.addEventListener('touchmove', (te) => { if (_sbDrag) { te.preventDefault(); _sbOnMove(te); } }, { passive: false });
-      document.addEventListener('touchend', _sbOnUp);
+      document.addEventListener('touchend', _sbOnUp, { passive: true });
     }
     let settingsPopupCloseTimer = null;
     const chipDataMap = new Map();
@@ -15735,7 +15876,7 @@ class AddRegexRuleModal {
         document.addEventListener('mouseup',()=>{spDrag=false;});
         settingsPopup.addEventListener('touchstart',(e)=>{if(e.target.closest('input,button,textarea,select,a,.setting-item,.clickable-icon'))return;const tc=e.touches[0];spDrag=true;spDragMoved=false;spDragX=tc.clientX;spDragY=tc.clientY;const r=settingsPopup.getBoundingClientRect();spStartX=r.left;spStartY=r.top;e.preventDefault();},{passive:false});
         document.addEventListener('touchmove',(e)=>{if(!spDrag)return;spDragMoved=true;const tc=e.touches[0];settingsPopup.style.left=(spStartX+tc.clientX-spDragX)+'px';settingsPopup.style.top=(spStartY+tc.clientY-spDragY)+'px';e.preventDefault();},{passive:false});
-        document.addEventListener('touchend',()=>{spDrag=false;});
+        document.addEventListener('touchend',()=>{spDrag=false;}, { passive: true });
 
         settingsPopup.addEventListener('mouseenter', () => {
           if (settingsPopupCloseTimer) { clearTimeout(settingsPopupCloseTimer); settingsPopupCloseTimer = null; }
@@ -16347,6 +16488,7 @@ class AddRegexRuleModal {
       if (!this.plugin.settings) this.plugin.settings = {};
       this.plugin.settings.showRelatedHighlights = e.target.checked;
       await this.plugin.saveData(this.plugin.settings);
+      if (typeof this.refreshModalContent === 'function') await this.refreshModalContent();
     });
 
     const _sectionToggleConfigs = [
@@ -16380,6 +16522,7 @@ class AddRegexRuleModal {
         if (!this.plugin.settings) this.plugin.settings = {};
         this.plugin.settings[_cfg.key] = e.target.checked;
         await this.plugin.saveData(this.plugin.settings);
+        if (typeof this.refreshModalContent === 'function') await this.refreshModalContent();
       });
     }
 
@@ -17541,7 +17684,6 @@ class AddRegexRuleModal {
           const data = await response.json();
           if (data.choices && data.choices[0]?.message?.content) {
             new Notice(t('settings.apiTestSuccess'));
-            console.log("API测试响应:", data.choices[0].message.content);
             // 将AI返回的内容追加到测试API文本框中
             testApiInput.value += `\n\nAI: ${data.choices[0].message.content}`;
           } else {
@@ -19029,6 +19171,12 @@ class AddRegexRuleModal {
             if (this._refreshUpdateChip) this._refreshUpdateChip();
           }
           this.toggleInlineRemark(ruleId, rule);
+          // 同步筛选脉络 / Info / 相关文档（与 chip 点击行为一致）
+          this._threadsFilterKw = rule.regex;
+          if (this._threadsReload) this._threadsReload();
+          this.addRelatedNotesSection(this.contentEl, rule.regex);
+          this._infoActiveChip = rule.regex;
+          if (typeof this._refreshInfoChips === 'function') this._refreshInfoChips();
         });
 
 
@@ -19152,7 +19300,6 @@ class AddRegexRuleModal {
 
           {
             // 右键：弹出选项菜单
-            console.log('Right-click on global rule button:', rule);
 
             // 创建上下文菜单
             const menu = document.createElement('div');
@@ -20267,7 +20414,7 @@ class AddRegexRuleModal {
   addRelatedNotesSection(contentEl, regex) {
     const plugin = this.plugin;
     this.clearRelatedNotesSection();
-    if (!plugin.settings || plugin.settings.showRelatedNotes === false || plugin.settings.showRelatedNotesSection === false) return;
+    if (!plugin.settings || plugin.settings.showRelatedNotes === false || plugin.settings.showRelatedNotesSection !== true) return;
     if (!regex) return;
     const _excludedGroups = plugin.settings?.excludedRelatedNotesCategories || [];
     const _groups = plugin.config?.globalRuleGroups || {};
@@ -20482,8 +20629,7 @@ class AddRegexRuleModal {
     hlSettingIcon.addEventListener('mouseleave', () => { hlSettingIcon.style.opacity = '0.4'; });
     hlSettingIcon.addEventListener('click', (se) => {
       se.preventDefault(); se.stopPropagation();
-      const existingMenu = section.querySelector('.hl-settings-menu');
-      if (existingMenu) { existingMenu.remove(); return; }
+      if (this._currentFloatingMenuAnchor === hlSettingIcon && this._currentFloatingMenu) { this._closeFloatingMenu(); return; }
       const menu = document.createElement('div');
       menu.className = 'hl-settings-menu';
       menu.style.cssText = 'background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:11px;min-width:200px;max-height:400px;overflow-y:auto;margin-top:4px;';
@@ -20496,9 +20642,7 @@ class AddRegexRuleModal {
         inp.addEventListener('input', () => { _s.relatedHlKwUniformClass = inp.value.trim(); this.plugin.saveData(this.plugin.settings); });
         row.appendChild(lbl); row.appendChild(inp); menu.appendChild(row); }
       _SG_FINISH_HL_SETTINGS(menu, _s, () => this.plugin.saveData(this.plugin.settings), section);
-            section.insertBefore(menu, section.firstChild);
-      const closeMenu = (ev) => { if (!menu.contains(ev.target) && !hlSettingIcon.contains(ev.target)) { menu.remove(); document.removeEventListener('mousedown', closeMenu); } };
-      setTimeout(() => document.addEventListener('mousedown', closeMenu), 0);
+      this._floatSettingsMenu(hlSettingIcon, menu);
     });
     headerRow.appendChild(hlSettingIcon);
     const closeBtn = document.createElement('span');
@@ -20889,7 +21033,7 @@ class AddRegexRuleModal {
       } else {
         this._preservedScrollTop = this.contentEl.scrollTop;
         this.refreshModalContent().then(() => {
-          const _allR = [...(Array.isArray(plugin.globalRules)?plugin.globalRules:[]), ...(Array.isArray(plugin.rules)?plugin.rules:[])];
+          const _allR = [...(Array.isArray(this.plugin.globalRules)?this.plugin.globalRules:[]), ...(Array.isArray(this.plugin.rules)?this.plugin.rules:[])];
           const _matchR = _allR.filter(r => { const _p = _splitRegexPipes(r.regex); return _p.includes(regex) || r.regex === regex || r.regex.includes(regex); });
           const _uniqRx = [...new Set(_matchR.map(r => r.regex))];
           requestAnimationFrame(() => {
@@ -20916,7 +21060,10 @@ class AddRegexRuleModal {
       const existing = this.contentEl.querySelector('.remark-content-container');
       if (existing) existing.remove();
       this._inlineRemarkRuleId = null;
-      if (this._infoSection) this._infoSection.style.display = '';
+      if (this._infoSection) {
+        const _isSentence = _isSentenceRule(regex, plugin.settings);
+        this._infoSection.style.display = _isSentence ? 'none' : '';
+      }
       this._infoActiveChip = regex;
       if (typeof this._refreshInfoChips === 'function') this._refreshInfoChips();
       if (typeof this._refreshUpdateChip === 'function') this._refreshUpdateChip();
@@ -20937,12 +21084,21 @@ class AddRegexRuleModal {
     const ruleId = 'regex-' + regex;
     this._showInlineRemarkForRules(ruleId, matchingRules);
     this.addRelatedNotesSection(this.contentEl, regex);
+    // 有匹配规则时也需显示相关高亮（区别于renderRemarkContent内的版块，这里展示 contentEl 内 inline 相关高亮扫描结果）
+    if (plugin.settings?.showRelatedHighlights !== false && plugin.settings?.showInlineRelatedHighlightsSection !== false && regex) {
+      const _exclGrps2 = plugin.settings?.excludedRelatedNotesCategories || [];
+      const _grpsX = plugin.config?.globalRuleGroups || {};
+      let _hlExcl2 = false;
+      if (_exclGrps2.length > 0) { for (const _g in _grpsX) { if (_exclGrps2.includes(_g) && _grpsX[_g].some(r => { const _pp = _splitRegexPipes(r); return _pp.includes(regex) || r === regex || _regexMatch(regex, r); })) { _hlExcl2 = true; break; } } }
+      if (!_hlExcl2) this._showRelatedHighlights(regex);
+    }
     if (this._infoSection) this._infoSection.style.display = '';
     this._infoActiveChip = regex;
     if (typeof this._refreshInfoChips === 'function') this._refreshInfoChips();
   }
 
   _renderKeywordHistory() {
+
     const plugin = this.plugin;
     const historyKeywords = plugin._keywordHistory || [];
     // 仅显示规则中的关键词
@@ -21193,7 +21349,7 @@ class AddRegexRuleModal {
         }
       }
 
-      if (ruleRelatedKws.size > 0 && this.plugin.settings?.showKeywordChipsBlock !== false) {
+      if (ruleRelatedKws.size > 0 && this.plugin.settings?.showKeywordChipsBlock === true) {
         const kwBlock = document.createElement('div');
         kwBlock.className = 'keyword-chips-block';
         kwBlock.style.cssText = 'margin-bottom:8px;';
@@ -21229,7 +21385,7 @@ class AddRegexRuleModal {
         _createSectionToggle(this.plugin, 'relatedKeywords_sidebar', chipsBar, kwBlockHeaderLeft);
         if (lastRenderResult?._existingMermaidGraph && lastRenderResult?._renderGraphSection) lastRenderResult._renderGraphSection(lastRenderResult._existingMermaidGraph, undefined, kwBlock);
         if (this._addUnifiedCard) this._addUnifiedCard(kwBlock, 'keywordChips', { w: 24, h: 3 });
-      } else if (this.plugin.settings?.showKeywordChipsBlock !== false && this._addUnifiedCard) {
+      } else if (this.plugin.settings?.showKeywordChipsBlock === true && this._addUnifiedCard) {
         const _emptyChips = document.createElement('div');
         _emptyChips.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;padding:4px 0;';
         _emptyChips.textContent = '（空）关联词';
@@ -21240,7 +21396,7 @@ class AddRegexRuleModal {
         const _aiEl = lastRenderResult?.aiQuestionBlock;
         if (_aiEl) {
           this._addUnifiedCard(_aiEl, 'aiQuestion', { w: 24, h: 4 });
-        } else if (this.plugin.settings?.showAiQuestionBlock !== false) {
+        } else if (this.plugin.settings?.showAiQuestionBlock === true) {
           const _emptyAi = document.createElement('div');
           _emptyAi.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;padding:4px 0;';
           _emptyAi.textContent = '（空）AI提问';
@@ -21328,10 +21484,969 @@ class AddRegexRuleModal {
     this._infoGridQueue = [];
   }
 
+  // ===== 底纹预设系统：10套CSS图案（中性灰半透明叠加，不改变底色，深浅色主题通用）=====
+  _ensureBgPatternCss(doc) {
+    const _doc = doc || document;
+    if (!_doc.getElementById('sg-bgpat-style')) {
+      const st = _doc.createElement('style'); st.id = 'sg-bgpat-style';
+      _doc.head.appendChild(st);
+    }
+    // !important 保证覆盖版块内联background简写（如info配色预设的section.style.background）
+    _doc.getElementById('sg-bgpat-style').textContent = [
+      '.sg-bgpat-grid{background-image:linear-gradient(rgba(128,128,128,.18) 1px,transparent 1px),linear-gradient(90deg,rgba(128,128,128,.18) 1px,transparent 1px)!important;background-size:16px 16px!important;}',
+      '.sg-bgpat-dots{background-image:radial-gradient(rgba(128,128,128,.28) 1px,transparent 1.5px)!important;background-size:14px 14px!important;}',
+      '.sg-bgpat-dotsLg{background-image:radial-gradient(rgba(128,128,128,.24) 2px,transparent 2.5px)!important;background-size:26px 26px!important;}',
+      '.sg-bgpat-diag{background-image:repeating-linear-gradient(45deg,rgba(128,128,128,.15) 0 1px,transparent 1px 10px)!important;}',
+      '.sg-bgpat-diag2{background-image:repeating-linear-gradient(-45deg,rgba(128,128,128,.15) 0 1px,transparent 1px 10px)!important;}',
+      '.sg-bgpat-hstripes{background-image:repeating-linear-gradient(0deg,rgba(128,128,128,.13) 0 4px,transparent 4px 12px)!important;}',
+      '.sg-bgpat-vstripes{background-image:repeating-linear-gradient(90deg,rgba(128,128,128,.13) 0 4px,transparent 4px 12px)!important;}',
+      '.sg-bgpat-checker{background-image:linear-gradient(45deg,rgba(128,128,128,.13) 25%,transparent 25%,transparent 75%,rgba(128,128,128,.13) 75%),linear-gradient(45deg,rgba(128,128,128,.13) 25%,transparent 25%,transparent 75%,rgba(128,128,128,.13) 75%)!important;background-size:16px 16px!important;background-position:0 0,8px 8px!important;}',
+      '.sg-bgpat-vignette{background-image:radial-gradient(ellipse at center,transparent 55%,rgba(128,128,128,.20) 100%)!important;}',
+    ].join('');
+  }
+
+  _applyBgPattern(el, settingKey) {
+    if (!el) return;
+    this._ensureBgPatternCss(el.ownerDocument || document);
+    const id = (this.plugin && this.plugin.settings?.[settingKey]) || 'none';
+    for (const p of SG_BG_PATTERNS) {
+      if (p.id !== 'none') el.classList.remove('sg-bgpat-' + p.id);
+    }
+    if (id !== 'none') el.classList.add('sg-bgpat-' + id);
+  }
+
+  // ===== 统一配色方案：由SG_COLOR_THEMES生成CSS变量类，局部重定义Obsidian变量（面板内UI自动跟随）=====
+  _ensureThemeCss(doc) {
+    const _doc = doc || document;
+    const _v2s = (vars) => Object.entries(vars).map(([k, v]) => `--${k}:${v};`).join('');
+    if (!_doc.getElementById('sg-theme-css')) {
+      const st = _doc.createElement('style'); st.id = 'sg-theme-css';
+      _doc.head.appendChild(st);
+    }
+    _doc.getElementById('sg-theme-css').textContent = Object.values(SG_COLOR_THEMES).map((th) => {
+      const zoneRules = Object.entries(th.zones || {}).map(([cid, z]) => `.${th.cls} .unified-card[data-card-id="${cid}"]{${_v2s(z.light)}}`).join('');
+      const zoneRulesDark = Object.entries(th.zones || {}).map(([cid, z]) => `.theme-dark .${th.cls} .unified-card[data-card-id="${cid}"]{${_v2s(z.dark)}}`).join('');
+      return `.${th.cls}{${_v2s(th.light)}}${zoneRules}.theme-dark .${th.cls}{${_v2s(th.dark)}}${zoneRulesDark}`;
+    }).join('') + '\n.sg-theme-active{background:var(--background-secondary) !important;}\n.sg-theme-active .unified-card{background:var(--sg-card-bg,var(--background-primary));border:1px solid var(--sg-card-border,transparent);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}\n.sg-theme-active .unified-card .unified-card-drag-handle{color:var(--text-muted);}';
+  }
+
+  _applyColorTheme() {
+    const modalEl = this.modalEl;
+    if (!modalEl) return;
+    // 无"跟随Obsidian"选项：无效/未设置值一律归一为水墨朱砂
+    const cur = SG_COLOR_THEMES[(this.plugin.settings?.panelColorTheme)] ? this.plugin.settings.panelColorTheme : 'inkjoss';
+    Object.values(SG_COLOR_THEMES).forEach((th) => modalEl.classList.remove(th.cls));
+    modalEl.classList.remove('sg-theme-active');
+    this._ensureThemeCss(modalEl.ownerDocument || document);
+    modalEl.classList.add(SG_COLOR_THEMES[cur].cls);
+    modalEl.classList.add('sg-theme-active');
+  }
+
+  // 配色方案选择行：3套主题预览块（面板底/卡片底/强调色三色条）+ "跟随Obsidian"
+  _makeThemeRow() {
+    const row = document.createElement('div');
+    row.style.cssText = 'margin:6px 0 8px;';
+    const label = document.createElement('div');
+    label.textContent = t('main.colorThemeLabel');
+    label.style.cssText = 'color:var(--text-muted);font-weight:600;margin:4px 0;font-size:11px;';
+    row.appendChild(label);
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(2,1fr);gap:4px;';
+    const _items = Object.entries(SG_COLOR_THEMES).map(([id, th]) => ({
+      id, name: t('main.theme_' + id),
+      panel: th.light['background-secondary'], card: th.light['sg-card-bg'], accent: th.light['interactive-accent'],
+    }));
+    const cur = SG_COLOR_THEMES[(this.plugin.settings?.panelColorTheme)] ? this.plugin.settings.panelColorTheme : 'inkjoss';
+    for (const it of _items) {
+      const sw = document.createElement('div');
+      sw.title = it.name;
+      sw.style.cssText = 'display:flex;align-items:center;gap:5px;padding:4px 5px;border-radius:6px;cursor:pointer;border:1px solid var(--background-modifier-border);';
+      if (cur === it.id) sw.style.outline = '2px solid var(--interactive-accent)';
+      // mini三色条：面板底/卡片底/强调色
+      const bar = document.createElement('div');
+      bar.style.cssText = 'flex-shrink:0;width:26px;height:16px;border-radius:3px;overflow:hidden;display:flex;flex-direction:column;border:1px solid rgba(128,128,128,0.25);';
+      const b1 = document.createElement('div'); b1.style.cssText = 'flex:1;background:' + it.panel + ';';
+      const b2 = document.createElement('div'); b2.style.cssText = 'flex:2;background:' + it.card + ';';
+      const b3 = document.createElement('div'); b3.style.cssText = 'flex:1;background:' + it.accent + ';';
+      bar.appendChild(b1); bar.appendChild(b2); bar.appendChild(b3);
+      const nameEl = document.createElement('span');
+      nameEl.textContent = it.name;
+      nameEl.style.cssText = 'font-size:10px;color:var(--text-normal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      sw.appendChild(bar);
+      sw.appendChild(nameEl);
+      sw.addEventListener('click', () => {
+        this.plugin.settings.panelColorTheme = it.id;
+        this.plugin.saveData(this.plugin.settings);
+        grid.querySelectorAll(':scope > div').forEach(x => { x.style.outline = ''; });
+        sw.style.outline = '2px solid var(--interactive-accent)';
+        this._applyColorTheme();
+      });
+      grid.appendChild(sw);
+    }
+    row.appendChild(grid);
+    return row;
+  }
+
+  // 生成"底纹"选择行：10套预设以小图标平铺（当前项高亮描边）
+  _makeBgPatternRow(settingKey, onApply) {
+    const row = document.createElement('div');
+    row.style.cssText = 'margin:6px 0 2px;';
+    const label = document.createElement('div');
+    label.textContent = t('main.bgPatternLabel');
+    label.style.cssText = 'color:var(--text-muted);font-weight:600;margin:4px 0;font-size:11px;';
+    row.appendChild(label);
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(5,1fr);gap:4px;';
+    const cur = (this.plugin.settings?.[settingKey]) || 'none';
+    for (const p of SG_BG_PATTERNS) {
+      const sw = document.createElement('div');
+      sw.title = p.label ? t(p.label) : t('main.bgpatNone');
+      sw.style.cssText = 'height:20px;border-radius:4px;cursor:pointer;border:1px solid var(--background-modifier-border);background-color:var(--background-primary);background-repeat:repeat;';
+      if (p.id !== 'none') sw.classList.add('sg-bgpat-' + p.id);
+      if (cur === p.id) sw.style.outline = '2px solid var(--interactive-accent)';
+      sw.addEventListener('click', () => {
+        this.plugin.settings[settingKey] = p.id;
+        this.plugin.saveData(this.plugin.settings);
+        grid.querySelectorAll('.sg-bgpat-swatch').forEach(x => { x.style.outline = ''; });
+        sw.style.outline = '2px solid var(--interactive-accent)';
+        try { onApply && onApply(p.id); } catch (e) {}
+      });
+      sw.classList.add('sg-bgpat-swatch');
+      grid.appendChild(sw);
+    }
+    row.appendChild(grid);
+    return row;
+  }
+
+  _floatSettingsMenu(anchorEl, menuEl) {
+    const _doc = (anchorEl && anchorEl.ownerDocument) || document;
+    if (this._currentFloatingMenu && this._currentFloatingMenu !== menuEl) {
+      try { this._currentFloatingMenu.remove(); } catch(e){}
+    }
+    const rect = anchorEl.getBoundingClientRect();
+    menuEl.style.position = 'fixed';
+    menuEl.style.zIndex = '99999';
+    menuEl.style.marginTop = '0';
+    menuEl.style.left = rect.left + 'px';
+    menuEl.style.top = (rect.bottom + 4) + 'px';
+    if (menuEl.parentElement && menuEl.parentElement !== _doc.body) {
+      menuEl.parentElement.removeChild(menuEl);
+    }
+    _doc.body.appendChild(menuEl);
+    const _vw = (_doc.defaultView && _doc.defaultView.innerWidth) || window.innerWidth;
+    const _mr = menuEl.getBoundingClientRect();
+    if (_mr.right > _vw) {
+      menuEl.style.left = Math.max(0, _vw - _mr.width - 4) + 'px';
+    }
+    this._currentFloatingMenu = menuEl;
+    this._currentFloatingMenuAnchor = anchorEl;
+    const _closeFn = (ev) => {
+      if (!menuEl.contains(ev.target) && (!anchorEl || !anchorEl.contains(ev.target))) {
+        try { menuEl.remove(); } catch(e){}
+        _doc.removeEventListener('mousedown', _closeFn, true);
+        if (this._currentFloatingMenu === menuEl) { this._currentFloatingMenu = null; this._currentFloatingMenuAnchor = null; }
+      }
+    };
+    setTimeout(() => _doc.addEventListener('mousedown', _closeFn, true), 0);
+  }
+
+  _closeFloatingMenu() {
+    if (this._currentFloatingMenu) {
+      try { this._currentFloatingMenu.remove(); } catch(e){}
+      this._currentFloatingMenu = null;
+      this._currentFloatingMenuAnchor = null;
+    }
+  }
+
+  addRecentFilesSection(contentEl) {
+    if (this.plugin.settings?.showRecentFilesSection === false) return;
+    const plugin = this.plugin;
+
+    const section = document.createElement('div');
+    section.className = 'recent-files-section';
+    section.style.cssText = 'margin-top:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:8px;background:var(--background-secondary);';
+
+    const headerRow = document.createElement('div');
+    headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
+    const headerLeft = document.createElement('div');
+    headerLeft.style.cssText = 'display:flex;align-items:center;gap:4px;';
+    const titleEl = document.createElement('span');
+    titleEl.textContent = t('main.recentFilesTitle');
+    titleEl.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-muted);';
+    headerLeft.appendChild(titleEl);
+    headerRow.appendChild(headerLeft);
+
+    const clearBtn = document.createElement('span');
+    clearBtn.textContent = t('main.recentFilesClear');
+    clearBtn.style.cssText = 'font-size:10px;cursor:pointer;color:var(--text-faint);padding:2px 6px;border-radius:4px;';
+    clearBtn.addEventListener('mouseenter', () => { clearBtn.style.color = 'var(--text-muted)'; });
+    clearBtn.addEventListener('mouseleave', () => { clearBtn.style.color = 'var(--text-faint)'; });
+    clearBtn.addEventListener('click', (e) => { e.stopPropagation(); plugin._clearRecentFiles(); });
+    headerRow.appendChild(clearBtn);
+    section.appendChild(headerRow);
+
+    const listContainer = document.createElement('div');
+    listContainer.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
+    section.appendChild(listContainer);
+
+    this._recentFilesSectionEl = section;
+    this._recentFilesListEl = listContainer;
+
+    if (this._addUnifiedCard) {
+      this._addUnifiedCard(section, 'recentFilesSection', { w: 24, h: 6 });
+    } else if (!section.parentElement) {
+      contentEl.appendChild(section);
+    }
+
+    this._renderRecentFilesList();
+  }
+
+  _renderRecentFilesList() {
+    const listEl = this._recentFilesListEl;
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    const plugin = this.plugin;
+    const recent = Array.isArray(plugin.settings.recentFiles) ? plugin.settings.recentFiles : [];
+    const pinned = Array.isArray(plugin.settings.pinnedFiles) ? plugin.settings.pinnedFiles : [];
+    const vault = this.app.vault;
+    const fileExists = (p) => { try { return vault.getAbstractFileByPath(p) !== null; } catch(e) { return false; } };
+
+    const validPinned = pinned.filter(fileExists);
+    const validRecent = recent.filter(r => fileExists(r.path));
+    if (validPinned.length !== pinned.length || validRecent.length !== recent.length) {
+      plugin.settings.pinnedFiles = validPinned;
+      plugin.settings.recentFiles = validRecent;
+      if (plugin._scheduleSaveRecentFiles) plugin._scheduleSaveRecentFiles();
+    }
+
+    if (validPinned.length === 0 && validRecent.length === 0) {
+      const empty = document.createElement('div');
+      empty.textContent = t('main.recentFilesEmpty');
+      empty.style.cssText = 'font-size:11px;color:var(--text-faint);padding:4px;text-align:center;';
+      listEl.appendChild(empty);
+      return;
+    }
+
+    const createFileItem = (path, isPinned) => {
+      const item = document.createElement('div');
+      item.className = 'recent-file-item';
+      item.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 6px;border-radius:4px;cursor:pointer;transition:background 0.1s;';
+      item.addEventListener('mouseenter', () => { item.style.background = 'var(--background-modifier-hover)'; });
+      item.addEventListener('mouseleave', () => { item.style.background = ''; });
+
+      const nameEl = document.createElement('span');
+      const baseName = path.split('/').pop().replace(/\.md$/, '');
+      nameEl.textContent = baseName;
+      nameEl.style.cssText = 'font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
+      nameEl.title = path;
+      item.appendChild(nameEl);
+
+      const pinBtn = document.createElement('span');
+      pinBtn.textContent = isPinned ? '\u{1F4CC}' : '\u{1F4CD}';
+      pinBtn.style.cssText = 'font-size:12px;cursor:pointer;flex-shrink:0;margin-left:4px;opacity:0.6;';
+      pinBtn.title = isPinned ? t('main.recentFilesUnpin') : t('main.recentFilesPin');
+      pinBtn.addEventListener('mouseenter', () => { pinBtn.style.opacity = '1'; });
+      pinBtn.addEventListener('mouseleave', () => { pinBtn.style.opacity = '0.6'; });
+      pinBtn.addEventListener('click', (e) => { e.stopPropagation(); plugin._togglePinFile(path); });
+      item.appendChild(pinBtn);
+
+      item.addEventListener('click', () => {
+        const file = this.app.vault.getAbstractFileByPath(path);
+        if (file) { this.app.workspace.getLeaf(true).openFile(file); }
+      });
+      return item;
+    };
+
+    if (validPinned.length > 0) {
+      const pinnedHeader = document.createElement('div');
+      pinnedHeader.textContent = t('main.recentFilesPinned');
+      pinnedHeader.style.cssText = 'font-size:10px;color:var(--text-faint);margin-top:2px;margin-bottom:2px;';
+      listEl.appendChild(pinnedHeader);
+      validPinned.forEach(path => { listEl.appendChild(createFileItem(path, true)); });
+    }
+
+    if (validRecent.length > 0) {
+      const recentHeader = document.createElement('div');
+      recentHeader.textContent = t('main.recentFilesRecent');
+      recentHeader.style.cssText = 'font-size:10px;color:var(--text-faint);margin-top:4px;margin-bottom:2px;';
+      listEl.appendChild(recentHeader);
+
+      const DISPLAY_LIMIT = 5;
+      const expanded = this._recentFilesExpanded === true;
+      const showCount = expanded ? validRecent.length : Math.min(DISPLAY_LIMIT, validRecent.length);
+      validRecent.slice(0, showCount).forEach(r => { listEl.appendChild(createFileItem(r.path, false)); });
+
+      if (validRecent.length > DISPLAY_LIMIT) {
+        const expandBtn = document.createElement('div');
+        expandBtn.textContent = expanded ? t('main.recentFilesCollapse') : t('main.recentFilesExpand', { n: validRecent.length - DISPLAY_LIMIT });
+        expandBtn.style.cssText = 'font-size:10px;cursor:pointer;color:var(--text-muted);padding:3px 6px;border-radius:4px;text-align:center;border:1px dashed var(--background-modifier-border);margin-top:2px;';
+        expandBtn.addEventListener('mouseenter', () => { expandBtn.style.color = 'var(--text-normal)'; });
+        expandBtn.addEventListener('mouseleave', () => { expandBtn.style.color = 'var(--text-muted)'; });
+        expandBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this._recentFilesExpanded = !expanded;
+          this._renderRecentFilesList();
+        });
+        listEl.appendChild(expandBtn);
+      }
+    }
+  }
+
+  // 最近创建文档版块（按文档创建日期倒序）
+  addRecentlyCreatedSection(contentEl) {
+    if (this.plugin.settings?.showRecentlyCreatedSection === false) return;
+
+    const section = document.createElement('div');
+    section.className = 'recently-created-section';
+    section.style.cssText = 'margin-top:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:8px;background:var(--background-secondary);';
+
+    const headerRow = document.createElement('div');
+    headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
+    const titleEl = document.createElement('span');
+    titleEl.textContent = t('main.recentCreatedTitle');
+    titleEl.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-muted);';
+    headerRow.appendChild(titleEl);
+    section.appendChild(headerRow);
+
+    const listContainer = document.createElement('div');
+    listContainer.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
+    section.appendChild(listContainer);
+
+    this._recentlyCreatedListEl = listContainer;
+
+    if (this._addUnifiedCard) {
+      this._addUnifiedCard(section, 'recentlyCreatedSection', { w: 24, h: 6 });
+    } else if (!section.parentElement) {
+      contentEl.appendChild(section);
+    }
+
+    this._renderRecentlyCreatedList();
+  }
+
+  _renderRecentlyCreatedList() {
+    const listEl = this._recentlyCreatedListEl;
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    const mdFiles = this.app.vault.getFiles().filter(f => f.extension === 'md');
+    mdFiles.sort((a, b) => b.stat.ctime - a.stat.ctime);
+    if (mdFiles.length === 0) {
+      const empty = document.createElement('div');
+      empty.textContent = t('main.recentCreatedEmpty');
+      empty.style.cssText = 'font-size:11px;color:var(--text-faint);padding:4px;text-align:center;';
+      listEl.appendChild(empty);
+      return;
+    }
+    const _fmtDate = (ts) => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+    const createItem = (file) => {
+      const item = document.createElement('div');
+      item.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 6px;border-radius:4px;cursor:pointer;transition:background 0.1s;';
+      item.addEventListener('mouseenter', () => { item.style.background = 'var(--background-modifier-hover)'; });
+      item.addEventListener('mouseleave', () => { item.style.background = ''; });
+      const nameEl = document.createElement('span');
+      nameEl.textContent = file.basename || file.name;
+      nameEl.style.cssText = 'font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
+      nameEl.title = file.path;
+      item.appendChild(nameEl);
+      const dateEl = document.createElement('span');
+      dateEl.textContent = _fmtDate(file.stat.ctime);
+      dateEl.style.cssText = 'font-size:10px;color:var(--text-faint);flex-shrink:0;margin-left:6px;';
+      item.appendChild(dateEl);
+      item.addEventListener('click', () => {
+        try { this.app.workspace.getLeaf(true).openFile(file); } catch (e) {}
+      });
+      return item;
+    };
+    const DISPLAY_LIMIT = 5;
+    const expanded = this._recentlyCreatedExpanded === true;
+    const showCount = expanded ? mdFiles.length : Math.min(DISPLAY_LIMIT, mdFiles.length);
+    mdFiles.slice(0, showCount).forEach(f => { listEl.appendChild(createItem(f)); });
+    if (mdFiles.length > DISPLAY_LIMIT) {
+      const expandBtn = document.createElement('div');
+      expandBtn.textContent = expanded ? t('main.recentFilesCollapse') : t('main.recentFilesExpand', { n: mdFiles.length - DISPLAY_LIMIT });
+      expandBtn.style.cssText = 'font-size:10px;cursor:pointer;color:var(--text-muted);padding:3px 6px;border-radius:4px;text-align:center;border:1px dashed var(--background-modifier-border);margin-top:2px;';
+      expandBtn.addEventListener('mouseenter', () => { expandBtn.style.color = 'var(--text-normal)'; });
+      expandBtn.addEventListener('mouseleave', () => { expandBtn.style.color = 'var(--text-muted)'; });
+      expandBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this._recentlyCreatedExpanded = !expanded;
+        this._renderRecentlyCreatedList();
+      });
+      listEl.appendChild(expandBtn);
+    }
+  }
+
+  // 最近关注版块（拖入文件/文件夹，文件夹自动展开其中文件）
+  addFocusSection(contentEl) {
+    if (this.plugin.settings?.showFocusSection === false) return;
+    const plugin = this.plugin;
+
+    const section = document.createElement('div');
+    section.className = 'focus-section';
+    section.style.cssText = 'margin-top:8px;padding:6px 8px;border:1px dashed var(--background-modifier-border);border-radius:8px;background:var(--background-secondary);';
+
+    const headerRow = document.createElement('div');
+    headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
+    const titleEl = document.createElement('span');
+    titleEl.textContent = t('main.focusTitle');
+    titleEl.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-muted);';
+    headerRow.appendChild(titleEl);
+
+    const clearBtn = document.createElement('span');
+    clearBtn.textContent = t('main.focusClear');
+    clearBtn.style.cssText = 'font-size:10px;cursor:pointer;color:var(--text-faint);padding:2px 6px;border-radius:4px;';
+    clearBtn.addEventListener('mouseenter', () => { clearBtn.style.color = 'var(--text-muted)'; });
+    clearBtn.addEventListener('mouseleave', () => { clearBtn.style.color = 'var(--text-faint)'; });
+    clearBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      plugin.settings.focusPaths = [];
+      plugin.saveData(plugin.settings);
+      this._renderFocusList();
+    });
+    headerRow.appendChild(clearBtn);
+    section.appendChild(headerRow);
+
+    const listContainer = document.createElement('div');
+    listContainer.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
+    section.appendChild(listContainer);
+
+    // 接收拖放的文件/文件夹
+    // 用 document 捕获阶段监听：避免被 Obsidian 全局拖放处理/GridStack 拦截导致 drop 不触发
+    const _borderNormal = '1px dashed var(--background-modifier-border)';
+    const _borderActive = '1px dashed var(--interactive-accent)';
+    const _inSection = (ev) => { try { return !!(ev.target && section.contains(ev.target)); } catch (e) { return false; } };
+    const _over = (ev) => {
+      if (!_inSection(ev)) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      section.style.border = _borderActive;
+    };
+    const _leave = (ev) => {
+      if (!_inSection(ev)) return;
+      try { if (ev.relatedTarget && section.contains(ev.relatedTarget)) return; } catch (e) {}
+      section.style.border = _borderNormal;
+    };
+    // 从 dataTransfer 多类型中提取 vault 路径
+    const _extractPaths = (dt) => {
+      if (!dt || typeof dt.getData !== 'function') return [];
+      const _out = [];
+      const _pushLine = (line) => {
+        let p = String(line || '').trim();
+        if (!p) return;
+        const _md = p.match(/\[.*?\]\((.*?)\)/);
+        if (_md) p = _md[1];
+        const _wiki = p.match(/\[\[(.*?)\]\]/);
+        if (_wiki) p = _wiki[1].split('|')[0];
+        p = p.replace(/^<|>$/g, '');
+        try {
+          if (/^[a-z]+:\/\//i.test(p)) {
+            const u = new URL(p);
+            if (u.protocol === 'obsidian:') {
+              const file = u.searchParams.get('file');
+              if (file) p = decodeURIComponent(file);
+              else return;
+            } else {
+              // app://host/path 或 file:///D:/vault/path → 取路径部分（file:// 绝对路径匹配失败会自然丢弃）
+              const rest = decodeURIComponent(u.pathname).replace(/^\/+/, '');
+              if (rest) p = rest;
+              else return;
+            }
+          }
+        } catch (e) {}
+        if (p && !_out.includes(p)) _out.push(p);
+      };
+      const _types = (dt.types && Array.from(dt.types)) || [];
+      const _primary = ['text/plain', 'text/unicode', 'text/uri-list'];
+      for (const type of _primary) {
+        if (!_types.includes(type)) continue;
+        try { _pushLine(dt.getData(type)); } catch (e) {}
+      }
+      if (_out.length === 0) {
+        // 兜底：遍历其他 text/* 类型（Obsidian 可能使用非标准拖放数据类型）
+        for (const type of _types) {
+          if (!type.startsWith('text/') || _primary.includes(type)) continue;
+          try { _pushLine(dt.getData(type)); } catch (e) {}
+        }
+        if (_out.length === 0 && _types.includes('text/html')) {
+          try {
+            const html = dt.getData('text/html') || '';
+            const _hrefs = html.match(/href="([^"]+)"/g) || [];
+            for (const h of _hrefs) _pushLine(h.replace(/^href="/, '').replace(/"$/, ''));
+          } catch (e) {}
+        }
+      }
+      return _out;
+    };
+    const _drop = async (ev) => {
+      if (!_inSection(ev)) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      section.style.border = _borderNormal;
+      const paths = _extractPaths(ev.dataTransfer);
+      // 路径解析：拖入路径可能不带.md后缀（拖文件）或只有文件夹名（拖文件夹），依次尝试 原路径 → 补.md → 去.md → 按名称唯一匹配
+      const _findByName = (p) => {
+        try {
+          const folders = this.app.vault.getAllLoadedFiles().filter(f => f.children && f.name === p);
+          if (folders.length === 1) return folders[0];
+          const files = this.app.vault.getFiles().filter(f => f.basename === p || f.name === p);
+          if (files.length === 1) return files[0];
+        } catch (e) {}
+        return null;
+      };
+      const _resolve = (p) => {
+        try {
+          let af = this.app.vault.getAbstractFileByPath(p);
+          if (af) return af;
+          af = this.app.vault.getAbstractFileByPath(p + '.md');
+          if (af) return af;
+          const stripped = p.replace(/\.md$/i, '');
+          if (stripped !== p) {
+            af = this.app.vault.getAbstractFileByPath(stripped);
+            if (af) return af;
+          }
+          return _findByName(p);
+        } catch (e) {}
+        return null;
+      };
+      if (!Array.isArray(plugin.settings.focusPaths)) plugin.settings.focusPaths = [];
+      let added = 0;
+      for (const p of paths) {
+        const af = _resolve(p);
+        if (!af) { console.log('[SG] focus drop: path not found in vault:', p); continue; }
+        if (!plugin.settings.focusPaths.includes(af.path)) {
+          plugin.settings.focusPaths.unshift(af.path);
+          added++;
+        }
+      }
+      if (added > 0) {
+        try { await plugin.saveData(plugin.settings); } catch (err) { console.error('[SG] focus saveData failed:', err); }
+        this._renderFocusList();
+      }
+      console.log('[SG] focus drop: added', added, 'of', paths.length);
+    };
+    // 清理旧监听（版块重建时防泄漏）
+    if (this._focusDocDnD) {
+      try {
+        this._focusDocDnD.doc.removeEventListener('dragover', this._focusDocDnD.over, true);
+        this._focusDocDnD.doc.removeEventListener('drop', this._focusDocDnD.drop, true);
+        this._focusDocDnD.doc.removeEventListener('dragleave', this._focusDocDnD.leave, true);
+      } catch (e) {}
+    }
+    const _doc = section.ownerDocument || document;
+    _doc.addEventListener('dragover', _over, true);
+    _doc.addEventListener('drop', _drop, true);
+    _doc.addEventListener('dragleave', _leave, true);
+    this._focusDocDnD = { doc: _doc, over: _over, drop: _drop, leave: _leave };
+
+    this._focusListEl = listContainer;
+
+    if (this._addUnifiedCard) {
+      this._addUnifiedCard(section, 'focusSection', { w: 24, h: 6 });
+    } else if (!section.parentElement) {
+      contentEl.appendChild(section);
+    }
+
+    this._renderFocusList();
+  }
+
+  _renderFocusList() {
+    const listEl = this._focusListEl;
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    const plugin = this.plugin;
+    if (!Array.isArray(plugin.settings.focusPaths)) plugin.settings.focusPaths = [];
+    const _exists = (p) => { try { return !!this.app.vault.getAbstractFileByPath(p); } catch (e) { return false; } };
+    // 清理已删除的路径
+    const valid = plugin.settings.focusPaths.filter(_exists);
+    if (valid.length !== plugin.settings.focusPaths.length) {
+      plugin.settings.focusPaths = valid;
+      plugin.saveData(plugin.settings);
+    }
+    if (valid.length === 0) {
+      const empty = document.createElement('div');
+      empty.textContent = t('main.focusEmpty');
+      empty.style.cssText = 'font-size:11px;color:var(--text-faint);padding:8px 4px;text-align:center;';
+      listEl.appendChild(empty);
+      return;
+    }
+
+    // 文件夹 → 递归收集其中文件
+    const _collectFiles = (folderPath) => {
+      const out = [];
+      try {
+        const af = this.app.vault.getAbstractFileByPath(folderPath);
+        if (!af || !af.children) return out;
+        const walk = (fo) => { for (const c of fo.children) { if (c.children) walk(c); else out.push(c); } };
+        walk(af);
+      } catch (e) {}
+      out.sort((a, b) => (a.path || '').localeCompare(b.path || ''));
+      return out;
+    };
+
+    const createRemoveBtn = (path) => {
+      const btn = document.createElement('span');
+      btn.textContent = '\u2715';
+      btn.title = t('main.focusRemove');
+      btn.style.cssText = 'font-size:11px;cursor:pointer;color:var(--text-faint);flex-shrink:0;margin-left:4px;padding:0 3px;border-radius:3px;';
+      btn.addEventListener('mouseenter', () => { btn.style.color = 'var(--text-error)'; });
+      btn.addEventListener('mouseleave', () => { btn.style.color = 'var(--text-faint)'; });
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        plugin.settings.focusPaths = plugin.settings.focusPaths.filter(pp => pp !== path);
+        await plugin.saveData(plugin.settings);
+        this._renderFocusList();
+      });
+      return btn;
+    };
+
+    const createFileItem = (file, isChild) => {
+      const item = document.createElement('div');
+      item.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 6px;border-radius:4px;cursor:pointer;transition:background 0.1s;' + (isChild ? 'padding-left:18px;' : '');
+      item.addEventListener('mouseenter', () => { item.style.background = 'var(--background-modifier-hover)'; });
+      item.addEventListener('mouseleave', () => { item.style.background = ''; });
+      const nameEl = document.createElement('span');
+      nameEl.textContent = file.basename || file.name;
+      nameEl.style.cssText = 'font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
+      nameEl.title = file.path;
+      item.appendChild(nameEl);
+      item.addEventListener('click', () => {
+        try { this.app.workspace.getLeaf(true).openFile(file); } catch (e) {}
+      });
+      return item;
+    };
+
+    for (const p of valid) {
+      let af = null;
+      try { af = this.app.vault.getAbstractFileByPath(p); } catch (e) {}
+      if (!af) continue;
+      if (af.children) {
+        // 文件夹：组头 + 自动展开其中所有文件
+        const files = _collectFiles(p);
+        const groupHeader = document.createElement('div');
+        groupHeader.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 6px;margin-top:2px;';
+        const gName = document.createElement('span');
+        gName.textContent = '\uD83D\uDCC1 ' + (af.name || p) + ' (' + files.length + ')';
+        gName.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
+        gName.title = p;
+        groupHeader.appendChild(gName);
+        groupHeader.appendChild(createRemoveBtn(p));
+        listEl.appendChild(groupHeader);
+        files.forEach(f => { listEl.appendChild(createFileItem(f, true)); });
+      } else {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 6px;border-radius:4px;transition:background 0.1s;';
+        row.addEventListener('mouseenter', () => { row.style.background = 'var(--background-modifier-hover)'; });
+        row.addEventListener('mouseleave', () => { row.style.background = ''; });
+        const nameEl = document.createElement('span');
+        nameEl.textContent = af.name || p;
+        nameEl.style.cssText = 'font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
+        nameEl.title = af.path;
+        row.appendChild(nameEl);
+        row.appendChild(createRemoveBtn(p));
+        row.addEventListener('click', () => {
+          try { this.app.workspace.getLeaf(true).openFile(af); } catch (e) {}
+        });
+        listEl.appendChild(row);
+      }
+    }
+  }
+
+  // 动态版块空状态卡（相关高亮/备注/关联关键词/AI提问/相关文档）：
+  // 这些版块需点击关键词后才渲染内容；初始渲染时创建占位卡，沿用保存的布局位置，消除"版块消失只剩空位"的空洞
+  addRemarkPlaceholderCards(contentEl) {
+    if (!this._addUnifiedCard) return;
+    const _ids = Array.isArray(this._remarkCardIds) ? this._remarkCardIds : ['relatedHighlights', 'remarkContent', 'keywordChips', 'aiQuestion', 'relatedNotes'];
+    const _defaults = { relatedHighlights: { w: 24, h: 6 }, remarkContent: { w: 24, h: 8 }, keywordChips: { w: 24, h: 3 }, aiQuestion: { w: 24, h: 4 }, relatedNotes: { w: 24, h: 3 } };
+    const _settingsMap = { relatedHighlights: 'showRelatedHighlightsSection', remarkContent: 'showRemarkContentBlock', keywordChips: 'showKeywordChipsBlock', aiQuestion: 'showAiQuestionBlock', relatedNotes: 'showRelatedNotesSection' };
+    for (const cid of _ids) {
+      if (!cid) continue;
+      if (this.plugin.settings?.[_settingsMap[cid]] !== true) continue;
+      const section = document.createElement('div');
+      section.style.cssText = 'height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:11px;font-style:italic;padding:8px;text-align:center;user-select:none;';
+      section.textContent = t('main.remarkPlaceholderHint');
+      try { this._addUnifiedCard(section, cid, _defaults[cid] || { w: 24, h: 3 }); } catch (e) {}
+    }
+  }
+
+  // 随机回顾版块：从全库备注中随机抽一条展示，点击来源跳转原文，可换一条
+  addRandomReviewSection(contentEl) {
+    if (this.plugin.settings?.showRandomReviewSection === false) return;
+    const plugin = this.plugin;
+
+    const section = document.createElement('div');
+    section.className = 'random-review-section';
+    section.style.cssText = 'height:100%;display:flex;flex-direction:column;padding:4px 2px;overflow:hidden;';
+
+    // headerRow 不用 margin-bottom，避免被 _mergeSectionHeader 误判（按钮文本可能比标题长而被当作标题移入dragHandle）
+    const headerRow = document.createElement('div');
+    headerRow.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;flex-shrink:0;padding-bottom:4px;';
+    const anotherBtn = document.createElement('button');
+    anotherBtn.style.cssText = 'background:var(--background-modifier-hover);border:none;border-radius:4px;color:var(--text-muted);font-size:10px;padding:2px 8px;cursor:pointer;';
+    anotherBtn.textContent = '⟳ ' + t('main.randomReviewAnother');
+    // GridStack 防护：阻止 mousedown/touchstart/pointerdown 冒泡（否则 GridStack 注册的 _mouseUp 会 preventDefault 吞掉 click）
+    ['mousedown', 'touchstart', 'pointerdown'].forEach(evt => {
+      anotherBtn.addEventListener(evt, (e) => { e.stopPropagation(); });
+    });
+    headerRow.appendChild(anotherBtn);
+    section.appendChild(headerRow);
+
+    const bodyEl = document.createElement('div');
+    bodyEl.style.cssText = 'flex:1;overflow-y:auto;padding:0 2px;';
+    section.appendChild(bodyEl);
+
+    const _pick = () => {
+      const entries = Object.entries(plugin._highlightRemarks || {}).filter(([, v]) => v && typeof v === 'object' && v.r && String(v.r).trim());
+      return entries.length ? entries[Math.floor(Math.random() * entries.length)] : null;
+    };
+
+    const _render = () => {
+      bodyEl.innerHTML = '';
+      const hit = _pick();
+      if (!hit) {
+        const emptyEl = document.createElement('div');
+        emptyEl.style.cssText = 'height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:11px;font-style:italic;';
+        emptyEl.textContent = t('main.randomReviewEmpty');
+        bodyEl.appendChild(emptyEl);
+        return;
+      }
+      const [key, entry] = hit;
+      const sepIdx = key.indexOf('::');
+      const hlText = sepIdx >= 0 ? key.slice(sepIdx + 2) : key;
+      const filePath = sepIdx >= 0 ? key.slice(0, sepIdx) : '';
+      // 备注内容
+      const remarkEl = document.createElement('div');
+      remarkEl.style.cssText = 'font-size:12px;line-height:1.55;color:var(--text-normal);white-space:pre-wrap;word-break:break-word;margin-bottom:6px;';
+      remarkEl.textContent = String(entry.r);
+      bodyEl.appendChild(remarkEl);
+      // 高亮原文
+      if (hlText) {
+        const hlEl = document.createElement('div');
+        hlEl.style.cssText = 'font-size:11px;color:var(--text-muted);border-left:3px solid var(--interactive-accent);padding:2px 6px;margin-bottom:4px;background:var(--background-primary);border-radius:0 4px 4px 0;cursor:pointer;';
+        hlEl.textContent = '== ' + hlText + ' ==';
+        bodyEl.appendChild(hlEl);
+      }
+      // 来源文件
+      let file = null;
+      try { file = filePath ? plugin.app.vault.getAbstractFileByPath(filePath) : null; } catch (e) {}
+      if (file) {
+        const srcEl = document.createElement('div');
+        srcEl.style.cssText = 'font-size:10px;color:var(--text-faint);cursor:pointer;text-decoration:underline;text-underline-offset:2px;';
+        srcEl.textContent = '📄 ' + (file.basename || file.name || filePath);
+        srcEl.addEventListener('click', async () => {
+          try { await plugin.app.workspace.getLeaf(true).openFile(file); } catch (e) {}
+        });
+        bodyEl.appendChild(srcEl);
+      }
+    };
+    _render();
+    anotherBtn.addEventListener('click', _render);
+    this._randomReviewRenderFn = _render;
+
+    try { this._addUnifiedCard(section, 'randomReviewSection', { w: 24, h: 6 }); } catch (e) { contentEl?.appendChild?.(section); }
+  }
+
+  // 快速笔记版块：输入内容回车即创建笔记（保存文件夹由设置项 quickNoteFolder 控制，留空=库根目录），创建后自动打开
+  addQuickNoteSection(contentEl) {
+    if (this.plugin.settings?.showQuickNoteSection === false) return;
+    const plugin = this.plugin;
+
+    const section = document.createElement('div');
+    section.className = 'quick-note-section';
+    section.style.cssText = 'height:100%;display:flex;flex-direction:column;padding:4px 2px;overflow:hidden;';
+
+    // 右上角设置入口（与info版块一致）：headerRow含flex+margin-bottom会被_mergeSectionHeader把齿轮移入卡片标题栏
+    const headerRow = document.createElement('div');
+    headerRow.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px;flex-shrink:0;';
+    const qnSettingIcon = document.createElement('span');
+    qnSettingIcon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+    qnSettingIcon.title = t('main.quickNoteTitle');
+    qnSettingIcon.style.cssText = 'cursor:pointer;opacity:0.4;display:inline-flex;align-items:center;transition:opacity 0.15s;';
+    qnSettingIcon.addEventListener('mouseenter', () => { qnSettingIcon.style.opacity = '0.8'; });
+    qnSettingIcon.addEventListener('mouseleave', () => { qnSettingIcon.style.opacity = '0.4'; });
+    qnSettingIcon.addEventListener('click', (se) => {
+      se.preventDefault(); se.stopPropagation();
+      if (this._currentFloatingMenuAnchor === qnSettingIcon && this._currentFloatingMenu) { this._closeFloatingMenu(); return; }
+      const menu = document.createElement('div');
+      menu.className = 'info-settings-menu';
+      menu.style.cssText = 'background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:11px;min-width:220px;';
+      const _s = plugin.settings || {};
+      // 版块底纹
+      menu.appendChild(this._makeBgPatternRow('secBg_quickNoteSection', () => {
+        this._applyBgPattern(section, 'secBg_quickNoteSection');
+      }));
+      // 保存文件夹
+      const folderLabel = document.createElement('div');
+      folderLabel.textContent = t('settings.quickNoteFolder');
+      folderLabel.style.cssText = 'color:var(--text-muted);margin:2px 0 3px;';
+      menu.appendChild(folderLabel);
+      const folderInput = document.createElement('input');
+      folderInput.type = 'text';
+      folderInput.value = _s.quickNoteFolder || '';
+      folderInput.placeholder = t('settings.quickNoteFolderHint');
+      folderInput.style.cssText = 'width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);font-size:11px;margin-bottom:8px;';
+      folderInput.addEventListener('change', () => {
+        _s.quickNoteFolder = folderInput.value.trim().replace(/^\/+|\/+$/g, '');
+        plugin.saveData(plugin.settings);
+      });
+      menu.appendChild(folderInput);
+      // 创建后是否打开
+      const openRow = document.createElement('label');
+      openRow.style.cssText = 'display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:6px;color:var(--text-normal);';
+      const openToggle = document.createElement('input');
+      openToggle.type = 'checkbox';
+      openToggle.checked = _s.quickNoteOpenAfter !== false;
+      openToggle.style.cursor = 'pointer';
+      openToggle.addEventListener('change', () => {
+        _s.quickNoteOpenAfter = openToggle.checked;
+        plugin.saveData(plugin.settings);
+        modeRow.style.display = openToggle.checked ? 'flex' : 'none';
+      });
+      const openText = document.createElement('span');
+      openText.textContent = t('settings.quickNoteOpenAfter').replace(/[::：]$/, '');
+      openRow.appendChild(openToggle);
+      openRow.appendChild(openText);
+      menu.appendChild(openRow);
+      // 打开位置
+      const modeRow = document.createElement('div');
+      modeRow.style.cssText = 'display:' + (_s.quickNoteOpenAfter === false ? 'none' : 'flex') + ';align-items:center;gap:6px;color:var(--text-normal);';
+      const modeText = document.createElement('span');
+      modeText.textContent = t('settings.quickNoteOpenMode').replace(/[::：]$/, '');
+      const modeSelect = document.createElement('select');
+      modeSelect.style.cssText = 'flex:1;padding:3px 6px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);font-size:11px;cursor:pointer;';
+      const _modes = [['tab', 'settings.quickNoteOpenModeTab'], ['current', 'settings.quickNoteOpenModeCurrent'], ['split', 'settings.quickNoteOpenModeSplit']];
+      for (const [val, key] of _modes) {
+        const opt = document.createElement('option');
+        opt.value = val; opt.textContent = t(key);
+        modeSelect.appendChild(opt);
+      }
+      modeSelect.value = _s.quickNoteOpenMode || 'tab';
+      modeSelect.addEventListener('change', () => {
+        _s.quickNoteOpenMode = modeSelect.value;
+        plugin.saveData(plugin.settings);
+      });
+      modeRow.appendChild(modeText);
+      modeRow.appendChild(modeSelect);
+      menu.appendChild(modeRow);
+      this._floatSettingsMenu(qnSettingIcon, menu);
+    });
+    headerRow.appendChild(qnSettingIcon);
+    section.appendChild(headerRow);
+
+    const inputRow = document.createElement('div');
+    inputRow.style.cssText = 'flex:1;display:flex;gap:6px;align-items:stretch;min-height:0;';
+    section.appendChild(inputRow);
+
+    const input = document.createElement('textarea');
+    input.rows = 2;
+    input.placeholder = t('main.quickNotePlaceholder');
+    input.style.cssText = 'flex:1;resize:none;font-size:12px;line-height:1.5;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:6px;background:var(--background-primary);color:var(--text-normal);';
+    inputRow.appendChild(input);
+
+    const createBtn = document.createElement('button');
+    createBtn.style.cssText = 'flex-shrink:0;align-self:center;background:var(--interactive-accent);color:var(--text-on-accent);border:none;border-radius:6px;font-size:11px;padding:6px 10px;cursor:pointer;';
+    createBtn.textContent = '✎';
+    createBtn.title = t('main.quickNoteTitle');
+    // GridStack 防护：防止 _mouseUp preventDefault 吞掉 click
+    ['mousedown', 'touchstart', 'pointerdown'].forEach(evt => {
+      createBtn.addEventListener(evt, (e) => { e.stopPropagation(); });
+    });
+    inputRow.appendChild(createBtn);
+
+    const _sanitizeName = (s) => s.replace(/[\\/:*?"<>|#^\[\]]/g, ' ').replace(/\s+/g, ' ').trim();
+    const _pad = (n) => String(n).padStart(2, '0');
+
+    const _create = async () => {
+      const text = input.value.trim();
+      if (!text) return;
+      try {
+        const vault = plugin.app.vault;
+        const folder = (plugin.settings.quickNoteFolder || '').replace(/^\/+|\/+$/g, '');
+        if (folder && !vault.getAbstractFileByPath(folder)) {
+          try { await vault.createFolder(folder); } catch (e) {}
+        }
+        const firstLine = text.split(/\r?\n/)[0].trim();
+        const base = _sanitizeName(firstLine).slice(0, 30) || t('main.quickNoteDefaultName');
+        const now = new Date();
+        let name = base + '.md';
+        if (vault.getAbstractFileByPath(folder ? folder + '/' + name : name)) {
+          name = base + ' ' + _pad(now.getHours()) + _pad(now.getMinutes()) + _pad(now.getSeconds()) + '.md';
+        }
+        const path = folder ? folder + '/' + name : name;
+        const file = await vault.create(path, text);
+        input.value = '';
+        try { new Notice(t('main.quickNoteCreated') + file.name); } catch (e) {}
+        // 打开行为由设置控制：quickNoteOpenAfter（默认true）决定是否打开，quickNoteOpenMode 决定打开位置
+        if (plugin.settings.quickNoteOpenAfter !== false) {
+          const mode = plugin.settings.quickNoteOpenMode || 'tab';
+          try {
+            if (mode === 'current') {
+              await plugin.app.workspace.getLeaf(false).openFile(file);
+            } else if (mode === 'split') {
+              await plugin.app.workspace.getLeaf('split').openFile(file);
+            } else {
+              await plugin.app.workspace.getLeaf(true).openFile(file);
+            }
+          } catch (e) {}
+        }
+      } catch (err) {
+        console.error('[SG] quick note create failed:', err);
+        try { new Notice(t('main.quickNoteFailed') + (err?.message || err)); } catch (e) {}
+      }
+    };
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); _create(); }
+    });
+    createBtn.addEventListener('click', _create);
+
+    try { this._addUnifiedCard(section, 'quickNoteSection', { w: 24, h: 4 }); } catch (e) { contentEl?.appendChild?.(section); }
+  }
+
+  // 统计概览版块：文档/高亮/关键词/备注数量与近7天新建
+  addStatsSection(contentEl) {
+    if (this.plugin.settings?.showStatsSection === false) return;
+    const plugin = this.plugin;
+
+    const section = document.createElement('div');
+    section.className = 'stats-section';
+    section.style.cssText = 'height:100%;display:flex;align-items:center;padding:4px 2px;overflow-x:auto;';
+
+    let _docs = 0, _recent = 0, _hl = 0, _kw = 0, _rm = 0;
+    try {
+      const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
+      const mdFiles = plugin.app.vault.getFiles().filter(f => f.extension === 'md');
+      _docs = mdFiles.length;
+      _recent = mdFiles.filter(f => (f.stat?.ctime || 0) > weekAgo).length;
+      _hl = Array.isArray(plugin._highlightDb) ? plugin._highlightDb.length : 0;
+      _kw = ((plugin.globalRules || []).length) + ((plugin.rules || []).length);
+      _rm = Object.values(plugin._highlightRemarks || {}).filter(v => v && typeof v === 'object' ? (v.r && String(v.r).trim()) : (v && String(v).trim())).length;
+    } catch (e) {}
+
+    const items = [
+      [_docs, 'main.statsDocs'], [_hl, 'main.statsHighlights'], [_kw, 'main.statsKeywords'],
+      [_rm, 'main.statsRemarks'], [_recent, 'main.statsRecent'],
+    ];
+    for (const [val, label] of items) {
+      const chip = document.createElement('div');
+      chip.style.cssText = 'flex:1;min-width:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;margin:0 3px;padding:6px 4px;background:var(--background-secondary);border:1px solid var(--background-modifier-border);border-radius:8px;';
+      const numEl = document.createElement('div');
+      numEl.style.cssText = 'font-size:17px;font-weight:700;color:var(--text-normal);line-height:1;';
+      numEl.textContent = String(val);
+      const labelEl = document.createElement('div');
+      labelEl.style.cssText = 'font-size:10px;color:var(--text-faint);white-space:nowrap;';
+      labelEl.textContent = t(label);
+      chip.appendChild(numEl);
+      chip.appendChild(labelEl);
+      section.appendChild(chip);
+    }
+
+    try { this._addUnifiedCard(section, 'statsSection', { w: 24, h: 3 }); } catch (e) { contentEl?.appendChild?.(section); }
+  }
+
   addInfoSection(contentEl) {
     this.clearInfoSection();
     if (this.plugin.settings?.showInfoSection === false) return;
     const plugin = this.plugin;
+    const _root = contentEl.getRootNode();
+    const _doc = (_root && _root.nodeType === 9) ? _root : (contentEl.ownerDocument || document);
     try { this.app.vault.adapter.mkdir('.obsidian/plugins/Regex-Css-Highlighter/info').catch(() => {}); } catch (e) {}
     const vaultFolder = (plugin.settings?.infoVaultFolder || '').trim().replace(/^\/+|\/+$/g, '');
     const pluginInfoDir = '.obsidian/plugins/Regex-Css-Highlighter/info';
@@ -21387,24 +22502,13 @@ class AddRegexRuleModal {
       return [curKw, ...related];
     };
 
-    const section = document.createElement('div');
+    const section = _doc.createElement('div');
     section.className = 'info-section';
     section.style.cssText = 'margin-top:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:8px;';
-    const _isDarkMode = document.body.classList.contains('theme-dark');
-    const _nightPreset = {secBg:'rgba(38,40,46,0.85)', cardBg:'rgba(54,58,68,0.92)', textColor:'rgba(220,220,230,0.92)'};
-    const _infoSectionBg = plugin.settings?.infoSectionBg || (_isDarkMode ? _nightPreset.secBg : 'rgba(250,240,205,0.75)');
-    const _infoCardBg = plugin.settings?.infoCardBg || (_isDarkMode ? _nightPreset.cardBg : 'rgba(236,216,154,0.90)');
-    const _infoTextColor = plugin.settings?.infoTextColor || (_isDarkMode ? _nightPreset.textColor : undefined);
-    section.style.background = _infoSectionBg;
-    if (_infoTextColor) {
-      section.style.color = _infoTextColor;
-      section.style.setProperty('--text-normal', _infoTextColor);
-      section.style.setProperty('--text-muted', _infoTextColor);
-    }
+    // 版块配色统一由全局配色方案（SG_COLOR_THEMES）负责，不再单独设置底色/文字色
     const _applyInfoCardStyles = () => {
-      const cardBg = plugin.settings?.infoCardBg || 'rgba(236,216,154,0.90)';
       const showGrid = plugin.settings?.infoCardGrid === true;
-      cardGrid.querySelectorAll('.info-card').forEach(c => { c.style.background = cardBg; c.style.backgroundImage = ''; c.style.backgroundSize = ''; });
+      cardGrid.querySelectorAll('.info-card').forEach(c => { c.style.background = 'var(--background-secondary)'; c.style.backgroundImage = ''; c.style.backgroundSize = ''; });
       if (showGrid) {
         const cw = this._infoGrid?.cellWidth?.() || (cardGrid.offsetWidth / 24);
         const ch = 20;
@@ -21430,124 +22534,17 @@ class AddRegexRuleModal {
     infoSettingIcon.addEventListener('mouseenter', () => { infoSettingIcon.style.opacity = '0.8'; });
     infoSettingIcon.addEventListener('mouseleave', () => { infoSettingIcon.style.opacity = '0.4'; });
     infoSettingIcon.addEventListener('click', (se) => {
-      console.log('[SG] infoSettingIcon click fired', se.target);
       se.preventDefault(); se.stopPropagation();
-      const existingMenu = section.querySelector('.info-settings-menu');
-      if (existingMenu) { existingMenu.remove(); return; }
+      if (this._currentFloatingMenuAnchor === infoSettingIcon && this._currentFloatingMenu) { this._closeFloatingMenu(); return; }
       const menu = document.createElement('div');
       menu.className = 'info-settings-menu';
       menu.style.cssText = 'background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:11px;min-width:240px;margin-top:4px;';
       const _s = plugin.settings || {};
+      // 版块底纹（配色统一由全局配色方案负责）
+      menu.appendChild(this._makeBgPatternRow('secBg_infoSection', () => {
+        this._applyBgPattern(section, 'secBg_infoSection');
+      }));
       {
-        const colorLabel = document.createElement('div');
-        colorLabel.textContent = t('main.infoColorScheme');
-        colorLabel.style.cssText = 'color:var(--text-muted);font-weight:600;margin:6px 0 4px;font-size:11px;';
-        menu.appendChild(colorLabel);
-        const _infoPresets = [
-          {name:t('main.infoPresetKraft'), secBg:'rgba(250,240,205,0.75)', cardBg:'rgba(236,216,154,0.90)', textColor:'rgba(70,50,30,0.92)'},
-          {name:t('main.infoPresetInk'), secBg:'rgba(238,236,230,0.80)', cardBg:'rgba(212,208,196,0.92)', textColor:'rgba(40,40,40,0.92)'},
-          {name:t('main.infoPresetNight'), secBg:'rgba(38,40,46,0.85)', cardBg:'rgba(54,58,68,0.92)', textColor:'rgba(220,220,230,0.92)'},
-          {name:t('main.infoPresetMint'), secBg:'rgba(222,240,232,0.78)', cardBg:'rgba(190,224,208,0.90)', textColor:'rgba(24,62,48,0.92)'},
-          {name:t('main.infoPresetOchre'), secBg:'rgba(238,216,194,0.78)', cardBg:'rgba(220,186,156,0.90)', textColor:'rgba(80,46,16,0.92)'},
-          {name:t('main.infoPresetIndigo'), secBg:'rgba(228,228,240,0.78)', cardBg:'rgba(200,200,224,0.90)', textColor:'rgba(40,40,80,0.92)'},
-        ];
-        const presetGrid = document.createElement('div');
-        presetGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-bottom:6px;';
-        _infoPresets.forEach(p => {
-          const chip = document.createElement('div');
-          chip.style.cssText = `display:flex;align-items:center;gap:3px;padding:3px 4px;border-radius:4px;cursor:pointer;font-size:9px;border:1px solid transparent;`;
-          const dot1 = document.createElement('span');
-          dot1.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.secBg};border:1px solid rgba(0,0,0,0.1);flex-shrink:0;`;
-          const dot2 = document.createElement('span');
-          dot2.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.cardBg};border:1px solid rgba(0,0,0,0.1);flex-shrink:0;`;
-          const nm = document.createElement('span');
-          nm.textContent = p.name;
-          nm.style.cssText = 'color:var(--text-normal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-          chip.appendChild(dot1); chip.appendChild(dot2); chip.appendChild(nm);
-          chip.addEventListener('click', () => {
-            _s.infoSectionBg = p.secBg; _s.infoCardBg = p.cardBg; _s.infoTextColor = p.textColor;
-            plugin.saveData(plugin.settings);
-            section.style.background = p.secBg;
-            if (p.textColor) {
-              section.style.color = p.textColor;
-              section.style.setProperty('--text-normal', p.textColor);
-              section.style.setProperty('--text-muted', p.textColor);
-            } else {
-              section.style.color = '';
-              section.style.removeProperty('--text-normal');
-              section.style.removeProperty('--text-muted');
-            }
-            _applyInfoCardStyles();
-            presetGrid.querySelectorAll(':scope > div').forEach(c => c.style.borderColor = 'transparent');
-            chip.style.borderColor = 'var(--interactive-accent)';
-            menu.querySelectorAll('input[type="color"]').forEach(ci => {
-              const row = ci.closest('div');
-              if (!row) return;
-              const lbl = row.querySelector('span');
-              if (!lbl) return;
-              const sk = lbl.dataset.key;
-              if (!sk) return;
-              const m2 = (_s[sk]||'').match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-              if (m2) ci.value = '#' + [parseInt(m2[1]),parseInt(m2[2]),parseInt(m2[3])].map(v=>v.toString(16).padStart(2,'0')).join('');
-            });
-          });
-          presetGrid.appendChild(chip);
-        });
-        menu.appendChild(presetGrid);
-        const mkColorRow = (labelText, settingKey, defaultVal, onApply) => {
-          const row = document.createElement('div');
-          row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin:3px 0;';
-          const lbl = document.createElement('span');
-          lbl.textContent = labelText;
-          lbl.dataset.key = settingKey;
-          lbl.style.cssText = 'color:var(--text-normal);font-size:10px;';
-          row.appendChild(lbl);
-          const inp = document.createElement('input');
-          inp.type = 'color';
-          const cur = _s[settingKey] || defaultVal;
-          const m = cur.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-          if (m) inp.value = '#' + [parseInt(m[1]),parseInt(m[2]),parseInt(m[3])].map(v=>v.toString(16).padStart(2,'0')).join('');
-          inp.style.cssText = 'width:28px;height:18px;border:1px solid var(--background-modifier-border);border-radius:4px;cursor:pointer;background:transparent;padding:0;';
-          inp.addEventListener('input', () => {
-            const hex = inp.value;
-            const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-            const aMatch = (_s[settingKey]||defaultVal).match(/rgba?\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/);
-            const a = aMatch ? parseFloat(aMatch[1]) : 0.85;
-            _s[settingKey] = `rgba(${r},${g},${b},${a})`;
-            plugin.saveData(plugin.settings);
-            onApply();
-          });
-          row.appendChild(inp);
-          const aInp = document.createElement('input');
-          aInp.type = 'range';
-          aInp.min = '0'; aInp.max = '1'; aInp.step = '0.05';
-          const aMatch2 = cur.match(/rgba?\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/);
-          aInp.value = aMatch2 ? parseFloat(aMatch2[1]) : 0.85;
-          aInp.style.cssText = 'width:50px;height:14px;cursor:pointer;';
-          aInp.addEventListener('input', () => {
-            const hex = inp.value;
-            const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-            _s[settingKey] = `rgba(${r},${g},${b},${aInp.value})`;
-            plugin.saveData(plugin.settings);
-            onApply();
-          });
-          row.appendChild(aInp);
-          return row;
-        };
-        menu.appendChild(mkColorRow(t('main.infoSectionBg'), 'infoSectionBg', 'rgba(250,240,205,0.75)', () => { section.style.background = _s.infoSectionBg || 'rgba(250,240,205,0.75)'; }));
-        menu.appendChild(mkColorRow(t('main.infoCardBg'), 'infoCardBg', 'rgba(236,216,154,0.90)', () => { _applyInfoCardStyles(); }));
-        menu.appendChild(mkColorRow(t('main.infoTextColor'), 'infoTextColor', 'rgba(70,50,30,0.92)', () => {
-          const _tc = _s.infoTextColor;
-          if (_tc) {
-            section.style.color = _tc;
-            section.style.setProperty('--text-normal', _tc);
-            section.style.setProperty('--text-muted', _tc);
-          } else {
-            section.style.color = '';
-            section.style.removeProperty('--text-normal');
-            section.style.removeProperty('--text-muted');
-          }
-        }));
         const gridRow = document.createElement('div');
         gridRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin:3px 0;';
         const gridLbl = document.createElement('span');
@@ -21615,10 +22612,7 @@ class AddRegexRuleModal {
       addPromptBtn.style.cssText = 'margin-top:2px;padding:3px 8px;cursor:pointer;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);font-size:10px;';
       addPromptBtn.addEventListener('click', () => { _s.infoCustomPrompts.push({ label: '', text: '' }); plugin.saveData(plugin.settings); _renderCustomPrompts(); });
       menu.appendChild(addPromptBtn);
-      section.insertBefore(menu, section.firstChild);
-      const _menuDoc = infoSettingIcon.ownerDocument || document;
-      const closeMenu = (ev) => { if (!menu.contains(ev.target) && !infoSettingIcon.contains(ev.target)) { menu.remove(); _menuDoc.removeEventListener('mousedown', closeMenu); } };
-      setTimeout(() => _menuDoc.addEventListener('mousedown', closeMenu), 0);
+      this._floatSettingsMenu(infoSettingIcon, menu);
     });
     headerLeft.appendChild(infoSettingIcon);
     headerRow.appendChild(headerLeft);
@@ -21626,24 +22620,18 @@ class AddRegexRuleModal {
     addBtn.textContent = '+';
     addBtn.title = t('main.infoAddFile');
     addBtn.style.cssText = 'padding:0 6px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:18px;line-height:0;font-size:13px;font-weight:700;';
-    const _infoHasKw = !!(this.regexInput?.getValue?.()?.trim() || this.currentEditingRule?.regex);
-    if (!_infoHasKw) {
-      addBtn.disabled = true;
-      addBtn.style.opacity = '0.4';
-      addBtn.style.cursor = 'not-allowed';
-      addBtn.title = t('main.infoAddBtnHint');
-    }
+
     headerRow.appendChild(addBtn);
     section.appendChild(headerRow);
-    const chipRow = document.createElement('div');
+    const chipRow = _doc.createElement('div');
     chipRow.className = 'info-chip-row';
     chipRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;align-items:center;';
     section.appendChild(chipRow);
-    const cardGrid = document.createElement('div');
+    const cardGrid = _doc.createElement('div');
     cardGrid.className = 'info-card-grid';
     cardGrid.style.cssText = 'min-height:60px;';
     section.appendChild(cardGrid);
-    const placeholder = document.createElement('div');
+    const placeholder = _doc.createElement('div');
     placeholder.className = 'info-placeholder';
     placeholder.textContent = t('main.infoEmpty');
     placeholder.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;';
@@ -21669,14 +22657,14 @@ class AddRegexRuleModal {
 
     _loadGridStack(this.app).then((GridStack) => {
       try {
-        if (!document.getElementById('info-grid-mobile-handle-style')) {
-          const mh = document.createElement('style');
+        if (!_doc.getElementById('info-grid-mobile-handle-style')) {
+          const mh = _doc.createElement('style');
           mh.id = 'info-grid-mobile-handle-style';
           mh.textContent = `.info-card-grid .grid-stack-item>.ui-resizable-handle{opacity:0;transition:opacity .15s;}.info-card-grid .grid-stack-item:hover>.ui-resizable-handle{opacity:1;}.info-card-grid .grid-stack-item>.ui-resizable-se{width:14px;height:14px;bottom:0;right:0;}@media (pointer:coarse){.info-card-grid .grid-stack-item>.ui-resizable-handle{width:20px!important;height:20px!important;z-index:5;opacity:1!important;}.info-card-grid .grid-stack-item>.ui-resizable-se{right:0!important;bottom:0!important;}}`;
-          document.head.appendChild(mh);
+          _doc.head.appendChild(mh);
         }
-        if (!document.getElementById('info-grid-col24-css')) {
-          const colCss = document.createElement('style');
+        if (!_doc.getElementById('info-grid-col24-css')) {
+          const colCss = _doc.createElement('style');
           colCss.id = 'info-grid-col24-css';
           let rules = '';
           for (let n = 1; n <= 24; n++) {
@@ -21685,7 +22673,7 @@ class AddRegexRuleModal {
             rules += `.gs-24>.grid-stack-item[gs-x="${n}"]{left:${pct}%}`;
           }
           colCss.textContent = rules;
-          document.head.appendChild(colCss);
+          _doc.head.appendChild(colCss);
         }
         const savedLayout = plugin.settings?.infoGridLayout || {};
         const _newCol = 24;
@@ -21717,10 +22705,27 @@ class AddRegexRuleModal {
           }, cardGrid);
           this._infoGrid = grid;
           this._infoGridReady = true;
+          // 内联定位兜底：GridStack 动态样式表在部分场景失效，导致卡片纵向堆顶，用内联 top/height 保证位置
+          const _applyInfoInlinePos = () => {
+            try {
+              const _ch = grid.opts.cellHeight || 20;
+              const _chu = grid.opts.cellHeightUnit || 'px';
+              for (const n of (grid.engine?.nodes || [])) {
+                if (!n.el) continue;
+                n.el.style.top = (n.y * _ch) + _chu;
+                n.el.style.height = (n.h * _ch) + _chu;
+                const ce = n.el.querySelector('.grid-stack-item-content');
+                if (ce) { ce.style.position = 'absolute'; ce.style.top = '2px'; ce.style.bottom = '2px'; ce.style.left = '2px'; ce.style.right = '2px'; }
+              }
+              const _row = grid.getRow();
+              cardGrid.style.minHeight = (_row * _ch) + _chu;
+            } catch(e) {}
+          };
           const _reflowNodes = () => {
             try {
               if (grid.engine?.nodes?.length) { grid.column(24, 'move'); }
             } catch(e) {}
+            _applyInfoInlinePos();
           };
           const _ro = new ResizeObserver(() => {
             if (this._infoGrid && this._infoGridReady && cardGrid.offsetWidth > 0) {
@@ -21730,10 +22735,13 @@ class AddRegexRuleModal {
           });
           _ro.observe(cardGrid);
           this._infoGridResizeObserver = _ro;
-          grid.on('change', () => { clearTimeout(this._infoGridSaveTimer); this._infoGridSaveTimer = setTimeout(_saveGridLayout, 500); });
-          grid.on('dragstop', () => { clearTimeout(this._infoGridSaveTimer); this._infoGridSaveTimer = setTimeout(_saveGridLayout, 300); });
-          grid.on('resizestop', () => { clearTimeout(this._infoGridSaveTimer); this._infoGridSaveTimer = setTimeout(_saveGridLayout, 300); });
+          grid.on('change', () => { clearTimeout(this._infoGridSaveTimer); this._infoGridSaveTimer = setTimeout(_saveGridLayout, 500); _applyInfoInlinePos(); });
+          grid.on('dragstop', () => { clearTimeout(this._infoGridSaveTimer); this._infoGridSaveTimer = setTimeout(_saveGridLayout, 300); _applyInfoInlinePos(); });
+          grid.on('resizestop', () => { clearTimeout(this._infoGridSaveTimer); this._infoGridSaveTimer = setTimeout(_saveGridLayout, 300); _applyInfoInlinePos(); });
           while (this._infoGridQueue.length > 0) { const fn = this._infoGridQueue.shift(); if (typeof fn === 'function') fn(grid); }
+          _applyInfoInlinePos();
+          requestAnimationFrame(() => _applyInfoInlinePos());
+          setTimeout(() => _applyInfoInlinePos(), 0);
         };
         if (cardGrid.offsetWidth > 0) { _doInit(); }
         else {
@@ -21757,7 +22765,7 @@ class AddRegexRuleModal {
 
     const renderMd = async (container, mdContent) => {
       container.innerHTML = '';
-      try { const { MarkdownRenderer, Component } = require('obsidian'); const comp = new Component(); comp.load(); const srcPath = plugin.app.workspace.getActiveFile()?.path || plugin.currentFilePath || ''; await MarkdownRenderer.renderMarkdown(mdContent, container, srcPath, comp); if (plugin.renderImagesManually) await plugin.renderImagesManually(mdContent, container, plugin); }
+      try { const { MarkdownRenderer, Component } = require('obsidian'); const comp = new Component(); comp.load(); const srcPath = plugin.app.workspace.getActiveFile()?.path || plugin.currentFilePath || ''; await MarkdownRenderer.renderMarkdown(mdContent, container, srcPath, comp); if (plugin.renderImagesManually) await plugin.renderImagesManually(mdContent, container, plugin); if (!container._sgLinkBound) { container._sgLinkBound = true; container.addEventListener('click', (ce) => { const linkEl = ce.target.closest('a.internal-link, a.is-unresolved'); if (linkEl) { ce.preventDefault(); ce.stopPropagation(); const href = linkEl.dataset.href || linkEl.getAttribute('href') || linkEl.textContent; if (href) plugin.app.workspace.openLinkText(href, '', true); } }); container.addEventListener('auxclick', (ce) => { if (ce.button !== 1) return; const linkEl = ce.target.closest('a.internal-link, a.is-unresolved'); if (linkEl) { ce.preventDefault(); ce.stopPropagation(); const href = linkEl.dataset.href || linkEl.getAttribute('href') || linkEl.textContent; if (href) { const leaf = plugin.app.workspace.getLeaf('window'); const file = plugin.app.metadataCache.getFirstLinkpathDest(href.replace(/\.md$/, ''), '') || plugin.app.vault.getAbstractFileByPath(href); if (file) leaf.openFile(file); } } }); } }
       catch (e) { container.textContent = mdContent; }
     };
 
@@ -21849,9 +22857,9 @@ class AddRegexRuleModal {
           panelHead.addEventListener('mousedown', _dStart, { signal: _dAb.signal });
           document.addEventListener('mousemove', _dMove, { signal: _dAb.signal });
           document.addEventListener('mouseup', _dEnd, { signal: _dAb.signal });
-          panelHead.addEventListener('touchstart', _dStart, { passive: false, signal: _dAb.signal });
-          document.addEventListener('touchmove', _dMove, { passive: false, signal: _dAb.signal });
-          document.addEventListener('touchend', _dEnd, { signal: _dAb.signal });
+          panelHead.addEventListener('touchstart', _dStart, { passive: true, signal: _dAb.signal });
+          document.addEventListener('touchmove', _dMove, { passive: true, signal: _dAb.signal });
+          document.addEventListener('touchend', _dEnd, { signal: _dAb.signal , passive: true});
         }
         const chipRow = document.createElement('div');
         chipRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;';
@@ -21956,6 +22964,16 @@ class AddRegexRuleModal {
         const itemContent = widgetEl.querySelector('.grid-stack-item-content') || widgetEl;
         itemContent.appendChild(card);
         itemContent.style.overflow = 'hidden';
+        // 内联定位兜底（gs-y/gs-h 属性由 GridStack 写入，含 autoPosition 计算结果）
+        try {
+          const _ch = grid.opts.cellHeight || 20;
+          const _chu = grid.opts.cellHeightUnit || 'px';
+          const _gy = parseInt(widgetEl.getAttribute('gs-y') || '', 10);
+          const _gh = parseInt(widgetEl.getAttribute('gs-h') || '', 10);
+          if (!isNaN(_gy)) widgetEl.style.top = (_gy * _ch) + _chu;
+          if (!isNaN(_gh)) widgetEl.style.height = (_gh * _ch) + _chu;
+          itemContent.style.position = 'absolute'; itemContent.style.top = '2px'; itemContent.style.bottom = '2px'; itemContent.style.left = '2px'; itemContent.style.right = '2px';
+        } catch(e) {}
       };
       if (this._infoGrid && this._infoGridReady) { _addToGrid(this._infoGrid); }
       else { cardGrid.appendChild(card); this._infoGridQueue.push((grid) => { try { card.remove(); _addToGrid(grid); } catch(e) {} }); }
@@ -22049,9 +23067,44 @@ class AddRegexRuleModal {
     };
 
     addBtn.addEventListener('click', async () => {
-      console.log('[SG] info addBtn click fired', this);
       const curKw = this.regexInput?.getValue?.()?.trim() || this.currentEditingRule?.regex || '';
-      if (curKw) await this._createInfoFile(curKw);
+      if (!curKw) return;
+      const _allRules = [...(Array.isArray(this.plugin.globalRules) ? this.plugin.globalRules : []), ...(Array.isArray(this.plugin.rules) ? this.plugin.rules : [])];
+      const _isKw = _allRules.some(r => { const _p = _splitRegexPipes(r.regex); return _p.includes(curKw) || r.regex === curKw; });
+      if (!_isKw) {
+        const _categories = this.plugin.config?.styleCategories || {};
+        const _groupFilter = this.plugin.floatButtonData?.randomHighlightGroups?.trim();
+        let _candidates = [];
+        if (_groupFilter) { const _gnames = _groupFilter.split(/[,，]/).map(g => g.trim()).filter(g => g); for (const gn of _gnames) { if (_categories[gn]) _candidates.push(..._categories[gn]); } }
+        if (_candidates.length === 0) { for (const cat in _categories) { if (cat === '标题样式') continue; if (_categories[cat]) _candidates.push(..._categories[cat]); } }
+        if (_candidates.length === 0) { _candidates = Array.from(this.cssStyles.keys()); }
+        const _randomClass = _candidates[Math.floor(Math.random() * _candidates.length)] || '';
+        try {
+          await this.plugin.addRule(curKw, _randomClass, false, this.remark || '');
+          await this.plugin.reloadStyles();
+          this.plugin.checkAndApplyHighlights();
+          if (this.plugin._addKeywordHistory) this.plugin._addKeywordHistory(curKw);
+          if (this.clearHistorySection) this.clearHistorySection();
+          if (this.clearGlobalRulesSection) this.clearGlobalRulesSection();
+          if (this.clearRemarkSection) this.clearRemarkSection();
+          if (this.addHistorySection) this.addHistorySection(this.contentEl);
+          if (this.addGlobalRulesSection) this.addGlobalRulesSection(this.contentEl);
+          if (this.addHeadingStylesSection) this.addHeadingStylesSection(this.contentEl);
+          if (this.addRemarkSection) this.addRemarkSection(this.contentEl);
+          if (typeof this._renderKeywordHistory === 'function') this._renderKeywordHistory();
+          const _newIdx = this.plugin.rules.findIndex(r => r.regex === curKw);
+          if (_newIdx !== -1) { this.currentEditingRule = { index: _newIdx, regex: curKw, cssClass: _randomClass, isGlobal: false, remark: this.remark || '' }; }
+          this._needsRefresh = false;
+          this._skipRefreshOnInteraction = true;
+          if (this.regexInput && this.regexInput.setValue) this.regexInput.setValue(curKw);
+        } catch(e) { console.warn('[Info] add keyword failed:', e); }
+      }
+      await this._createInfoFile(curKw);
+      this._infoActiveChip = curKw;
+      if (typeof this._refreshInfoChips === 'function') this._refreshInfoChips();
+      if (typeof this._showKeywordCards === 'function') this._showKeywordCards(curKw);
+      this._needsRefresh = false;
+      this._skipRefreshOnInteraction = true;
     });
 
     const chipBaseStyle = 'display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;cursor:pointer;user-select:none;white-space:nowrap;border:1px solid var(--background-modifier-border);background:rgba(var(--mono-rgb-0),0.3);color:var(--text-muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;';
@@ -22144,7 +23197,6 @@ class AddRegexRuleModal {
     helpBtn.textContent = '?';
     helpBtn.style.cssText = 'cursor:pointer;color:var(--text-faint);font-size:10px;padding:0 3px;';
     helpBtn.addEventListener('click', (e) => {
-      console.log('[SG] helpBtn click fired', e.target);
       e.stopPropagation();
       _showHelpFloat(helpBtn, t('main.threadsHelpContent'));
     });
@@ -22157,45 +23209,15 @@ class AddRegexRuleModal {
     threadsSettingIcon.addEventListener('mouseleave', () => { threadsSettingIcon.style.opacity = '0.4'; });
     threadsSettingIcon.addEventListener('click', async (se) => {
       se.preventDefault(); se.stopPropagation();
-      const existingPanel = section.querySelector('.threads-settings-panel');
-      if (existingPanel) { existingPanel.remove(); return; }
+      if (this._currentFloatingMenuAnchor === threadsSettingIcon && this._currentFloatingMenu) { this._closeFloatingMenu(); return; }
       const panel = document.createElement('div');
       panel.className = 'threads-settings-panel';
       panel.style.cssText = 'background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:11px;margin-top:4px;';
-      const paletteLabel = document.createElement('div');
-      paletteLabel.textContent = t('settings.hlPalette');
-      paletteLabel.style.cssText = 'color:var(--text-muted);font-weight:600;margin:0 0 4px;font-size:11px;';
-      panel.appendChild(paletteLabel);
-      const grid = document.createElement('div');
-      grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:8px;';
-      const _threadsSettings = _pluginInst.settings || {};
-      const currentPalette = _threadsSettings.threadsPalette || 'sg-theme-01';
-      _SG_PALETTES.forEach(p => {
-        const chip = document.createElement('div');
-        chip.style.cssText = `display:flex;align-items:center;gap:4px;padding:3px 6px;border-radius:6px;cursor:pointer;font-size:10px;border:1.5px solid ${p.id===currentPalette?'var(--interactive-accent)':'transparent'};background:${p.id===currentPalette?'rgba(var(--mono-rgb-0),0.08)':'transparent'};transition:border-color 0.15s,background 0.15s;`;
-        const nameSpan = document.createElement('span');
-        nameSpan.textContent = (typeof _currentLang !== 'undefined' && _currentLang === 'en' && p.nameEn) ? p.nameEn : p.name;
-        nameSpan.style.cssText = 'color:var(--text-normal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;';
-        chip.appendChild(nameSpan);
-        const dotRow = document.createElement('span');
-        dotRow.style.cssText = 'display:inline-flex;gap:2px;align-items:center;margin-left:auto;';
-        const bgDot = document.createElement('span');
-        bgDot.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.bg};border:1px solid rgba(0,0,0,0.1);flex-shrink:0;`;
-        dotRow.appendChild(bgDot);
-        const fgDot = document.createElement('span');
-        fgDot.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.fg};border:1px solid rgba(0,0,0,0.1);flex-shrink:0;`;
-        dotRow.appendChild(fgDot);
-        chip.appendChild(dotRow);
-        chip.addEventListener('click', () => {
-          _threadsSettings.threadsPalette = p.id;
-          if (_pluginInst.saveData) _pluginInst.saveData(_pluginInst.settings);
-          _SG_APPLY_PALETTE(section, _pluginInst.settings, 'threadsPalette');
-          grid.querySelectorAll(':scope > div').forEach(c => { c.style.borderColor='transparent'; c.style.background='transparent'; });
-          chip.style.borderColor='var(--interactive-accent)'; chip.style.background='rgba(var(--mono-rgb-0),0.08)';
-        });
-        grid.appendChild(chip);
-      });
-      panel.appendChild(grid);
+      // 调色板选择器已移除：版块配色统一由全局配色方案（SG_COLOR_THEMES）负责
+      // 版块底纹
+      panel.appendChild(this._makeBgPatternRow('secBg_threadsSection', () => {
+        this._applyBgPattern(section, 'secBg_threadsSection');
+      }));
       const fileLabel = document.createElement('div');
       fileLabel.textContent = 'Threads.md';
       fileLabel.style.cssText = 'color:var(--text-muted);font-weight:600;margin:0 0 4px;font-size:11px;';
@@ -22208,9 +23230,7 @@ class AddRegexRuleModal {
       let _saveTimer = null;
       ta.addEventListener('input', () => { clearTimeout(_saveTimer); _saveTimer = setTimeout(async () => { try { await _adapter.write(_threadsPath, ta.value); } catch(e) {} }, 500); });
       panel.appendChild(ta);
-      section.insertBefore(panel, section.firstChild);
-      const closeMenu = (ev) => { if (!panel.contains(ev.target) && !threadsSettingIcon.contains(ev.target)) { panel.remove(); document.removeEventListener('mousedown', closeMenu); } };
-      setTimeout(() => document.addEventListener('mousedown', closeMenu), 0);
+      this._floatSettingsMenu(threadsSettingIcon, panel);
     });
     headerLeft.appendChild(threadsSettingIcon);
     header.appendChild(headerLeft);
@@ -22317,6 +23337,8 @@ class AddRegexRuleModal {
     this.clearParkingLotSection();
     if (this.plugin.settings?.showParkingLot === false) return;
     const plugin = this.plugin;
+    const _root = contentEl.getRootNode();
+    const _doc = (_root && _root.nodeType === 9) ? _root : (contentEl.ownerDocument || document);
     const _existingPl = contentEl.querySelector('.parking-lot-section');
     const _plNextSibling = _existingPl ? _existingPl.nextSibling : null;
     if (_existingPl) _existingPl.remove();
@@ -22360,7 +23382,7 @@ class AddRegexRuleModal {
     const matchKw = (fileName, keywords) => true;
     const getRelatedKeywords = () => [];
 
-    const section = document.createElement('div');
+    const section = _doc.createElement('div');
     section.className = 'parking-lot-section';
     section.style.cssText = 'margin-top:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:8px;position:relative;';
     const _plHeight = plugin.settings?.parkingLotHeight || 300;
@@ -22368,21 +23390,10 @@ class AddRegexRuleModal {
     section.style.display = 'flex';
     section.style.flexDirection = 'column';
     section.style.overflow = 'hidden';
-    const _isDarkMode = document.body.classList.contains('theme-dark');
-    const _nightPreset = {secBg:'rgba(38,40,46,0.85)', cardBg:'rgba(54,58,68,0.92)', textColor:'rgba(220,220,230,0.92)'};
-    const _parkingLotSectionBg = plugin.settings?.parkingLotSectionBg || (_isDarkMode ? _nightPreset.secBg : 'rgba(250,240,205,0.75)');
-    const _parkingLotCardBg = plugin.settings?.parkingLotCardBg || (_isDarkMode ? _nightPreset.cardBg : 'rgba(236,216,154,0.90)');
-    const _parkingLotTextColor = plugin.settings?.parkingLotTextColor || (_isDarkMode ? _nightPreset.textColor : undefined);
-    section.style.background = _parkingLotSectionBg;
-    if (_parkingLotTextColor) {
-      section.style.color = _parkingLotTextColor;
-      section.style.setProperty('--text-normal', _parkingLotTextColor);
-      section.style.setProperty('--text-muted', _parkingLotTextColor);
-    }
+    // 版块配色统一由全局配色方案（SG_COLOR_THEMES）负责，不再单独设置底色/文字色
     const _applyInfoCardStyles = () => {
-      const cardBg = plugin.settings?.parkingLotCardBg || 'rgba(236,216,154,0.90)';
       const showGrid = plugin.settings?.parkingLotCardGrid === true;
-      cardGrid.querySelectorAll('.info-card').forEach(c => { c.style.background = cardBg; c.style.backgroundImage = ''; c.style.backgroundSize = ''; });
+      cardGrid.querySelectorAll('.info-card').forEach(c => { c.style.background = 'var(--background-secondary)'; c.style.backgroundImage = ''; c.style.backgroundSize = ''; });
       if (showGrid) {
         const cw = this._plGrid?.cellWidth?.() || (cardGrid.offsetWidth / 24);
         const ch = 20;
@@ -22416,126 +23427,14 @@ class AddRegexRuleModal {
     infoSettingIcon.addEventListener('mouseenter', () => { infoSettingIcon.style.opacity = '0.8'; });
     infoSettingIcon.addEventListener('mouseleave', () => { infoSettingIcon.style.opacity = '0.4'; });
     infoSettingIcon.addEventListener('click', (se) => {
-      console.log('[SG] infoSettingIcon click fired', se.target);
       se.preventDefault(); se.stopPropagation();
-      const existingMenu = section.querySelector('.info-settings-menu');
-      if (existingMenu) { existingMenu.remove(); section.style.height = (plugin.settings?.parkingLotHeight || 300) + 'px'; section.style.overflow = 'hidden'; return; }
-      section.style.height = 'auto';
-      section.style.overflow = 'visible';
+      if (this._currentFloatingMenuAnchor === infoSettingIcon && this._currentFloatingMenu) { this._closeFloatingMenu(); section.style.height = (plugin.settings?.parkingLotHeight || 300) + 'px'; section.style.overflow = 'hidden'; return; }
       const menu = document.createElement('div');
       menu.className = 'info-settings-menu';
       menu.style.cssText = 'background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:11px;min-width:240px;margin-top:4px;';
       const _s = plugin.settings || {};
+      // 配色方案选择器已移除：版块配色统一由全局配色方案（SG_COLOR_THEMES）负责
       {
-        const colorLabel = document.createElement('div');
-        colorLabel.textContent = t('main.infoColorScheme');
-        colorLabel.style.cssText = 'color:var(--text-muted);font-weight:600;margin:6px 0 4px;font-size:11px;';
-        menu.appendChild(colorLabel);
-        const _infoPresets = [
-          {name:t('main.infoPresetKraft'), secBg:'rgba(250,240,205,0.75)', cardBg:'rgba(236,216,154,0.90)', textColor:'rgba(70,50,30,0.92)'},
-          {name:t('main.infoPresetInk'), secBg:'rgba(238,236,230,0.80)', cardBg:'rgba(212,208,196,0.92)', textColor:'rgba(40,40,40,0.92)'},
-          {name:t('main.infoPresetNight'), secBg:'rgba(38,40,46,0.85)', cardBg:'rgba(54,58,68,0.92)', textColor:'rgba(220,220,230,0.92)'},
-          {name:t('main.infoPresetMint'), secBg:'rgba(222,240,232,0.78)', cardBg:'rgba(190,224,208,0.90)', textColor:'rgba(24,62,48,0.92)'},
-          {name:t('main.infoPresetOchre'), secBg:'rgba(238,216,194,0.78)', cardBg:'rgba(220,186,156,0.90)', textColor:'rgba(80,46,16,0.92)'},
-          {name:t('main.infoPresetIndigo'), secBg:'rgba(228,228,240,0.78)', cardBg:'rgba(200,200,224,0.90)', textColor:'rgba(40,40,80,0.92)'},
-        ];
-        const presetGrid = document.createElement('div');
-        presetGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-bottom:6px;';
-        _infoPresets.forEach(p => {
-          const chip = document.createElement('div');
-          chip.style.cssText = `display:flex;align-items:center;gap:3px;padding:3px 4px;border-radius:4px;cursor:pointer;font-size:9px;border:1px solid transparent;`;
-          const dot1 = document.createElement('span');
-          dot1.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.secBg};border:1px solid rgba(0,0,0,0.1);flex-shrink:0;`;
-          const dot2 = document.createElement('span');
-          dot2.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.cardBg};border:1px solid rgba(0,0,0,0.1);flex-shrink:0;`;
-          const nm = document.createElement('span');
-          nm.textContent = p.name;
-          nm.style.cssText = 'color:var(--text-normal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-          chip.appendChild(dot1); chip.appendChild(dot2); chip.appendChild(nm);
-          chip.addEventListener('click', () => {
-            _s.parkingLotSectionBg = p.secBg; _s.parkingLotCardBg = p.cardBg; _s.parkingLotTextColor = p.textColor;
-            plugin.saveData(plugin.settings);
-            section.style.background = p.secBg;
-            if (p.textColor) {
-              section.style.color = p.textColor;
-              section.style.setProperty('--text-normal', p.textColor);
-              section.style.setProperty('--text-muted', p.textColor);
-            } else {
-              section.style.color = '';
-              section.style.removeProperty('--text-normal');
-              section.style.removeProperty('--text-muted');
-            }
-            _applyInfoCardStyles();
-            presetGrid.querySelectorAll(':scope > div').forEach(c => c.style.borderColor = 'transparent');
-            chip.style.borderColor = 'var(--interactive-accent)';
-            menu.querySelectorAll('input[type="color"]').forEach(ci => {
-              const row = ci.closest('div');
-              if (!row) return;
-              const lbl = row.querySelector('span');
-              if (!lbl) return;
-              const sk = lbl.dataset.key;
-              if (!sk) return;
-              const m2 = (_s[sk]||'').match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-              if (m2) ci.value = '#' + [parseInt(m2[1]),parseInt(m2[2]),parseInt(m2[3])].map(v=>v.toString(16).padStart(2,'0')).join('');
-            });
-          });
-          presetGrid.appendChild(chip);
-        });
-        menu.appendChild(presetGrid);
-        const mkColorRow = (labelText, settingKey, defaultVal, onApply) => {
-          const row = document.createElement('div');
-          row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin:3px 0;';
-          const lbl = document.createElement('span');
-          lbl.textContent = labelText;
-          lbl.dataset.key = settingKey;
-          lbl.style.cssText = 'color:var(--text-normal);font-size:10px;';
-          row.appendChild(lbl);
-          const inp = document.createElement('input');
-          inp.type = 'color';
-          const cur = _s[settingKey] || defaultVal;
-          const m = cur.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-          if (m) inp.value = '#' + [parseInt(m[1]),parseInt(m[2]),parseInt(m[3])].map(v=>v.toString(16).padStart(2,'0')).join('');
-          inp.style.cssText = 'width:28px;height:18px;border:1px solid var(--background-modifier-border);border-radius:4px;cursor:pointer;background:transparent;padding:0;';
-          inp.addEventListener('input', () => {
-            const hex = inp.value;
-            const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-            const aMatch = (_s[settingKey]||defaultVal).match(/rgba?\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/);
-            const a = aMatch ? parseFloat(aMatch[1]) : 0.85;
-            _s[settingKey] = `rgba(${r},${g},${b},${a})`;
-            plugin.saveData(plugin.settings);
-            onApply();
-          });
-          row.appendChild(inp);
-          const aInp = document.createElement('input');
-          aInp.type = 'range';
-          aInp.min = '0'; aInp.max = '1'; aInp.step = '0.05';
-          const aMatch2 = cur.match(/rgba?\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/);
-          aInp.value = aMatch2 ? parseFloat(aMatch2[1]) : 0.85;
-          aInp.style.cssText = 'width:50px;height:14px;cursor:pointer;';
-          aInp.addEventListener('input', () => {
-            const hex = inp.value;
-            const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-            _s[settingKey] = `rgba(${r},${g},${b},${aInp.value})`;
-            plugin.saveData(plugin.settings);
-            onApply();
-          });
-          row.appendChild(aInp);
-          return row;
-        };
-        menu.appendChild(mkColorRow(t('main.parkingLotSectionBg'), 'parkingLotSectionBg', 'rgba(250,240,205,0.75)', () => { section.style.background = _s.parkingLotSectionBg || 'rgba(250,240,205,0.75)'; }));
-        menu.appendChild(mkColorRow(t('main.parkingLotCardBg'), 'parkingLotCardBg', 'rgba(236,216,154,0.90)', () => { _applyInfoCardStyles(); }));
-        menu.appendChild(mkColorRow(t('main.parkingLotTextColor'), 'parkingLotTextColor', 'rgba(70,50,30,0.92)', () => {
-          const _tc = _s.parkingLotTextColor;
-          if (_tc) {
-            section.style.color = _tc;
-            section.style.setProperty('--text-normal', _tc);
-            section.style.setProperty('--text-muted', _tc);
-          } else {
-            section.style.color = '';
-            section.style.removeProperty('--text-normal');
-            section.style.removeProperty('--text-muted');
-          }
-        }));
         const gridRow = document.createElement('div');
         gridRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin:3px 0;';
         const gridLbl = document.createElement('span');
@@ -22612,10 +23511,7 @@ class AddRegexRuleModal {
       addPromptBtn.style.cssText = 'margin-top:2px;padding:3px 8px;cursor:pointer;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);font-size:10px;';
       addPromptBtn.addEventListener('click', () => { _s.parkingLotCustomPrompts.push({ label: '', text: '' }); plugin.saveData(plugin.settings); _renderCustomPrompts(); });
       menu.appendChild(addPromptBtn);
-      section.insertBefore(menu, section.firstChild);
-      const _menuDoc = infoSettingIcon.ownerDocument || document;
-      const closeMenu = (ev) => { if (!menu.contains(ev.target) && !infoSettingIcon.contains(ev.target)) { menu.remove(); _menuDoc.removeEventListener('mousedown', closeMenu); } };
-      setTimeout(() => _menuDoc.addEventListener('mousedown', closeMenu), 0);
+      this._floatSettingsMenu(infoSettingIcon, menu);
     });
     headerLeft.appendChild(infoSettingIcon);
     headerRow.appendChild(headerLeft);
@@ -22626,15 +23522,15 @@ class AddRegexRuleModal {
 
     headerRow.appendChild(addBtn);
     section.appendChild(headerRow);
-    const chipRow = document.createElement('div');
+    const chipRow = _doc.createElement('div');
     chipRow.className = 'info-chip-row';
     chipRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;align-items:center;';
     section.appendChild(chipRow);
-    const cardGrid = document.createElement('div');
+    const cardGrid = _doc.createElement('div');
     cardGrid.className = 'info-card-grid';
     cardGrid.style.cssText = 'min-height:60px;flex:1;overflow-y:auto;';
     section.appendChild(cardGrid);
-    const resizeHandle = document.createElement('div');
+    const resizeHandle = _doc.createElement('div');
     resizeHandle.style.cssText = 'position:absolute;bottom:0;right:0;width:16px;height:16px;cursor:nwse-resize;z-index:10;opacity:0.3;transition:opacity 0.15s;';
     resizeHandle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 3v6h-6M3 21v-6h6M21 3l-9 9M3 21l9-9"/></svg>';
     resizeHandle.addEventListener('mouseenter', () => { resizeHandle.style.opacity = '1'; });
@@ -22677,14 +23573,14 @@ class AddRegexRuleModal {
 
     _loadGridStack(this.app).then((GridStack) => {
       try {
-        if (!document.getElementById('info-grid-mobile-handle-style')) {
-          const mh = document.createElement('style');
+        if (!_doc.getElementById('info-grid-mobile-handle-style')) {
+          const mh = _doc.createElement('style');
           mh.id = 'info-grid-mobile-handle-style';
           mh.textContent = `.info-card-grid .grid-stack-item>.ui-resizable-handle{opacity:0;transition:opacity .15s;}.info-card-grid .grid-stack-item:hover>.ui-resizable-handle{opacity:1;}.info-card-grid .grid-stack-item>.ui-resizable-se{width:14px;height:14px;bottom:0;right:0;}@media (pointer:coarse){.info-card-grid .grid-stack-item>.ui-resizable-handle{width:20px!important;height:20px!important;z-index:5;opacity:1!important;}.info-card-grid .grid-stack-item>.ui-resizable-se{right:0!important;bottom:0!important;}}`;
-          document.head.appendChild(mh);
+          _doc.head.appendChild(mh);
         }
-        if (!document.getElementById('info-grid-col24-css')) {
-          const colCss = document.createElement('style');
+        if (!_doc.getElementById('info-grid-col24-css')) {
+          const colCss = _doc.createElement('style');
           colCss.id = 'info-grid-col24-css';
           let rules = '';
           for (let n = 1; n <= 24; n++) {
@@ -22693,7 +23589,7 @@ class AddRegexRuleModal {
             rules += `.gs-24>.grid-stack-item[gs-x="${n}"]{left:${pct}%}`;
           }
           colCss.textContent = rules;
-          document.head.appendChild(colCss);
+          _doc.head.appendChild(colCss);
         }
         const savedLayout = plugin.settings?.parkingLotGridLayout || {};
         const _newCol = 24;
@@ -22725,10 +23621,27 @@ class AddRegexRuleModal {
           }, cardGrid);
           this._plGrid = grid;
           this._plGridReady = true;
+          // 内联定位兜底：GridStack 动态样式表在部分场景失效，导致卡片纵向堆顶，用内联 top/height 保证位置
+          const _applyPlInlinePos = () => {
+            try {
+              const _ch = grid.opts.cellHeight || 20;
+              const _chu = grid.opts.cellHeightUnit || 'px';
+              for (const n of (grid.engine?.nodes || [])) {
+                if (!n.el) continue;
+                n.el.style.top = (n.y * _ch) + _chu;
+                n.el.style.height = (n.h * _ch) + _chu;
+                const ce = n.el.querySelector('.grid-stack-item-content');
+                if (ce) { ce.style.position = 'absolute'; ce.style.top = '2px'; ce.style.bottom = '2px'; ce.style.left = '2px'; ce.style.right = '2px'; }
+              }
+              const _row = grid.getRow();
+              cardGrid.style.minHeight = (_row * _ch) + _chu;
+            } catch(e) {}
+          };
           const _reflowNodes = () => {
             try {
               if (grid.engine?.nodes?.length) { grid.column(24, 'move'); }
             } catch(e) {}
+            _applyPlInlinePos();
           };
           const _ro = new ResizeObserver(() => {
             if (this._plGrid && this._plGridReady && cardGrid.offsetWidth > 0) {
@@ -22738,10 +23651,13 @@ class AddRegexRuleModal {
           });
           _ro.observe(cardGrid);
           this._plGridResizeObserver = _ro;
-          grid.on('change', () => { clearTimeout(this._plGridSaveTimer); this._plGridSaveTimer = setTimeout(_saveGridLayout, 500); });
-          grid.on('dragstop', () => { clearTimeout(this._plGridSaveTimer); this._plGridSaveTimer = setTimeout(_saveGridLayout, 300); });
-          grid.on('resizestop', () => { clearTimeout(this._plGridSaveTimer); this._plGridSaveTimer = setTimeout(_saveGridLayout, 300); });
+          grid.on('change', () => { clearTimeout(this._plGridSaveTimer); this._plGridSaveTimer = setTimeout(_saveGridLayout, 500); _applyPlInlinePos(); });
+          grid.on('dragstop', () => { clearTimeout(this._plGridSaveTimer); this._plGridSaveTimer = setTimeout(_saveGridLayout, 300); _applyPlInlinePos(); });
+          grid.on('resizestop', () => { clearTimeout(this._plGridSaveTimer); this._plGridSaveTimer = setTimeout(_saveGridLayout, 300); _applyPlInlinePos(); });
           while (this._plGridQueue.length > 0) { const fn = this._plGridQueue.shift(); if (typeof fn === 'function') fn(grid); }
+          _applyPlInlinePos();
+          requestAnimationFrame(() => _applyPlInlinePos());
+          setTimeout(() => _applyPlInlinePos(), 0);
         };
         if (cardGrid.offsetWidth > 0) { _doInit(); }
         else {
@@ -22765,7 +23681,7 @@ class AddRegexRuleModal {
 
     const renderMd = async (container, mdContent) => {
       container.innerHTML = '';
-      try { const { MarkdownRenderer, Component } = require('obsidian'); const comp = new Component(); comp.load(); const srcPath = plugin.app.workspace.getActiveFile()?.path || plugin.currentFilePath || ''; await MarkdownRenderer.renderMarkdown(mdContent, container, srcPath, comp); if (plugin.renderImagesManually) await plugin.renderImagesManually(mdContent, container, plugin); }
+      try { const { MarkdownRenderer, Component } = require('obsidian'); const comp = new Component(); comp.load(); const srcPath = plugin.app.workspace.getActiveFile()?.path || plugin.currentFilePath || ''; await MarkdownRenderer.renderMarkdown(mdContent, container, srcPath, comp); if (plugin.renderImagesManually) await plugin.renderImagesManually(mdContent, container, plugin); if (!container._sgLinkBound) { container._sgLinkBound = true; container.addEventListener('click', (ce) => { const linkEl = ce.target.closest('a.internal-link, a.is-unresolved'); if (linkEl) { ce.preventDefault(); ce.stopPropagation(); const href = linkEl.dataset.href || linkEl.getAttribute('href') || linkEl.textContent; if (href) plugin.app.workspace.openLinkText(href, '', true); } }); container.addEventListener('auxclick', (ce) => { if (ce.button !== 1) return; const linkEl = ce.target.closest('a.internal-link, a.is-unresolved'); if (linkEl) { ce.preventDefault(); ce.stopPropagation(); const href = linkEl.dataset.href || linkEl.getAttribute('href') || linkEl.textContent; if (href) { const leaf = plugin.app.workspace.getLeaf('window'); const file = plugin.app.metadataCache.getFirstLinkpathDest(href.replace(/\.md$/, ''), '') || plugin.app.vault.getAbstractFileByPath(href); if (file) leaf.openFile(file); } } }); } }
       catch (e) { container.textContent = mdContent; }
     };
 
@@ -22853,9 +23769,9 @@ class AddRegexRuleModal {
           panelHead.addEventListener('mousedown', _dStart, { signal: _dAb.signal });
           document.addEventListener('mousemove', _dMove, { signal: _dAb.signal });
           document.addEventListener('mouseup', _dEnd, { signal: _dAb.signal });
-          panelHead.addEventListener('touchstart', _dStart, { passive: false, signal: _dAb.signal });
-          document.addEventListener('touchmove', _dMove, { passive: false, signal: _dAb.signal });
-          document.addEventListener('touchend', _dEnd, { signal: _dAb.signal });
+          panelHead.addEventListener('touchstart', _dStart, { passive: true, signal: _dAb.signal });
+          document.addEventListener('touchmove', _dMove, { passive: true, signal: _dAb.signal });
+          document.addEventListener('touchend', _dEnd, { signal: _dAb.signal , passive: true});
         }
         const chipRow = document.createElement('div');
         chipRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;';
@@ -22960,6 +23876,16 @@ class AddRegexRuleModal {
         const itemContent = widgetEl.querySelector('.grid-stack-item-content') || widgetEl;
         itemContent.appendChild(card);
         itemContent.style.overflow = 'hidden';
+        // 内联定位兜底（gs-y/gs-h 属性由 GridStack 写入，含 autoPosition 计算结果）
+        try {
+          const _ch = grid.opts.cellHeight || 20;
+          const _chu = grid.opts.cellHeightUnit || 'px';
+          const _gy = parseInt(widgetEl.getAttribute('gs-y') || '', 10);
+          const _gh = parseInt(widgetEl.getAttribute('gs-h') || '', 10);
+          if (!isNaN(_gy)) widgetEl.style.top = (_gy * _ch) + _chu;
+          if (!isNaN(_gh)) widgetEl.style.height = (_gh * _ch) + _chu;
+          itemContent.style.position = 'absolute'; itemContent.style.top = '2px'; itemContent.style.bottom = '2px'; itemContent.style.left = '2px'; itemContent.style.right = '2px';
+        } catch(e) {}
       };
       if (this._plGrid && this._plGridReady) { _addToGrid(this._plGrid); }
       else { cardGrid.appendChild(card); this._plGridQueue.push((grid) => { try { card.remove(); _addToGrid(grid); } catch(e) {} }); }
@@ -23186,7 +24112,6 @@ class AddRegexRuleModal {
           const ruleFileName = '.obsidian/plugins/Regex-Css-Highlighter/data/file-rules.json';
           const systemPath = require('path').join(this.app.vault.adapter.basePath, ruleFileName);
           require('electron').shell.openPath(systemPath);
-          console.log('已使用系统方式打开规则文件:', systemPath);
         }
       } catch (error) {
         console.error('打开规则文件失败:', error);
@@ -23505,18 +24430,14 @@ class AddRegexRuleModal {
 
         // 中键点击：删除规则 - 使用唯一标识符并立即执行清理
         historyButton.addEventListener("mousedown", async (e) => {
-          console.log('History button mouse down, button:', e.button, 'ruleId:', ruleId);
           if (e.button === 1) { // 中键
             e.preventDefault();
             e.stopPropagation();
-            console.log('Deleting history rule with middle-click, ruleId:', ruleId);
             await this.deleteRuleById(ruleId);
 
             // 添加1秒延迟，确保配置文件有足够时间保存
-            console.log('Waiting 1 second before running CSS cleanup...');
             setTimeout(async () => {
               // 1秒后执行CSS清理操作，删除孤立样式和未使用的keyframes
-              console.log('Running CSS cleanup after 1 second delay...');
               // [已禁用] cleanupOrphanedStyles
               // if (this.plugin && typeof this.plugin.cleanupOrphanedStyles === 'function') {
               //   await this.plugin.cleanupOrphanedStyles();
@@ -23531,18 +24452,14 @@ class AddRegexRuleModal {
 
         // 添加auxclick事件监听器确保中键事件被捕获
         historyButton.addEventListener("auxclick", async (e) => {
-          console.log('History button auxclick, button:', e.button, 'ruleId:', ruleId);
           if (e.button === 1) { // 中键
             e.preventDefault();
             e.stopPropagation();
-            console.log('Deleting history rule with auxclick middle-click, ruleId:', ruleId);
             await this.deleteRuleById(ruleId);
 
             // 添加1秒延迟，确保配置文件有足够时间保存
-            console.log('Waiting 1 second before running CSS cleanup...');
             setTimeout(async () => {
               // 1秒后执行CSS清理操作，删除孤立样式和未使用的keyframes
-              console.log('Running CSS cleanup after 1 second delay...');
               // [已禁用] cleanupOrphanedStyles
               // if (this.plugin && typeof this.plugin.cleanupOrphanedStyles === 'function') {
               //   await this.plugin.cleanupOrphanedStyles();
@@ -23608,7 +24525,6 @@ class AddRegexRuleModal {
             _activeContextMenuCleanup = null;
           }
 
-          console.log('Right-click on current file rule button:', rule);
 
           // 创建上下文菜单
           const menu = document.createElement('div');
@@ -23901,7 +24817,6 @@ class AddRegexRuleModal {
       return;
     }
 
-    console.log('Attempting to delete rule with ID:', ruleId);
 
     // 更安全的解析规则ID方法 - 使用正则表达式分割
     let regex, cssClass;
@@ -23952,8 +24867,6 @@ class AddRegexRuleModal {
       this.addGlobalRulesSection(this.contentEl);
       this.addRemarkSection(this.contentEl);
     } else {
-      console.log('Rule not found for deletion:', ruleId);
-      console.log('Current rules:', this.plugin.rules);
     }
 
   }
@@ -23979,21 +24892,17 @@ class AddRegexRuleModal {
       // 使用字符串拼接避免模板字符串中的转义问题
       const styleRegex = new RegExp('(?:\\/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*\\/\\s*)?\\.' + escapedClassName + '(?:::[a-zA-Z-]+(?:\\([^)]*\\))?)*\\s*\\{(?:[^{}]|\\{[^{}]*\\})*\\}\\s*', 'gs');
 
-      console.log('Using regex to remove:', styleRegex);
       const newCssContent = cssContent.replace(styleRegex, '');
 
       if (newCssContent !== cssContent) {
         // 保存更新后的CSS文件
         await this.app.vault.adapter.write(cssPath, newCssContent);
-        console.log(`Removed CSS rule for ${className} from styles.css`);
 
         return newCssContent;
       } else {
-        console.log(`CSS rule for ${className} not found in styles.css`);
 
         // 调试信息：检查CSS内容中是否包含该类名
         if (cssContent.includes(`.${className}`)) {
-          console.log(`But class ${className} exists in CSS file, regex might not be matching correctly`);
         }
 
         return cssContent;
@@ -24006,7 +24915,6 @@ class AddRegexRuleModal {
 
   async deleteStyleAndCleanup(className) {
     try {
-      console.log('Deleting style and running cleanup for:', className);
 
       // 从配置文件中删除样式
       const newCssContent = await this.removeStyleFromConfig(className);
@@ -24033,7 +24941,6 @@ class AddRegexRuleModal {
 
   async saveSortedStyles(draggedCategory, draggedIndex, targetCategory, targetIndex) {
     try {
-      console.log(`Saving sorted styles: moving from ${draggedIndex} in ${draggedCategory} to ${targetIndex} in ${targetCategory}`);
 
       // 确保styleCategories是对象且分类存在
       if (!styleCategories || typeof styleCategories !== 'object' ||
@@ -24058,7 +24965,6 @@ class AddRegexRuleModal {
       // 处理相同分类内的移动
       if (draggedCategory === targetCategory) {
         if (draggedIndex === targetIndex) {
-          console.log('Same index and category, no sorting needed');
           return;
         }
 
@@ -24070,7 +24976,6 @@ class AddRegexRuleModal {
 
         // 更新样式分类配置
         styleCategories[draggedCategory] = sourceClassNames;
-        console.log('Intra-category move completed, updated categories:', styleCategories);
       }
       // 处理跨分类移动
       else {
@@ -24084,33 +24989,26 @@ class AddRegexRuleModal {
         styleCategories[draggedCategory] = sourceClassNames;
         styleCategories[targetCategory] = targetClassNames;
 
-        console.log(`Style moved across categories: ${draggedClassName} from ${draggedCategory} to ${targetCategory}`);
       }
 
       // 保存到配置文件 - 使用与addStyleToConfig相同的相对路径方式
       const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
-      console.log('Saving to config path:', configPath);
 
       // 先保存到文件
       await this.app.vault.adapter.write(configPath, JSON.stringify(styleCategories, null, 2));
-      console.log('Styles reordered successfully, saved to file');
 
       // 然后重新加载配置到全局变量，确保数据一致性
       if (this.plugin && typeof this.plugin.loadStyleCategories === 'function') {
-        console.log('Reloading style categories...');
         await this.plugin.loadStyleCategories();
-        console.log('Style categories reloaded:', Object.keys(styleCategories));
       }
 
       // 无论是否跨分类移动，都刷新索引，确保UI显示正确
       if (typeof this.refreshStyleButtonIndices === 'function') {
-        console.log('Refreshing style button indices...');
         this.refreshStyleButtonIndices();
       }
 
       // 刷新当前弹窗内容，确保立即显示最新的样式顺序
       if (typeof this.refreshModalContent === 'function') {
-        console.log('Refreshing modal content to show updated style order...');
         await this.refreshModalContent();
       }
 
@@ -24132,7 +25030,6 @@ class AddRegexRuleModal {
         if (index > -1) {
           styleCategories[category].splice(index, 1);
           found = true;
-          console.log(`Removed ${className} from category ${category}`);
         }
       });
 
@@ -24140,20 +25037,17 @@ class AddRegexRuleModal {
         // 保存更新后的配置到文件
         const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
         await this.app.vault.adapter.write(configPath, JSON.stringify(styleCategories, null, 2));
-        console.log('Updated style-categories.json saved');
 
         // 从CSS文件中删除样式，返回更新后的CSS内容
         const updatedCssContent = await this.removeStyleFromCSSFile(className);
 
         // 重新加载配置
         await this.plugin.loadStyleCategories();
-        console.log('Style categories reloaded');
 
         // 更新类名数量显示
 
         return updatedCssContent;
       } else {
-        console.log(`Style ${className} not found in any category`);
         return null;
       }
     } catch (error) {
@@ -24163,7 +25057,6 @@ class AddRegexRuleModal {
   }
 
   async openCSSEditor(className, currentStyle) {
-    console.log('Opening CSS editor for:', className, 'with cached style:', currentStyle);
 
     const self = this;
 
@@ -24329,7 +25222,6 @@ class AddRegexRuleModal {
                     name === className ? newClassName : name
                   );
                   found = true;
-                  console.log(`Updated class name in category ${category}: ${className} -> ${newClassName}`);
                   break;
                 }
               }
@@ -24338,7 +25230,6 @@ class AddRegexRuleModal {
               if (found) {
                 await this.app.vault.adapter.write(configPath, JSON.stringify(styleCategories, null, 2));
                               } else {
-                console.log(`Old class name ${className} not found in style-categories.json, skipping update`);
               }
 
               // 类名变更后，需要重新加载样式分类配置并刷新UI
@@ -24392,7 +25283,6 @@ class AddRegexRuleModal {
       if (originalCssOnClose) await originalCssOnClose();
       setTimeout(() => { this._subModalOpen = false; }, 200);
 
-      console.log('CSS editor closed, refreshing UI...');
 
       try {
         // 并行执行异步操作，减少等待时间
@@ -24414,7 +25304,6 @@ class AddRegexRuleModal {
         const _domCss = document.getElementById('Regex-Css-Highlighter-dynamic-styles')?.textContent || ''; self.reloadStyles(_domCss);
 
         // 4. 直接执行UI更新，无需延迟
-        console.log('执行UI更新...');
 
         // 获取当前正则表达式输入值
         const inputValue = self.regexInput ? self.regexInput.getValue() : "";
@@ -24720,7 +25609,6 @@ class AddRegexRuleModal {
           });
         }
 
-        console.log('样式恢复和刷新完成！');
       });
     }
   }
@@ -24755,7 +25643,6 @@ class AddRegexRuleModal {
   refreshSingleCodeMirrorView(view, isSecondaryRefresh = false) {
     if (!view) return;
 
-    console.log(`Refreshing CodeMirror view${isSecondaryRefresh ? ' (secondary)' : ''}...`);
 
     // 方法1: 使用CodeMirror API触发测量和更新
     view.requestMeasure();
@@ -24796,7 +25683,6 @@ class AddRegexRuleModal {
       }
     }
 
-    console.log('Style refresh completed for CodeMirror view');
   }
 
   // 应用全局样式刷新策略，针对所有CSS属性
@@ -24823,13 +25709,11 @@ class AddRegexRuleModal {
       computedStyle.transform;
       computedStyle.opacity;
     } catch (error) {
-      console.debug('Error during computed style recalculation:', error);
     }
   }
 
   // 通用方法：自动识别所有可能受插件影响的元素
   getAllStyledElements() {
-    console.log('Identifying all styled elements...');
     const allAffectedElements = new Set();
 
     // 方法1: 确保包含所有插件生成的rcg-前缀元素（这是唯一固定的标识符）
@@ -24866,7 +25750,6 @@ class AddRegexRuleModal {
       });
     }
 
-    console.log('Found', allAffectedElements.size, 'potentially styled elements');
     return Array.from(allAffectedElements);
   }
 
@@ -24901,7 +25784,6 @@ class AddRegexRuleModal {
           });
         } catch (e) {
           // 忽略跨域样式表的错误
-          console.debug('Error accessing style sheet rules:', e);
         }
       });
     } catch (error) {
@@ -25291,7 +26173,6 @@ class AddRegexRuleModal {
             buttonContainer.style.borderColor = "#ddd";
           }, 500);
 
-          console.log(`Updated button style for .${className}:`, newStyle);
         }
       }
     });
@@ -25351,7 +26232,6 @@ class AddRegexRuleModal {
 
   async handleCategoryDragMove(draggedCategory, targetCategory, insertBefore, mainContainer) {
     try {
-      console.log(`Moving category ${draggedCategory} ${insertBefore ? 'before' : 'after'} ${targetCategory}`);
 
       // 创建新的排序后的分类对象
       const newCategories = {};
@@ -25423,7 +26303,6 @@ class AddRegexRuleModal {
 
   async handleDragMove(draggedCategory, draggedIndex, targetCategory, targetIndex, targetElement) {
     try {
-      console.log(`Dragging from ${draggedIndex} in category ${draggedCategory} to ${targetIndex} in category ${targetCategory}`);
 
       // 立即在DOM中进行视觉调整，给用户即时反馈
       if (draggedCategory === targetCategory) {
@@ -25467,7 +26346,6 @@ class AddRegexRuleModal {
       } else {
         // 跨分类移动的视觉反馈
         try {
-          console.log('Attempting cross-category move from', draggedCategory, 'to', targetCategory);
 
           // 找到目标元素的父网格容器
           const targetGrid = targetElement.closest('div[style*="display: flex"]');
@@ -25490,20 +26368,17 @@ class AddRegexRuleModal {
             const h4 = container.querySelector('.rch-group-chip');
             if (h4 && h4.textContent.trim() === draggedCategory) {
               sourceCategoryContainer = container;
-              console.log('Found source category container:', draggedCategory);
               break;
             }
           }
 
           // 方法2: 如果直接匹配失败，尝试从内存数据中获取类名，然后查找包含该类名按钮的容器
           if (!sourceCategoryContainer) {
-            console.log('Trying alternate approach to find source container');
 
             // 从内存数据中获取该分类下的第一个类名
             const categoryStyles = styleCategories[draggedCategory];
             if (categoryStyles && categoryStyles.length > 0) {
               const firstStyleName = categoryStyles[0];
-              console.log('Looking for container with style:', firstStyleName);
 
               // 查找包含该类名的元素
               const styleElement = this.modalEl.querySelector(`.style-example.${firstStyleName}`);
@@ -25511,7 +26386,6 @@ class AddRegexRuleModal {
                 const buttonContainer = styleElement.closest('div[style*="cursor: pointer"]');
                 if (buttonContainer) {
                   sourceCategoryContainer = buttonContainer.closest('div[style*="display: flex"]')?.parentElement;
-                  console.log('Found source container from style element');
                 }
               }
             }
@@ -25519,11 +26393,9 @@ class AddRegexRuleModal {
 
           // 方法3: 最后，尝试查找任何包含该分类数据属性的元素的父容器
           if (!sourceCategoryContainer) {
-            console.log('Using last resort: finding by data-category attribute');
             const elementsWithCategory = this.modalEl.querySelectorAll(`[data-category="${draggedCategory}"]`);
             if (elementsWithCategory.length > 0) {
               sourceCategoryContainer = elementsWithCategory[0].closest('div[style*="display: flex"]')?.parentElement;
-              console.log('Found source container from data-category elements');
             }
           }
 
@@ -25559,17 +26431,14 @@ class AddRegexRuleModal {
             });
 
             if (draggedButton) {
-              console.log(`Found button by index in document: ${draggedIndex}`);
             } else if (draggedIndex < allSourceButtons.length) {
               // 其次尝试在源网格中直接按位置查找
               draggedButton = allSourceButtons[draggedIndex];
-              console.log(`Found button by position in source grid: ${draggedIndex}`);
             }
           }
 
           // 方法2: 按分类和索引组合查找（更精确的匹配）
           if (!draggedButton) {
-            console.log('Trying to find by category and index combination');
             draggedButton = allDocButtons.find(btn => {
               const btnIndex = parseInt(btn.getAttribute('data-style-index'));
               const btnCategory = btn.getAttribute('data-category');
@@ -25580,12 +26449,10 @@ class AddRegexRuleModal {
 
           // 方法3: 尝试从内存数据中获取类名，然后查找对应的按钮
           if (!draggedButton) {
-            console.log('Trying to find by style name from memory data');
             // 从内存数据中获取该分类下对应索引的样式名称
             const categoryStyles = styleCategories[draggedCategory];
             if (categoryStyles && draggedIndex >= 0 && draggedIndex < categoryStyles.length) {
               const styleName = categoryStyles[draggedIndex];
-              console.log(`Looking for button with style: ${styleName}`);
 
               // 查找包含该样式名称的按钮
               draggedButton = allDocButtons.find(btn => {
@@ -25618,8 +26485,6 @@ class AddRegexRuleModal {
 
           if (!draggedButton) {
             console.error('Dragged button not found with category:', draggedCategory, 'and index:', draggedIndex);
-            console.log(`Available buttons in document: ${allDocButtons.length}`);
-            console.log(`Available buttons in source grid: ${allSourceButtons.length}`);
             this.showError(this.contentEl, t('main.cannotFindDragBtn') + ` ${draggedCategory}[${draggedIndex}]`);
             return;
           }
@@ -25629,20 +26494,17 @@ class AddRegexRuleModal {
 
           // 如果目标元素不是按钮，尝试查找其包含的按钮或最近的按钮
           if (!targetButton.hasAttribute('data-style-index')) {
-            console.log('Target element is not a style button, searching for related button');
 
             // 方法1: 查找目标元素内部的按钮
             const nestedButton = targetButton.querySelector('[data-style-index]');
             if (nestedButton) {
               targetButton = nestedButton;
-              console.log('Found nested style button');
             }
             // 方法2: 查找目标元素附近的按钮
             else {
               const nearbyButton = targetButton.closest('[data-style-index]');
               if (nearbyButton) {
                 targetButton = nearbyButton;
-                console.log('Found nearby style button');
               }
             }
           }
@@ -25651,7 +26513,6 @@ class AddRegexRuleModal {
             console.warn('Could not find proper target button, using parent grid for positioning');
           }
 
-          console.log('Found elements for cross-category move');
 
           // 高亮显示目标分类
           targetCategoryContainer.style.backgroundColor = '#f0f8ff';
@@ -25684,7 +26545,6 @@ class AddRegexRuleModal {
                 draggedButton.style.opacity = '1';
                 targetCategoryContainer.style.backgroundColor = '';
 
-                console.log('执行UI刷新 - 增强版');
 
                 // 确保内容元素可访问
                 if (!self.contentEl) {
@@ -25698,10 +26558,8 @@ class AddRegexRuleModal {
 
                 // 重新加载样式分类数据
                 if (self.plugin && typeof self.plugin.loadStyleCategories === 'function') {
-                  console.log('重新加载样式分类数据...');
                   try {
                     await self.plugin.loadStyleCategories();
-                    console.log('数据已重新加载');
                   } catch (loadError) {
                                         // 即使加载失败也要继续尝试刷新UI
                   }
@@ -25712,7 +26570,6 @@ class AddRegexRuleModal {
                 if (typeof self.refreshStyleButtonIndices === 'function') {
                   try {
                     self.refreshStyleButtonIndices();
-                    console.log('按钮索引已刷新');
                   } catch (e) {
                     console.error('刷新按钮索引失败:', e);
                   }
@@ -25734,7 +26591,6 @@ class AddRegexRuleModal {
                 // 方法2: 如果refreshModalContent不存在或失败，尝试使用onOpen重建
                 if (!contentRebuilt && typeof self.onOpen === 'function') {
                   try {
-                    console.log('尝试使用onOpen重建内容');
 
                     // 保存当前滚动位置
                     const scrollTop = self.contentEl.scrollTop;
@@ -25751,7 +26607,6 @@ class AddRegexRuleModal {
                     self.contentEl.scrollTop = scrollTop;
 
                     contentRebuilt = true;
-                    console.log('内容已通过onOpen重建');
                   } catch (e) {
                     console.error('onOpen执行失败:', e);
                   }
@@ -25760,7 +26615,6 @@ class AddRegexRuleModal {
                 // 方法3: 如果所有方法都失败，尝试重新打开模态框作为最后的备选方案
                 if (!contentRebuilt && typeof self.close === 'function' && self.app && self.plugin) {
                   try {
-                    console.log('使用最后的备选方案：重新打开模态框');
 
                     // 保存当前状态
                     const app = self.app;
@@ -25776,7 +26630,6 @@ class AddRegexRuleModal {
                         const AddRegexRuleModal = window.AddRegexRuleModal || self.constructor;
                         const newModal = new AddRegexRuleModal(app, plugin);
                         newModal.open();
-                        console.log('新模态框已打开');
                       } catch (reopenError) {
                         console.error('重新打开模态框失败:', reopenError);
                       }
@@ -26061,8 +26914,6 @@ class AddRegexRuleModal {
           const closeBtn = this.modalEl.querySelector('.rch-close-btn');
           if (sidebarBtn) sidebarBtn.style.display = 'none';
           if (closeBtn) closeBtn.style.display = 'none';
-          const _popoutBtnRefresh = this.modalEl.querySelector('.rch-popout-btn');
-          if (_popoutBtnRefresh && (this._isPopout || this._popoutDoc && this._popoutDoc !== document || this.modalEl.ownerDocument !== document)) _popoutBtnRefresh.style.display = 'none';
         }
       }
     } catch (error) {
@@ -26088,31 +26939,108 @@ class RegexHighlightSettingTab extends PluginSettingTab {
     msgEl.style.color = 'var(--text-muted)';
     msgEl.textContent = t('settings.redirectMsg');
 
-    const btn = containerEl.createEl('button');
-    btn.textContent = t('settings.redirectBtn');
-    btn.style.cursor = 'pointer';
-    btn.style.padding = '8px 16px';
-    btn.style.borderRadius = '6px';
-    btn.style.background = 'var(--interactive-accent)';
-    btn.style.color = 'var(--text-on-accent)';
-    btn.style.border = 'none';
-    btn.style.fontSize = '14px';
-    btn.addEventListener('click', () => {
+    const btnRow = containerEl.createDiv();
+    btnRow.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap;';
+
+    const _mkBtn = (label) => {
+      const b = btnRow.createEl('button');
+      b.textContent = label;
+      b.style.cssText = 'cursor:pointer;padding:8px 16px;border-radius:6px;background:var(--interactive-accent);color:var(--text-on-accent);border:none;font-size:14px;';
+      return b;
+    };
+
+    // 打开右侧面板sg
+    const openSidebarBtn = _mkBtn(t('settings.openSidebarBtn'));
+    openSidebarBtn.addEventListener('click', async () => {
       // 关闭Obsidian设置面板
       const settingEl = document.querySelector('.modal-bg.settings-modal');
       if (settingEl) settingEl.click();
-      // 打开主面板并滚动到设置区域
-      const modal = new AddRegexRuleModal(this.app, this.plugin);
-      modal.open();
-      setTimeout(() => {
-        const settingsPanel = document.querySelector('.regex-highlighter-settings');
-        if (settingsPanel) {
-          settingsPanel.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }
-      }, 300);
+      await this.plugin.openSidebarView();
     });
+
+    // 新标签页打开sg
+    const openTabBtn = _mkBtn(t('settings.openTabBtn'));
+    openTabBtn.addEventListener('click', async () => {
+      // 关闭Obsidian设置面板
+      const settingEl = document.querySelector('.modal-bg.settings-modal');
+      if (settingEl) settingEl.click();
+      await this.plugin.openPanelInTab();
+    });
+
   }
 }
+
+// 底纹预设清单（id 对应 CSS 类 sg-bgpat-<id>，label 为 i18n key）
+const SG_BG_PATTERNS = [
+  { id: 'none', label: null },
+  { id: 'grid', label: 'main.bgpatGrid' },
+  { id: 'dots', label: 'main.bgpatDots' },
+  { id: 'dotsLg', label: 'main.bgpatDotsLg' },
+  { id: 'diag', label: 'main.bgpatDiag' },
+  { id: 'diag2', label: 'main.bgpatDiag2' },
+  { id: 'hstripes', label: 'main.bgpatHstripes' },
+  { id: 'vstripes', label: 'main.bgpatVstripes' },
+  { id: 'checker', label: 'main.bgpatChecker' },
+  { id: 'vignette', label: 'main.bgpatVignette' },
+];
+
+// 统一配色方案（3套）：重定义Obsidian CSS变量实现局部主题化，卡片底色/强调色/次要文字对比度统一收敛
+// zones仅semantic方案使用：按data-card-id分区上色（统计蓝/回顾黄/关键词绿）
+const SG_COLOR_THEMES = {
+  inkjoss: {
+    cls: 'sg-theme-inkjoss',
+    light: {
+      'background-primary': '#FFFFFF', 'background-secondary': '#F1EFE8', 'background-modifier-border': 'rgba(44,44,42,0.12)',
+      'text-normal': '#2C2C2A', 'text-muted': '#5F5E5A', 'text-faint': '#888780',
+      'interactive-accent': '#B03A20', 'sg-accent-soft': 'rgba(176,58,32,0.08)', 'sg-empty-bg': '#F1EFE8',
+      'sg-card-bg': '#FFFFFF', 'sg-card-border': 'rgba(44,44,42,0.10)',
+    },
+    dark: {
+      'background-primary': '#26272A', 'background-secondary': '#1D1E1C', 'background-modifier-border': 'rgba(232,230,224,0.10)',
+      'text-normal': '#E8E6E0', 'text-muted': '#A8A49B', 'text-faint': '#7C786F',
+      'interactive-accent': '#E06A55', 'sg-accent-soft': 'rgba(224,106,85,0.14)', 'sg-empty-bg': '#222325',
+      'sg-card-bg': '#26272A', 'sg-card-border': 'rgba(232,230,224,0.08)',
+    },
+    zones: {},
+  },
+  rouge: {
+    cls: 'sg-theme-rouge',
+    light: {
+      'background-primary': '#FFFFFF', 'background-secondary': '#FBEAF0', 'background-modifier-border': 'rgba(75,21,40,0.14)',
+      'text-normal': '#4B1528', 'text-muted': '#993556', 'text-faint': '#C08DA1',
+      'interactive-accent': '#D4537E', 'sg-accent-soft': 'rgba(212,83,126,0.10)', 'sg-empty-bg': '#FDF3F7',
+      'sg-card-bg': '#FFFFFF', 'sg-card-border': 'rgba(75,21,40,0.10)',
+    },
+    dark: {
+      'background-primary': '#362430', 'background-secondary': '#2A1B22', 'background-modifier-border': 'rgba(242,223,231,0.10)',
+      'text-normal': '#F2DFE7', 'text-muted': '#D08CA4', 'text-faint': '#96637A',
+      'interactive-accent': '#E06C93', 'sg-accent-soft': 'rgba(224,108,147,0.14)', 'sg-empty-bg': '#2F1F27',
+      'sg-card-bg': '#362430', 'sg-card-border': 'rgba(242,223,231,0.08)',
+    },
+    zones: {},
+  },
+  semantic: {
+    cls: 'sg-theme-semantic',
+    light: {
+      'background-primary': '#FFFFFF', 'background-secondary': '#F5F4F0', 'background-modifier-border': 'rgba(44,44,42,0.12)',
+      'text-normal': '#2C2C2A', 'text-muted': '#5F5E5A', 'text-faint': '#888780',
+      'interactive-accent': '#185FA5', 'sg-accent-soft': 'rgba(24,95,165,0.08)', 'sg-empty-bg': '#F5F4F0',
+      'sg-card-bg': '#FFFFFF', 'sg-card-border': 'rgba(44,44,42,0.10)',
+    },
+    dark: {
+      'background-primary': '#26282B', 'background-secondary': '#1E1F21', 'background-modifier-border': 'rgba(230,230,228,0.10)',
+      'text-normal': '#E6E6E4', 'text-muted': '#A5A7A9', 'text-faint': '#75777A',
+      'interactive-accent': '#6FA8E0', 'sg-accent-soft': 'rgba(111,168,224,0.14)', 'sg-empty-bg': '#232527',
+      'sg-card-bg': '#26282B', 'sg-card-border': 'rgba(230,230,228,0.08)',
+    },
+    zones: {
+      statsSection: { light: { 'sg-card-bg': '#E6F1FB', 'text-normal': '#042C53', 'text-muted': '#185FA5' }, dark: { 'sg-card-bg': 'rgba(111,168,224,0.10)', 'text-normal': '#8FC1EF', 'text-muted': '#6FA8E0' } },
+      randomReviewSection: { light: { 'sg-card-bg': '#FAEEDA', 'text-normal': '#412402', 'text-muted': '#854F0B' }, dark: { 'sg-card-bg': 'rgba(196,146,58,0.10)', 'text-normal': '#E8C37E', 'text-muted': '#C99552' } },
+      threadsSection: { light: { 'sg-card-bg': '#E1F5EE', 'text-normal': '#04342C', 'text-muted': '#2A6B5C' }, dark: { 'sg-card-bg': 'rgba(74,157,127,0.10)', 'text-normal': '#85D0B4', 'text-muted': '#5FB494' } },
+      keywordHistory: { light: { 'sg-card-bg': '#E1F5EE', 'text-normal': '#04342C', 'text-muted': '#2A6B5C' }, dark: { 'sg-card-bg': 'rgba(74,157,127,0.10)', 'text-normal': '#85D0B4', 'text-muted': '#5FB494' } },
+    },
+  },
+};
 
 const SWIFTGLOSSA_SIDEBAR_VIEW_TYPE = 'swiftglossa-sidebar';
 
@@ -26164,6 +27092,18 @@ class SwiftGlossaSidebarView extends ItemView {
       modal.open();
       this.plugin._regexHighlightModal = modal;
     } else {
+      if (modal._unifiedGrid && modal._unifiedGridReady && modal._getLayoutKey) {
+        try {
+          const _oldLk = modal._getLayoutKey();
+          if (!modal.plugin.settings[_oldLk]) modal.plugin.settings[_oldLk] = {};
+          for (const n of (modal._unifiedGrid.engine?.nodes || [])) {
+            const cardEl = n.el?.querySelector?.('.unified-card');
+            const cid = cardEl?.dataset?.cardId;
+            if (cid) modal.plugin.settings[_oldLk][cid] = { x: n.x, y: n.y, w: n.w, h: n.h };
+          }
+          modal.plugin.saveData(modal.plugin.settings);
+        } catch(e) {}
+      }
       modal._popoutDoc = _popoutDoc;
       modal._isPopout = _isPopout;
     }
@@ -26196,18 +27136,6 @@ class SwiftGlossaSidebarView extends ItemView {
       this._savedParent = null;
     }
 
-    if (modal._unifiedGrid && modal._unifiedGridReady && modal._getLayoutKey) {
-      try {
-        const _oldLk = modal._getLayoutKey();
-        if (!modal.plugin.settings[_oldLk]) modal.plugin.settings[_oldLk] = {};
-        for (const n of (modal._unifiedGrid.engine?.nodes || [])) {
-          const cardEl = n.el?.querySelector?.('.unified-card');
-          const cid = cardEl?.dataset?.cardId;
-          if (cid) modal.plugin.settings[_oldLk][cid] = { x: n.x, y: n.y, w: n.w, h: n.h };
-        }
-        modal.plugin.saveData(modal.plugin.settings);
-      } catch(e) {}
-    }
 
     this._savedStyles = {};
     const propsToSave = ['position','left','top','transform','width','height','maxHeight','minWidth','maxWidth','borderRadius','zIndex','opacity','boxShadow','background','backdropFilter','webkitBackdropFilter','border'];
@@ -26239,8 +27167,18 @@ class SwiftGlossaSidebarView extends ItemView {
 
     {
       const _newDoc = container.ownerDocument;
-      if (_oldGridDoc && _oldGridDoc !== _newDoc && modal._recreateUnifiedGrid) {
-        modal._recreateUnifiedGrid();
+      if (_oldGridDoc && _oldGridDoc !== _newDoc) {
+        if (modal._unifiedGridReady && modal._recreateUnifiedGrid) {
+          modal._recreateUnifiedGrid();
+        } else if (modal._unifiedGridQueue && modal._reapplyLayout) {
+          modal._unifiedGridQueue.push((grid) => { try { modal._reapplyLayout(); } catch(e){} });
+        }
+        try { if (modal._infoGrid) modal._infoGrid.destroy(false); } catch(e){}
+        try { if (modal._plGrid) modal._plGrid.destroy(false); } catch(e){}
+        modal._infoGrid = null; modal._infoGridReady = false;
+        modal._plGrid = null; modal._plGridReady = false;
+        if (modal.addInfoSection) { try { modal.addInfoSection(modal.contentEl); } catch(e){ console.warn('[rebuild info grid]', e); } }
+        if (modal.addParkingLotSection) { try { modal.addParkingLotSection(modal.contentEl); } catch(e){ console.warn('[rebuild pl grid]', e); } }
       } else if (modal._reapplyLayout) {
         modal._reapplyLayout();
       }
@@ -26251,8 +27189,6 @@ class SwiftGlossaSidebarView extends ItemView {
     const closeBtn = modal.modalEl.querySelector('.rch-close-btn');
     if (_sbBtn) _sbBtn.style.display = 'none';
     if (closeBtn) closeBtn.style.display = 'none';
-    const _popoutBtn = modal.modalEl.querySelector('.rch-popout-btn');
-    if (_popoutBtn) _popoutBtn.style.display = _isPopout ? 'none' : '';
 
     // 清理浮动模式的resize handle
     if (modal._resizeHandle && document.body.contains(modal._resizeHandle)) {
@@ -26294,20 +27230,27 @@ class SwiftGlossaSidebarView extends ItemView {
           const selectedText = selection.toString().trim();
           const anchorNode = selection.anchorNode;
           if (anchorNode && !modal.modalEl.contains(anchorNode) && _isInEditor(anchorNode)) {
-            const _allRules = [...(Array.isArray(this.plugin.rules)?this.plugin.rules:[]), ...(Array.isArray(this.plugin.globalRules)?this.plugin.globalRules:[])];
+            const _plugin = this.plugin;
+            requestAnimationFrame(() => {
+            const _allRules = [...(Array.isArray(_plugin.rules)?_plugin.rules:[]), ...(Array.isArray(_plugin.globalRules)?_plugin.globalRules:[])];
             const _matchRules = _allRules.filter(r => { const _p = _splitRegexPipes(r.regex); return _p.some(p => selectedText.includes(p)) || r.regex === selectedText || _regexMatch(selectedText, r.regex); });
             const _uniqueRegexes = [...new Set(_matchRules.map(r => r.regex))];
-            console.log('[kw-chip-sb-sel] selectedText:', selectedText.substring(0,30), 'allRules:', _allRules.length, 'matchRules:', _matchRules.length, 'uniqueRegexes:', _uniqueRegexes);
+            modal._threadsFilterKw = _matchRules.length > 0 ? selectedText : null;
+            requestAnimationFrame(() => {
             if (_uniqueRegexes.length > 0 && modal._showKwChips) { modal._showKwChips(_uniqueRegexes, selectedText, selectedText); } else if (modal._hideKwChips) { modal._hideKwChips(); }
             modal.regexInput.setValue(selectedText);
-
+            requestAnimationFrame(() => {
             if (modal.updateStyleButtonsPreview) modal.updateStyleButtonsPreview(selectedText);
             if (modal.highlightMatchingRuleButtons) modal.highlightMatchingRuleButtons();
+            requestAnimationFrame(() => {
             modal._needsRefresh = false;
             if (modal.showInlineRemarkForRegex) modal.showInlineRemarkForRegex(selectedText);
-            this.plugin._addKeywordHistory(selectedText);
-            modal._threadsFilterKw = _matchRules.length > 0 ? selectedText : null;
+            _plugin._addKeywordHistory(selectedText);
             if (modal._threadsReload) modal._threadsReload();
+            });
+            });
+            });
+            });
           }
         }
       }, 150);
@@ -26325,25 +27268,33 @@ class SwiftGlossaSidebarView extends ItemView {
       if (!highlightEl) return;
       const ruleRegex = highlightEl.dataset?.ruleRegex || highlightEl.dataset?.remark;
       if (ruleRegex) {
-        const _allRules = [...(Array.isArray(this.plugin.rules)?this.plugin.rules:[]), ...(Array.isArray(this.plugin.globalRules)?this.plugin.globalRules:[])];
+        const _plugin = this.plugin;
+        requestAnimationFrame(() => {
+        const _allRules = [...(Array.isArray(_plugin.rules)?_plugin.rules:[]), ...(Array.isArray(_plugin.globalRules)?_plugin.globalRules:[])];
         const _matchRules = _allRules.filter(r => { const _p = _splitRegexPipes(r.regex); return _p.includes(ruleRegex) || r.regex === ruleRegex || r.regex.includes(ruleRegex); });
         const _uniqueRegexes = [...new Set(_matchRules.map(r => r.regex))];
-        console.log('[kw-chip-sidebar] ruleRegex:', ruleRegex, 'allRules:', _allRules.length, 'matchRules:', _matchRules.length, 'uniqueRegexes:', _uniqueRegexes);
+        const _matchRule = _matchRules[0];
+        if (_matchRule) { const _ri = _allRules.indexOf(_matchRule); const _isG = _ri >= _plugin.rules.length; modal.currentEditingRule = { index: _isG ? _ri - _plugin.rules.length : _ri, regex: _matchRule.regex, cssClass: _matchRule.cssClass, isGlobal: _isG, remark: _matchRule.remark || '' }; modal.inputModifiedSinceEdit = false; }
+        const _mainModal = _plugin._regexHighlightModal;
+        if (_mainModal) { _mainModal._threadsFilterKw = ruleRegex; }
+        requestAnimationFrame(() => {
         if (_uniqueRegexes.length > 0 && modal._showKwChips) { modal._showKwChips(_uniqueRegexes, ruleRegex, ruleRegex); } else if (modal._hideKwChips) { modal._hideKwChips(); }
         modal.regexInput.setValue(ruleRegex);
-
+        requestAnimationFrame(() => {
         if (modal.updateStyleButtonsPreview) modal.updateStyleButtonsPreview(ruleRegex);
         if (modal.highlightMatchingRuleButtons) modal.highlightMatchingRuleButtons();
+        requestAnimationFrame(() => {
         modal._needsRefresh = false;
         if (modal.showInlineRemarkForRegex) modal.showInlineRemarkForRegex(ruleRegex);
-        const _matchRule = _matchRules[0];
-        if (_matchRule) { const _ri = _allRules.indexOf(_matchRule); const _isG = _ri >= this.plugin.rules.length; modal.currentEditingRule = { index: _isG ? _ri - this.plugin.rules.length : _ri, regex: _matchRule.regex, cssClass: _matchRule.cssClass, isGlobal: _isG, remark: _matchRule.remark || '' }; modal.inputModifiedSinceEdit = false; if (modal._refreshUpdateChip) modal._refreshUpdateChip(); }
-        this.plugin._addKeywordHistory(ruleRegex);
-        const _mainModal = this.plugin._regexHighlightModal;
+        if (modal._refreshUpdateChip) modal._refreshUpdateChip();
+        _plugin._addKeywordHistory(ruleRegex);
         if (_mainModal && _mainModal._threadsReload) {
-          _mainModal._threadsFilterKw = ruleRegex;
           _mainModal._threadsReload();
         }
+        });
+        });
+        });
+        });
       }
     };
     document.addEventListener('click', this._sidebarClickHandler, true);
@@ -26368,6 +27319,24 @@ class SwiftGlossaSidebarView extends ItemView {
     if (modal) {
       try {
         if (_isPopout) {
+          try {
+            if (modal._unifiedGridSaveTimer) { clearTimeout(modal._unifiedGridSaveTimer); modal._unifiedGridSaveTimer = null; }
+            if (modal._unifiedGridColTimer) { clearTimeout(modal._unifiedGridColTimer); modal._unifiedGridColTimer = null; }
+            if (modal._infoGridSaveTimer) { clearTimeout(modal._infoGridSaveTimer); modal._infoGridSaveTimer = null; }
+            if (modal._infoGridColTimer) { clearTimeout(modal._infoGridColTimer); modal._infoGridColTimer = null; }
+            if (modal._plGridSaveTimer) { clearTimeout(modal._plGridSaveTimer); modal._plGridSaveTimer = null; }
+            if (modal._plGridColTimer) { clearTimeout(modal._plGridColTimer); modal._plGridColTimer = null; }
+            if (modal._unifiedGridResizeObserver) { try { modal._unifiedGridResizeObserver.disconnect(); } catch(e){} modal._unifiedGridResizeObserver = null; }
+            if (modal._infoGridResizeObserver) { try { modal._infoGridResizeObserver.disconnect(); } catch(e){} modal._infoGridResizeObserver = null; }
+            if (modal._infoGridWaitObserver) { try { modal._infoGridWaitObserver.disconnect(); } catch(e){} modal._infoGridWaitObserver = null; }
+            if (modal._plGridResizeObserver) { try { modal._plGridResizeObserver.disconnect(); } catch(e){} modal._plGridResizeObserver = null; }
+            if (modal._plGridWaitObserver) { try { modal._plGridWaitObserver.disconnect(); } catch(e){} modal._plGridWaitObserver = null; }
+            if (modal._infoResizeObservers) { modal._infoResizeObservers.forEach(ro => { try { ro.disconnect(); } catch(e){} }); modal._infoResizeObservers = null; }
+            if (modal._plResizeObservers) { modal._plResizeObservers.forEach(ro => { try { ro.disconnect(); } catch(e){} }); modal._plResizeObservers = null; }
+            if (modal._unifiedGrid) { try { modal._unifiedGrid.destroy(false); } catch(e){} modal._unifiedGrid = null; modal._unifiedGridReady = false; }
+            if (modal._infoGrid) { try { modal._infoGrid.destroy(false); } catch(e){} modal._infoGrid = null; modal._infoGridReady = false; }
+            if (modal._plGrid) { try { modal._plGrid.destroy(false); } catch(e){} modal._plGrid = null; modal._plGridReady = false; }
+          } catch(e3) {}
           if (modal.modalEl && modal.modalEl.parentNode) {
             try { modal.modalEl.parentNode.removeChild(modal.modalEl); } catch(e2){}
           }
@@ -26435,9 +27404,87 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
   async onload() {
     const { MarkdownView, Notice } = require('obsidian');
 
+    // 方案 A 迁移：把旧的 sidebarGridLayout 迁移到统一的 unifiedGridLayout（只迁一次）
+    try {
+      if (this.settings && !this.settings.unifiedGridLayout && this.settings.sidebarGridLayout) {
+        this.settings.unifiedGridLayout = this.settings.sidebarGridLayout;
+        this.saveData(this.settings);
+        console.log('[SwiftGlossa] Migrated sidebarGridLayout -> unifiedGridLayout');
+      }
+    } catch (e) { console.warn('[SwiftGlossa] layout migration failed:', e); }
 
     this.registerView(SWIFTGLOSSA_SIDEBAR_VIEW_TYPE, (leaf) => new SwiftGlossaSidebarView(leaf, this));
     const { addIcon } = require('obsidian');
+
+    this.registerDomEvent(document, 'contextmenu', (e) => {
+      const heading = e.target.closest('h1, h2, h3, h4, h5, h6');
+      if (!heading) return;
+      const view = heading.closest('.markdown-reading-view, .markdown-preview-view');
+      if (!view) return;
+      const file = this.app.workspace.getActiveFile();
+      if (!file) return;
+      const headingText = heading.textContent.trim();
+      if (!headingText) return;
+      e.preventDefault();
+      const { Menu } = require('obsidian');
+      const menu = new Menu();
+      menu.addItem((item) => {
+        item.setTitle('SG-复制当前段落链接').setIcon('link').onClick(() => {
+          const link = `[[${file.basename}#${headingText}]]`;
+          try { navigator.clipboard.writeText(link); } catch (err) { const ta = document.createElement('textarea'); ta.value = link; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
+          new Notice('已复制: ' + link);
+        });
+      });
+      menu.showAtMouseEvent(e);
+    });
+    this.registerEvent(this.app.workspace.on('editor-menu', (menu, editor, view) => {
+      if (!editor || !view || !view.file) return;
+      const cursor = editor.getCursor();
+      const lineText = editor.getLine(cursor.line) || '';
+      const m = lineText.match(/^\s*(#{1,6})\s+(.+?)\s*#*\s*$/);
+      if (!m) return;
+      const headingText = m[2]
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/\*(.+?)\*/g, '$1')
+        .replace(/__(.+?)__/g, '$1')
+        .replace(/_(.+?)_/g, '$1')
+        .replace(/~~(.+?)~~/g, '$1')
+        .replace(/`(.+?)`/g, '$1')
+        .replace(/\[\[([^\]|]+)(\|([^\]]+))?\]\]/g, (mt, p1, p2, p3) => p3 || p1.split('#').pop())
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .trim();
+      if (!headingText) return;
+      menu.addItem((item) => {
+        item.setTitle('SG-复制当前段落链接').setIcon('link').onClick(() => {
+          const link = `[[${view.file.basename}#${headingText}]]`;
+          try { navigator.clipboard.writeText(link); } catch (err) { const ta = document.createElement('textarea'); ta.value = link; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
+          new Notice('已复制: ' + link);
+        });
+      });
+    }));
+    this.registerObsidianProtocolHandler('sg-search', async (params) => {
+      let text = (params && (params.text || params.query)) || '';
+      if (!text) return;
+      try { text = decodeURIComponent(text); } catch {}
+      text = text.trim();
+      if (!text) return;
+      const { workspace } = this.app;
+      let leaf = workspace.getLeavesOfType(SWIFTGLOSSA_SIDEBAR_VIEW_TYPE)[0];
+      if (!leaf) { leaf = workspace.getRightLeaf(false); await leaf.setViewState({ type: SWIFTGLOSSA_SIDEBAR_VIEW_TYPE, active: true }); }
+      else { workspace.revealLeaf(leaf); }
+      const _trySearch = (n) => {
+        const modal = this._regexHighlightModal;
+        if (modal && modal.regexInput && modal.regexInput.inputEl) {
+          if (modal._hideKwChips) modal._hideKwChips();
+          modal.regexInput.setValue('');
+          modal.regexInput.inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+          modal.regexInput.setValue(text);
+          modal.regexInput.inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+        }
+        else if (n > 0) { setTimeout(() => _trySearch(n - 1), 50); }
+      };
+      _trySearch(20);
+    });
     addIcon('swiftglossa-icon', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="68" text-anchor="middle" font-size="52" font-weight="bold" font-family="sans-serif" fill="currentColor">SG</text></svg>');
 
     this.countedRegexes = new Set();
@@ -26507,13 +27554,27 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       chipHoverMode: false,
       showRelatedNotes: true,
       showRelatedHighlights: true,
+      showParkingLot: false,
       showInfoSection: true,
       showRelatedHighlightsSection: true,
       showInlineRelatedHighlightsSection: true,
-      showRemarkContentBlock: true,
-      showKeywordChipsBlock: true,
-      showAiQuestionBlock: true,
-      showRelatedNotesSection: true,
+      showRemarkContentBlock: false,
+      showKeywordChipsBlock: false,
+      showAiQuestionBlock: false,
+      showRelatedNotesSection: false,
+      showRecentFilesSection: false,
+      showThreads: false,
+      showRecentlyCreatedSection: false,
+      showFocusSection: false,
+      showRandomReviewSection: false,
+      showQuickNoteSection: false,
+      showStatsSection: false,
+
+      hoverKeywordNoPopup: true,
+      panelColorTheme: 'rouge',
+      recentFiles: [],
+      pinnedFiles: [],
+
 
       remarkGridLayout: {},
       unifiedGridLayout: {},
@@ -26864,15 +27925,27 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       if (highlightEl.closest('[data-remark-source], .threads-section, .remark-content-container')) { return; }
         const clickedRegex = highlightEl.dataset?.ruleRegex;
         if (!clickedRegex) return;
-        const _lv = this.app?.workspace?.getLeavesOfType?.('swiftglossa-sidebar'); const _v = _lv?.[0]?.view; const _mMain = (this._regexHighlightModal && this._regexHighlightModal._isOpen && this._regexHighlightModal.modalEl && _isInAnyDoc(this._regexHighlightModal.modalEl)) ? this._regexHighlightModal : null; const _m = _mMain || (_v?._sidebarModal); if (_m) { const _allRules = [...(Array.isArray(this.rules)?this.rules:[]), ...(Array.isArray(this.globalRules)?this.globalRules:[])]; const _matchRules = _allRules.filter(r => { const _p = _splitRegexPipes(r.regex); return _p.includes(clickedRegex) || r.regex === clickedRegex || r.regex.includes(clickedRegex); }); const _uniqueRegexes = [...new Set(_matchRules.map(r => r.regex))]; if (_uniqueRegexes.length > 0 && _m._showKwChips) { _m._showKwChips(_uniqueRegexes, clickedRegex, clickedRegex); } else if (_m._hideKwChips) { _m._hideKwChips(); } if (_m.regexInput) _m.regexInput.setValue(clickedRegex); if (_m.updateStyleButtonsPreview) _m.updateStyleButtonsPreview(clickedRegex); if (_m.highlightMatchingRuleButtons) _m.highlightMatchingRuleButtons(); if (_m.showInlineRemarkForRegex) { _m._needsRefresh = false; _m.showInlineRemarkForRegex(clickedRegex); } const _matchRule = _matchRules[0]; if (_matchRule) { const _ri = _allRules.indexOf(_matchRule); const _isG = _ri >= this.rules.length; _m.currentEditingRule = { index: _isG ? _ri - this.rules.length : _ri, regex: _matchRule.regex, cssClass: _matchRule.cssClass, isGlobal: _isG, remark: _matchRule.remark || '' }; _m.inputModifiedSinceEdit = false; if (_m._refreshUpdateChip) _m._refreshUpdateChip(); } }
+        requestAnimationFrame(() => {
+        const _lv = this.app?.workspace?.getLeavesOfType?.('swiftglossa-sidebar'); const _v = _lv?.[0]?.view; const _mMain = (this._regexHighlightModal && this._regexHighlightModal._isOpen && this._regexHighlightModal.modalEl && _isInAnyDoc(this._regexHighlightModal.modalEl)) ? this._regexHighlightModal : null; const _m = _mMain || (_v?._sidebarModal); let _uniqueRegexes = []; if (_m) { const _allRules = [...(Array.isArray(this.rules)?this.rules:[]), ...(Array.isArray(this.globalRules)?this.globalRules:[])]; const _matchRules = _allRules.filter(r => { const _p = _splitRegexPipes(r.regex); return _p.includes(clickedRegex) || r.regex === clickedRegex || r.regex.includes(clickedRegex); }); _uniqueRegexes = [...new Set(_matchRules.map(r => r.regex))]; const _matchRule = _matchRules[0]; if (_matchRule) { const _ri = _allRules.indexOf(_matchRule); const _isG = _ri >= this.rules.length; _m.currentEditingRule = { index: _isG ? _ri - this.rules.length : _ri, regex: _matchRule.regex, cssClass: _matchRule.cssClass, isGlobal: _isG, remark: _matchRule.remark || '' }; _m.inputModifiedSinceEdit = false; } }
+        if (_mMain) { _mMain._threadsFilterKw = clickedRegex; }
+        requestAnimationFrame(() => {
+        if (_m) { if (_uniqueRegexes.length > 0 && _m._showKwChips) { _m._showKwChips(_uniqueRegexes, clickedRegex, clickedRegex); } else if (_m._hideKwChips) { _m._hideKwChips(); } if (_m.regexInput) _m.regexInput.setValue(clickedRegex); }
+        requestAnimationFrame(() => {
+        if (_m) { if (_m.updateStyleButtonsPreview) _m.updateStyleButtonsPreview(clickedRegex); if (_m.highlightMatchingRuleButtons) _m.highlightMatchingRuleButtons(); }
+        requestAnimationFrame(() => {
+        if (_m) { if (_m.showInlineRemarkForRegex) { _m._needsRefresh = false; _m.showInlineRemarkForRegex(clickedRegex); } if (_m._refreshUpdateChip) _m._refreshUpdateChip(); }
         this._addKeywordHistory(clickedRegex);
-        if (_mMain && _mMain._threadsReload) { _mMain._threadsFilterKw = clickedRegex; _mMain._threadsReload(); }
+        if (_mMain && _mMain._threadsReload) { _mMain._threadsReload(); }
         const floatingBall = document.getElementById('regex-highlighter-floating-ball');
         if (floatingBall) {
           this._keepRuleActionButtons = true;
           this._showRuleActionButtons(floatingBall, clickedRegex);
           setTimeout(() => { this._keepRuleActionButtons = false; }, 500);
         }
+        });
+        });
+        });
+        });
       });
     }
 
@@ -26881,6 +27954,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       this.app.workspace.on('active-leaf-change', (leaf) => {
         if (leaf?.view?.file) {
           this.onFileChange(leaf.view.file.path);
+          this._addRecentFile(leaf.view.file.path);
         }
       })
     );
@@ -26893,6 +27967,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
         if (file) {
           // console.log('File opened:', file.path);
           this.onFileChange(file.path);
+          this._addRecentFile(file.path);
           // MarkdownPostProcessor 会自动处理高亮，不需要手动调用
         }
       })
@@ -26917,7 +27992,6 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
         if (file && file.path && data && data.position && data.position.oldPath) {
           const oldPath = data.position.oldPath;
           const newPath = file.path;
-          console.log(`File renamed/moved detected: ${oldPath} -> ${newPath}`);
           await this.handleFileRenameOrMove(oldPath, newPath);
         }
       })
@@ -26927,8 +28001,8 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     this.registerEvent(
       this.app.vault.on('rename', async (file, oldPath) => {
         if (file && file.path && oldPath && file.path.endsWith('.md')) {
-          console.log(`Vault rename event detected: ${oldPath} -> ${file.path}`);
           await this.handleFileRenameOrMove(oldPath, file.path);
+          this._renameRecentFile(oldPath, file.path);
         }
       })
     );
@@ -26964,7 +28038,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
           this.applyHighlightsToLivePreviewCallouts(activeLeaf.editor.cm.dom);
         }
       }, 300);
-    }, true);
+    }, { capture: true, passive: true });
 
     // 监听活动标签页变更事件
     // 注意：移除了手动调用 highlightRegexText 的代码
@@ -27002,7 +28076,6 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
     setTimeout(() => {
       const activeFile = this.app.workspace.getActiveFile();
       if (activeFile) {
-        console.log('Initializing with active file:', activeFile.path);
         this.onFileChange(activeFile.path);
         // 应用样式到标题和标签页
         setTimeout(() => {
@@ -27017,7 +28090,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       name: t('cmd.openMainPanel'),
       callback: () => {
 
-        new AddRegexRuleModal(this.app, this).open();
+        this.openSidebarView();
       },
       hotkeys: [
         {
@@ -27082,9 +28155,9 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
 
     this.createFloatingBall();
 
-    // 左侧功能区按钮：打开主面板（悬浮球隐藏后可通过此按钮打开）
+    // 左侧功能区按钮：打开右侧面板（悬浮球隐藏后可通过此按钮打开）
     this.addRibbonIcon('swiftglossa-icon', 'SwiftGlossa', () => {
-      new AddRegexRuleModal(this.app, this).open();
+      this.openSidebarView();
     });
 
     this.renderFloatingOptionButtons();
@@ -27198,7 +28271,6 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
           }
         }
         this._customFonts.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
-        console.log(`[FontLoader] 系统字体: ${familySet.size} 个`);
       } else {
         console.warn('[FontLoader] 浏览器不支持 queryLocalFonts API');
       }
@@ -28774,7 +29846,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       touchIsDragging = false;
       touchMoved = false;
-    });
+    }, { passive: true });
 
     let hoverMenu = null;
     let hoverTimeout = null;
@@ -28908,7 +29980,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       // 打开主面板选项
       const mainModalOption = createMenuOptionWithFloat('openMainPanel', t('floating.openMainPanel'), () => {
-        new AddRegexRuleModal(this.app, this).open();
+        this.openSidebarView();
         if (document.body.contains(menu)) {
           document.body.removeChild(menu);
         }
@@ -29902,7 +30974,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                 });
               }
             } catch (e) {
-              console.log('检查hover样式时出错:', e);
             }
 
             styleButton.appendChild(styleExample);
@@ -30795,7 +31866,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         ).join('\n');
       }
     } catch (error) {
-      console.log('读取悬浮选项样式CSS规则失败:', error);
     }
 
     if (fullCssRules) {
@@ -30822,7 +31892,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         ).join('\n');
       }
     } catch (error) {
-      console.log('读取分组按钮样式CSS规则失败:', error);
     }
 
     if (fullCssRules) {
@@ -30894,7 +31963,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
     const optionHandlers = {
       openMainPanel: () => {
-        new AddRegexRuleModal(this.app, this).open();
+        this.openSidebarView();
       },
       addFloatNote: () => {
         const mx = this.lastMouseX || (window.innerWidth - 80);
@@ -31507,7 +32576,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           await this.saveFloatButtonData();
           updateArrowDirection();
         }
-      });
+      }, { passive: true });
 
       const showSubmenu = () => {
         if (currentSubmenu) return;
@@ -32649,7 +33718,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         ).join('\n');
       }
     } catch (error) {
-      console.log('读取完整CSS规则失败，使用基本样式:', error);
     }
 
     // 应用原始样式（包括伪元素）
@@ -32820,7 +33888,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }
         this.saveFloatingStyleWindows();
       }
-    });
+    }, { passive: true });
 
     // 滚轮调整透明度和大小
     floatingWindow.addEventListener('wheel', (e) => {
@@ -32868,9 +33936,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
 // 添加辅助事件监听器确保中键事件被捕获
     floatingWindow.addEventListener('auxclick', async (e) => {
-      console.log('auxclick event triggered, button:', e.button);
       if (e.button === 1) {
-        console.log('Middle button auxclick on floating style button');
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
@@ -33081,7 +34147,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       try {
         const backupPath = '.obsidian/plugins/Regex-Css-Highlighter/floatbutton_data.json.bak';
         await crossFS.write(this.app.vault, backupPath, rawContent || '');
-        console.log('已备份损坏的悬浮按钮数据到 floatbutton_data.json.bak');
       } catch (backupErr) {
         console.error('备份损坏文件失败:', backupErr);
       }
@@ -33161,7 +34226,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         _cachedCssContent = cssContent;
       }
     } catch (error) {
-      console.log('读取CSS文件失败:', error);
     }
 
     for (const data of savedWindows) {
@@ -33215,7 +34279,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             ).join('\n');
           }
         } catch (error) {
-          console.log('解析CSS规则失败，使用基本样式:', error);
         }
       }
 
@@ -33363,7 +34426,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }
         this.saveFloatingStyleWindows();
       }
-    });
+    }, { passive: true });
 
     // 滚轮调整透明度和大小
     floatingWindow.addEventListener('wheel', (e) => {
@@ -34844,20 +35907,48 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     }
   }
 
-  // 弹出为独立窗口（参考 floating notes 的独立窗口，使用 Obsidian 原生 popout 窗口）
-  async openPanelPopout() {
-    try {
-      if (typeof this.app.workspace.openPopoutLeaf === 'function') {
-        const leaf = this.app.workspace.openPopoutLeaf();
-        if (leaf) {
-          await leaf.setViewState({ type: SWIFTGLOSSA_SIDEBAR_VIEW_TYPE, active: true });
-          return;
-        }
-      }
-    } catch (e) {
-      console.warn('[SwiftGlossa] openPopoutLeaf failed, fallback to sidebar:', e);
-    }
+  // 打开侧边栏面板并滚动到指定区域（主面板已删除，统一走 SidebarView）
+  async openPanelAndScroll(selector) {
     await this.openSidebarView();
+    let _tries = 25;
+    const _scroll = () => {
+      const modalEl = this._regexHighlightModal?.modalEl;
+      const target = modalEl ? modalEl.querySelector(selector) : null;
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      } else if (_tries-- > 0) {
+        setTimeout(_scroll, 200);
+      }
+    };
+    setTimeout(_scroll, 200);
+  }
+
+  // 在新标签页打开 sg 面板；若已在其他位置（侧边栏/标签页/独立窗口）打开，则迁移过去
+  async openPanelInTab() {
+    const existing = this.app.workspace.getLeavesOfType(SWIFTGLOSSA_SIDEBAR_VIEW_TYPE)[0];
+    if (existing) {
+      // 先保存当前布局（防抖保存可能未触发）
+      const modal = this._regexHighlightModal;
+      if (modal?._unifiedGrid && modal._unifiedGridReady && modal._getLayoutKey) {
+        try {
+          const _oldLk = modal._getLayoutKey();
+          if (!this.settings[_oldLk]) this.settings[_oldLk] = {};
+          for (const n of (modal._unifiedGrid.engine?.nodes || [])) {
+            const cardEl = n.el?.querySelector?.('.unified-card');
+            const cid = cardEl?.dataset?.cardId;
+            if (cid) this.settings[_oldLk][cid] = { x: n.x, y: n.y, w: n.w, h: n.h };
+          }
+          await this.saveData(this.settings);
+        } catch (e) {}
+      }
+      // 销毁旧 view（单例modal随之释放），避免双view争抢
+      try { await existing.setViewState({ type: 'empty' }); } catch (e) {}
+    }
+    const tabLeaf = this.app.workspace.getLeaf('tab');
+    if (tabLeaf) {
+      await tabLeaf.setViewState({ type: SWIFTGLOSSA_SIDEBAR_VIEW_TYPE, active: true });
+      this.app.workspace.revealLeaf(tabLeaf);
+    }
   }
 
   async ensureSidebarView() {
@@ -35178,24 +36269,18 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
   // AI助手主函数
   async aiAssistant() {
-    console.log('🤖 AI助手函数被调用');
     const { Notice, MarkdownView } = require('obsidian');
 
     try {
-      console.log('📄 检查活动视图...');
       const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-      console.log('📄 活动视图:', activeView);
       if (!activeView) {
         console.warn('⚠️ 没有打开的Markdown文件');
         new Notice(t('main.openMdFile'));
         return;
       }
 
-      console.log('📋 获取选中的文本...');
       const selectedText = this.getSelectedText();
-      console.log('📋 选中的文本:', selectedText);
       if (!selectedText || !selectedText.trim()) {
-        console.log('⚠️ 没有选中的文本，将打开空窗口');
       }
 
       // 检查是否需要立即发送到AI
@@ -35205,21 +36290,16 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       // 优先使用全局设置，保持向后兼容
       const autoSend = this.settings?.aiAutoSend || currentAIConfig.autoSend || false;
-      console.log('⚙️ 自动发送设置:', autoSend);
 
       if (autoSend) {
         // 检查是否有默认提示词和选中文字
         const hasSelectedText = selectedText && selectedText.trim();
         const hasDefaultPromptId = this.settings?.defaultPromptId;
 
-        console.log('🔍 自动发送条件检查:');
-        console.log('   - 有选中文字:', hasSelectedText);
-        console.log('   - 有默认提示词:', hasDefaultPromptId);
 
         // 只有同时有默认提示词和选中文字时才自动发送
         if (hasDefaultPromptId && hasSelectedText) {
           // 立即发送到AI
-          console.log('🔑 检查API Key...');
           if (!currentAIConfig.apiKey) {
             console.warn('⚠️ 未配置API Key');
             new Notice(t('main.configureAiFirst'));
@@ -35233,7 +36313,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             const content = await this.app.vault.adapter.read(configPath);
             templates = JSON.parse(content);
           } catch (e) {
-            console.log('提示词模板配置文件不存在');
           }
 
           // 获取当前文档信息
@@ -35253,11 +36332,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const promptContent = defaultPrompt ? defaultPrompt.content : (this.settings?.aiPrompt || "请分析以下内容：");
           const fullPrompt = `${promptContent}\n\n` + t('ai.docName') + `: ${documentName}\n\n${selectedText}`;
 
-          console.log('💬 准备发送的提示词长度:', fullPrompt.length);
-          console.log('📝 使用的默认提示词:', defaultPrompt ? defaultPrompt.name : '全局提示词');
 
           new Notice(t('main.sendingToAi'));
-          console.log('📡 开始调用AI API...');
 
           // 创建对话历史
           const conversationHistory = [
@@ -35271,13 +36347,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const responsePromise = this.callAIWithHistory(conversationHistory);
 
           // 立即显示弹窗，传入Promise、selectedText、plugin实例和对话历史
-          console.log('🪟 立即显示弹窗...');
           this.showAIResponse(responsePromise, selectedText, conversationHistory);
 
-          console.log('✅ 弹窗已显示，等待AI响应...');
         } else {
           // 不满足自动发送条件，仅显示窗口
-          console.log('⚠️ 不满足自动发送条件，仅显示窗口');
 
           // 创建一个空的Promise和对话历史
           const responsePromise = Promise.resolve('');
@@ -35286,11 +36359,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 显示AI窗口
           this.showAIResponse(responsePromise, selectedText, conversationHistory);
 
-          console.log('✅ 弹窗已显示，等待用户输入...');
         }
       } else {
         // 自动发送开关未开启，仅显示窗口
-        console.log('🪟 仅显示AI窗口，不发送请求');
 
         // 创建一个空的Promise和对话历史
         const responsePromise = Promise.resolve('');
@@ -35299,7 +36370,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         // 显示AI窗口
         this.showAIResponse(responsePromise, selectedText, conversationHistory);
 
-        console.log('✅ 弹窗已显示，等待用户输入...');
       }
     } catch (error) {
       console.error('❌ AI助手错误:', error);
@@ -35309,22 +36379,17 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   }
 
   async extractEntities() {
-    console.log('🔍 实体提取函数被调用');
     const { Notice, MarkdownView } = require('obsidian');
 
     try {
-      console.log('📄 检查活动视图...');
       const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-      console.log('📄 活动视图:', activeView);
       if (!activeView?.editor) {
         console.warn('⚠️ 没有打开的Markdown文件或编辑器');
         new Notice(t('main.openMdFile'));
         return;
       }
 
-      console.log('📋 获取选中的文本...');
       const selectedText = this.getSelectedText();
-      console.log('📋 选中的文本:', selectedText);
 
       if (!selectedText || !selectedText.trim()) {
         console.warn('⚠️ 没有选中的文本');
@@ -35340,23 +36405,13 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       if (!currentAIConfig.apiKey) {
         console.warn('⚠️ 未配置API Key');
         new Notice(t('main.configureAiFirst'));
-        // 打开主面板并跳到底部设置
-        const mainModal = new AddRegexRuleModal(this.app, this);
-        mainModal.open();
-        // 延迟执行滚动，确保模态框已经完全打开
-        setTimeout(() => {
-          const aiSettingsSection = document.getElementById('ai-settings-section');
-          if (aiSettingsSection) {
-            aiSettingsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 300);
+        // 打开侧边栏面板并跳到底部AI设置（主面板已删除）
+        await this.openPanelAndScroll('#ai-settings-section');
         return;
       }
 
       // 打开实体提取模态框
-      console.log('🪟 打开实体提取模态框...');
       new EntityExtractionModal(this.app, selectedText, this).open();
-      console.log('✅ 实体提取模态框已打开');
     } catch (error) {
       console.error('❌ 实体提取错误:', error);
       console.error('❌ 错误堆栈:', error.stack);
@@ -35388,11 +36443,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超时
 
-    console.log('📡 发送AI请求(初始):', {
-      url: apiUrl,
-      model: model,
-      promptLength: prompt.length
-    });
 
     try {
       // 构建请求参数
@@ -35493,7 +36543,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       clearTimeout(timeoutId);
 
-      console.log('📡 收到API响应(初始):', response.status, response.statusText);
 
       if (!response.ok) {
         const errorData = await response.text();
@@ -35502,7 +36551,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
 
       const data = await response.json();
-      console.log('✅ 解析响应成功(初始)');
 
       if (!data.choices || data.choices.length === 0) {
         console.error('❌ 响应中没有choices(初始):', data);
@@ -35513,7 +36561,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       // 处理工具调用响应
       if (choice.message?.tool_calls) {
-        console.log('🔧 收到工具调用请求:', choice.message.tool_calls);
 
         // 检查是否是网络搜索工具调用
         const webSearchCall = choice.message.tool_calls.find(
@@ -35521,7 +36568,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         );
 
         if (webSearchCall) {
-          console.log('🌐 执行网络搜索...');
 
           // 尝试解析搜索查询
           let searchQuery = '';
@@ -35533,7 +36579,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           }
 
           if (searchQuery) {
-            console.log('🔍 搜索查询:', searchQuery);
 
             // 由于我们没有实际的网络搜索实现，这里返回一个模拟结果
             // 在实际应用中，这里应该调用网络搜索API
@@ -35636,7 +36681,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             requestBody.messages.push(choice.message);
             requestBody.messages.push(toolResultMessage);
 
-            console.log('📡 发送工具调用结果给AI...');
 
             // 再次调用AI API获取最终响应
             const finalResponse = await fetch(apiUrl, {
@@ -35656,7 +36700,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             }
 
             const finalData = await finalResponse.json();
-            console.log('✅ 解析最终响应成功');
 
             if (!finalData.choices || finalData.choices.length === 0) {
               console.error('❌ 最终响应中没有choices:', finalData);
@@ -35667,7 +36710,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
             // 检查最终响应是否仍然是工具调用
             if (finalChoice.message?.tool_calls) {
-              console.log('🔧 最终响应仍然是工具调用:', finalChoice.message.tool_calls);
 
               // 由于我们没有实际的网络搜索能力，返回一个默认响应
               // 这里构造一个基于模拟搜索结果的总结
@@ -35676,7 +36718,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               ).join('\n\n');
 
               const defaultResponse = t('ai.searchSummary') + ` "${searchQuery}":\n\n${summary}`;
-              console.log('📝 使用基于搜索结果的默认响应');
               return defaultResponse;
             }
 
@@ -35691,11 +36732,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               ).join('\n\n');
 
               const defaultResponse = t('ai.searchSummary') + ` "${searchQuery}":\n\n${summary}`;
-              console.log('📝 使用基于搜索结果的默认响应');
               return defaultResponse;
             }
 
-            console.log('✅ 成功获取最终AI回复,长度:', finalContent.length);
             return finalContent;
           }
         }
@@ -35714,7 +36753,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }
       }
 
-      console.log('✅ 成功获取AI回复(初始),长度:', content.length);
       return content;
     } catch (error) {
       clearTimeout(timeoutId);
@@ -35813,12 +36851,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超时
 
-    console.log('📡 发送AI请求:', {
-      url: apiUrl,
-      model: model,
-      messageCount: conversationHistory.length,
-      historySize: JSON.stringify(conversationHistory).length
-    });
 
     try {
       // 构建请求参数
@@ -35914,7 +36946,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       clearTimeout(timeoutId);
 
-      console.log('📡 收到API响应:', response.status, response.statusText);
 
       if (!response.ok) {
         const errorData = await response.text();
@@ -35923,7 +36954,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
 
       const data = await response.json();
-      console.log('✅ 解析响应成功');
 
       if (!data.choices || data.choices.length === 0) {
         console.error('❌ 响应中没有choices:', data);
@@ -35934,7 +36964,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       // 处理工具调用响应
       if (choice.message?.tool_calls) {
-        console.log('🔧 收到工具调用请求:', choice.message.tool_calls);
 
         // 检查是否是网络搜索工具调用
         const webSearchCall = choice.message.tool_calls.find(
@@ -35942,7 +36971,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         );
 
         if (webSearchCall) {
-          console.log('🌐 执行网络搜索...');
 
           // 尝试解析搜索查询
           let searchQuery = '';
@@ -35960,7 +36988,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           }
 
           if (searchQuery) {
-            console.log('🔍 搜索查询:', searchQuery);
 
             // 由于我们没有实际的网络搜索实现，这里返回一个模拟结果
             // 在实际应用中，这里应该调用网络搜索API
@@ -36074,7 +37101,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             requestBody.messages.push(choice.message);
             requestBody.messages.push(toolResultMessage);
 
-            console.log('📡 发送工具调用结果给AI...');
 
             // 再次调用AI API获取最终响应
             const finalResponse = await fetch(apiUrl, {
@@ -36094,7 +37120,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             }
 
             const finalData = await finalResponse.json();
-            console.log('✅ 解析最终响应成功');
 
             if (!finalData.choices || finalData.choices.length === 0) {
               console.error('❌ 最终响应中没有choices:', finalData);
@@ -36105,7 +37130,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
             // 检查最终响应是否仍然是工具调用
             if (finalChoice.message?.tool_calls) {
-              console.log('🔧 最终响应仍然是工具调用:', finalChoice.message.tool_calls);
 
               // 由于我们没有实际的网络搜索能力，返回一个默认响应
               // 这里构造一个基于模拟搜索结果的总结
@@ -36114,7 +37138,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               ).join('\n\n');
 
               const defaultResponse = t('ai.searchSummary') + ` "${searchQuery}":\n\n${summary}`;
-              console.log('📝 使用基于搜索结果的默认响应');
               return defaultResponse;
             }
 
@@ -36129,11 +37152,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               ).join('\n\n');
 
               const defaultResponse = t('ai.searchSummary') + ` "${searchQuery}":\n\n${summary}`;
-              console.log('📝 使用基于搜索结果的默认响应');
               return defaultResponse;
             }
 
-            console.log('✅ 成功获取最终AI回复,长度:', finalContent.length);
             return finalContent;
           }
         }
@@ -36152,7 +37173,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }
       }
 
-      console.log('✅ 成功获取AI回复,长度:', content.length);
       return content;
     } catch (error) {
       clearTimeout(timeoutId);
@@ -36300,18 +37320,12 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           settingsLink.style.color = "red";
           settingsLink.style.textDecoration = "underline";
           settingsLink.style.cursor = "pointer";
-          settingsLink.addEventListener("click", (e) => {
+          settingsLink.addEventListener("click", async (e) => {
             e.preventDefault();
             e.stopPropagation();
             this.close();
-            const mainModal = new AddRegexRuleModal(this.app, this.plugin);
-            mainModal.open();
-            setTimeout(() => {
-              const aiSettingsSection = document.getElementById("ai-settings-section");
-              if (aiSettingsSection) {
-                aiSettingsSection.scrollIntoView({ behavior: "smooth", block: "start" });
-              }
-            }, 100);
+            // 打开侧边栏面板并跳到底部AI设置（主面板已删除）
+            await this.plugin.openPanelAndScroll("#ai-settings-section");
           });
         }
 
@@ -36893,7 +37907,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 限制对话历史长度,防止token超限
           // 只保留最近的10轮对话(20条消息)
           if (this.conversationHistory.length > 20) {
-            console.log(`⚠️ 对话历史过长(${this.conversationHistory.length}条),保留最近10轮`);
             // 保留第一条系统消息(如果有)和最近的19条消息
             const recentHistory = this.conversationHistory.slice(-20);
             // 确保第一条是用户消息
@@ -36903,8 +37916,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             this.conversationHistory = recentHistory;
           }
 
-          console.log(`📝 准备发送对话,历史记录数: ${this.conversationHistory.length}`);
-          console.log(`🔍 网络搜索状态: ${this.plugin.settings.enableWebSearch ? '启用' : '禁用'}`);
 
           // 检查是否选择了特定的AI
           let originalAI = null;
@@ -36915,7 +37926,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
               originalAI = this.plugin.settings?.currentAI || 0;
               // 设置为选中的AI
               this.plugin.settings.currentAI = selectedAI;
-              console.log(`🔄 临时切换到AI: ${this.aiSelector.options[this.aiSelector.selectedIndex].text}`);
             }
           }
 
@@ -36925,7 +37935,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           // 恢复原始AI（如果有临时切换）
           if (originalAI !== null) {
             this.plugin.settings.currentAI = originalAI;
-            console.log(`🔄 恢复到原始AI索引: ${originalAI}`);
           }
 
           // 将AI回复添加到历史记录
@@ -37979,7 +38988,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             templates = JSON.parse(content);
           } catch (e) {
             // 如果文件不存在，返回空数组
-            console.log('提示词模板配置文件不存在，将使用默认设置');
           }
 
           return templates;
@@ -38437,12 +39445,10 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   // 从剪贴板添加样式或备注到指定分类
   async applyCategoryStyleWithClipboard(categoryName, originalCategoryName) {
     try {
-      console.log(`🚀🚀🚀 applyCategoryStyleWithClipboard 被调用！categoryName: ${categoryName}, originalCategoryName: ${originalCategoryName}`);
       const { Notice } = require('obsidian');
 
       // 读取剪贴板内容
       const clipboardText = await navigator.clipboard.readText();
-      console.log(`📋 剪贴板内容长度: ${clipboardText ? clipboardText.length : 0}, 是否为CSS: ${this.isClipboardContentCSS(clipboardText)}`);
 
       if (!clipboardText.trim()) {
         new Notice(t('main.clipboardEmpty'));
@@ -38478,7 +39484,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       // 处理不同情况
       if (hasBothDescriptionAndCSS) {
         // 同时有描述文字和CSS代码
-        console.log(`🔍 检测到同时包含描述文字和CSS代码: 描述文字长度 ${descriptionText.length}, CSS代码长度 ${cssRule.length}`);
 
         // 验证CSS代码是否有效
         if (!this.isClipboardContentCSS(cssRule)) {
@@ -38488,7 +39493,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       } else if (this.isClipboardContentCSS(clipboardText)) {
         // 只有CSS代码
         cssRule = clipboardText.trim();
-        console.log('🔍 检测到只有CSS代码');
       } else {
         // 只有描述文字（备注）
         if (selectedText && selectedText.trim()) {
@@ -38522,88 +39526,64 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       try {
         // 尝试读取现有CSS文件
-        console.log('📖 尝试读取现有CSS文件...');
         cssContent = await this.app.vault.adapter.read(cssPath);
-        console.log(`✅ 成功读取CSS文件，现有内容长度: ${cssContent.length} 字符`);
       } catch (e) {
         // 如果文件不存在，创建空内容
-        console.log(`⚠️ CSS文件不存在或无法读取，使用空内容: ${e.message}`);
         cssContent = '';
       }
 
       // 检查是否有@keyframes规则
-      console.log('🔍 检查CSS文件中的@keyframes规则...');
       const keyframesIndex = cssContent.indexOf('@keyframes');
 
       if (keyframesIndex !== -1) {
-        console.log(`🔄 在第${keyframesIndex}个字符处找到@keyframes规则，在此之前插入新规则`);
         // 在第一个@keyframes之前插入
         cssContent = cssContent.substring(0, keyframesIndex) + cssRule + '\n' + cssContent.substring(keyframesIndex);
       } else {
-        console.log('🔄 未找到@keyframes规则，直接添加到文件末尾');
         // 如果没有@keyframes，则直接添加到文件末尾
         cssContent += '\n' + cssRule;
       }
 
       // 保存CSS文件
-      console.log('💾 准备保存CSS文件...');
       await this.app.vault.adapter.write(cssPath, cssContent);
-      console.log('✅ CSS文件保存成功');
 
       // 添加到分类配置
-      console.log('📋 更新分类配置...');
       const categoryKeys = Object.keys(styleCategories);
 
       if (categoryKeys.length > 0 && !styleCategories[originalCategoryName]) {
         // 如果指定分类不存在，则添加到最后一个分组
         const lastCategory = categoryKeys[categoryKeys.length - 1];
-        console.log(`⚠️ 分类"${originalCategoryName}"不存在，添加到最后一个分组"${lastCategory}"`);
         styleCategories[lastCategory].push(className);
-        console.log(`✅ 已将样式${className}添加到分类"${lastCategory}"`);
       } else if (styleCategories[originalCategoryName]) {
         // 如果指定分类存在，则添加到该分类
         styleCategories[originalCategoryName].push(className);
-        console.log(`✅ 已将样式${className}添加到分类"${originalCategoryName}"`);
       } else {
         // 如果没有任何分类，创建一个默认分类
-        console.log(`⚠️ 没有找到任何分类，创建默认分类`);
         styleCategories['默认'] = [];
         styleCategories['默认'].push(className);
-        console.log(`✅ 已将样式${className}添加到默认分类`);
       }
 
       // 保存配置文件
       const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
-      console.log(`💾 准备保存配置文件到: ${configPath}`);
       await this.app.vault.adapter.write(configPath, JSON.stringify(styleCategories, null, 2));
-      console.log('✅ 配置文件保存成功');
 
       // 显示成功消息
-      console.log(`🎉 操作完成: 已将CSS样式添加到 "${categoryName}" 分类`);
       new Notice(t('main.styleAddedToCategory'));
 
       // 重新加载样式分类配置
-      console.log('🔄 重新加载样式分类配置...');
       await this.loadStyleCategories();
-      console.log('✅ 样式分类配置重新加载完成');
 
       // 重新加载CSS样式 - 使用插件实例确保正确上下文，传入已知的cssContent
-      console.log('🔄 重新加载CSS样式...');
       if (this && this.injectCSSContent) {
         await this.injectCSSContent(cssContent);
-        console.log('✅ CSS内容注入完成');
       }
 
       // 更新新添加样式的按钮样式
       if (this && this.updateButtonStyle && typeof this.updateButtonStyle === 'function') {
-        console.log(`🔄 更新样式按钮 ${className} 的样式...`);
         this.updateButtonStyle(className);
-        console.log('✅ 按钮样式更新完成');
       }
 
       // 如果有选中的文本，延时500ms后应用新添加的样式
       if (selectedText && selectedText.trim()) {
-        console.log(`🎯 准备延时应用新样式 "${className}" 到选中的文本`);
 
         // 强制刷新当前视图，确保新添加的样式被加载
         setTimeout(() => {
@@ -38645,7 +39625,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                     setTimeout(() => {
                       try {
                         this.addRemarkToSelection(selectedText, descriptionText);
-                        console.log('✅ 已成功添加备注:', descriptionText);
                       } catch (error) {
                         console.error('添加备注时出错:', error);
                       }
@@ -38687,11 +39666,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       console.error('❌ 错误详情:', error.stack);
       const { Notice } = require('obsidian');
       new Notice(t('main.addFromClipboardFailed') + ': ' + error.message);
-      console.log('💡 请检查以下几点:');
-      console.log('1. 浏览器权限是否允许访问剪贴板');
-      console.log('2. CSS文件是否可写');
-      console.log('3. 配置文件是否可写');
-      console.log('4. 分类名格式是否正确 (如 "new:^!y")');
     }
   }
 
@@ -38791,7 +39765,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   // 将剪贴板内容作为备注添加到选中文本
   async addRemarkToSelection(selectedText, remarkText) {
     try {
-      console.log(`📝📝📝 addRemarkToSelection 被调用！selectedText: ${selectedText}, remarkText: ${remarkText}`);
       const { Notice } = require('obsidian');
 
       // 获取当前文件路径
@@ -39031,7 +40004,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             const ruleFileName = '.obsidian/plugins/Regex-Css-Highlighter/data/file-rules.json';
             const systemPath = require('path').join(modal.app.vault.adapter.basePath, ruleFileName);
             require('electron').shell.openPath(systemPath);
-            console.log('已使用系统方式打开规则文件:', systemPath);
           }
         } catch (error) {
           console.error('打开规则文件失败:', error);
@@ -39059,7 +40031,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const styleCategoriesPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
           const systemPath = require('path').join(modal.app.vault.adapter.basePath, styleCategoriesPath);
           require('electron').shell.openPath(systemPath);
-          console.log('已使用系统方式打开样式分组文件:', systemPath);
         } catch (error) {
           console.error('打开样式分组文件失败:', error);
           const { Notice } = require('obsidian');
@@ -39214,7 +40185,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
             const ruleFileName = '.obsidian/plugins/Regex-Css-Highlighter/data/file-rules.json';
             const systemPath = require('path').join(modal.app.vault.adapter.basePath, ruleFileName);
             require('electron').shell.openPath(systemPath);
-            console.log('已使用系统方式打开规则文件:', systemPath);
           }
         } catch (error) {
           console.error('打开规则文件失败:', error);
@@ -39242,7 +40212,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
           const styleCategoriesPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
           const systemPath = require('path').join(modal.app.vault.adapter.basePath, styleCategoriesPath);
           require('electron').shell.openPath(systemPath);
-          console.log('已使用系统方式打开样式分组文件:', systemPath);
         } catch (error) {
           console.error('打开样式分组文件失败:', error);
           const { Notice } = require('obsidian');
@@ -39560,6 +40529,56 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       this._keywordHistory = this._keywordHistory.slice(0, 100);
     }
     this._scheduleSaveKeywordHistory();
+  }
+
+  _addRecentFile(filePath) {
+    if (!filePath || !filePath.endsWith('.md')) return;
+    const recent = Array.isArray(this.settings.recentFiles) ? this.settings.recentFiles : [];
+    const filtered = recent.filter(r => r.path !== filePath);
+    filtered.unshift({ path: filePath, time: Date.now() });
+    this.settings.recentFiles = filtered.slice(0, 50);
+    this._scheduleSaveRecentFiles();
+    const modal = this._regexHighlightModal;
+    if (modal && modal._renderRecentFilesList) modal._renderRecentFilesList();
+  }
+
+  _scheduleSaveRecentFiles() {
+    if (this._recentFilesTimer) clearTimeout(this._recentFilesTimer);
+    this._recentFilesTimer = setTimeout(() => {
+      this.saveData(this.settings);
+      this._recentFilesTimer = null;
+    }, 500);
+  }
+
+  _togglePinFile(filePath) {
+    if (!filePath) return;
+    const pinned = Array.isArray(this.settings.pinnedFiles) ? this.settings.pinnedFiles.slice() : [];
+    const idx = pinned.indexOf(filePath);
+    if (idx === -1) { pinned.push(filePath); } else { pinned.splice(idx, 1); }
+    this.settings.pinnedFiles = pinned;
+    this._scheduleSaveRecentFiles();
+    const modal = this._regexHighlightModal;
+    if (modal && modal._renderRecentFilesList) modal._renderRecentFilesList();
+  }
+
+  _clearRecentFiles() {
+    this.settings.recentFiles = [];
+    this._scheduleSaveRecentFiles();
+    const modal = this._regexHighlightModal;
+    if (modal && modal._renderRecentFilesList) modal._renderRecentFilesList();
+  }
+
+  _renameRecentFile(oldPath, newPath) {
+    let changed = false;
+    const recent = Array.isArray(this.settings.recentFiles) ? this.settings.recentFiles : [];
+    for (const r of recent) { if (r.path === oldPath) { r.path = newPath; changed = true; } }
+    const pinned = Array.isArray(this.settings.pinnedFiles) ? this.settings.pinnedFiles : [];
+    for (let i = 0; i < pinned.length; i++) { if (pinned[i] === oldPath) { pinned[i] = newPath; changed = true; } }
+    if (changed) {
+      this._scheduleSaveRecentFiles();
+      const modal = this._regexHighlightModal;
+      if (modal && modal._renderRecentFilesList) modal._renderRecentFilesList();
+    }
   }
 
   // 备注迁移：构建全部规则的迁移计划
@@ -40243,7 +41262,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         } catch (e) {}
       }
 
-      console.log('[RegexCssHL] 迁移完成:', ruleFiles.length, '个规则文件,', countFiles.length, '个计数文件已清理');
     } catch (error) {
       console.error('[RegexCssHL] 迁移失败:', error);
     }
@@ -40457,7 +41475,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         }
 
         if (shouldUpdate) {
-          console.log('Merged rule:', rule.regex, existingRule);
         }
       } else {
         // 如果不存在，添加新规则
@@ -40468,7 +41485,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
     // 如果合并后有变化，更新文件
     if (mergedRules.length !== rules.length) {
-      console.log(`Merged duplicate rules: ${rules.length} -> ${mergedRules.length}`);
       return mergedRules;
     }
 
@@ -40502,7 +41518,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
   // 备注调试日志
   remarkLog(...args) {
     if (this.settings?.remarkDebugLog) {
-      console.log(...args);
     }
   }
   remarkWarn(...args) {
@@ -40839,7 +41854,7 @@ if (note._collapsed) {
         document.addEventListener('mouseup',()=>{if(!_md)return;_md=false;mini.style.cursor='pointer';if(_md2){note._collapsedPos={left:mini.style.left,top:mini.style.top};plugin.saveGlobalNotes();}requestAnimationFrame(()=>{_md2=false;});});
         mini.addEventListener('touchstart',(te)=>{te.preventDefault();const t=te.touches[0];_md=true;_md2=false;_mx=t.clientX;_my=t.clientY;_msx=mini.offsetLeft;_msy=mini.offsetTop;},{passive:false});
         document.addEventListener('touchmove',(te)=>{if(_md){te.preventDefault();const t=te.touches[0];_md2=true;mini.style.left=(_msx+t.clientX-_mx)+'px';mini.style.top=(_msy+t.clientY-_my)+'px';}},{passive:false});
-        document.addEventListener('touchend',()=>{if(!_md)return;const wasMoved=_md2;_md=false;_md2=false;mini.style.cursor='pointer';if(wasMoved){note._collapsedPos={left:mini.style.left,top:mini.style.top};plugin.saveGlobalNotes();}else{note._collapsed=false;delete note._collapsedPos;plugin.saveGlobalNotes();mini.remove();plugin.renderGlobalNotesArea();}});
+        document.addEventListener('touchend',()=>{if(!_md)return;const wasMoved=_md2;_md=false;_md2=false;mini.style.cursor='pointer';if(wasMoved){note._collapsedPos={left:mini.style.left,top:mini.style.top};plugin.saveGlobalNotes();}else{note._collapsed=false;delete note._collapsedPos;plugin.saveGlobalNotes();mini.remove();plugin.renderGlobalNotesArea();}}, { passive: true });
         document.body.appendChild(mini);
         continue;
       }
@@ -41001,7 +42016,6 @@ if (note._collapsed) {
       }, { passive: false });
       paletteBtnInline.addEventListener('click', (e) => {
         e.stopPropagation();
-        console.log('[FloatNote] paletteBtn clicked, presets:', plugin.colorSchemePresets?.length);
         const ex = (paletteBtnInline.ownerDocument || document).querySelector('.color-scheme-popup');
         if (ex) { ex.remove(); return; }
         const noteCard = card;
@@ -41025,7 +42039,7 @@ if (note._collapsed) {
         document.addEventListener('mouseup',()=>{pDrag=false;});
         header.addEventListener('touchstart',(e)=>{const t=e.touches[0];pDrag=true;pDragX=t.clientX;pDragY=t.clientY;const r=popup.getBoundingClientRect();pStartX=r.left;pStartY=r.top;e.preventDefault();},{passive:false});
         document.addEventListener('touchmove',(e)=>{if(!pDrag)return;const t=e.touches[0];popup.style.left=(pStartX+t.clientX-pDragX)+'px';popup.style.top=(pStartY+t.clientY-pDragY)+'px';e.preventDefault();},{passive:false});
-        document.addEventListener('touchend',()=>{pDrag=false;});
+        document.addEventListener('touchend',()=>{pDrag=false;}, { passive: true });
         const scrollBody = document.createElement('div');
         scrollBody.style.cssText = 'overflow-y:auto;padding:8px 10px;flex:1;';
         const allSchemes = [...colorSchemePresets];
@@ -41349,7 +42363,7 @@ if (note._collapsed) {
         note._floatPos = { left: card.style.left, top: card.style.top };
         plugin.saveGlobalNotes();
       };
-      document.addEventListener('touchend', onTouchEnd);
+      document.addEventListener('touchend', onTouchEnd, { passive: true });
       let cardOpacity = note._floatOpacity || 1;
       let cardSchemeIdx = note._colorScheme ? colorSchemePresets.findIndex(s => s.id === note._colorScheme) : 0;
       if (cardSchemeIdx < 0) cardSchemeIdx = 0;
@@ -41608,7 +42622,7 @@ if (note._collapsed) {
           const wasMoved = _dragMoved;
           _dragging = false; _dragMoved = false; mini.style.cursor = 'pointer';
           if (!wasMoved) { _touchRestored = true; if (navigator.vibrate) navigator.vibrate(30); restoreCard(); }
-        });
+        }, { passive: true });
         let _touchRestored = false;
         mini.addEventListener('click', () => { if (_dragging) return; if (_touchRestored) { _touchRestored = false; return; } if (navigator.vibrate) navigator.vibrate(30); restoreCard(); });
         mini.addEventListener('auxclick', (ae) => { ae.preventDefault(); ae.stopPropagation(); });
@@ -41644,8 +42658,8 @@ if (note._collapsed) {
           te.preventDefault(); te.stopPropagation();
           const t = te.touches[0];
           nrStart = { x: t.clientX, y: t.clientY, w: card.offsetWidth, h: card.offsetHeight };
-          document.addEventListener('touchmove', nrTouchMove, { passive: false });
-          document.addEventListener('touchend', nrTouchEnd);
+          document.addEventListener('touchmove', nrTouchMove, { passive: true });
+          document.addEventListener('touchend', nrTouchEnd, { passive: true });
         }, { passive: false });
       }
       document.body.appendChild(card);
@@ -41995,8 +43009,7 @@ content.addEventListener('auxclick', (e) => {
 } catch(err) { console.error('[Popout] script error:', err); }
 </script></body></html>`;
       win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
-      try { require('fs').writeFileSync(require('path').join(require('os').tmpdir(), 'popout_debug.html'), html); console.log('[FloatNote] debug HTML saved to tmpdir'); } catch(e2) {}
-      console.log('[FloatNote] popout loaded, html length:', html.length, 'note:', note.id);
+      try { require('fs').writeFileSync(require('path').join(require('os').tmpdir(), 'popout_debug.html'), html); } catch(e2) {}
       if (note._popoutOpacity && note._popoutOpacity < 1) {
         win.once('ready-to-show', () => { try { win.setOpacity(note._popoutOpacity); } catch(e) {} });
       }
@@ -42326,7 +43339,6 @@ content.addEventListener('auxclick', (e) => {
       new Notice(t('main.sentenceNotAllowedAsGlobal') || '长句不宜作为全局规则，请添加为当前文件规则');
       return false;
     }
-    console.log('Adding global rule:', regex, cssClass, remark);
 
     // 检查是否已存在相同 regex 的全局规则
     const existingRuleIndex = this.globalRules.findIndex(rule => rule.regex === regex);
@@ -42358,13 +43370,11 @@ content.addEventListener('auxclick', (e) => {
       }
 
       if (shouldUpdate) {
-        console.log('Updated existing global rule:', existingRule);
         await this.saveGlobalRules(this.globalRules);
         this.rulesVersion++;
         this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
         this.refreshCurrentView();
       } else {
-        console.log('Global rule already exists with same values, skipping:', existingRule);
       }
       return true;
     } else {
@@ -42372,7 +43382,6 @@ content.addEventListener('auxclick', (e) => {
       const newRule = { regex, cssClass };
       if (links && links.length > 0) newRule.links = links;
       this.globalRules.push(newRule);
-      console.log('Global rules after adding:', this.globalRules);
 
       // 保存全局规则
       await this.saveGlobalRules(this.globalRules);
@@ -42394,7 +43403,6 @@ content.addEventListener('auxclick', (e) => {
       return;
     }
 
-    console.log('Adding file rule:', regex, cssClass, remark, 'for file:', this.currentFilePath);
 
     // 检查是否已存在相同 regex 的规则
     const existingRuleIndex = this.rules.findIndex(rule => rule.regex === regex);
@@ -42426,19 +43434,16 @@ content.addEventListener('auxclick', (e) => {
       }
 
       if (shouldUpdate) {
-        console.log('Updated existing rule:', existingRule);
         await this.saveFileRules(this.currentFilePath, this.rules);
         this.rulesVersion++;
         this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
         this.refreshCurrentView();
       } else {
-        console.log('Rule already exists with same values, skipping:', existingRule);
       }
     } else {
       const newRule = { regex, cssClass, timestamp: Date.now() };
       if (links && links.length > 0) newRule.links = links;
       this.rules.push(newRule);
-      console.log('File rules after adding:', this.rules);
 
       // 保存到文件
       await this.saveFileRules(this.currentFilePath, this.rules);
@@ -42458,7 +43463,6 @@ content.addEventListener('auxclick', (e) => {
 
     // 删除规则
     this.globalRules.splice(index, 1);
-    console.log('Global rules after removal:', this.globalRules);
 
     // 保存全局规则
     await this.saveGlobalRules(this.globalRules);
@@ -42474,8 +43478,6 @@ content.addEventListener('auxclick', (e) => {
         return;
       }
 
-      console.log('Current file path:', this.currentFilePath);
-      console.log('Current rules before adding:', this.rules);
 
       // 先加载现有规则，避免覆盖
       await this.loadFileRules(this.currentFilePath);
@@ -42501,18 +43503,15 @@ content.addEventListener('auxclick', (e) => {
         }
 
         if (shouldUpdate) {
-          console.log('Updated existing rule:', existingRule);
           await this.saveFileRules(this.currentFilePath, this.rules);
 
           this.rulesVersion++;
           this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
           this.refreshCurrentView();
         } else {
-          console.log('Rule already exists with same values, skipping:', existingRule);
         }
       } else {
         this.rules.push({ regex, cssClass, remark, timestamp: Date.now() });
-        console.log('Rules after adding:', this.rules);
 
         // 保存到对应的JSON文件
         await this.saveFileRules(this.currentFilePath, this.rules);
@@ -42536,7 +43535,6 @@ content.addEventListener('auxclick', (e) => {
       return;
     }
 
-    console.log('Moving rule to global:', regex, cssClass);
 
     // 先加载文件规则
     await this.loadFileRules(this.currentFilePath);
@@ -42555,7 +43553,6 @@ content.addEventListener('auxclick', (e) => {
       // 添加到全局规则
       await this.addGlobalRule(regex, cssClass, ruleToMove.remark || '');
 
-      console.log('Rule moved to global successfully');
       return true;
     } else {
       console.error('Rule not found in file rules');
@@ -43182,7 +44179,6 @@ content.addEventListener('auxclick', (e) => {
     try {
       this.settings.buttonTexts = this.buttonTexts;
       await this.saveData(this.settings);
-      console.log('Button texts saved:', this.buttonTexts);
     } catch (error) {
       console.error('Failed to save button texts:', error);
     }
@@ -44101,10 +45097,6 @@ content.addEventListener('auxclick', (e) => {
         box-sizing: border-box;
       `;
       noteWindow.style.cssText = popupStyle;
-      console.log('[Tooltip] 1. 设置弹窗样式:', popupStyle);
-      console.log('[Tooltip] 1. 设置后内联样式:', noteWindow.style.cssText);
-      console.log('[Tooltip] 1. 设置后计算样式宽度:', window.getComputedStyle(noteWindow).width);
-      console.log('[Tooltip] 1. 设置后计算样式最大宽度:', window.getComputedStyle(noteWindow).maxWidth);
 
 
 
@@ -44164,22 +45156,10 @@ content.addEventListener('auxclick', (e) => {
 
       // 等待一小段时间让DOM和Markdown渲染完成后显示弹窗
       noteWindowTimeout = setTimeout(() => {
-        console.log('[Tooltip] 5. 显示弹窗前');
-        console.log('[Tooltip] 5. 显示前内联样式:', noteWindow.style.cssText);
-        console.log('[Tooltip] 5. 显示前计算样式宽度:', window.getComputedStyle(noteWindow).width);
-        console.log('[Tooltip] 5. 显示前计算样式最大宽度:', window.getComputedStyle(noteWindow).maxWidth);
-        console.log('[Tooltip] 5. 内容容器宽度:', window.getComputedStyle(contentContainer).width);
-        console.log('[Tooltip] 5. 编辑区域宽度:', window.getComputedStyle(editTextarea).width);
-        console.log('[Tooltip] 5. 预览区域宽度:', window.getComputedStyle(previewDiv).width);
-        console.log('[Tooltip] 5. 弹窗内容长度:', remark.length);
 
         noteWindow.style.opacity = '1';
         noteWindow.style.transform = 'translateX(0) translateY(0)';
 
-        console.log('[Tooltip] 5. 显示弹窗后');
-        console.log('[Tooltip] 5. 显示后内联样式:', noteWindow.style.cssText);
-        console.log('[Tooltip] 5. 显示后计算样式宽度:', window.getComputedStyle(noteWindow).width);
-        console.log('[Tooltip] 5. 显示后计算样式最大宽度:', window.getComputedStyle(noteWindow).maxWidth);
       }, 100);
 
       // 保存备注窗口引用
@@ -44276,14 +45256,6 @@ content.addEventListener('auxclick', (e) => {
           isMouseOverNoteWindow = false;
           if (noteWindowTimeout) clearTimeout(noteWindowTimeout);
           noteWindowTimeout = setTimeout(closeNoteWindow, 300);
-          console.log('[Tooltip] boundsCheck: 鼠标离开包围盒, 将关闭:', {
-            mouse: { x: me.clientX, y: me.clientY },
-            bounds: { bx1, bx2, by1, by2 },
-            popupRect: { top: pr.top, bottom: pr.bottom, left: pr.left, right: pr.right },
-            targetRect: { top: tr.top, bottom: tr.bottom, left: tr.left, right: tr.right },
-            elementUnderMouse: el?.tagName,
-            elementClass: (typeof el?.className === 'string' ? el.className : el?.className?.baseVal)?.substring(0, 80)
-          });
         }
       };
       document.addEventListener('mousemove', boundsCheckHandler);
@@ -44303,7 +45275,6 @@ content.addEventListener('auxclick', (e) => {
   // 清理孤立的CSS样式和相关的keyframes [已禁用]
   async cleanupOrphanedStyles() {
     // [已禁用] 此函数已暂时禁用，不执行任何清理操作
-    console.log('cleanupOrphanedStyles is disabled');
   }
 
   // 显示清理通知
@@ -44349,7 +45320,6 @@ content.addEventListener('auxclick', (e) => {
 
   // 重新加载所有样式
   reloadAllStyles() {
-    console.log('Reloading all styles after cleanup...');
 
     // 方法1: 重新加载CSS链接
     const links = document.querySelectorAll('link[rel="stylesheet"]');
@@ -44357,13 +45327,11 @@ content.addEventListener('auxclick', (e) => {
       if (link.href.includes('Regex-Css-Highlighter/styles.css')) {
         const href = link.href;
         link.href = href + '?t=' + Date.now();
-        console.log('Reloaded CSS stylesheet after cleanup:', link.href);
       }
     });
 
     // 方法2: 直接注入CSS内容
     this.injectCSSContent().then(() => {
-      console.log('CSS content injected after cleanup');
 
       // 刷新当前视图
       this.refreshCurrentView();
@@ -44983,7 +45951,6 @@ content.addEventListener('auxclick', (e) => {
     const originalText = element.dataset.originalText || element.textContent;
     if (!element.dataset.originalText) {
       element.dataset.originalText = originalText;
-      console.log('Stored original text:', originalText);
     }
 
     // 对于标题和标签，我们可以尝试直接应用样式，而不是复杂的文本替换
@@ -45007,7 +45974,6 @@ content.addEventListener('auxclick', (e) => {
         // 为了简单起见，我们可以尝试两种方法：
         // 1. 添加类名到元素本身
         element.classList.add(cssClass);
-        console.log('Added class to element:', cssClass);
 
         // 2. 同时尝试内部高亮（原有的方法）
         try {
@@ -45047,7 +46013,6 @@ content.addEventListener('auxclick', (e) => {
             span.dataset.ruleRegex = regex;
 
             span.textContent = match[0];
-            console.log('Created span with class:', cssClass || 'none', 'regex:', regex, 'for text:', match[0]);
             frag.appendChild(span);
             lastIdx = match.index + match[0].length;
           }
@@ -45067,7 +46032,6 @@ content.addEventListener('auxclick', (e) => {
           // 如果内部高亮失败，至少我们已经添加了类名
         }
       } else {
-        console.log(`Rule did not match: ${regex}`);
       }
     }
 
@@ -45277,7 +46241,6 @@ content.addEventListener('auxclick', (e) => {
     helpBtn.textContent = '?';
     helpBtn.style.cssText = 'cursor:pointer;color:var(--text-faint);font-size:10px;padding:0 3px;';
     helpBtn.addEventListener('click', (e) => {
-      console.log('[SG] helpBtn click fired', e.target);
       e.stopPropagation();
       _showHelpFloat(helpBtn, t('main.threadsHelpContent'));
     });
@@ -45365,6 +46328,7 @@ content.addEventListener('auxclick', (e) => {
 
   renderRemarkContent(container, opts) {
     const plugin = this;
+    const _modal = () => plugin._regexHighlightModal;
     let relatedHighlightsSection = null;
     container.addEventListener('mousedown', () => { window._sgIgnoreSelUntil = Date.now() + 600; }, true);
     const {
@@ -45751,7 +46715,7 @@ content.addEventListener('auxclick', (e) => {
                   kwSpan.textContent = m.text.substring(seg.start, seg.end);
                   if (seg.regex) {
                     kwSpan.dataset.ruleRegex = seg.regex;
-                    kwSpan.addEventListener('click', (ce) => { ce.stopPropagation(); if (this.regexInput) this.regexInput.setValue(seg.regex); if (this.updateStyleButtonsPreview) this.updateStyleButtonsPreview(seg.regex); if (this.showInlineRemarkForRegex) this.showInlineRemarkForRegex(seg.regex); plugin.openKeywordWindow(seg.regex); });
+                    kwSpan.addEventListener('click', (ce) => { ce.stopPropagation(); const m = _modal(); if (m && m.regexInput) m.regexInput.setValue(seg.regex); if (m && m.updateStyleButtonsPreview) m.updateStyleButtonsPreview(seg.regex); if (m && m.showInlineRemarkForRegex) m.showInlineRemarkForRegex(seg.regex); plugin.openKeywordWindow(seg.regex); });
                   }
                   hlSpan.appendChild(kwSpan);
                 } else {
@@ -45874,8 +46838,8 @@ content.addEventListener('auxclick', (e) => {
     remarkSettingIcon.addEventListener('mouseleave', () => { remarkSettingIcon.style.opacity = '0.4'; });
     remarkSettingIcon.addEventListener('click', (se) => {
       se.preventDefault(); se.stopPropagation();
-      const existingMenu = remarkBlock.querySelector('.remark-settings-menu');
-      if (existingMenu) { existingMenu.remove(); return; }
+      const m = _modal();
+      if (m && m._currentFloatingMenuAnchor === remarkSettingIcon && m._currentFloatingMenu) { m._closeFloatingMenu(); return; }
       const menu = document.createElement('div');
       menu.className = 'remark-settings-menu';
       menu.style.cssText = 'background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:11px;min-width:200px;margin-top:4px;';
@@ -45897,9 +46861,12 @@ content.addEventListener('auxclick', (e) => {
       };
       addRemarkSlider(t('settings.remarkPopupFontSize') || '字体大小', 'popupFontSize', 10, 20, 1, 'px');
       addRemarkSlider(t('settings.remarkLineSpacing') || '行距', 'popupLineHeight', 1.0, 2.5, 0.1, '');
-      remarkBlock.insertBefore(menu, remarkBlock.firstChild);
-      const closeMenu = (ev) => { if (!menu.contains(ev.target) && !remarkSettingIcon.contains(ev.target)) { menu.remove(); document.removeEventListener('mousedown', closeMenu); } };
-      setTimeout(() => document.addEventListener('mousedown', closeMenu), 0);
+      if (m && typeof m._floatSettingsMenu === 'function') { m._floatSettingsMenu(remarkSettingIcon, menu); }
+      else {
+        remarkBlockHeaderLeft.appendChild(menu);
+        const closeMenu = (ev) => { if (!menu.contains(ev.target) && !remarkSettingIcon.contains(ev.target)) { menu.remove(); (remarkSettingIcon.ownerDocument || document).removeEventListener('mousedown', closeMenu); } };
+        setTimeout(() => (remarkSettingIcon.ownerDocument || document).addEventListener('mousedown', closeMenu), 0);
+      }
     });
     remarkBlockHeaderLeft.appendChild(remarkSettingIcon);
     remarkBlockHeader.appendChild(remarkBlockHeaderLeft);
@@ -47676,12 +48643,11 @@ ${fullContext}`;
       });
     }
 
-    return { linksByFile, container, relatedHighlightsSection, remarkContentBlock: plugin.settings?.showRemarkContentBlock !== false ? remarkBlock : null, aiBtnContainer, aiGraphBtn, _existingMermaidGraph, _renderGraphSection, aiQuestionBlock: plugin.settings?.showAiQuestionBlock !== false ? aiQuestionBlock : null };
+    return { linksByFile, container, relatedHighlightsSection, remarkContentBlock: plugin.settings?.showRemarkContentBlock === true ? remarkBlock : null, aiBtnContainer, aiGraphBtn, _existingMermaidGraph, _renderGraphSection, aiQuestionBlock: plugin.settings?.showAiQuestionBlock === true ? aiQuestionBlock : null };
   }
 
   // 打开关键词独立窗口（可拖动，可打开多个）
   openKeywordWindow(keywordRegex, preservedRect) {
-    console.log('[KW-GRID] openKeywordWindow called with:', keywordRegex);
     const plugin = this;
 
     // 优先精确匹配 regex，其次匹配包含该关键词的规则
@@ -47812,7 +48778,7 @@ ${fullContext}`;
     closeBtn.addEventListener('mousedown', startKwLongPress);
     closeBtn.addEventListener('mouseup', cancelKwLongPress);
     closeBtn.addEventListener('mouseleave', cancelKwLongPress);
-    closeBtn.addEventListener('touchstart', startKwLongPress);
+    closeBtn.addEventListener('touchstart', startKwLongPress, { passive: true });
     closeBtn.addEventListener('touchend', (e) => {
       cancelKwLongPress();
       if (!kwLongPressTriggered) { e.preventDefault(); win.remove(); }
@@ -47874,7 +48840,6 @@ ${fullContext}`;
     kwRemarkCardGrid.addEventListener('mousedown', (e) => {
       const isHandle = e.target.closest('.remark-card-drag-handle') || e.target.closest('.ui-resizable-handle');
       const isCtrl = e.target.closest('.remark-card-ctrl, button, a, input, textarea, select, [contenteditable]');
-      console.log('[KW-GRID] mousedown on grid, target:', e.target.className, 'isHandle:', isHandle, 'isCtrl:', isCtrl, 'button:', e.button);
       if (isHandle && !isCtrl) {
         e.preventDefault();
         const _prevOverflow = content.style.overflow;
@@ -47886,9 +48851,8 @@ ${fullContext}`;
         const _dragOverlay = document.createElement('div');
         _dragOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;pointer-events:auto;background:transparent;touch-action:none;';
         document.body.appendChild(_dragOverlay);
-        console.log('[KW-GRID] overlay created, body children:', document.body.children.length);
         let _mmCount = 0;
-        const _debugMM = (ev) => { _mmCount++; if (_mmCount <= 3) console.log('[KW-GRID] mousemove on document capture:', ev.clientX, ev.clientY, 'target:', ev.target.className); };
+        const _debugMM = (ev) => { _mmCount++; if (_mmCount <= 3) void 0; };
         document.addEventListener('mousemove', _debugMM, true);
         const _cleanup = () => {
           _dragOverlay.remove();
@@ -47897,7 +48861,6 @@ ${fullContext}`;
           content.style.webkitUserSelect = _prevWebkitUserSelect;
           document.removeEventListener('mouseup', _cleanup, true);
           document.removeEventListener('mousemove', _debugMM, true);
-          console.log('[KW-GRID] cleanup done, mousemove count:', _mmCount);
         };
         document.addEventListener('mouseup', _cleanup, true);
       }
@@ -48019,8 +48982,7 @@ ${fullContext}`;
         itemContent.style.overflow = 'hidden';
         const _settingKey = _kwCardSettingMap[cardId];
         if (_settingKey && plugin.settings?.[_settingKey] === false) { widgetEl.style.display = 'none'; }
-        console.log('[KW-GRID] card added:', cardId, 'widget:', widgetEl.className, 'dragHandle in DOM:', document.body.contains(dragHandle));
-        dragHandle.addEventListener('mousedown', () => { console.log('[KW-GRID] mousedown on dragHandle for card:', cardId); }, true);
+        dragHandle.addEventListener('mousedown', () => { }, true);
       };
       if (_kwRemarkGrid && _kwRemarkGridReady) { _addToGrid(_kwRemarkGrid); }
       else { _kwRemarkGridQueue.push((grid) => { try { _addToGrid(grid); } catch(e) {} }); }
@@ -48048,7 +49010,6 @@ ${fullContext}`;
           document.head.appendChild(colCss);
         }
         const _doInit = () => {
-          console.log('[KW-GRID] _doInit called, offsetWidth:', kwRemarkCardGrid.offsetWidth);
           const grid = GridStack.init({
             column: 24, cellHeight: 20, margin: 2,
             draggable: { handle: '.remark-card-drag-handle', scroll: false, appendTo: 'parent' },
@@ -48057,12 +49018,11 @@ ${fullContext}`;
           }, kwRemarkCardGrid);
           _kwRemarkGrid = grid;
           _kwRemarkGridReady = true;
-          console.log('[KW-GRID] GridStack init success, nodes:', grid.engine?.nodes?.length);
           grid.on('change', () => { clearTimeout(_kwRemarkGridSaveTimer); _kwRemarkGridSaveTimer = setTimeout(_saveKwRemarkGridLayout, 500); });
-          grid.on('dragstart', (ev) => { console.log('[KW-GRID] dragstart', ev); });
-          grid.on('dragstop', (ev) => { console.log('[KW-GRID] dragstop', ev); clearTimeout(_kwRemarkGridSaveTimer); _kwRemarkGridSaveTimer = setTimeout(_saveKwRemarkGridLayout, 300); });
-          grid.on('resizestart', (ev) => { console.log('[KW-GRID] resizestart', ev); });
-          grid.on('resizestop', (ev) => { console.log('[KW-GRID] resizestop', ev); clearTimeout(_kwRemarkGridSaveTimer); _kwRemarkGridSaveTimer = setTimeout(_saveKwRemarkGridLayout, 300); });
+          grid.on('dragstart', (ev) => { });
+          grid.on('dragstop', (ev) => { clearTimeout(_kwRemarkGridSaveTimer); _kwRemarkGridSaveTimer = setTimeout(_saveKwRemarkGridLayout, 300); });
+          grid.on('resizestart', (ev) => { });
+          grid.on('resizestop', (ev) => { clearTimeout(_kwRemarkGridSaveTimer); _kwRemarkGridSaveTimer = setTimeout(_saveKwRemarkGridLayout, 300); });
           while (_kwRemarkGridQueue.length > 0) { const fn = _kwRemarkGridQueue.shift(); if (typeof fn === 'function') fn(grid); }
         };
         if (kwRemarkCardGrid.offsetWidth > 0) { _doInit(); }
@@ -48248,7 +49208,7 @@ ${fullContext}`;
       }
     }
 
-    if (allRelatedKeywords.size > 0 && plugin.settings?.showKeywordChipsBlock !== false) {
+    if (allRelatedKeywords.size > 0 && plugin.settings?.showKeywordChipsBlock === true) {
       const kwBlock = document.createElement('div');
       kwBlock.className = 'keyword-chips-block';
       kwBlock.style.cssText = 'margin-bottom:8px;';
@@ -48498,7 +49458,7 @@ ${fullContext}`;
     };
     const onTouchEnd = () => { isDragging = false; isResizing = false; };
     document.addEventListener('touchmove', onTouchMove, { passive: true });
-    document.addEventListener('touchend', onTouchEnd);
+    document.addEventListener('touchend', onTouchEnd, { passive: true });
     // 双击标题栏规则名进入编辑
     titleText.addEventListener('dblclick', (e) => {
       e.stopPropagation();
@@ -48978,7 +49938,7 @@ ${fullContext}`;
           popupCloseBtn.addEventListener('mousedown', startLongPress);
           popupCloseBtn.addEventListener('mouseup', cancelLongPress);
           popupCloseBtn.addEventListener('mouseleave', cancelLongPress);
-          popupCloseBtn.addEventListener('touchstart', startLongPress);
+          popupCloseBtn.addEventListener('touchstart', startLongPress, { passive: true });
           popupCloseBtn.addEventListener('touchend', (e) => {
             cancelLongPress();
             if (!popupLongPressTriggered) { e.preventDefault(); hidePopup(true, true); }
@@ -49086,7 +50046,7 @@ ${fullContext}`;
           };
           const onPopupTouchEnd = () => { isDraggingPopup = false; };
           document.addEventListener('touchmove', onPopupTouchMove, { passive: true });
-          document.addEventListener('touchend', onPopupTouchEnd);
+          document.addEventListener('touchend', onPopupTouchEnd, { passive: true });
           let onPopupMouseMove = (e) => {
             if (!isDraggingPopup) return;
             const dx = e.clientX - popupDragStartX;
@@ -49326,7 +50286,7 @@ ${fullContext}`;
                 }
               }
 
-              if (allRelatedKeywords.size > 0 && plugin.settings?.showKeywordChipsBlock !== false) {
+              if (allRelatedKeywords.size > 0 && plugin.settings?.showKeywordChipsBlock === true) {
                 const kwBlock = document.createElement('div');
                 kwBlock.className = 'keyword-chips-block';
                 kwBlock.style.cssText = 'margin-bottom:8px;';
@@ -50721,7 +51681,7 @@ ${fullContext}`;
           };
           const onPopupResizeTouchEnd = () => { isPopupResizing = false; };
           document.addEventListener('touchmove', onPopupResizeTouchMove, { passive: true });
-          document.addEventListener('touchend', onPopupResizeTouchEnd);
+          document.addEventListener('touchend', onPopupResizeTouchEnd, { passive: true });
           // 鼠标 resize 也整合到已有的 onPopupMouseMove
           const origOnPopupMouseMove = onPopupMouseMove;
           onPopupMouseMove = (e) => {
@@ -50861,7 +51821,7 @@ ${fullContext}`;
 
           // 添加滚动监听
           scrollHandler = updatePopupPosition;
-          document.addEventListener('scroll', scrollHandler, true);
+          document.addEventListener('scroll', scrollHandler, { capture: true, passive: true });
         } catch (err) {
           console.error('[Remark] 错误:', err);
         }
@@ -51175,11 +52135,11 @@ ${fullContext}`;
 
           glBtn.addEventListener('touchend', () => {
             if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
-          });
+          }, { passive: true });
 
           glBtn.addEventListener('touchmove', () => {
             if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
-          });
+          }, { passive: true });
 
           // 阻止长按触发click
           glBtn.addEventListener('click', (ce) => {
@@ -51634,7 +52594,7 @@ ${fullContext}`;
       if (currentBadge && currentBadgeTarget) {
         positionBadge(currentBadge, currentBadgeTarget);
       }
-    }, true);
+    }, { capture: true, passive: true });
   }
 
   initRemarkBadge() {
@@ -51854,7 +52814,7 @@ ${fullContext}`;
       if (currentRemarkBadge && currentRemarkBadgeTarget) {
         positionRemarkBadge(currentRemarkBadge, currentRemarkBadgeTarget);
       }
-    }, true);
+    }, { capture: true, passive: true });
   }
 
   // 智能选择搜索词：规则词匹配多个时依次尝试备注中的句子
@@ -52206,7 +53166,7 @@ function setupModalResizeHandle(modalInstance, modalEl, widthInput, opacityInput
     updatePosition();
   };
   document.addEventListener('touchmove', onResizeTouchMove, { passive: true });
-  document.addEventListener('touchend', onResizeTouchEnd);
+  document.addEventListener('touchend', onResizeTouchEnd, { passive: true });
 
   modalInstance._resizeHandle = resizeHandle;
   modalInstance._resizeUpdatePosition = updatePosition;

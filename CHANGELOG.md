@@ -2,7 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v2.1.3 (2026-08-12)
+## 🆕 v2.1.4 (2026-09-02)
+
+- **Card Move Bug Fix / 卡片移动修复** — Fixed card movement bugs in main panel, Info, and Parking Lot sections / 修复主面板、Info、停车场中卡片移动bug
+- **Main Panel Removal Fix / 主面板移除修复** — Fixed bug where main panel was not fully removed; fixed bug where clicking a keyword in the Keywords tab expanded all keywords / 修复主面板未完全移除bug；修复点击关键词tab中的关键词展开了所有关键词bug
+- **New Sections / 新增版块** — Added "Recently Created" (by creation date), "Recent Focus", "Random Review", "Quick Note", and "Stats Overview" sections / 添加"最近创建文档"、"最近关注"、"随机回顾"、"快速笔记"、"统计概览"版块
+- **Tab Button Fix / 标签页按钮修复** — Fixed bug where "Open SwiftGlossa in New Tab" button did not work / 修复"在新标签页打开sg"按钮点击无效bug
+- **Keyword Click Sync / 关键词点击同步** — Clicking a keyword in the Keywords tab now updates related files, threads, and info sections / 关键词tab中的关键词点击后同步更新相关文件、脉络、info版块
+- **Settings Button Fix / 设置按钮修复** — Fixed settings button disappearing after grid recreation (e.g. sidebar↔tab switch) / 修复区域切换后设置按钮消失bug
+- **New Install Defaults / 新装默认设置** — Hover keyword no-popup enabled, color theme defaults to "Rouge", most sections disabled by default / 新装插件默认勾选"悬停关键词不触发弹窗"，配色方案默认"胭脂粉"，大部分版块默认不勾选
+- **Section Display Logic / 版块显示逻辑** — Changed section visibility checks from `!== false` to `=== true` so undefined settings don't show sections; placeholder cards now respect section toggles / 版块显示判断从 `!== false` 改为 `=== true`，未设置时不显示版块；占位卡片现在遵循版块开关
+- **Duplicate Setting Removal / 重复设置移除** — Removed duplicate "Quick note folder" setting from Obsidian settings panel (already in Quick Note section) / 移除Obsidian设置面板中重复的"快速笔记保存文件夹"设置
+- **Instant Refresh / 即时刷新** — Section toggle changes now refresh immediately; `refreshModalContent` properly destroys old grid before re-render / 版块勾选/取消勾选即时刷新；`refreshModalContent` 重新渲染前正确销毁旧grid
+- **Background Pattern Removal / 底纹移除** — Removed background pattern setting from panel settings popup / 移除面板右上角设置中的底纹选项
+
+## v2.1.3 (2026-08-12)
 
 - **Popout Window Button Fix / 独立窗口按钮修复** — Hide "Pop Out" button in standalone window using `leaf.getRoot()` detection; removed CSS `!important` that persisted after popout close and hid sidebar button / 用 `leaf.getRoot()` 检测独立窗口并隐藏弹出按钮；移除关闭后残留的 CSS `!important` 规则
 - **Parking Lot Button Fix / 停车场按钮修复** — Parking lot +button is always clickable without requiring a keyword / 停车场+按钮无需关键词即可点击

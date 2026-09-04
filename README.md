@@ -91,6 +91,17 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 
 <details>
+<summary>v2.1.5 (2026-09-05)</summary>
+
+- **Button Overlap Fix / 按钮重叠修复** — Fixed overlap between section buttons (New, Refresh, Clear) and auto background-pattern gear icon / 修复版块按钮（新建、刷新、清空）与自动底纹齿轮重叠问题
+- **Canvas Title Fix / Canvas 标题修复** — Added title span in mindmap section header to prevent misidentifying button text as title / 思维导图版块标题栏添加标题 span，防止误选按钮文字为标题
+- **Keyword-Canvas Auto Match / 关键词自动匹配 Canvas** — Clicking or searching a keyword auto-loads a `.canvas` file with matching basename / 点击或搜索关键词时自动查找并加载同名 `.canvas` 文件
+- **Translation Completion / 翻译补全** — Added i18n keys for canvas drop hint, regex section title, add button, name placeholder / 补全"拖入 canvas 文件或新建"、"正则文本版块"、"+ 添加"等翻译
+- **New Install Defaults / 新装默认设置** — Info, Open Docs, Canvas sections default to unchecked for new installations / 新安装时 Info、当前打开的文档、Canvas 版块默认不勾选
+
+</details>
+
+<details>
 <summary>v2.1.4 (2026-09-02)</summary>
 
 - **Card Move Bug Fix / 卡片移动修复** — Fixed card movement bugs in main panel, Info, and Parking Lot sections / 修复主面板、Info、停车场中卡片移动bug

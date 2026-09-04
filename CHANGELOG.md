@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v2.1.4 (2026-09-02)
+## 🆕 v2.1.5 (2026-09-05)
+
+- **Button Overlap Fix / 按钮重叠修复** — Fixed overlap between section buttons (New, Refresh, Clear) and the auto background-pattern gear icon by adding padding-right to dragHandle / 修复版块按钮（新建、刷新、清空）与自动底纹齿轮重叠问题，给 dragHandle 添加 padding-right
+- **Canvas Title Fix / Canvas 标题修复** — Added title span "Canvas" in mindmap section header to prevent `_mergeSectionHeader` from misidentifying button text as title / 思维导图版块标题栏添加"Canvas"标题 span，防止 `_mergeSectionHeader` 误选按钮文字为标题
+- **Keyword-Canvas Auto Match / 关键词自动匹配 Canvas** — Added `_tryShowCanvasForKeyword` method: clicking or searching a keyword auto-loads a `.canvas` file with matching basename / 添加 `_tryShowCanvasForKeyword` 方法，点击或搜索关键词时自动查找并加载同名 `.canvas` 文件
+- **Translation Completion / 翻译补全** — Added i18n keys for "Drop canvas file or create new", "Regex Text Sections", "+ Add", "Name", "New Section" / 补全"拖入 canvas 文件或新建"、"正则文本版块"、"+ 添加"、"名称"、"新版块"翻译
+- **New Install Defaults / 新装默认设置** — Changed `showInfoSection`, `showOpenDocsSection`, `showMindmapSection` defaults from `true` to `false` for new installations / 新安装插件时 Info、当前打开的文档、Canvas 版块默认不勾选
+
+## v2.1.4 (2026-09-02)
 
 - **Card Move Bug Fix / 卡片移动修复** — Fixed card movement bugs in main panel, Info, and Parking Lot sections / 修复主面板、Info、停车场中卡片移动bug
 - **Main Panel Removal Fix / 主面板移除修复** — Fixed bug where main panel was not fully removed; fixed bug where clicking a keyword in the Keywords tab expanded all keywords / 修复主面板未完全移除bug；修复点击关键词tab中的关键词展开了所有关键词bug

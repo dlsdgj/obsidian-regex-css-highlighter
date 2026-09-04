@@ -2,7 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v2.1.5 (2026-09-05)
+## 🆕 v2.1.6 (2026-09-05)
+
+- **Ribbon Button Opens in Tab / 功能区按钮标签页打开** — Left ribbon SG button now opens panel in a new tab by default instead of sidebar / 左侧功能区 SG 按钮默认在新标签页打开面板
+- **Quick Memo Section / 随手记版块** — Added "Quick Memo" section: a plain-text scratchpad with auto-save, always in editing mode / 新增"随手记"版块：纯文本中转区，始终处于编辑状态，内容自动保存
+- **Canvas Chip Close Persistence / Canvas chip 关闭持久化** — Closed canvas chips no longer reappear after switching tabs; manually closed paths tracked in `canvasClosedPaths` to prevent auto-re-matching / 关闭的 canvas chip 切换标签页后不再重新出现，手动关闭路径记录在 `canvasClosedPaths` 防止自动重新匹配
+
+## v2.1.5.1 (2026-09-05)
+
+- **Ribbon Button Default Tab / 功能区按钮默认标签页** — Left ribbon SG button now opens panel in a new tab by default instead of sidebar / 左侧功能区 SG 按钮点击后默认在新标签页打开面板，而非侧边栏
+- **Quick Memo Section / 随手记版块** — Added "Quick Memo" section: a plain-text scratchpad with auto-save, always in editing mode / 新增"随手记"版块：纯文本中转区，始终处于编辑状态，内容自动保存
+
+## v2.1.5 (2026-09-05)
 
 - **Button Overlap Fix / 按钮重叠修复** — Fixed overlap between section buttons (New, Refresh, Clear) and the auto background-pattern gear icon by adding padding-right to dragHandle / 修复版块按钮（新建、刷新、清空）与自动底纹齿轮重叠问题，给 dragHandle 添加 padding-right
 - **Canvas Title Fix / Canvas 标题修复** — Added title span "Canvas" in mindmap section header to prevent `_mergeSectionHeader` from misidentifying button text as title / 思维导图版块标题栏添加"Canvas"标题 span，防止 `_mergeSectionHeader` 误选按钮文字为标题

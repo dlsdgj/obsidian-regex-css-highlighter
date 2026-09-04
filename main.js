@@ -738,6 +738,8 @@ const i18n = {
     'main.regexNamePlaceholder': '名称',
     'main.regexNewSection': '新版块',
     'main.cardLabelQuickNote': '快速笔记',
+    'main.cardLabelQuickMemo': '随手记',
+    'main.quickMemoPlaceholder': '随手记…纯文本中转区，内容自动保存',
     'main.quickNoteTitle': '快速笔记',
     'main.quickNotePlaceholder': '输入内容，回车创建笔记',
     'main.quickNoteCreated': '已创建笔记: ',
@@ -1966,6 +1968,8 @@ const i18n = {
     'main.regexNamePlaceholder': 'Name',
     'main.regexNewSection': 'New Section',
     'main.cardLabelQuickNote': 'Quick Note',
+    'main.cardLabelQuickMemo': 'Quick Memo',
+    'main.quickMemoPlaceholder': 'Quick memo... plain text scratchpad, auto-saved',
     'main.quickNoteTitle': 'Quick Note',
     'main.quickNotePlaceholder': 'Type and press Enter to create a note',
     'main.quickNoteCreated': 'Note created: ',
@@ -14034,6 +14038,7 @@ class AddRegexRuleModal {
             { key: 'showFocusSection', label: t('main.cardLabelFocus'), cardId: 'focusSection', defaultVal: true },
             { key: 'showRandomReviewSection', label: t('main.cardLabelRandomReview'), cardId: 'randomReviewSection', defaultVal: true },
             { key: 'showQuickNoteSection', label: t('main.cardLabelQuickNote'), cardId: 'quickNoteSection', defaultVal: true },
+            { key: 'showQuickMemoSection', label: t('main.cardLabelQuickMemo'), cardId: 'quickMemoSection', defaultVal: true },
             { key: 'showStatsSection', label: t('main.cardLabelStats'), cardId: 'statsSection', defaultVal: true },
             { key: 'showOpenDocsSection', label: t('main.cardLabelOpenDocs'), cardId: 'openDocsSection', defaultVal: false },
             { key: 'showMindmapSection', label: t('main.cardLabelMindmap'), cardId: 'mindmapSection', defaultVal: false },
@@ -14352,7 +14357,7 @@ class AddRegexRuleModal {
           card.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;height:100%;';
           const dragHandle = document.createElement('div');
           dragHandle.className = 'unified-card-drag-handle';
-          const _cardLabels = { infoSection: t('main.cardLabelInfo'), parkingLotSection: t('main.cardLabelParkingLot'), threadsSection: t('main.cardLabelThreads'), keywordHistory: t('main.cardLabelKeywordHistory'), relatedHighlights: t('main.cardLabelRelatedHighlights'), remarkContent: t('main.cardLabelRemarkContent'), keywordChips: t('main.cardLabelKeywordChips'), aiQuestion: t('main.cardLabelAiQuestion'), relatedNotes: t('main.cardLabelRelatedNotes'), recentFilesSection: t('main.cardLabelRecentFiles'), recentlyCreatedSection: t('main.cardLabelRecentlyCreated'), focusSection: t('main.cardLabelFocus'), randomReviewSection: t('main.cardLabelRandomReview'), quickNoteSection: t('main.cardLabelQuickNote'), statsSection: t('main.cardLabelStats'), openDocsSection: t('main.cardLabelOpenDocs'), mindmapSection: t('main.cardLabelMindmap') };
+          const _cardLabels = { infoSection: t('main.cardLabelInfo'), parkingLotSection: t('main.cardLabelParkingLot'), threadsSection: t('main.cardLabelThreads'), keywordHistory: t('main.cardLabelKeywordHistory'), relatedHighlights: t('main.cardLabelRelatedHighlights'), remarkContent: t('main.cardLabelRemarkContent'), keywordChips: t('main.cardLabelKeywordChips'), aiQuestion: t('main.cardLabelAiQuestion'), relatedNotes: t('main.cardLabelRelatedNotes'), recentFilesSection: t('main.cardLabelRecentFiles'), recentlyCreatedSection: t('main.cardLabelRecentlyCreated'), focusSection: t('main.cardLabelFocus'), randomReviewSection: t('main.cardLabelRandomReview'), quickNoteSection: t('main.cardLabelQuickNote'), quickMemoSection: t('main.cardLabelQuickMemo'), statsSection: t('main.cardLabelStats'), openDocsSection: t('main.cardLabelOpenDocs'), mindmapSection: t('main.cardLabelMindmap') };
           dragHandle.style.cssText = 'cursor:move;font-size:10px;font-weight:600;color:var(--text-muted);padding:2px 6px;border-bottom:1px solid var(--background-modifier-border);opacity:0.7;transition:opacity .15s;display:flex;align-items:center;gap:4px;';
           dragHandle.innerHTML = '<span style="font-size:12px;">\u263F</span><span class="unified-card-label">' + (_cardLabels[cardId] || cardId) + '</span>';
           card.appendChild(dragHandle);
@@ -14436,7 +14441,7 @@ class AddRegexRuleModal {
           };
           _mergeSectionHeader();
           // 无设置按钮的版块：在卡片标题栏自动添加底纹设置齿轮
-          const _autoBgIconIds = ['recentFilesSection', 'recentlyCreatedSection', 'focusSection', 'randomReviewSection', 'statsSection', 'openDocsSection', 'mindmapSection'];
+          const _autoBgIconIds = ['recentFilesSection', 'recentlyCreatedSection', 'focusSection', 'randomReviewSection', 'statsSection', 'openDocsSection', 'mindmapSection', 'quickMemoSection'];
           if (_autoBgIconIds.includes(cardId)) {
             const _bgIcon = document.createElement('span');
             _bgIcon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
@@ -14483,7 +14488,7 @@ class AddRegexRuleModal {
             }, { passive: true });
           });
           this._unifiedCardIds.add(cardId);
-          const _cardSettingMap = { infoSection: 'showInfoSection', parkingLotSection: 'showParkingLot', threadsSection: 'showThreads', relatedHighlights: 'showRelatedHighlightsSection', remarkContent: 'showRemarkContentBlock', keywordChips: 'showKeywordChipsBlock', aiQuestion: 'showAiQuestionBlock', relatedNotes: 'showRelatedNotesSection', recentFilesSection: 'showRecentFilesSection', recentlyCreatedSection: 'showRecentlyCreatedSection', focusSection: 'showFocusSection', randomReviewSection: 'showRandomReviewSection', quickNoteSection: 'showQuickNoteSection', statsSection: 'showStatsSection', openDocsSection: 'showOpenDocsSection', mindmapSection: 'showMindmapSection' };
+          const _cardSettingMap = { infoSection: 'showInfoSection', parkingLotSection: 'showParkingLot', threadsSection: 'showThreads', relatedHighlights: 'showRelatedHighlightsSection', remarkContent: 'showRemarkContentBlock', keywordChips: 'showKeywordChipsBlock', aiQuestion: 'showAiQuestionBlock', relatedNotes: 'showRelatedNotesSection', recentFilesSection: 'showRecentFilesSection', recentlyCreatedSection: 'showRecentlyCreatedSection', focusSection: 'showFocusSection', randomReviewSection: 'showRandomReviewSection', quickNoteSection: 'showQuickNoteSection', quickMemoSection: 'showQuickMemoSection', statsSection: 'showStatsSection', openDocsSection: 'showOpenDocsSection', mindmapSection: 'showMindmapSection' };
           const _addToGrid = (grid) => {
             const existing = grid.engine?.nodes?.find(n => n.el?.querySelector?.('.unified-card')?.dataset?.cardId === cardId);
             if (existing) { try { grid.removeWidget(existing.el, true); } catch(e) {} }
@@ -14619,6 +14624,7 @@ class AddRegexRuleModal {
         this.addFocusSection(contentEl);
         this.addRandomReviewSection(contentEl);
         this.addQuickNoteSection(contentEl);
+        this.addQuickMemoSection(contentEl);
         this.addStatsSection(contentEl);
         this.addOpenDocsSection(contentEl);
         this.addMindmapSection(contentEl);
@@ -23658,6 +23664,38 @@ class AddRegexRuleModal {
     try { this._addUnifiedCard(section, 'statsSection', { w: 24, h: 3 }); } catch (e) { contentEl?.appendChild?.(section); }
   }
 
+  addQuickMemoSection(contentEl) {
+    if (this.plugin.settings?.showQuickMemoSection === false) return;
+    const plugin = this.plugin;
+    const section = document.createElement('div');
+    section.className = 'quick-memo-section';
+    section.style.cssText = 'height:100%;display:flex;flex-direction:column;padding:2px;overflow:hidden;';
+    const headerRow = document.createElement('div');
+    headerRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:2px;flex-shrink:0;';
+    const titleSpan = document.createElement('span');
+    titleSpan.textContent = t('main.cardLabelQuickMemo');
+    titleSpan.style.cssText = 'font-size:13px;font-weight:600;color:var(--text-normal);user-select:none;';
+    headerRow.appendChild(titleSpan);
+    section.appendChild(headerRow);
+    const textarea = document.createElement('textarea');
+    textarea.className = 'quick-memo-textarea';
+    textarea.placeholder = t('main.quickMemoPlaceholder');
+    textarea.style.cssText = 'flex:1;width:100%;resize:none;border:1px solid var(--background-modifier-border);border-radius:4px;padding:6px 8px;font-size:13px;line-height:1.5;background:var(--background-primary);color:var(--text-normal);font-family:var(--font-interface);outline:none;';
+    textarea.value = plugin.settings.quickMemoText || '';
+    let _saveTimer = null;
+    textarea.addEventListener('input', () => {
+      clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(() => {
+        plugin.settings.quickMemoText = textarea.value;
+        plugin.saveData(plugin.settings);
+      }, 500);
+    });
+    textarea.addEventListener('mousedown', (e) => e.stopPropagation());
+    textarea.addEventListener('pointerdown', (e) => e.stopPropagation());
+    section.appendChild(textarea);
+    try { this._addUnifiedCard(section, 'quickMemoSection', { w: 12, h: 6 }); } catch (e) { contentEl?.appendChild?.(section); }
+  }
+
   addOpenDocsSection(contentEl) {
     if (this.plugin.settings?.showOpenDocsSection === false) return;
     const section = document.createElement('div');
@@ -23988,16 +24026,18 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
     section.appendChild(canvasContainer);
     let currentFilePath = null;
     if (!Array.isArray(plugin.settings.canvasSections)) plugin.settings.canvasSections = [];
+    if (!Array.isArray(plugin.settings.canvasClosedPaths)) plugin.settings.canvasClosedPaths = [];
     const _saveCanvasList = async () => { try { await plugin.saveData(plugin.settings); } catch(e) {} };
     const _matchKeywords = () => {
       const _allRules = [...(Array.isArray(plugin.rules) ? plugin.rules : []), ...(Array.isArray(plugin.globalRules) ? plugin.globalRules : [])];
       const _allCanvas = plugin.app.vault.getFiles().filter(f => f.extension === 'canvas');
       const _newMatches = [];
+      const _closed = plugin.settings.canvasClosedPaths;
       for (const rule of _allRules) {
         const kw = (rule.regex || '').trim();
         if (!kw) continue;
         const match = _allCanvas.find(f => f.basename === kw || f.basename.toLowerCase() === kw.toLowerCase());
-        if (match && !plugin.settings.canvasSections.find(s => s.path === match.path)) {
+        if (match && !plugin.settings.canvasSections.find(s => s.path === match.path) && !_closed.includes(match.path)) {
           plugin.settings.canvasSections.push({ path: match.path });
           _newMatches.push(match.path);
         }
@@ -24027,7 +24067,9 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
         closeX.addEventListener('click', async (ev) => {
           ev.preventDefault(); ev.stopPropagation();
           const _idx = plugin.settings.canvasSections.findIndex(s => s.path === f.path);
-          if (_idx >= 0) { plugin.settings.canvasSections.splice(_idx, 1); await _saveCanvasList(); }
+          if (_idx >= 0) { plugin.settings.canvasSections.splice(_idx, 1); }
+          if (!plugin.settings.canvasClosedPaths.includes(f.path)) { plugin.settings.canvasClosedPaths.push(f.path); }
+          await _saveCanvasList();
           if (currentFilePath === f.path) { currentFilePath = null; loadFile(null); }
           refreshChips();
         });
@@ -29450,6 +29492,9 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       showFocusSection: false,
       showRandomReviewSection: false,
       showQuickNoteSection: false,
+      showQuickMemoSection: true,
+
+      quickMemoText: '',
       showStatsSection: false,
       showOpenDocsSection: false,
       showMindmapSection: false,
@@ -29457,6 +29502,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       dynFileSections: [],
 
       canvasSections: [],
+      canvasClosedPaths: [],
 
       hoverKeywordNoPopup: true,
       panelColorTheme: 'rouge',
@@ -30043,9 +30089,9 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
 
     this.createFloatingBall();
 
-    // 左侧功能区按钮：打开右侧面板（悬浮球隐藏后可通过此按钮打开）
+    // 左侧功能区按钮：在新标签页打开 sg 面板
     this.addRibbonIcon('swiftglossa-icon', 'SwiftGlossa', () => {
-      this.openSidebarView();
+      this.openPanelInTab();
     });
 
     this.renderFloatingOptionButtons();

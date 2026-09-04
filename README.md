@@ -91,6 +91,23 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 
 <details>
+<summary>v2.1.6 (2026-09-05)</summary>
+
+- **Ribbon Button Opens in Tab / 功能区按钮标签页打开** — Left ribbon SG button now opens panel in a new tab by default / 左侧功能区 SG 按钮默认在新标签页打开面板
+- **Quick Memo Section / 随手记版块** — Added Quick Memo section: a plain-text scratchpad with auto-save / 新增随手记版块：纯文本中转区，内容自动保存
+- **Canvas Chip Close Persistence / Canvas chip 关闭持久化** — Closed canvas chips no longer reappear after switching tabs / 关闭的 canvas chip 切换标签页后不再重新出现
+
+</details>
+
+<details>
+<summary>v2.1.5.1 (2026-09-05)</summary>
+
+- **Ribbon Button Default Tab / 功能区按钮默认标签页** — Left ribbon SG button now opens panel in a new tab by default / 左侧功能区 SG 按钮默认在新标签页打开面板
+- **Quick Memo Section / 随手记版块** — Added Quick Memo section: a plain-text scratchpad with auto-save / 新增随手记版块：纯文本中转区，内容自动保存
+
+</details>
+
+<details>
 <summary>v2.1.5 (2026-09-05)</summary>
 
 - **Button Overlap Fix / 按钮重叠修复** — Fixed overlap between section buttons (New, Refresh, Clear) and auto background-pattern gear icon / 修复版块按钮（新建、刷新、清空）与自动底纹齿轮重叠问题

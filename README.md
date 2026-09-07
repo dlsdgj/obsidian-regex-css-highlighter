@@ -91,6 +91,28 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 
 <details>
+<summary>v2.1.7 (2026-09-08)</summary>
+
+- **Calendar Section / 万年历版块** — Added calendar with month/year views, lunar dates, solar terms, festivals, Gan-Zhi years / 新增万年历版块，支持月/年视图、农历、节气、节日、干支纪年
+- **Calendar Fixes / 万年历修复** — Fixed month switch title, year view separator, week bar after restart, today highlight / 修复切换月份标题、年视图分隔、重启后星期栏、今天高亮
+- **Diary Section / 日记版块** — Added diary with real-time preview, font/line settings; daily activity summary written to diary / 新增日记版块，支持实时预览、字体设置；当天活动汇总写入日记
+- **Canvas DnD Fix / Canvas 拖入修复** — Fixed dragging .canvas files into canvas section / 修复拖入 .canvas 文件到 Canvas 版块
+- **Canvas Mobile Fix / Canvas 手机修复** — Fixed sidebar scroll, card move, long-press on mobile / 修复手机端侧边栏滚动、版块移动、长按问题
+- **Card Close Button / 卡片关闭按钮** — Added close button to CSS/keyword group cards / CSS、关键词分组版块添加关闭按钮
+- **Related Highlight Dark Mode / 相关高亮深色模式** — Fixed unreadable text in dark mode / 修复深色模式下文字看不清
+- **Floating Notes in Diary / 悬浮笔记写入日记** — Floating notes written to date diary / 悬浮笔记写入对应日期日记
+- **Canvas + Button / Canvas 加号按钮** — Canvas + button changed to SVG icon / Canvas 加号按钮改为 SVG 图标
+- **Canvas Help Button / Canvas 帮助按钮** — Added ? button with operation guide / 添加帮助按钮和操作说明
+- **Calendar Title Removal / 万年历标题移除** — Removed redundant calendar title / 移除冗余万年历标题
+- **English Calendar / 英文万年历** — English mode hides lunar/festivals/Gan-Zhi / 英文模式隐藏农历/节气/干支
+- **Quick Note Font Settings / 快速笔记字体设置** — Added font size/line height settings / 添加字体大小/行距设置
+- **Quick Memo Font Settings / 随手记字体设置** — Added font size/line height settings / 添加字体大小/行距设置
+- **Open Docs DnD / 当前文档拖入文件** — Drag files to display in-place without new tabs / 拖入文件直接在版块显示，不打开新标签页
+- **Open Docs Font Settings / 当前文档字体设置** — Added font size/line height settings / 添加字体大小/行距设置
+
+</details>
+
+<details>
 <summary>v2.1.6 (2026-09-05)</summary>
 
 - **Ribbon Button Opens in Tab / 功能区按钮标签页打开** — Left ribbon SG button now opens panel in a new tab by default / 左侧功能区 SG 按钮默认在新标签页打开面板

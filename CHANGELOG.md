@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.1.7 (2026-09-08)
+
+- **Calendar Section** — Added calendar with month/year views, lunar dates, solar terms, festivals, Gan-Zhi years, holiday markers, note count badges
+- **Calendar Fixes** — Fixed month switch title, year view separator, week bar after restart, today highlight
+- **Diary Section** — Added diary with real-time preview, font/line-height/padding/line-number settings; daily activity summary written to diary
+- **Canvas DnD Fix** — Fixed dragging .canvas files into canvas section via document capture-phase DnD
+- **Canvas Mobile Fix** — Fixed sidebar scroll on mobile, card move not responding, long-press without follow
+- **Card Close Button** — Added close button to CSS/keyword group cards
+- **Related Highlight Dark Mode** — Fixed unreadable text in dark mode via CSS variable override
+- **Floating Notes in Diary** — Floating notes written to corresponding date diary
+- **Canvas + Button** — Canvas + button changed to SVG icon, positioned right of settings
+- **Canvas Help Button** — Added ? SVG button with operation guide popup
+- **Calendar Title Removal** — Removed redundant calendar title inside section header
+- **English Calendar** — English mode hides lunar/festivals/Gan-Zhi; translated labels
+- **Quick Note Font Settings** — Added font size/line height settings
+- **Quick Memo Font Settings** — Added font size/line height settings
+- **Open Docs DnD** — Drag files to open docs section displays in-place without new tabs
+- **Open Docs Font Settings** — Added font size/line height settings
+
 ## 🆕 v2.1.6 (2026-09-05)
 
 - **Ribbon Button Opens in Tab / 功能区按钮标签页打开** — Left ribbon SG button now opens panel in a new tab by default instead of sidebar / 左侧功能区 SG 按钮默认在新标签页打开面板

@@ -6,9 +6,10 @@
 
 SwiftGlossa highlights keywords with regex + custom CSS and indexes them into a searchable highlight database — click any keyword to surface every match vault-wide. Keywords are the bones, CSS the skin, the database the flesh; floating notes are a paper wristband of always-visible questions. (Formerly Regex CSS Highlighter)/SwiftGlossa 用正则+自定义 CSS 高亮关键词并建立可搜索的高亮数据库——点击任意关键词即可浮现全库匹配。关键词是骨头，CSS 是皮肤，数据库是血肉；悬浮笔记是常显问题的纸带手环。（原 Regex CSS Highlighter）
 
-![Remark Feature / 1](./assets/203-1.png)
-![Remark Feature / 2](./assets/203-2.png)
-![Remark Feature / 3](./assets/203-3.png)
+![Remark Feature / 1](./assets/拖拽文件到sg.gif)
+![Remark Feature / 2](./assets/sg-Canvas.gif)
+![Remark Feature / 3](./assets/sg-floating%20note.gif)
+![Remark Feature / 4](./assets/203-3.png)
 <details>
 <summary>Features</summary>
 
@@ -72,9 +73,12 @@ D:\Documents\Obsidian Vault\.obsidian\plugins\Regex-Css-Highlighter\main.js
 
 
 ## Installation / 安装
+<details>
+<summary> Installation</summary>
 
 Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins → Browse to install directly.
 在 Obsidian 设置 → 社区插件 → 浏览 中搜索 "Regex Css Highlighter" 直接安装。
+</details>
 
 <details>
 <summary>Manual Installation / 手动安装</summary>

@@ -778,6 +778,18 @@ const i18n = {
     'main.diaryPaddingRight': '右边距',
     'main.diaryShowLineNumbers': '显示行号',
     'main.diaryOpenInTab': '在新标签页打开',
+    'main.openDocsStyleTitle': '样式设置',
+    'main.openDocsFontSize': '字体大小',
+    'main.openDocsLineHeight': '行间距',
+    'main.openDocsPaddingLeft': '左边距',
+    'main.openDocsPaddingRight': '右边距',
+    'main.openDocsShowLineNumbers': '显示行号',
+    'main.dynFileStyleTitle': '样式设置',
+    'main.dynFileFontSize': '字体大小',
+    'main.dynFileLineHeight': '行间距',
+    'main.dynFilePaddingLeft': '左边距',
+    'main.dynFilePaddingRight': '右边距',
+    'main.dynFileShowLineNumbers': '显示行号',
     'main.openDiary': '打开日记',
     'main.openInDiarySection': '在日记版块中打开',
     'main.calendarNoNotes': '无记录',
@@ -857,6 +869,9 @@ const i18n = {
     'main.infoCardBg': '卡片背景',
     'main.infoTextColor': '字体颜色',
     'main.infoCardGrid': '卡片网格',
+    'main.infoShowLineNumbers': '显示行号',
+    'main.infoPaddingLeft': '左边距',
+    'main.infoPaddingRight': '右边距',
     'main.infoPresetKraft': '牛皮纸',
     'main.infoPresetInk': '水墨',
     'main.infoPresetNight': '深夜',
@@ -2037,6 +2052,18 @@ const i18n = {
     'main.diaryPaddingRight': 'Padding Right',
     'main.diaryShowLineNumbers': 'Show Line Numbers',
     'main.diaryOpenInTab': 'Open in new tab',
+    'main.openDocsStyleTitle': 'Style Settings',
+    'main.openDocsFontSize': 'Font Size',
+    'main.openDocsLineHeight': 'Line Height',
+    'main.openDocsPaddingLeft': 'Padding Left',
+    'main.openDocsPaddingRight': 'Padding Right',
+    'main.openDocsShowLineNumbers': 'Show Line Numbers',
+    'main.dynFileStyleTitle': 'Style Settings',
+    'main.dynFileFontSize': 'Font Size',
+    'main.dynFileLineHeight': 'Line Height',
+    'main.dynFilePaddingLeft': 'Padding Left',
+    'main.dynFilePaddingRight': 'Padding Right',
+    'main.dynFileShowLineNumbers': 'Show Line Numbers',
     'main.openDiary': 'Open Diary',
     'main.openInDiarySection': 'Open in Diary section',
     'main.calendarNoNotes': 'No notes',
@@ -2116,6 +2143,9 @@ const i18n = {
     'main.infoCardBg': 'Card BG',
     'main.infoTextColor': 'Text Color',
     'main.infoCardGrid': 'Card Grid',
+    'main.infoShowLineNumbers': 'Show Line Numbers',
+    'main.infoPaddingLeft': 'Padding Left',
+    'main.infoPaddingRight': 'Padding Right',
     'main.infoPresetKraft': 'Kraft',
     'main.infoPresetInk': 'Ink',
     'main.infoPresetNight': 'Night',
@@ -9110,6 +9140,7 @@ class AddRegexRuleModal {
       } catch(e) {}
       this._dynFileDnD = null;
     }
+    try { document.querySelectorAll('.dyn-file-section').forEach(sec => { if (sec._dynFileLeaf) { try { sec._dynFileLeaf.detach(); } catch(e) {} sec._dynFileLeaf = null; } }); } catch(e) {}
     if (this._sgTabTitleRestoreListener) {
       try { this.app?.workspace?.off('active-leaf-change', this._sgTabTitleRestoreListener); } catch(e) {}
       this._sgTabTitleRestoreListener = null;
@@ -9119,6 +9150,7 @@ class AddRegexRuleModal {
       try { this.app?.workspace?.off('active-leaf-change', this._openDocsLeafListener); this.app?.workspace?.off('layout-change', this._openDocsLeafListener); } catch(e) {}
       this._openDocsLeafListener = null;
     }
+    if (this._openDocsLeaf) { try { this._openDocsLeaf.detach(); } catch(e) {} this._openDocsLeaf = null; }
     if (this._openDocsContentEl?._component) { try { this._openDocsContentEl._component.unload(); } catch(e) {} }
     if (this._openDocsContentEl?._sgSelBtn) { try { this._openDocsContentEl._sgSelBtn.remove(); } catch(e) {} this._openDocsContentEl._sgSelBtn = null; }
     if (this._outsideClickHandler) {
@@ -14465,6 +14497,7 @@ class AddRegexRuleModal {
           card.appendChild(dragHandle);
           const cardContent = document.createElement('div');
           cardContent.style.cssText = 'flex:1;overflow-y:auto;overflow-x:hidden;padding:4px;display:flex;flex-direction:column;';
+
           sectionEl.style.width = '100%';
           sectionEl.style.flex = '1';
           cardContent.appendChild(sectionEl);
@@ -14557,7 +14590,7 @@ class AddRegexRuleModal {
           }
           // 无设置按钮的版块：在卡片标题栏自动添加底纹设置齿轮
           const _autoBgIconIds = ['recentFilesSection', 'recentlyCreatedSection', 'focusSection', 'randomReviewSection', 'statsSection', 'openDocsSection', 'mindmapSection', 'quickMemoSection', 'calendarSection', 'diarySection'];
-          if (_autoBgIconIds.includes(cardId)) {
+          if (_autoBgIconIds.includes(cardId) || cardId.startsWith('dynFile_')) {
             const _bgIcon = document.createElement('span');
             _bgIcon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
             _bgIcon.title = t('main.bgPatternLabel');
@@ -14581,9 +14614,94 @@ class AddRegexRuleModal {
               }
               if (cardId === 'openDocsSection') {
                 menu.appendChild(this._makeFontLineHeightRows('openDocsSection', () => {
-                  const _c = this._openDocsContentEl;
-                  if (_c) { const _s = this.plugin.settings || {}; const _fs = _s['openDocsSectionFontSize']; const _lh = _s['openDocsSectionLineHeight']; if (_fs) _c.style.fontSize = _fs + 'px'; if (_lh) _c.style.lineHeight = String(_lh); }
+                  this._applyOpenDocsCss?.();
                 }));
+                const _odStyleSep = document.createElement('div'); _odStyleSep.style.cssText = 'border-top:1px solid var(--background-modifier-border);margin:4px 0;';
+                menu.appendChild(_odStyleSep);
+                const _odStyleTitle = document.createElement('div'); _odStyleTitle.textContent = t('main.openDocsStyleTitle'); _odStyleTitle.style.cssText = 'color:var(--text-muted);font-weight:600;font-size:10px;margin-bottom:2px;';
+                menu.appendChild(_odStyleTitle);
+                const _odFsRow = document.createElement('div');
+                _odFsRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
+                const _odFsLabel = document.createElement('span'); _odFsLabel.textContent = t('main.openDocsFontSize'); _odFsLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
+                const _odFsSel = document.createElement('select');
+                _odFsSel.style.cssText = 'font-size:10px;padding:1px 4px;border-radius:4px;border:1px solid var(--background-modifier-border);background:var(--background-primary);color:var(--text-normal);';
+                for (const _fs of [9, 10, 11, 12, 13, 14, 15, 16, 17, 18]) {
+                  const _opt = document.createElement('option'); _opt.value = String(_fs); _opt.textContent = _fs + 'px'; if (_fs === (this.plugin.settings?.openDocsFontSize || 13)) _opt.selected = true; _odFsSel.appendChild(_opt);
+                }
+                _odFsSel.addEventListener('change', () => { this.plugin.settings.openDocsFontSize = parseInt(_odFsSel.value) || 13; this.plugin.saveData(this.plugin.settings); this._applyOpenDocsCss?.(); });
+                _odFsRow.appendChild(_odFsLabel); _odFsRow.appendChild(_odFsSel);
+                menu.appendChild(_odFsRow);
+                const _odLhRow = document.createElement('div');
+                _odLhRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
+                const _odLhLabel = document.createElement('span'); _odLhLabel.textContent = t('main.openDocsLineHeight'); _odLhLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
+                const _odLhSel = document.createElement('select');
+                _odLhSel.style.cssText = 'font-size:10px;padding:1px 4px;border-radius:4px;border:1px solid var(--background-modifier-border);background:var(--background-primary);color:var(--text-normal);';
+                for (const _lh of [1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0]) {
+                  const _opt = document.createElement('option'); _opt.value = String(_lh); _opt.textContent = String(_lh); if (_lh === (this.plugin.settings?.openDocsLineHeight || 1.5)) _opt.selected = true; _odLhSel.appendChild(_opt);
+                }
+                _odLhSel.addEventListener('change', () => { this.plugin.settings.openDocsLineHeight = parseFloat(_odLhSel.value) || 1.5; this.plugin.saveData(this.plugin.settings); this._applyOpenDocsCss?.(); });
+                _odLhRow.appendChild(_odLhLabel); _odLhRow.appendChild(_odLhSel);
+                menu.appendChild(_odLhRow);
+                for (const [_padKey, _padLbl] of [['openDocsPaddingLeft','main.openDocsPaddingLeft'],['openDocsPaddingRight','main.openDocsPaddingRight']]) {
+                  const _padRow = document.createElement('div');
+                  _padRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
+                  const _padLabel = document.createElement('span'); _padLabel.textContent = t(_padLbl); _padLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
+                  const _padInput = document.createElement('input'); _padInput.type = 'number'; _padInput.min = '0'; _padInput.max = '60'; _padInput.value = String(this.plugin.settings?.[_padKey] ?? 8); _padInput.style.cssText = 'width:50px;font-size:10px;padding:1px 4px;border-radius:4px;border:1px solid var(--background-modifier-border);background:var(--background-primary);color:var(--text-normal);';
+                  _padInput.addEventListener('change', () => { this.plugin.settings[_padKey] = Math.max(0, Math.min(60, parseInt(_padInput.value) || 0)); this.plugin.saveData(this.plugin.settings); this._applyOpenDocsCss?.(); });
+                  _padRow.appendChild(_padLabel); _padRow.appendChild(_padInput);
+                  menu.appendChild(_padRow);
+                }
+                const _odLnRow = document.createElement('div');
+                _odLnRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
+                const _odLnLabel = document.createElement('span'); _odLnLabel.textContent = t('main.openDocsShowLineNumbers'); _odLnLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
+                const _odLnToggle = document.createElement('input'); _odLnToggle.type = 'checkbox'; _odLnToggle.checked = this.plugin.settings?.openDocsShowLineNumbers === true; _odLnToggle.style.cursor = 'pointer';
+                _odLnToggle.addEventListener('change', () => { this.plugin.settings.openDocsShowLineNumbers = _odLnToggle.checked; this.plugin.saveData(this.plugin.settings); this._applyOpenDocsCss?.(); });
+                _odLnRow.appendChild(_odLnLabel); _odLnRow.appendChild(_odLnToggle);
+                menu.appendChild(_odLnRow);
+              }
+              if (cardId.startsWith('dynFile_')) {
+                const _dfStyleSep = document.createElement('div'); _dfStyleSep.style.cssText = 'border-top:1px solid var(--background-modifier-border);margin:4px 0;';
+                menu.appendChild(_dfStyleSep);
+                const _dfStyleTitle = document.createElement('div'); _dfStyleTitle.textContent = t('main.dynFileStyleTitle'); _dfStyleTitle.style.cssText = 'color:var(--text-muted);font-weight:600;font-size:10px;margin-bottom:2px;';
+                menu.appendChild(_dfStyleTitle);
+                const _dfFsRow = document.createElement('div');
+                _dfFsRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
+                const _dfFsLabel = document.createElement('span'); _dfFsLabel.textContent = t('main.dynFileFontSize'); _dfFsLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
+                const _dfFsSel = document.createElement('select');
+                _dfFsSel.style.cssText = 'font-size:10px;padding:1px 4px;border-radius:4px;border:1px solid var(--background-modifier-border);background:var(--background-primary);color:var(--text-normal);';
+                for (const _fs of [9, 10, 11, 12, 13, 14, 15, 16, 17, 18]) {
+                  const _opt = document.createElement('option'); _opt.value = String(_fs); _opt.textContent = _fs + 'px'; if (_fs === (this.plugin.settings?.dynFileFontSize || 13)) _opt.selected = true; _dfFsSel.appendChild(_opt);
+                }
+                _dfFsSel.addEventListener('change', () => { this.plugin.settings.dynFileFontSize = parseInt(_dfFsSel.value) || 13; this.plugin.saveData(this.plugin.settings); this._applyDynFileCss?.(); });
+                _dfFsRow.appendChild(_dfFsLabel); _dfFsRow.appendChild(_dfFsSel);
+                menu.appendChild(_dfFsRow);
+                const _dfLhRow = document.createElement('div');
+                _dfLhRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
+                const _dfLhLabel = document.createElement('span'); _dfLhLabel.textContent = t('main.dynFileLineHeight'); _dfLhLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
+                const _dfLhSel = document.createElement('select');
+                _dfLhSel.style.cssText = 'font-size:10px;padding:1px 4px;border-radius:4px;border:1px solid var(--background-modifier-border);background:var(--background-primary);color:var(--text-normal);';
+                for (const _lh of [1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0]) {
+                  const _opt = document.createElement('option'); _opt.value = String(_lh); _opt.textContent = String(_lh); if (_lh === (this.plugin.settings?.dynFileLineHeight || 1.5)) _opt.selected = true; _dfLhSel.appendChild(_opt);
+                }
+                _dfLhSel.addEventListener('change', () => { this.plugin.settings.dynFileLineHeight = parseFloat(_dfLhSel.value) || 1.5; this.plugin.saveData(this.plugin.settings); this._applyDynFileCss?.(); });
+                _dfLhRow.appendChild(_dfLhLabel); _dfLhRow.appendChild(_dfLhSel);
+                menu.appendChild(_dfLhRow);
+                for (const [_padKey, _padLbl] of [['dynFilePaddingLeft','main.dynFilePaddingLeft'],['dynFilePaddingRight','main.dynFilePaddingRight']]) {
+                  const _padRow = document.createElement('div');
+                  _padRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
+                  const _padLabel = document.createElement('span'); _padLabel.textContent = t(_padLbl); _padLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
+                  const _padInput = document.createElement('input'); _padInput.type = 'number'; _padInput.min = '0'; _padInput.max = '60'; _padInput.value = String(this.plugin.settings?.[_padKey] ?? 8); _padInput.style.cssText = 'width:50px;font-size:10px;padding:1px 4px;border-radius:4px;border:1px solid var(--background-modifier-border);background:var(--background-primary);color:var(--text-normal);';
+                  _padInput.addEventListener('change', () => { this.plugin.settings[_padKey] = Math.max(0, Math.min(60, parseInt(_padInput.value) || 0)); this.plugin.saveData(this.plugin.settings); this._applyDynFileCss?.(); });
+                  _padRow.appendChild(_padLabel); _padRow.appendChild(_padInput);
+                  menu.appendChild(_padRow);
+                }
+                const _dfLnRow = document.createElement('div');
+                _dfLnRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
+                const _dfLnLabel = document.createElement('span'); _dfLnLabel.textContent = t('main.dynFileShowLineNumbers'); _dfLnLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
+                const _dfLnToggle = document.createElement('input'); _dfLnToggle.type = 'checkbox'; _dfLnToggle.checked = this.plugin.settings?.dynFileShowLineNumbers === true; _dfLnToggle.style.cursor = 'pointer';
+                _dfLnToggle.addEventListener('change', () => { this.plugin.settings.dynFileShowLineNumbers = _dfLnToggle.checked; this.plugin.saveData(this.plugin.settings); this._applyDynFileCss?.(); });
+                _dfLnRow.appendChild(_dfLnLabel); _dfLnRow.appendChild(_dfLnToggle);
+                menu.appendChild(_dfLnRow);
               }
               if (cardId === 'quickMemoSection') {
                 menu.appendChild(this._makeFontLineHeightRows('quickMemoSection', () => {
@@ -22222,6 +22340,7 @@ class AddRegexRuleModal {
     if (this._removeUnifiedCard) this._removeUnifiedCard('infoSection');
     if (this._infoGrid) { try { this._infoGrid.destroy(false); } catch(e){} }
     if (this._infoResizeObservers) this._infoResizeObservers.forEach(ro => { try { ro.disconnect(); } catch(e){} });
+    try { document.querySelectorAll('.info-card-content').forEach(c => { if (c._infoLeaf) { try { c._infoLeaf.detach(); } catch(e) {} c._infoLeaf = null; } }); } catch(e) {}
     const existing = this.contentEl?.querySelector('.info-section');
     if (existing) existing.remove();
     this._infoSection = null;
@@ -22352,7 +22471,7 @@ class AddRegexRuleModal {
       const zoneRules = Object.entries(th.zones || {}).map(([cid, z]) => `.${th.cls} .unified-card[data-card-id="${cid}"]{${_v2s(z.light)}}`).join('');
       const zoneRulesDark = Object.entries(th.zones || {}).map(([cid, z]) => `.theme-dark .${th.cls} .unified-card[data-card-id="${cid}"]{${_v2s(z.dark)}}`).join('');
       return `.${th.cls}{${_v2s(th.light)}}${zoneRules}.theme-dark .${th.cls}{${_v2s(th.dark)}}${zoneRulesDark}`;
-    }).join('') + '\n.sg-theme-active{background:var(--background-secondary) !important;}\n.sg-theme-active .unified-card{background:var(--sg-card-bg,var(--background-primary));border:1px solid var(--sg-card-border,transparent);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}\n.sg-theme-active .unified-card .unified-card-drag-handle{color:var(--text-muted);}';
+    }).join('') + '\n.sg-theme-active{background:var(--background-secondary) !important;}\n.sg-theme-active .unified-card{background:var(--sg-card-bg,var(--background-primary));border:1px solid var(--sg-card-border,transparent);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}\n.sg-theme-active .unified-card .unified-card-drag-handle{color:var(--text-muted);}\n.sg-theme-active .open-docs-content .view-content,.sg-theme-active .open-docs-content .markdown-source-view,.sg-theme-active .open-docs-content .markdown-reading-view,.sg-theme-active .open-docs-content .markdown-preview-view,.sg-theme-active .open-docs-content .cm-editor,.sg-theme-active .open-docs-content .cm-scroller,.sg-theme-active .diary-content .view-content,.sg-theme-active .diary-content .markdown-source-view,.sg-theme-active .diary-content .markdown-reading-view,.sg-theme-active .diary-content .markdown-preview-view,.sg-theme-active .diary-content .cm-editor,.sg-theme-active .diary-content .cm-scroller,.sg-theme-active .info-section .info-card-content .view-content,.sg-theme-active .info-section .info-card-content .markdown-source-view,.sg-theme-active .info-section .info-card-content .markdown-reading-view,.sg-theme-active .info-section .info-card-content .markdown-preview-view,.sg-theme-active .info-section .info-card-content .cm-editor,.sg-theme-active .info-section .info-card-content .cm-scroller{background:var(--background-secondary) !important;}';
   }
 
   _applyColorTheme() {
@@ -22974,7 +23093,7 @@ class AddRegexRuleModal {
     const title = document.createElement('span');
     title.textContent = file.basename;
     title.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-normal);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;';
-    title.title = '双击编辑';
+    title.title = t('main.diaryOpenInTab') || '在新标签页打开';
     header.appendChild(title);
     const closeBtn = document.createElement('span');
     closeBtn.textContent = '×';
@@ -22984,6 +23103,7 @@ class AddRegexRuleModal {
     closeBtn.addEventListener('mouseleave', () => { closeBtn.style.color = 'var(--text-muted)'; });
     closeBtn.addEventListener('click', async (ev) => {
       ev.preventDefault(); ev.stopPropagation();
+      if (section._dynFileLeaf) { try { section._dynFileLeaf.detach(); } catch(e) {} section._dynFileLeaf = null; }
       try {
         const _lk = (typeof this._getLayoutKey === 'function') ? this._getLayoutKey() : 'unifiedGridLayout';
         const _savedLayout = plugin.settings?.[_lk] || {};
@@ -23007,135 +23127,57 @@ class AddRegexRuleModal {
     section.appendChild(header);
     const contentArea = document.createElement('div');
     contentArea.className = 'dyn-file-content';
-    contentArea.style.cssText = 'flex:1;overflow-y:auto;overflow-x:hidden;padding:4px;font-size:12px;line-height:1.5;cursor:text;user-select:text;-webkit-user-select:text;';
+    contentArea.style.cssText = 'flex:1;overflow:hidden;padding:0;user-select:text;-webkit-user-select:text;';
     section.appendChild(contentArea);
+    this._applyDynFileCss = () => {
+      const _s = this.plugin.settings;
+      const _fs = _s.dynFileFontSize || 13;
+      const _lh = _s.dynFileLineHeight || 1.5;
+      const _pl = _s.dynFilePaddingLeft ?? 8;
+      const _pr = _s.dynFilePaddingRight ?? 8;
+      const _ln = _s.dynFileShowLineNumbers === true;
+      let _styleEl = document.getElementById('sg-dyn-file-style');
+      if (!_styleEl) { _styleEl = document.createElement('style'); _styleEl.id = 'sg-dyn-file-style'; document.head.appendChild(_styleEl); }
+      _styleEl.textContent = `.dyn-file-content .cm-content{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.dyn-file-content .cm-line{line-height:${_lh} !important;}.dyn-file-content .cm-gutters{display:${_ln ? 'flex' : 'none'} !important;}.dyn-file-content .markdown-reading-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.dyn-file-content .markdown-preview-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.dyn-file-content .markdown-preview-pushed{padding-left:${_pl}px !important;padding-right:${_pr}px !important;}`;
+      try { document.querySelectorAll('.dyn-file-content .cm-gutters,.dyn-file-content .cm-gutter.cm-lineNumbers').forEach(el => { el.style.display = _ln ? '' : 'none'; }); } catch(e) {}
+    };
+    this._applyDynFileCss();
     const _renderContent = async () => {
       try {
-        const _content = await plugin.app.vault.read(file);
+        if (section._dynFileLeaf && section._dynFileLeaf.containerEl && section._dynFileLeaf.containerEl.parentElement) {
+          try { await section._dynFileLeaf.openFile(file); const _vh = section._dynFileLeaf.containerEl.querySelector('.view-header'); if (_vh) _vh.style.display = 'none'; this._applyDynFileCss?.(); return; } catch (e) {}
+        }
+        if (section._dynFileLeaf) { try { section._dynFileLeaf.detach(); } catch(e) {} section._dynFileLeaf = null; }
         contentArea.innerHTML = '';
-        try {
-          const { MarkdownRenderer, Component } = require('obsidian');
-          const comp = new Component(); comp.load();
-          await MarkdownRenderer.renderMarkdown(_content, contentArea, file.path, comp);
-          if (plugin.renderImagesManually) await plugin.renderImagesManually(_content, contentArea, plugin);
-          contentArea._dynFileComponent = comp;
-        } catch (e) {
-          contentArea.textContent = _content;
-        }
-        if (!contentArea._sgLinkBound) {
-          contentArea._sgLinkBound = true;
-          contentArea.addEventListener('click', (ce) => {
-            const linkEl = ce.target.closest('a.internal-link, a.is-unresolved');
-            if (linkEl) {
-              ce.preventDefault(); ce.stopPropagation();
-              const href = linkEl.dataset.href || linkEl.getAttribute('href') || linkEl.textContent;
-              if (href) plugin.app.workspace.openLinkText(href, '', true);
-            }
-          });
-        }
-        try {
-          const _allKwRules = [...(Array.isArray(plugin.rules) ? plugin.rules : []), ...(Array.isArray(plugin.globalRules) ? plugin.globalRules : [])];
-          if (typeof _buildKeywordRanges === 'function' && _allKwRules.length > 0) {
-            const _kwRanges = _buildKeywordRanges(contentArea.textContent, _allKwRules);
-            if (_kwRanges.length > 0) {
-              const walker = document.createTreeWalker(contentArea, NodeFilter.SHOW_TEXT);
-              const textNodes = []; let tn;
-              while ((tn = walker.nextNode())) textNodes.push(tn);
-              let offset = 0;
-              for (const textNode of textNodes) {
-                const nodeStart = offset; const nodeEnd = offset + textNode.textContent.length;
-                for (const range of _kwRanges) {
-                  if (range.start >= nodeStart && range.end <= nodeEnd) {
-                    const localStart = range.start - nodeStart; const localEnd = range.end - nodeStart;
-                    const before = textNode.textContent.substring(0, localStart);
-                    const kwText = textNode.textContent.substring(localStart, localEnd);
-                    const after = textNode.textContent.substring(localEnd);
-                    const kwSpan = document.createElement('span');
-                    kwSpan.className = (plugin.settings?.relatedHlKwUniformClass || range.cssClass || '') + ' highlight-regex-text';
-                    kwSpan.style.cssText = 'cursor:pointer;';
-                    kwSpan.textContent = kwText;
-                    if (range.regex) {
-                      kwSpan.dataset.ruleRegex = range.regex;
-                      kwSpan.addEventListener('click', (cev) => {
-                        cev.stopPropagation();
-                        if (this.regexInput) { this.regexInput.setValue?.(range.regex); }
-                      });
-                    }
-                    textNode.textContent = before;
-                    textNode.after(kwSpan);
-                    kwSpan.after(after);
-                  }
-                }
-                offset = nodeEnd;
-              }
-            }
-          }
-        } catch (e) {}
+        const obs = require('obsidian');
+        const split = new obs.WorkspaceSplit(this.app.workspace, 'vertical');
+        split.containerEl.style.cssText = 'width:100%;height:100%;';
+        contentArea.appendChild(split.containerEl);
+        const leaf = this.app.workspace.createLeafInParent(split, 0);
+        section._dynFileLeaf = leaf;
+        await leaf.openFile(file);
+        const _vh = leaf.containerEl.querySelector('.view-header'); if (_vh) _vh.style.display = 'none';
+        this._applyDynFileCss?.();
       } catch (e) {
         contentArea.textContent = '（无法读取文件: ' + file.path + '）';
       }
     };
     _renderContent();
-    contentArea.addEventListener('mouseup', () => {
-      try {
-        const _sel = window.getSelection?.();
-        const _txt = _sel ? String(_sel.toString()).trim() : '';
-        if (_txt && _txt.length > 0 && this.regexInput && typeof this.regexInput.setValue === 'function') {
-          this.regexInput.setValue(_txt);
-        }
-      } catch (e) {}
-    });
-    let _editing = false;
-    const _enterEdit = async () => {
-      if (_editing) return;
-      _editing = true;
-      try {
-        if (contentArea._dynFileComponent) { try { contentArea._dynFileComponent.unload(); } catch(e) {} contentArea._dynFileComponent = null; }
-        const _raw = await plugin.app.vault.read(file);
-        contentArea.innerHTML = '';
-        const _ta = document.createElement('textarea');
-        _ta.className = 'dyn-file-edit-textarea';
-        _ta.value = _raw;
-        _ta.style.cssText = 'width:100%;height:100%;border:none;outline:none;resize:none;padding:4px;font-size:12px;line-height:1.5;background:var(--background-primary);color:var(--text-normal);font-family:var(--font-monospace);box-sizing:border-box;';
-        contentArea.style.overflow = 'hidden';
-        contentArea.appendChild(_ta);
-        const _btnRow = document.createElement('div');
-        _btnRow.style.cssText = 'display:flex;gap:6px;justify-content:flex-end;padding:4px 0 0;border-top:1px solid var(--background-modifier-border);margin-top:4px;';
-        const _saveBtn = document.createElement('button');
-        _saveBtn.textContent = t('main.mindmapOK');
-        _saveBtn.style.cssText = 'padding:2px 12px;cursor:pointer;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--interactive-accent);color:#fff;font-size:11px;';
-        const _cancelBtn = document.createElement('button');
-        _cancelBtn.textContent = t('main.mindmapCancel');
-        _cancelBtn.style.cssText = 'padding:2px 12px;cursor:pointer;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-secondary);color:var(--text-normal);font-size:11px;';
-        _btnRow.appendChild(_cancelBtn);
-        _btnRow.appendChild(_saveBtn);
-        section.appendChild(_btnRow);
-        _ta.focus();
-        const _exit = async (_save) => {
-          if (!_editing) return;
-          _editing = false;
-          if (_save) {
-            try { await plugin.app.vault.modify(file, _ta.value); } catch(e) {}
+    if (!contentArea._sgSelBound) {
+      contentArea._sgSelBound = true;
+      contentArea.addEventListener('mouseup', () => {
+        try {
+          const _sel = window.getSelection?.();
+          const _txt = _sel ? String(_sel.toString()).trim() : '';
+          if (_txt && _txt.length > 0 && this.regexInput && typeof this.regexInput.setValue === 'function') {
+            this.regexInput.setValue(_txt);
           }
-          _btnRow.remove();
-          contentArea.style.overflow = 'auto';
-          await _renderContent();
-        };
-        _saveBtn.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); _exit(true); });
-        _cancelBtn.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); _exit(false); });
-        _ta.addEventListener('keydown', (ev) => {
-          if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); _exit(false); }
-          else if (ev.key === 's' && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); ev.stopPropagation(); _exit(true); }
-        });
-      } catch (e) { _editing = false; }
-    };
-    contentArea.addEventListener('dblclick', (ev) => {
-      ev.preventDefault(); ev.stopPropagation();
-      _enterEdit();
-    });
+        } catch (e) {}
+      });
+    }
     title.addEventListener('dblclick', (ev) => {
       ev.preventDefault(); ev.stopPropagation();
-      _enterEdit();
+      plugin.app.workspace.openLinkText(file.path, '', true);
     });
     try { this._addUnifiedCard(section, cid, { w: 12, h: 6 }); } catch (e) { if (!section.parentElement) contentEl.appendChild(section); }
   }
@@ -24237,7 +24279,7 @@ class AddRegexRuleModal {
     section.appendChild(headerRow);
     const contentArea = document.createElement('div');
     contentArea.className = 'diary-content';
-    contentArea.style.cssText = 'flex:1;overflow:hidden;padding:0;';
+    contentArea.style.cssText = 'flex:1;overflow:hidden;padding:0;background:var(--background-secondary);';
     section.appendChild(contentArea);
     const getDailyConfig = () => {
       try {
@@ -24264,7 +24306,7 @@ class AddRegexRuleModal {
       const _ln = _s.diaryShowLineNumbers === true;
       let _styleEl = document.getElementById('sg-diary-style');
       if (!_styleEl) { _styleEl = document.createElement('style'); _styleEl.id = 'sg-diary-style'; document.head.appendChild(_styleEl); }
-      _styleEl.textContent = `.diary-content .cm-content{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .cm-line{line-height:${_lh} !important;}.diary-content .cm-gutters{display:${_ln ? 'flex' : 'none'} !important;}.diary-content .markdown-reading-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .markdown-preview-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .markdown-preview-pushed{padding-left:${_pl}px !important;padding-right:${_pr}px !important;}`;
+      _styleEl.textContent = `.diary-content .cm-content{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .cm-line{line-height:${_lh} !important;}.diary-content .cm-gutters{display:${_ln ? 'flex' : 'none'} !important;}.diary-content .cm-scroller{padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .markdown-reading-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .markdown-preview-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .markdown-preview-pushed{padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .view-content,.diary-content .markdown-source-view,.diary-content .markdown-reading-view,.diary-content .markdown-preview-view,.diary-content .cm-editor,.diary-content .cm-scroller,.diary-content .markdown-preview-pushed{background:transparent !important;}`;
       try { contentArea.querySelectorAll('.cm-gutters,.cm-gutter.cm-lineNumbers').forEach(el => { el.style.display = _ln ? '' : 'none'; }); } catch(e) {}
     };
     this._applyDiaryCss();
@@ -24319,7 +24361,8 @@ class AddRegexRuleModal {
       const _d = new Date(currentDate); _d.setHours(0,0,0,0);
       const _dayStart = _d.getTime(); const _dayEnd = _dayStart + 86400000;
       const _lines = [];
-      const _secHeader = '## ' + t('main.diaryActivitySection');
+      const _curSecHeader = '## ' + t('main.diaryActivitySection');
+      const _allSecHeaders = ['## 当天动态', '## Today Activity'];
       if (_s.diaryWriteHighlights) {
         const _hls = (Array.isArray(plugin._highlightDb) ? plugin._highlightDb : []).filter(e => {
           const ts = e.ts || plugin._highlightDbFileStats?.[e.path] || 0;
@@ -24342,18 +24385,22 @@ class AddRegexRuleModal {
       }
       if (_s.diaryWriteFloatNotes) {
         const _fns = (Array.isArray(plugin.globalNotes) ? plugin.globalNotes : []).filter(n => { const ts = n._createdAt || n.id || 0; return ts >= _dayStart && ts < _dayEnd; });
-        if (_fns.length > 0) { _lines.push('### ' + t('main.diaryActFloatNotes')); for (const n of _fns.slice(0, 30)) { const _t = (n.text || '').replace(/\n/g, ' ').trim().substring(0, 80); _lines.push(`- ${_t}`); } _lines.push(''); }
+        if (_fns.length > 0) { _lines.push('### ' + t('main.diaryActFloatNotes')); for (const n of _fns.slice(0, 30)) { const _t = (n.text || '').replace(/\n/g, ' ').trim(); _lines.push(`- ${_t}`); } _lines.push(''); }
       }
       if (_lines.length === 0) return;
       let content = await this.app.vault.read(file);
-      const _secIdx = content.indexOf(_secHeader);
+      let _secIdx = -1, _foundSecHeader = null;
+      for (const _h of _allSecHeaders) {
+        const _i = content.indexOf(_h);
+        if (_i >= 0 && (_secIdx < 0 || _i < _secIdx)) { _secIdx = _i; _foundSecHeader = _h; }
+      }
       if (_secIdx >= 0) {
         const _afterSec = content.substring(0, _secIdx);
-        let _nextSecIdx = content.indexOf('\n## ', _secIdx + _secHeader.length);
+        let _nextSecIdx = content.indexOf('\n## ', _secIdx + _foundSecHeader.length);
         if (_nextSecIdx < 0) _nextSecIdx = content.length;
-        content = _afterSec + _secHeader + '\n\n' + _lines.join('\n') + '\n' + content.substring(_nextSecIdx);
+        content = _afterSec + _foundSecHeader + '\n\n' + _lines.join('\n') + '\n' + content.substring(_nextSecIdx);
       } else {
-        content = content.replace(/\s+$/, '') + '\n\n' + _secHeader + '\n\n' + _lines.join('\n') + '\n';
+        content = content.replace(/\s+$/, '') + '\n\n' + _curSecHeader + '\n\n' + _lines.join('\n') + '\n';
       }
       await this.app.vault.modify(file, content);
       if (_diaryLeaf && _diaryLeaf.containerEl && _diaryLeaf.containerEl.parentElement) { try { await _diaryLeaf.openFile(file); const _vh = _diaryLeaf.containerEl.querySelector('.view-header'); if (_vh) _vh.style.display = 'none'; this._applyDiaryCss?.(); } catch(e) {} }
@@ -24469,6 +24516,7 @@ class AddRegexRuleModal {
 
   addOpenDocsSection(contentEl) {
     if (this.plugin.settings?.showOpenDocsSection === false) return;
+    if (this._openDocsLeaf) { try { this._openDocsLeaf.detach(); } catch(e) {} this._openDocsLeaf = null; }
     const section = document.createElement('div');
     section.className = 'open-docs-section';
     section.style.cssText = 'height:100%;display:flex;flex-direction:column;padding:4px 2px;overflow:hidden;';
@@ -24483,13 +24531,37 @@ class AddRegexRuleModal {
     chipsContainer.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;padding:4px 0;flex-shrink:0;overflow-x:auto;max-height:60px;';
     section.appendChild(chipsContainer);
     const contentContainer = document.createElement('div');
-    contentContainer.style.cssText = 'flex:1;overflow-y:auto;padding:4px;user-select:text;-webkit-user-select:text;';
+    contentContainer.className = 'open-docs-content';
+    contentContainer.style.cssText = 'flex:1;overflow:hidden;padding:0;user-select:text;-webkit-user-select:text;background:var(--background-secondary);';
     section.appendChild(contentContainer);
     this._openDocsSectionEl = section;
     this._openDocsChipsEl = chipsContainer;
     this._openDocsContentEl = contentContainer;
     this._openDocsSelectedPath = null;
     if (!Array.isArray(this._openDocsExtraFiles)) this._openDocsExtraFiles = [];
+    this._openDocsLeaf = null;
+    this._applyOpenDocsCss = () => {
+      const _s = this.plugin.settings;
+      const _fs = _s.openDocsFontSize || 13;
+      const _lh = _s.openDocsLineHeight || 1.5;
+      const _pl = _s.openDocsPaddingLeft ?? 8;
+      const _pr = _s.openDocsPaddingRight ?? 8;
+      const _ln = _s.openDocsShowLineNumbers === true;
+      let _styleEl = document.getElementById('sg-open-docs-style');
+      if (!_styleEl) { _styleEl = document.createElement('style'); _styleEl.id = 'sg-open-docs-style'; document.head.appendChild(_styleEl); }
+      _styleEl.textContent = `.open-docs-content .cm-content{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.open-docs-content .cm-line{line-height:${_lh} !important;}.open-docs-content .cm-gutters{display:${_ln ? 'flex' : 'none'} !important;}.open-docs-content .markdown-reading-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.open-docs-content .markdown-preview-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.open-docs-content .markdown-preview-pushed{padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.open-docs-content .view-content,.open-docs-content .markdown-source-view,.open-docs-content .markdown-reading-view,.open-docs-content .markdown-preview-view,.open-docs-content .cm-editor,.open-docs-content .cm-scroller,.open-docs-content .markdown-preview-pushed{background:transparent !important;}`;
+      try { contentContainer.querySelectorAll('.cm-gutters,.cm-gutter.cm-lineNumbers').forEach(el => { el.style.display = _ln ? '' : 'none'; }); } catch(e) {}
+    };
+    this._applyOpenDocsCss();
+    this._applyOpenDocsViewBg = () => {
+      if (!contentContainer) return;
+      contentContainer.querySelectorAll('.view-content, .markdown-source-view, .markdown-reading-view, .markdown-preview-view, .cm-editor, .cm-scroller, .markdown-preview-pushed, .markdown-source-view.mod-cm6, .markdown-reading-view .markdown-preview-view').forEach(el => { el.style.setProperty('background', 'var(--background-secondary)', 'important'); el.style.setProperty('background-color', 'var(--background-secondary)', 'important'); });
+    };
+    let _viewBgTimer = null;
+    if (!contentContainer._sgViewBgObs) {
+      contentContainer._sgViewBgObs = new MutationObserver(() => { clearTimeout(_viewBgTimer); _viewBgTimer = setTimeout(() => { this._applyOpenDocsViewBg?.(); }, 50); });
+      contentContainer._sgViewBgObs.observe(contentContainer, { childList: true, subtree: true });
+    }
     const _odBorderNormal = '1px solid var(--background-modifier-border)';
     const _odInSection = (ev) => { try { const r = section.getBoundingClientRect(); return ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom; } catch (e) { return false; } };
     const _odExtractPaths = (dt) => {
@@ -24604,7 +24676,7 @@ class AddRegexRuleModal {
     const docs = [];
     for (const l of leaves) {
       const p = l.view.file.path;
-      if (!seen.has(p)) { seen.add(p); docs.push({ path: p, basename: l.view.file.basename }); }
+      if (!seen.has(p)) { seen.add(p); docs.push({ path: p, basename: l.view.file.basename, source: 'leaf' }); }
     }
     if (Array.isArray(this._openDocsExtraFiles)) {
       for (const fp of this._openDocsExtraFiles) {
@@ -24612,11 +24684,12 @@ class AddRegexRuleModal {
         const f = this.app.vault.getAbstractFileByPath(fp);
         if (!f) continue;
         seen.add(fp);
-        docs.push({ path: fp, basename: f.basename });
+        docs.push({ path: fp, basename: f.basename, source: 'extra' });
       }
     }
     chipsEl.innerHTML = '';
     if (docs.length === 0) {
+      if (this._openDocsLeaf) { try { this._openDocsLeaf.detach(); } catch(e) {} this._openDocsLeaf = null; }
       if (contentEl._component) { try { contentEl._component.unload(); } catch(e) {} contentEl._component = null; }
       contentEl.innerHTML = '';
       const empty = document.createElement('div');
@@ -24633,10 +24706,31 @@ class AddRegexRuleModal {
     this._openDocsSelectedPath = selectedPath;
     for (const doc of docs) {
       const chip = document.createElement('span');
-      chip.textContent = doc.basename;
       const _isActive = doc.path === selectedPath;
-      chip.style.cssText = `font-size:11px;padding:2px 8px;border-radius:10px;cursor:pointer;white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis;transition:background 0.1s;${_isActive ? 'background:var(--text-accent);color:var(--text-on-accent);' : 'background:var(--background-secondary);color:var(--text-muted);border:1px solid var(--background-modifier-border);'}`;
+      chip.style.cssText = `display:inline-flex;align-items:center;gap:2px;font-size:11px;padding:2px 6px 2px 8px;border-radius:10px;cursor:pointer;white-space:nowrap;max-width:150px;transition:background 0.1s;${_isActive ? 'background:var(--text-accent);color:var(--text-on-accent);' : 'background:var(--background-secondary);color:var(--text-muted);border:1px solid var(--background-modifier-border);'}`;
       chip.title = doc.path;
+      const chipLabel = document.createElement('span');
+      chipLabel.textContent = doc.basename;
+      chipLabel.style.cssText = 'overflow:hidden;text-overflow:ellipsis;max-width:120px;';
+      chip.appendChild(chipLabel);
+      const closeBtn = document.createElement('span');
+      closeBtn.textContent = '\u00d7';
+      closeBtn.style.cssText = 'flex-shrink:0;cursor:pointer;font-size:13px;line-height:1;opacity:0.55;padding:0 1px;border-radius:50%;';
+      closeBtn.addEventListener('mouseenter', () => { closeBtn.style.opacity = '1'; closeBtn.style.color = 'var(--text-error)'; });
+      closeBtn.addEventListener('mouseleave', () => { closeBtn.style.opacity = '0.55'; closeBtn.style.color = ''; });
+      ['mousedown', 'pointerdown'].forEach(evt => { closeBtn.addEventListener(evt, (e) => { e.stopPropagation(); }); });
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (doc.source === 'leaf') {
+          const targetLeaf = this.app.workspace.getLeavesOfType('markdown').find(l => l.view?.file?.path === doc.path);
+          if (targetLeaf) { try { targetLeaf.detach(); } catch(err) {} }
+        } else if (doc.source === 'extra') {
+          this._openDocsExtraFiles = (this._openDocsExtraFiles || []).filter(p => p !== doc.path);
+        }
+        if (this._openDocsSelectedPath === doc.path) this._openDocsSelectedPath = null;
+        this._renderOpenDocs();
+      });
+      chip.appendChild(closeBtn);
       chip.addEventListener('mouseenter', () => { if (!_isActive) chip.style.background = 'var(--background-modifier-hover)'; });
       chip.addEventListener('mouseleave', () => { if (!_isActive) chip.style.background = 'var(--background-secondary)'; });
       ['mousedown', 'pointerdown'].forEach(evt => { chip.addEventListener(evt, (e) => { e.stopPropagation(); }); });
@@ -24650,112 +24744,60 @@ class AddRegexRuleModal {
     this._renderOpenDocsContent(selectedPath);
   }
 
-  _renderOpenDocsContent(filePath) {
+  async _renderOpenDocsContent(filePath) {
     const contentEl = this._openDocsContentEl;
     if (!contentEl) return;
     const plugin = this.plugin;
     if (contentEl._sgSelBtn) { contentEl._sgSelBtn.remove(); contentEl._sgSelBtn = null; }
-    if (contentEl._component) { try { contentEl._component.unload(); } catch(e) {} contentEl._component = null; }
-    contentEl.innerHTML = '';
     const file = this.app.vault.getAbstractFileByPath(filePath);
-    if (!file) { contentEl.textContent = t('main.openDocsEmpty'); return; }
-    this.app.vault.read(file).then(content => {
-      try {
-        const { MarkdownRenderer: MR, Component } = require('obsidian');
-        const component = new Component();
-        component.load();
-        MR.renderMarkdown(content, contentEl, filePath, component);
-        contentEl._component = component;
-        try {
-          const _allKwRules = [...(Array.isArray(plugin.rules)?plugin.rules:[]), ...(Array.isArray(plugin.globalRules)?plugin.globalRules:[])];
-          const _kwRanges = _buildKeywordRanges(contentEl.textContent, _allKwRules);
-          if (_kwRanges.length > 0) {
-            const walker = document.createTreeWalker(contentEl, NodeFilter.SHOW_TEXT);
-            const textNodes = []; let tn;
-            while ((tn = walker.nextNode())) textNodes.push(tn);
-            let offset = 0;
-            for (const textNode of textNodes) {
-              const nodeStart = offset;
-              const nodeEnd = offset + textNode.textContent.length;
-              for (const range of _kwRanges) {
-                if (range.start >= nodeStart && range.end <= nodeEnd) {
-                  const localStart = range.start - nodeStart;
-                  const localEnd = range.end - nodeStart;
-                  const before = textNode.textContent.substring(0, localStart);
-                  const kwText = textNode.textContent.substring(localStart, localEnd);
-                  const after = textNode.textContent.substring(localEnd);
-                  const kwSpan = document.createElement('span');
-                  kwSpan.className = (plugin.settings?.relatedHlKwUniformClass || range.cssClass || '') + ' highlight-regex-text';
-                  kwSpan.style.cssText = 'cursor:pointer;';
-                  kwSpan.textContent = kwText;
-                  if (range.regex) {
-                    kwSpan.dataset.ruleRegex = range.regex;
-                    kwSpan.addEventListener('click', (ce) => {
-                      ce.stopPropagation();
-                      const _m = plugin._regexHighlightModal;
-                      if (_m && _m.contentEl && _m.regexInput) {
-                        if (_m._showKwChips) { _m._showKwChips([range.regex], range.regex, range.regex); }
-                        _m.regexInput.setValue?.(range.regex);
-                        requestAnimationFrame(() => {
-                          const _ar=[...(plugin.globalRules||[]),...(plugin.rules||[])],_mr=_ar.find(r=>r.regex===range.regex);
-                          if(_mr){const _gi=plugin.globalRules.includes(_mr);_m.currentEditingRule={index:_gi?plugin.globalRules.indexOf(_mr):plugin.rules.indexOf(_mr),regex:_mr.regex,cssClass:_mr.cssClass,isGlobal:_gi,remark:_mr.remark||''};_m.inputModifiedSinceEdit=false;}
-                          if (_m.updateStyleButtonsPreview) _m.updateStyleButtonsPreview(range.regex);
-                          _m.highlightMatchingRuleButtons?.();
-                          _m._needsRefresh = false;
-                          _m.showInlineRemarkForRegex?.(range.regex);
-                          if (_m._refreshUpdateChip) _m._refreshUpdateChip();
-                        });
-                        setTimeout(() => { if (_m.regexInput) _m.regexInput.setValue?.(range.regex); }, 50);
-                      }
-                    });
-                  }
-                  const parent = textNode.parentNode;
-                  if (before) parent.insertBefore(document.createTextNode(before), textNode);
-                  parent.insertBefore(kwSpan, textNode);
-                  if (after) parent.insertBefore(document.createTextNode(after), textNode);
-                  parent.removeChild(textNode);
-                  break;
-                }
-              }
-              offset = nodeEnd;
-            }
-          }
-        } catch {}
-        if (!contentEl._sgLinkBound) {
-          contentEl._sgLinkBound = true;
-          contentEl.addEventListener('click', (ce) => {
-            const linkEl = ce.target.closest('a.internal-link, a.is-unresolved');
-            if (linkEl) {
-              ce.preventDefault(); ce.stopPropagation();
-              const href = linkEl.dataset.href || linkEl.getAttribute('href') || linkEl.textContent;
-              if (href) plugin.app.workspace.openLinkText(href, '', true);
-            }
+    if (!file) {
+      if (this._openDocsLeaf) { try { this._openDocsLeaf.detach(); } catch(e) {} this._openDocsLeaf = null; }
+      contentEl.innerHTML = '';
+      contentEl.textContent = t('main.openDocsEmpty');
+      return;
+    }
+    if (this._openDocsLeaf && this._openDocsLeaf.containerEl && this._openDocsLeaf.containerEl.parentElement) {
+      try { await this._openDocsLeaf.openFile(file); const _vh = this._openDocsLeaf.containerEl.querySelector('.view-header'); if (_vh) _vh.style.display = 'none'; this._applyOpenDocsCss?.(); this._bindOpenDocsSelection(); this._applyOpenDocsViewBg?.(); return; } catch (e) {}
+    }
+    if (this._openDocsLeaf) { try { this._openDocsLeaf.detach(); } catch(e) {} this._openDocsLeaf = null; }
+    contentEl.innerHTML = '';
+    try {
+      const obs = require('obsidian');
+      const split = new obs.WorkspaceSplit(this.app.workspace, 'vertical');
+      split.containerEl.style.cssText = 'width:100%;height:100%;';
+      contentEl.appendChild(split.containerEl);
+      const leaf = this.app.workspace.createLeafInParent(split, 0);
+      this._openDocsLeaf = leaf;
+      await leaf.openFile(file);
+      const _vh = leaf.containerEl.querySelector('.view-header'); if (_vh) _vh.style.display = 'none';
+      this._applyOpenDocsCss?.();
+      this._bindOpenDocsSelection();
+      this._applyOpenDocsViewBg?.();
+    } catch (e) { contentEl.textContent = 'Error: ' + e.message; }
+  }
+
+  _bindOpenDocsSelection() {
+    const contentEl = this._openDocsContentEl;
+    if (!contentEl || contentEl._sgSelBound) return;
+    contentEl._sgSelBound = true;
+    contentEl.addEventListener('mouseup', () => {
+      setTimeout(() => {
+        const sel = contentEl.getRootNode().getSelection?.() || window.getSelection();
+        const selText = sel ? sel.toString().trim() : '';
+        if (selText.length < 2 || selText.length > 100) return;
+        if (!sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        if (!contentEl.contains(range.commonAncestorContainer)) return;
+        const _m = this.plugin._regexHighlightModal;
+        if (_m && _m.regexInput) {
+          _m.regexInput.setValue?.(selText);
+          requestAnimationFrame(() => {
+            if (_m.updateStyleButtonsPreview) _m.updateStyleButtonsPreview(selText);
+            _m.highlightMatchingRuleButtons?.();
           });
         }
-        if (!contentEl._sgSelBound) {
-          contentEl._sgSelBound = true;
-          contentEl.addEventListener('mouseup', () => {
-            setTimeout(() => {
-              const sel = contentEl.getRootNode().getSelection?.() || window.getSelection();
-              const selText = sel ? sel.toString().trim() : '';
-              if (selText.length < 2 || selText.length > 100) return;
-              if (!sel.rangeCount) return;
-              const range = sel.getRangeAt(0);
-              if (!contentEl.contains(range.commonAncestorContainer)) return;
-              const _m = plugin._regexHighlightModal;
-              if (_m && _m.regexInput) {
-                _m.regexInput.setValue?.(selText);
-                requestAnimationFrame(() => {
-                  if (_m.updateStyleButtonsPreview) _m.updateStyleButtonsPreview(selText);
-                  _m.highlightMatchingRuleButtons?.();
-                });
-              }
-            }, 10);
-          });
-        }
-        const _odS = this.plugin.settings || {}; const _odFs = _odS['openDocsSectionFontSize']; const _odLh = _odS['openDocsSectionLineHeight']; if (_odFs) contentEl.style.fontSize = _odFs + 'px'; if (_odLh) contentEl.style.lineHeight = String(_odLh);
-      } catch(e) { contentEl.textContent = content; }
-    }).catch(() => { contentEl.textContent = t('main.openDocsEmpty'); });
+      }, 10);
+    });
   }
 
   _getVisNetworkLib() {
@@ -25297,6 +25339,7 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
       }));
       menu.appendChild(this._makeFontLineHeightRows('infoSection', () => {
         this._applySectionFontStyle(this._infoCardGrid, 'infoSection', '.info-card-content, .info-card .markdown-rendered');
+        this._applyInfoCardCss?.();
       }));
       {
         const gridRow = document.createElement('div');
@@ -25312,6 +25355,30 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
         gridCb.addEventListener('change', () => { _s.infoCardGrid = gridCb.checked; plugin.saveData(plugin.settings); _applyInfoCardStyles(); });
         gridRow.appendChild(gridCb);
         menu.appendChild(gridRow);
+      }
+      {
+        const lnRow = document.createElement('div');
+        lnRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin:3px 0;';
+        const lnLbl = document.createElement('span');
+        lnLbl.textContent = t('main.infoShowLineNumbers');
+        lnLbl.style.cssText = 'color:var(--text-normal);font-size:10px;';
+        lnRow.appendChild(lnLbl);
+        const lnCb = document.createElement('input');
+        lnCb.type = 'checkbox';
+        lnCb.checked = _s.infoShowLineNumbers === true;
+        lnCb.style.cssText = 'cursor:pointer;';
+        lnCb.addEventListener('change', () => { _s.infoShowLineNumbers = lnCb.checked; plugin.saveData(plugin.settings); this._applyInfoCardCss?.(); });
+        lnRow.appendChild(lnCb);
+        menu.appendChild(lnRow);
+      }
+      for (const [_padKey, _padLbl] of [['infoPaddingLeft','main.infoPaddingLeft'],['infoPaddingRight','main.infoPaddingRight']]) {
+        const _padRow = document.createElement('div');
+        _padRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin:3px 0;gap:8px;';
+        const _padLabel = document.createElement('span'); _padLabel.textContent = t(_padLbl); _padLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
+        const _padInput = document.createElement('input'); _padInput.type = 'number'; _padInput.min = '0'; _padInput.max = '60'; _padInput.value = String(_s[_padKey] ?? 4); _padInput.style.cssText = 'width:50px;font-size:10px;padding:1px 4px;border-radius:4px;border:1px solid var(--background-modifier-border);background:var(--background-primary);color:var(--text-normal);';
+        _padInput.addEventListener('change', () => { _s[_padKey] = Math.max(0, Math.min(60, parseInt(_padInput.value) || 0)); plugin.saveData(plugin.settings); this._applyInfoCardCss?.(); });
+        _padRow.appendChild(_padLabel); _padRow.appendChild(_padInput);
+        menu.appendChild(_padRow);
       }
       const vfLabel = document.createElement('div');
       vfLabel.textContent = t('settings.infoVaultFolder');
@@ -25517,10 +25584,55 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
       cardGrid.appendChild(placeholder);
     };
 
+    this._applyInfoCardCss = () => {
+      const _s = this.plugin.settings || {};
+      const _fs = _s.infoSectionFontSize || 13;
+      const _lh = _s.infoSectionLineHeight || 1.6;
+      const _ln = _s.infoShowLineNumbers === true;
+      const _pl = _s.infoPaddingLeft ?? 4;
+      const _pr = _s.infoPaddingRight ?? 4;
+      let _styleEl = document.getElementById('sg-info-card-style');
+      if (!_styleEl) { _styleEl = document.createElement('style'); _styleEl.id = 'sg-info-card-style'; document.head.appendChild(_styleEl); }
+      _styleEl.textContent = `.info-card-content .cm-content{font-size:${_fs}px !important;line-height:${_lh} !important;padding-top:0 !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.info-card-content .cm-line{line-height:${_lh} !important;}.info-card-content .cm-gutters{display:${_ln ? 'flex' : 'none'} !important;}.info-card-content .cm-scroller{padding:0 !important;}.info-card-content .markdown-reading-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding:${_pl}px ${_pr}px !important;}.info-card-content .markdown-preview-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding:${_pl}px ${_pr}px !important;}.info-card-content .markdown-preview-pushed{padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.info-card-content .backlink,.info-card-content .outgoing-link,.info-card-content .backlink-pane,.info-card-content .outgoing-link-pane,.info-card-content .markdown-backlinks,.info-card-content .markdown-outgoing-links,.info-card-content .status-bar,.info-card-content .markdown-source-view-status,.info-card-content .view-content>.status-bar{display:none !important;}.info-section .info-card-content .view-content,.info-section .info-card-content .markdown-source-view,.info-section .info-card-content .markdown-reading-view,.info-section .info-card-content .markdown-preview-view,.info-section .info-card-content .cm-editor,.info-section .info-card-content .cm-scroller,.info-section .info-card-content .markdown-preview-pushed{background:transparent !important;}`;
+    };
+    this._applyInfoCardCss();
+
     const renderMd = async (container, mdContent) => {
       container.innerHTML = '';
       try { const { MarkdownRenderer, Component } = require('obsidian'); const comp = new Component(); comp.load(); const srcPath = plugin.app.workspace.getActiveFile()?.path || plugin.currentFilePath || ''; await MarkdownRenderer.renderMarkdown(mdContent, container, srcPath, comp); if (plugin.renderImagesManually) await plugin.renderImagesManually(mdContent, container, plugin); if (!container._sgLinkBound) { container._sgLinkBound = true; container.addEventListener('click', (ce) => { const linkEl = ce.target.closest('a.internal-link, a.is-unresolved'); if (linkEl) { ce.preventDefault(); ce.stopPropagation(); const href = linkEl.dataset.href || linkEl.getAttribute('href') || linkEl.textContent; if (href) plugin.app.workspace.openLinkText(href, '', true); } }); container.addEventListener('auxclick', (ce) => { if (ce.button !== 1) return; const linkEl = ce.target.closest('a.internal-link, a.is-unresolved'); if (linkEl) { ce.preventDefault(); ce.stopPropagation(); const href = linkEl.dataset.href || linkEl.getAttribute('href') || linkEl.textContent; if (href) { const leaf = plugin.app.workspace.getLeaf('window'); const file = plugin.app.metadataCache.getFirstLinkpathDest(href.replace(/\.md$/, ''), '') || plugin.app.vault.getAbstractFileByPath(href); if (file) leaf.openFile(file); } } }); } this._applySectionFontStyle(cardGrid, 'infoSection', '.info-card-content, .info-card .markdown-rendered'); if (!container.textContent.trim()) container.textContent = mdContent; }
       catch (e) { container.textContent = mdContent; }
+    };
+    const renderInfoFile = async (container, infoPath, fallbackContent) => {
+      if (container._infoLeaf) { try { container._infoLeaf.detach(); } catch(e) {} container._infoLeaf = null; }
+      if (container._infoComponent) { try { container._infoComponent.unload(); } catch(e) {} container._infoComponent = null; }
+      container.innerHTML = '';
+      let file = null;
+      if (infoPath) { try { file = plugin.app.vault.getAbstractFileByPath(infoPath); } catch(e) {} }
+      if (file) {
+        try {
+          const obs = require('obsidian');
+          const split = new obs.WorkspaceSplit(this.app.workspace, 'vertical');
+          split.containerEl.style.cssText = 'width:100%;height:100%;';
+          container.appendChild(split.containerEl);
+          const leaf = this.app.workspace.createLeafInParent(split, 0);
+          container._infoLeaf = leaf;
+          await leaf.openFile(file);
+          const _vh = leaf.containerEl.querySelector('.view-header'); if (_vh) _vh.style.display = 'none';
+          const _hideInfoExtras = () => {
+            const _vc = leaf.containerEl.querySelector('.view-content');
+            if (_vc) { Array.from(_vc.children).forEach(child => { if (!child.classList.contains('markdown-source-view') && !child.classList.contains('markdown-reading-view') && !child.classList.contains('markdown-view')) { child.style.display = 'none'; } }); }
+          };
+          _hideInfoExtras();
+          setTimeout(_hideInfoExtras, 100);
+          setTimeout(_hideInfoExtras, 500);
+          this._applyInfoCardCss?.();
+          container._infoInLeaf = true;
+          return true;
+        } catch(e) { if (container._infoLeaf) { try { container._infoLeaf.detach(); } catch(e2) {} container._infoLeaf = null; } }
+      }
+      container._infoInLeaf = false;
+      await renderMd(container, fallbackContent);
+      return false;
     };
 
     this._addInfoCard = (filePath, fileName, kw, editMode) => {
@@ -25679,9 +25791,9 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
           let accumulated = '';
           try {
             const reply = await plugin.callAIStream(p, (delta, full) => { accumulated = full; streamEl.textContent = full; cardContent.scrollTop = cardContent.scrollHeight; });
-            if (reply && reply.trim()) { await writeInfoFile(fileName, reply.trim()); await renderMd(cardContent, reply.trim()); }
-            else if (accumulated) { await writeInfoFile(fileName, accumulated); await renderMd(cardContent, accumulated); }
-          } catch (err) { new Notice(t('main.infoAiFailed') + ': ' + (err.message || t('main.infoUnknownError'))); if (accumulated) { try { await writeInfoFile(fileName, accumulated); await renderMd(cardContent, accumulated); } catch(e){} } }
+            if (reply && reply.trim()) { const _p = await writeInfoFile(fileName, reply.trim()); await renderInfoFile(cardContent, _p, reply.trim()); }
+            else if (accumulated) { const _p = await writeInfoFile(fileName, accumulated); await renderInfoFile(cardContent, _p, accumulated); }
+          } catch (err) { new Notice(t('main.infoAiFailed') + ': ' + (err.message || t('main.infoUnknownError'))); if (accumulated) { try { const _p = await writeInfoFile(fileName, accumulated); await renderInfoFile(cardContent, _p, accumulated); } catch(e){} } }
           finally { aiBtn.style.opacity = '1'; }
         });
         const _onDocDown = (ev) => { if (_aiPopup && !_aiPopup.contains(ev.target) && !aiBtn.contains(ev.target)) { _closeAiPopup(); document.removeEventListener('mousedown', _onDocDown); } };
@@ -25700,6 +25812,7 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
       delBtn.addEventListener('mouseleave', () => { delBtn.style.opacity = '0.5'; });
       delBtn.addEventListener('click', async (de) => {
         de.preventDefault(); de.stopPropagation();
+        if (cardContent._infoLeaf) { try { cardContent._infoLeaf.detach(); } catch(e) {} cardContent._infoLeaf = null; }
         const r = await readInfoFile(fileName);
         if (r) { try { await this.app.vault.adapter.remove(r.path); } catch(e){} }
         if (plugin.settings.infoGridLayout && plugin.settings.infoGridLayout[fileName]) { delete plugin.settings.infoGridLayout[fileName]; plugin.saveData(plugin.settings); }
@@ -25752,8 +25865,8 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
         cardContent.appendChild(ta);
         ta.focus();
         const save = async () => {
-          await writeInfoFile(fileName, ta.value);
-          await renderMd(cardContent, ta.value);
+          const _p = await writeInfoFile(fileName, ta.value);
+          await renderInfoFile(cardContent, _p, ta.value);
         };
         ta.addEventListener('blur', save);
         ta.addEventListener('keydown', (ke) => { if (ke.key === 'Enter' && (ke.ctrlKey || ke.metaKey)) { ke.preventDefault(); ta.blur(); } });
@@ -25779,7 +25892,7 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
           } catch (err) { new Notice(t('main.infoAiFailed') + ': ' + (err.message || '')); }
         });
       };
-      cardContent.addEventListener('dblclick', (ev) => { ev.preventDefault(); ev.stopPropagation(); startEdit(); });
+
       if (editMode) { startEdit(); }
       else {
         const loading = document.createElement('div');
@@ -25788,7 +25901,7 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
         cardContent.appendChild(loading);
         (async () => {
           const r = await readInfoFile(fileName);
-          if (r) { await renderMd(cardContent, r.content); }
+          if (r) { await renderInfoFile(cardContent, r.path, r.content); }
           else { cardContent.innerHTML = ''; const nf1 = document.createElement('div'); nf1.textContent = t('main.infoEmptyCard'); nf1.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;'; cardContent.appendChild(nf1); }
         })();
       }
@@ -30414,6 +30527,9 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       showRelatedHighlights: true,
       showParkingLot: false,
       showInfoSection: false,
+      infoShowLineNumbers: false,
+      infoPaddingLeft: 4,
+      infoPaddingRight: 4,
       showRelatedHighlightsSection: true,
       showInlineRelatedHighlightsSection: true,
       showRemarkContentBlock: false,
@@ -30442,6 +30558,16 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       diaryPaddingLeft: 8,
       diaryPaddingRight: 8,
       diaryShowLineNumbers: false,
+      openDocsFontSize: 13,
+      openDocsLineHeight: 1.5,
+      openDocsPaddingLeft: 8,
+      openDocsPaddingRight: 8,
+      openDocsShowLineNumbers: false,
+      dynFileFontSize: 13,
+      dynFileLineHeight: 1.5,
+      dynFilePaddingLeft: 8,
+      dynFilePaddingRight: 8,
+      dynFileShowLineNumbers: false,
 
 
       quickMemoText: '',
@@ -45388,7 +45514,22 @@ if (note._collapsed) {
 
         };
         input.addEventListener('blur', finishEdit);
-        input.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { ev.preventDefault(); input.blur(); } });
+        input.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Escape') { ev.preventDefault(); input.blur(); return; }
+          if (ev.key === 'Enter' && !ev.shiftKey && !ev.ctrlKey && !ev.metaKey) {
+            setTimeout(() => {
+              autoResize();
+              const _needed = input.scrollHeight + 12;
+              const _maxH = window.innerHeight * 0.8;
+              const _curCardH = card.getBoundingClientRect().height;
+              if (_needed > _curCardH && _needed <= _maxH) {
+                card.style.height = _needed + 'px';
+              } else if (_needed > _maxH && _curCardH < _maxH) {
+                card.style.height = _maxH + 'px';
+              }
+            }, 0);
+          }
+        });
       });
       card.addEventListener('contextmenu', (e) => {
         e.preventDefault();

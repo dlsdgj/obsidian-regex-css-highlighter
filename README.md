@@ -95,6 +95,17 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 
 <details>
+<summary>v2.1.8 (2026-09-10)</summary>
+
+- **Open Docs Chip Close / 当前文档chip关闭按钮** — Added close button (×) to open docs chips; closes leaf for open files, removes from list for dragged files / 当前文档chip添加关闭按钮，主工作区文档关闭标签页，拖入文件从列表移除
+- **Section Background / 版块背景色** — Info cards, open docs, diary content background now use panel background color / info卡片、当前文档、日记版块背景改为面板背景色
+- **Dragged Doc Background / 拖入文档背景** — Dragged-in doc background forced to panel color via JS inline style / 拖入文档背景用JS内联样式强制设为面板背景色
+- **Diary cm-scroller Padding / 日记编辑器边距** — Diary cm-scroller padding follows left/right margin settings / 日记cm-scroller边距跟随左右边距设置
+- **Info Card Dblclick / info卡片双击** — Double-click now selects text instead of opening document / 双击改为选中文字而非打开文档
+
+</details>
+
+<details>
 <summary>v2.1.7 (2026-09-08)</summary>
 
 - **Calendar Section / 万年历版块** — Added calendar with month/year views, lunar dates, solar terms, festivals, Gan-Zhi years / 新增万年历版块，支持月/年视图、农历、节气、节日、干支纪年

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## 🆕 v2.1.8 (2026-09-10)
+
+- **Open Docs Chip Close** — Added close button (×) to open docs chips; closes workspace leaf for open files, removes from list for dragged files
+- **Section Background** — Info cards, open docs, diary content background now use panel background color instead of default white
+- **Dragged Doc Background** — Dragged-in doc background forced to panel color via JS inline style + MutationObserver (CSS rules don't apply to Obsidian leaf views)
+- **Diary cm-scroller Padding** — Diary cm-scroller padding now follows left/right margin settings, overriding default 32px
+- **Info Card Dblclick** — Removed open-document on info card double-click; double-click now selects text like in tabs
+
 ## v2.1.7 (2026-09-08)
 
 - **Calendar Section** — Added calendar with month/year views, lunar dates, solar terms, festivals, Gan-Zhi years, holiday markers, note count badges
@@ -21,7 +29,7 @@ All notable changes to this project will be documented in this file.
 - **Open Docs DnD** — Drag files to open docs section displays in-place without new tabs
 - **Open Docs Font Settings** — Added font size/line height settings
 
-## 🆕 v2.1.6 (2026-09-05)
+## v2.1.6 (2026-09-05)
 
 - **Ribbon Button Opens in Tab / 功能区按钮标签页打开** — Left ribbon SG button now opens panel in a new tab by default instead of sidebar / 左侧功能区 SG 按钮默认在新标签页打开面板
 - **Quick Memo Section / 随手记版块** — Added "Quick Memo" section: a plain-text scratchpad with auto-save, always in editing mode / 新增"随手记"版块：纯文本中转区，始终处于编辑状态，内容自动保存

@@ -2,7 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v2.1.8 (2026-09-10)
+## 🆕 v2.1.9 (2026-09-12)
+
+- **Merged Related Section** — Combined related docs, highlights, threads, and random review into a single "关联" section with zone-based rendering; removed separate toggles from settings panel
+- **Removed Sections** — Removed parking lot, focus, and quick memo sections from settings and code
+- **SVG Drag Handle** — Replaced full-width title bar drag with 6-dot SVG grip handle on unified and keyword cards; header bar no longer draggable except from grip
+- **Font/Line-Height Slider** — Changed font size and line height controls from dropdowns to range sliders in dragged-file and diary sections
+- **Drag File Open Button** — Added open-in-new-tab button to dragged file section headers
+- **Diary Backlinks** — Added "show backlinks in tab" toggle in diary section settings
+- **Gan-Zhi Fix** — Fixed Gan-Zhi year calculation using mid-year solar date instead of Jan 1
+- **Canvas Scroll Passthrough** — Canvas section passes wheel events to parent when no file loaded
+- **Related Section Optimizations** — Empty states collapsed to single-line hints, unified count format (n), highlight settings merged into related section menu, random review hidden when highlights present
+
+## v2.1.8 (2026-09-10)
 
 - **Open Docs Chip Close** — Added close button (×) to open docs chips; closes workspace leaf for open files, removes from list for dragged files
 - **Section Background** — Info cards, open docs, diary content background now use panel background color instead of default white

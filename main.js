@@ -1,4 +1,4 @@
-﻿const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover, PluginSettingTab, ItemView, WorkspaceLeaf } = require('obsidian');
+const { Plugin, Modal, Setting, MarkdownView, Menu, Notice, HoverPopover, PluginSettingTab, ItemView, WorkspaceLeaf } = require('obsidian');
 
 const _lunarLib = (function(){ var module={exports:{}}; var exports=module.exports; /**
  * Minified by jsDelivr using Terser v5.37.0.
@@ -632,7 +632,7 @@ const i18n = {
     'main.relatedNotes': '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> 相关文档',
     'main.relatedHighlights': '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 相关高亮',
     'main.keywordRelatedHighlights': '关键词相关高亮',
-    'main.nonKeywordRelatedHighlights': '非关键词相关高亮',
+    'main.nonKeywordRelatedHighlights': '高亮',
     'settings.hlPalette': '高亮配色方案',
     'settings.hlRemarkDisplayMode': '高亮评论显示方式',
     'settings.hlFontSize': '字体大小',
@@ -1906,7 +1906,7 @@ const i18n = {
     'main.relatedNotes': '📎 Related Files',
     'main.relatedHighlights': '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Related Highlights',
     'main.keywordRelatedHighlights': 'Keyword Related Highlights',
-    'main.nonKeywordRelatedHighlights': 'Non-Keyword Related Highlights',
+    'main.nonKeywordRelatedHighlights': 'Highlights',
     'settings.hlPalette': 'Highlight Color Palette',
     'settings.hlRemarkDisplayMode': 'Remark Display Mode',
     'settings.hlFontSize': 'Font Size',
@@ -14121,7 +14121,7 @@ class AddRegexRuleModal {
           }
           const lockLayout = _p.settings?.unifiedCardLockLayout === true;
           _unifiedGrid.classList.toggle('unified-grid-locked', lockLayout);
-          _unifiedGrid.querySelectorAll('.unified-card-drag-handle').forEach(h => { h.style.cursor = lockLayout ? 'default' : 'move'; });
+          _unifiedGrid.querySelectorAll('.unified-card-drag-handle').forEach(h => { h.style.cursor = lockLayout ? 'default' : 'grab'; });
           if (this._unifiedGrid && this._unifiedGridReady) {
             try { this._unifiedGrid.enableMove(!lockLayout, false); } catch(e) {}
             try { this._unifiedGrid.enableResize(!lockLayout, false); } catch(e) {}
@@ -14156,19 +14156,16 @@ class AddRegexRuleModal {
           panel.appendChild(_sep);
           const _sectionToggles = [
             { key: 'showInfoSection', label: t('main.cardLabelInfo'), cardId: 'infoSection', defaultVal: false },
-            { key: 'showParkingLot', label: t('main.cardLabelParkingLot'), cardId: 'parkingLotSection', defaultVal: true },
-            { key: 'showThreads', label: t('main.cardLabelThreads'), cardId: 'threadsSection', defaultVal: true },
-            { key: 'showRelatedHighlightsSection', label: t('main.cardLabelRelatedHighlights'), cardId: 'relatedHighlights', defaultVal: true },
+            { key: 'showMergedRelatedSection', label: '关联', cardId: 'mergedRelated', defaultVal: true },
             { key: 'showRemarkContentBlock', label: t('main.cardLabelRemarkContent'), cardId: 'remarkContent', defaultVal: true },
             { key: 'showKeywordChipsBlock', label: t('main.cardLabelKeywordChips'), cardId: 'keywordChips', defaultVal: true },
             { key: 'showAiQuestionBlock', label: t('main.cardLabelAiQuestion'), cardId: 'aiQuestion', defaultVal: true },
-            { key: 'showRelatedNotesSection', label: t('main.cardLabelRelatedNotes'), cardId: 'relatedNotes', defaultVal: true },
             { key: 'showRecentFilesSection', label: t('main.cardLabelRecentFiles'), cardId: 'recentFilesSection', defaultVal: true },
             { key: 'showRecentlyCreatedSection', label: t('main.cardLabelRecentlyCreated'), cardId: 'recentlyCreatedSection', defaultVal: true },
-            { key: 'showFocusSection', label: t('main.cardLabelFocus'), cardId: 'focusSection', defaultVal: true },
-            { key: 'showRandomReviewSection', label: t('main.cardLabelRandomReview'), cardId: 'randomReviewSection', defaultVal: true },
+
+
             { key: 'showQuickNoteSection', label: t('main.cardLabelQuickNote'), cardId: 'quickNoteSection', defaultVal: true },
-            { key: 'showQuickMemoSection', label: t('main.cardLabelQuickMemo'), cardId: 'quickMemoSection', defaultVal: true },
+
             { key: 'showCalendarSection', label: t('main.cardLabelCalendar'), cardId: 'calendarSection', defaultVal: true },
             { key: 'showDiarySection', label: t('main.cardLabelDiary'), cardId: 'diarySection', defaultVal: true },
 
@@ -14231,7 +14228,7 @@ class AddRegexRuleModal {
         this._unifiedGridReady = false;
         this._unifiedGridQueue = [];
         this._unifiedCardIds = new Set();
-        this._remarkCardIds = new Set(['relatedHighlights', 'remarkContent', 'keywordChips', 'aiQuestion', 'relatedNotes']);
+        this._remarkCardIds = new Set(['remarkContent', 'keywordChips', 'aiQuestion']);
 
         this._getLayoutKey = () => {
           // 侧边栏（窄区域）与标签页/独立窗口（宽区域）分别保存布局
@@ -14262,13 +14259,10 @@ class AddRegexRuleModal {
                 // 同 document 区域切换时旧实例的 DD 状态不可靠（拖拽失效），必须回到全新 init 状态。
                 setTimeout(() => {
                   try {
-                    console.log('[SG] rebuild inner grids (info/parking lot)...');
+                    console.log('[SG] rebuild inner grids (info)...');
                     try { if (this._infoGrid) this._infoGrid.destroy(false); } catch(e){}
-                    try { if (this._plGrid) this._plGrid.destroy(false); } catch(e){}
                     this._infoGrid = null; this._infoGridReady = false;
-                    this._plGrid = null; this._plGridReady = false;
                     if (this.addInfoSection) { try { this.addInfoSection(this.contentEl); } catch(e){ console.warn('[rebuild info grid]', e); } }
-                    if (this.addParkingLotSection) { try { this.addParkingLotSection(this.contentEl); } catch(e){ console.warn('[rebuild pl grid]', e); } }
                   } catch (e) { console.warn('[SG] inner rebuild failed:', e); }
                 }, 350);
               }, 200);
@@ -14480,6 +14474,7 @@ class AddRegexRuleModal {
 
         this._addUnifiedCard = (sectionEl, cardId, defaultOpts) => {
           if (!sectionEl) return null;
+          if (this._zoneOverride) { this._zoneOverride.appendChild(sectionEl); return sectionEl; }
           const plugin = this.plugin;
           const _lk = this._getLayoutKey();
           const savedLayout = this.plugin.settings?.[_lk]?.[cardId];
@@ -14489,10 +14484,20 @@ class AddRegexRuleModal {
           card.dataset.cardId = cardId;
           card.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;height:100%;';
           const dragHandle = document.createElement('div');
-          dragHandle.className = 'unified-card-drag-handle';
-          const _cardLabels = { infoSection: t('main.cardLabelInfo'), parkingLotSection: t('main.cardLabelParkingLot'), threadsSection: t('main.cardLabelThreads'), keywordHistory: t('main.cardLabelKeywordHistory'), relatedHighlights: t('main.cardLabelRelatedHighlights'), remarkContent: t('main.cardLabelRemarkContent'), keywordChips: t('main.cardLabelKeywordChips'), aiQuestion: t('main.cardLabelAiQuestion'), relatedNotes: t('main.cardLabelRelatedNotes'), recentFilesSection: t('main.cardLabelRecentFiles'), recentlyCreatedSection: t('main.cardLabelRecentlyCreated'), focusSection: t('main.cardLabelFocus'), randomReviewSection: t('main.cardLabelRandomReview'), quickNoteSection: t('main.cardLabelQuickNote'), quickMemoSection: t('main.cardLabelQuickMemo'), calendarSection: t('main.cardLabelCalendar'), diarySection: t('main.cardLabelDiary'), statsSection: t('main.cardLabelStats'), openDocsSection: t('main.cardLabelOpenDocs'), mindmapSection: t('main.cardLabelMindmap') };
-          dragHandle.style.cssText = 'cursor:move;font-size:10px;font-weight:600;color:var(--text-muted);padding:2px 6px;border-bottom:1px solid var(--background-modifier-border);opacity:0.7;transition:opacity .15s;display:flex;align-items:center;gap:4px;';
-          dragHandle.innerHTML = '<span style="font-size:12px;">\u263F</span><span class="unified-card-label">' + (_cardLabels[cardId] || cardId) + '</span>';
+          dragHandle.className = 'unified-card-header-bar';
+          const _cardLabels = { infoSection: t('main.cardLabelInfo'), keywordHistory: t('main.cardLabelKeywordHistory'), remarkContent: t('main.cardLabelRemarkContent'), keywordChips: t('main.cardLabelKeywordChips'), aiQuestion: t('main.cardLabelAiQuestion'), recentFilesSection: t('main.cardLabelRecentFiles'), recentlyCreatedSection: t('main.cardLabelRecentlyCreated'), randomReviewSection: t('main.cardLabelRandomReview'), quickNoteSection: t('main.cardLabelQuickNote'), calendarSection: t('main.cardLabelCalendar'), diarySection: t('main.cardLabelDiary'), statsSection: t('main.cardLabelStats'), openDocsSection: t('main.cardLabelOpenDocs'), mindmapSection: t('main.cardLabelMindmap'), mergedRelated: '关联' };
+          dragHandle.style.cssText = 'font-size:10px;font-weight:600;color:var(--text-muted);padding:2px 6px;border-bottom:1px solid var(--background-modifier-border);opacity:0.7;transition:opacity .15s;display:flex;align-items:center;gap:4px;';
+          const _grip = document.createElement('span');
+          _grip.className = 'unified-card-drag-handle';
+          _grip.innerHTML = '<svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="2" cy="2" r="1.2"/><circle cx="8" cy="2" r="1.2"/><circle cx="2" cy="7" r="1.2"/><circle cx="8" cy="7" r="1.2"/><circle cx="2" cy="12" r="1.2"/><circle cx="8" cy="12" r="1.2"/></svg>';
+          _grip.title = '拖动移动';
+          _grip.style.cssText = 'cursor:grab;flex-shrink:0;color:var(--text-muted);display:inline-flex;align-items:center;user-select:none;-webkit-user-select:none;touch-action:none;';
+          dragHandle.appendChild(_grip);
+          const _labelEl = document.createElement('span'); _labelEl.className = 'unified-card-label'; _labelEl.textContent = _cardLabels[cardId] || cardId;
+          dragHandle.appendChild(_labelEl);
+          ['mousedown', 'touchstart', 'pointerdown'].forEach(evt => {
+            dragHandle.addEventListener(evt, (e) => { if (!e.target.closest('.unified-card-drag-handle')) e.stopPropagation(); }, { capture: true });
+          });
 
           card.appendChild(dragHandle);
           const cardContent = document.createElement('div');
@@ -14589,7 +14594,7 @@ class AddRegexRuleModal {
             dragHandle.style.paddingRight = '24px';
           }
           // 无设置按钮的版块：在卡片标题栏自动添加底纹设置齿轮
-          const _autoBgIconIds = ['recentFilesSection', 'recentlyCreatedSection', 'focusSection', 'randomReviewSection', 'statsSection', 'openDocsSection', 'mindmapSection', 'quickMemoSection', 'calendarSection', 'diarySection'];
+          const _autoBgIconIds = ['recentFilesSection', 'recentlyCreatedSection', 'randomReviewSection', 'statsSection', 'openDocsSection', 'mindmapSection', 'calendarSection', 'diarySection', 'mergedRelated'];
           if (_autoBgIconIds.includes(cardId) || cardId.startsWith('dynFile_')) {
             const _bgIcon = document.createElement('span');
             _bgIcon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
@@ -14658,34 +14663,51 @@ class AddRegexRuleModal {
                 _odLnToggle.addEventListener('change', () => { this.plugin.settings.openDocsShowLineNumbers = _odLnToggle.checked; this.plugin.saveData(this.plugin.settings); this._applyOpenDocsCss?.(); });
                 _odLnRow.appendChild(_odLnLabel); _odLnRow.appendChild(_odLnToggle);
                 menu.appendChild(_odLnRow);
+                const _odBlRow = document.createElement('div');
+                _odBlRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
+                const _odBlLabel = document.createElement('span'); _odBlLabel.textContent = '在标签页中显示反向链接'; _odBlLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
+                const _odBlToggle = document.createElement('input'); _odBlToggle.type = 'checkbox'; _odBlToggle.checked = this.plugin.settings?.openDocsShowBacklinks === true; _odBlToggle.style.cursor = 'pointer';
+                _odBlToggle.addEventListener('change', () => { this.plugin.settings.openDocsShowBacklinks = _odBlToggle.checked; this.plugin.saveData(this.plugin.settings); this._applyOpenDocsCss?.(); this._renderOpenDocsContent?.(this._openDocsSelectedPath); });
+                _odBlRow.appendChild(_odBlLabel); _odBlRow.appendChild(_odBlToggle);
+                menu.appendChild(_odBlRow);
+              }
+              if (cardId === 'mergedRelated') {
+                const _s = this.plugin?.settings || {};
+                { const _rrSep = document.createElement('div'); _rrSep.style.cssText = 'border-top:1px solid var(--background-modifier-border);margin:4px 0;';
+                  menu.appendChild(_rrSep);
+                  const _rrRow = document.createElement('div'); _rrRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;';
+                  const _rrLbl = document.createElement('span'); _rrLbl.textContent = t('main.cardLabelRandomReview'); _rrLbl.style.cssText = 'color:var(--text-muted);flex:1;';
+                  const _rrCb = document.createElement('input'); _rrCb.type = 'checkbox'; _rrCb.checked = _s.showRandomReviewSection !== false; _rrCb.style.cursor = 'pointer';
+                  _rrCb.addEventListener('change', () => { _s.showRandomReviewSection = _rrCb.checked; this.plugin.saveData(this.plugin.settings); if (this._mergedRelatedRefresh) this._mergedRelatedRefresh(this._mergedCurrentRegex); });
+                  _rrRow.appendChild(_rrLbl); _rrRow.appendChild(_rrCb); menu.appendChild(_rrRow); }
+                const _hlSep = document.createElement('div'); _hlSep.style.cssText = 'border-top:1px solid var(--background-modifier-border);margin:4px 0;';
+                menu.appendChild(_hlSep);
+                const _hlTitle = document.createElement('div'); _hlTitle.textContent = '高亮'; _hlTitle.style.cssText = 'color:var(--text-muted);font-weight:600;font-size:10px;margin-bottom:2px;';
+                menu.appendChild(_hlTitle);
+                _SG_CREATE_HL_SETTINGS(menu, _s, () => this.plugin.saveData(this.plugin.settings), sectionEl);
+                { const row = document.createElement('div');
+                  row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;';
+                  const lbl = document.createElement('span'); lbl.textContent = t('settings.hlKwUniformClass'); lbl.style.cssText = 'color:var(--text-muted);flex:1;';
+                  const inp = document.createElement('input'); inp.type = 'text'; inp.value = _s.relatedHlKwUniformClass || ''; inp.placeholder = t('settings.hlKwUniformClassPlaceholder'); inp.style.cssText = 'width:140px;font-size:10px;padding:1px 4px;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-normal);';
+                  inp.addEventListener('input', () => { _s.relatedHlKwUniformClass = inp.value.trim(); this.plugin.saveData(this.plugin.settings); });
+                  row.appendChild(lbl); row.appendChild(inp); menu.appendChild(row); }
+                _SG_FINISH_HL_SETTINGS(menu, _s, () => this.plugin.saveData(this.plugin.settings), sectionEl);
               }
               if (cardId.startsWith('dynFile_')) {
                 const _dfStyleSep = document.createElement('div'); _dfStyleSep.style.cssText = 'border-top:1px solid var(--background-modifier-border);margin:4px 0;';
                 menu.appendChild(_dfStyleSep);
                 const _dfStyleTitle = document.createElement('div'); _dfStyleTitle.textContent = t('main.dynFileStyleTitle'); _dfStyleTitle.style.cssText = 'color:var(--text-muted);font-weight:600;font-size:10px;margin-bottom:2px;';
                 menu.appendChild(_dfStyleTitle);
-                const _dfFsRow = document.createElement('div');
-                _dfFsRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
-                const _dfFsLabel = document.createElement('span'); _dfFsLabel.textContent = t('main.dynFileFontSize'); _dfFsLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
-                const _dfFsSel = document.createElement('select');
-                _dfFsSel.style.cssText = 'font-size:10px;padding:1px 4px;border-radius:4px;border:1px solid var(--background-modifier-border);background:var(--background-primary);color:var(--text-normal);';
-                for (const _fs of [9, 10, 11, 12, 13, 14, 15, 16, 17, 18]) {
-                  const _opt = document.createElement('option'); _opt.value = String(_fs); _opt.textContent = _fs + 'px'; if (_fs === (this.plugin.settings?.dynFileFontSize || 13)) _opt.selected = true; _dfFsSel.appendChild(_opt);
-                }
-                _dfFsSel.addEventListener('change', () => { this.plugin.settings.dynFileFontSize = parseInt(_dfFsSel.value) || 13; this.plugin.saveData(this.plugin.settings); this._applyDynFileCss?.(); });
-                _dfFsRow.appendChild(_dfFsLabel); _dfFsRow.appendChild(_dfFsSel);
-                menu.appendChild(_dfFsRow);
-                const _dfLhRow = document.createElement('div');
-                _dfLhRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
-                const _dfLhLabel = document.createElement('span'); _dfLhLabel.textContent = t('main.dynFileLineHeight'); _dfLhLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
-                const _dfLhSel = document.createElement('select');
-                _dfLhSel.style.cssText = 'font-size:10px;padding:1px 4px;border-radius:4px;border:1px solid var(--background-modifier-border);background:var(--background-primary);color:var(--text-normal);';
-                for (const _lh of [1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0]) {
-                  const _opt = document.createElement('option'); _opt.value = String(_lh); _opt.textContent = String(_lh); if (_lh === (this.plugin.settings?.dynFileLineHeight || 1.5)) _opt.selected = true; _dfLhSel.appendChild(_opt);
-                }
-                _dfLhSel.addEventListener('change', () => { this.plugin.settings.dynFileLineHeight = parseFloat(_dfLhSel.value) || 1.5; this.plugin.saveData(this.plugin.settings); this._applyDynFileCss?.(); });
-                _dfLhRow.appendChild(_dfLhLabel); _dfLhRow.appendChild(_dfLhSel);
-                menu.appendChild(_dfLhRow);
+                { const _sl = (label, key, min, max, step, unit) => {
+                  const row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;';
+                  const lbl = document.createElement('span'); lbl.textContent = label; lbl.style.cssText = 'color:var(--text-muted);flex:1;';
+                  const val = document.createElement('span'); val.textContent = (this.plugin.settings?.[key] ?? (min + (max-min)/2)) + (unit||''); val.style.cssText = 'color:var(--text-normal);min-width:32px;text-align:right;margin:0 4px;';
+                  const inp = document.createElement('input'); inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = this.plugin.settings?.[key] ?? (min + (max-min)/2); inp.style.cssText = 'width:80px;flex-shrink:0;';
+                  inp.addEventListener('input', () => { this.plugin.settings[key] = parseFloat(inp.value); val.textContent = inp.value + (unit||''); this.plugin.saveData(this.plugin.settings); this._applyDynFileCss?.(); });
+                  row.appendChild(lbl); row.appendChild(inp); row.appendChild(val); menu.appendChild(row);
+                };
+                _sl(t('main.dynFileFontSize'), 'dynFileFontSize', 10, 18, 1, 'px');
+                _sl(t('main.dynFileLineHeight'), 'dynFileLineHeight', 1.0, 2.5, 0.1, ''); }
                 for (const [_padKey, _padLbl] of [['dynFilePaddingLeft','main.dynFilePaddingLeft'],['dynFilePaddingRight','main.dynFilePaddingRight']]) {
                   const _padRow = document.createElement('div');
                   _padRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
@@ -14702,13 +14724,15 @@ class AddRegexRuleModal {
                 _dfLnToggle.addEventListener('change', () => { this.plugin.settings.dynFileShowLineNumbers = _dfLnToggle.checked; this.plugin.saveData(this.plugin.settings); this._applyDynFileCss?.(); });
                 _dfLnRow.appendChild(_dfLnLabel); _dfLnRow.appendChild(_dfLnToggle);
                 menu.appendChild(_dfLnRow);
+                const _dfBlRow = document.createElement('div');
+                _dfBlRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
+                const _dfBlLabel = document.createElement('span'); _dfBlLabel.textContent = '在标签页中显示反向链接'; _dfBlLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
+                const _dfBlToggle = document.createElement('input'); _dfBlToggle.type = 'checkbox'; _dfBlToggle.checked = this.plugin.settings?.dynFileShowBacklinks === true; _dfBlToggle.style.cursor = 'pointer';
+                _dfBlToggle.addEventListener('change', () => { this.plugin.settings.dynFileShowBacklinks = _dfBlToggle.checked; this.plugin.saveData(this.plugin.settings); this._applyDynFileCss?.(); const _sec = sectionEl?.closest?.('.dyn-file-section'); if (_sec?._dynFileLeaf) { const _bl = _sec._dynFileLeaf.containerEl?.querySelector('.backlink-pane, .embedded-backlinks'); if (_bl) { _bl.style.display = _dfBlToggle.checked ? '' : 'none'; if (_dfBlToggle.checked) { const _tg = _bl.querySelector('.collapse-icon'); if (_tg && _tg.classList.contains('is-collapsed')) { try { _tg.click(); } catch(e) {} } } } } });
+                _dfBlRow.appendChild(_dfBlLabel); _dfBlRow.appendChild(_dfBlToggle);
+                menu.appendChild(_dfBlRow);
               }
-              if (cardId === 'quickMemoSection') {
-                menu.appendChild(this._makeFontLineHeightRows('quickMemoSection', () => {
-                  const _ta = sectionEl.querySelector('.quick-memo-textarea');
-                  if (_ta) { const _s = this.plugin.settings || {}; const _fs = _s['quickMemoSectionFontSize']; const _lh = _s['quickMemoSectionLineHeight']; if (_fs) _ta.style.fontSize = _fs + 'px'; if (_lh) _ta.style.lineHeight = String(_lh); }
-                }));
-              }
+
               if (cardId === 'calendarSection' && _currentLang !== 'en') {
                 const _holRow = document.createElement('div');
                 _holRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:4px 0;gap:8px;';
@@ -14727,28 +14751,16 @@ class AddRegexRuleModal {
                 menu.appendChild(_styleSep);
                 const _styleTitle = document.createElement('div'); _styleTitle.textContent = t('main.diaryStyleTitle'); _styleTitle.style.cssText = 'color:var(--text-muted);font-weight:600;font-size:10px;margin-bottom:2px;';
                 menu.appendChild(_styleTitle);
-                const _fsRow = document.createElement('div');
-                _fsRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
-                const _fsLabel = document.createElement('span'); _fsLabel.textContent = t('main.diaryFontSize'); _fsLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
-                const _fsSel = document.createElement('select');
-                _fsSel.style.cssText = 'font-size:10px;padding:1px 4px;border-radius:4px;border:1px solid var(--background-modifier-border);background:var(--background-primary);color:var(--text-normal);';
-                for (const _fs of [9, 10, 11, 12, 13, 14, 15, 16, 17, 18]) {
-                  const _opt = document.createElement('option'); _opt.value = String(_fs); _opt.textContent = _fs + 'px'; if (_fs === (this.plugin.settings?.diaryFontSize || 13)) _opt.selected = true; _fsSel.appendChild(_opt);
-                }
-                _fsSel.addEventListener('change', () => { this.plugin.settings.diaryFontSize = parseInt(_fsSel.value) || 13; this.plugin.saveData(this.plugin.settings); this._applyDiaryCss?.(); });
-                _fsRow.appendChild(_fsLabel); _fsRow.appendChild(_fsSel);
-                menu.appendChild(_fsRow);
-                const _lhRow = document.createElement('div');
-                _lhRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
-                const _lhLabel = document.createElement('span'); _lhLabel.textContent = t('main.diaryLineHeight'); _lhLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
-                const _lhSel = document.createElement('select');
-                _lhSel.style.cssText = 'font-size:10px;padding:1px 4px;border-radius:4px;border:1px solid var(--background-modifier-border);background:var(--background-primary);color:var(--text-normal);';
-                for (const _lh of [1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0]) {
-                  const _opt = document.createElement('option'); _opt.value = String(_lh); _opt.textContent = String(_lh); if (_lh === (this.plugin.settings?.diaryLineHeight || 1.5)) _opt.selected = true; _lhSel.appendChild(_opt);
-                }
-                _lhSel.addEventListener('change', () => { this.plugin.settings.diaryLineHeight = parseFloat(_lhSel.value) || 1.5; this.plugin.saveData(this.plugin.settings); this._applyDiaryCss?.(); });
-                _lhRow.appendChild(_lhLabel); _lhRow.appendChild(_lhSel);
-                menu.appendChild(_lhRow);
+                { const _sl = (label, key, min, max, step, unit) => {
+                  const row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;';
+                  const lbl = document.createElement('span'); lbl.textContent = label; lbl.style.cssText = 'color:var(--text-muted);flex:1;';
+                  const val = document.createElement('span'); val.textContent = (this.plugin.settings?.[key] ?? (min + (max-min)/2)) + (unit||''); val.style.cssText = 'color:var(--text-normal);min-width:32px;text-align:right;margin:0 4px;';
+                  const inp = document.createElement('input'); inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = this.plugin.settings?.[key] ?? (min + (max-min)/2); inp.style.cssText = 'width:80px;flex-shrink:0;';
+                  inp.addEventListener('input', () => { this.plugin.settings[key] = parseFloat(inp.value); val.textContent = inp.value + (unit||''); this.plugin.saveData(this.plugin.settings); this._applyDiaryCss?.(); });
+                  row.appendChild(lbl); row.appendChild(inp); row.appendChild(val); menu.appendChild(row);
+                };
+                _sl(t('main.diaryFontSize'), 'diaryFontSize', 10, 18, 1, 'px');
+                _sl(t('main.diaryLineHeight'), 'diaryLineHeight', 1.0, 2.5, 0.1, ''); }
                 for (const [_padKey, _padLbl] of [['diaryPaddingLeft','main.diaryPaddingLeft'],['diaryPaddingRight','main.diaryPaddingRight']]) {
                   const _padRow = document.createElement('div');
                   _padRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
@@ -14765,6 +14777,13 @@ class AddRegexRuleModal {
                 _lnToggle.addEventListener('change', () => { this.plugin.settings.diaryShowLineNumbers = _lnToggle.checked; this.plugin.saveData(this.plugin.settings); this._applyDiaryCss?.(); });
                 _lnRow.appendChild(_lnLabel); _lnRow.appendChild(_lnToggle);
                 menu.appendChild(_lnRow);
+                const _blRow = document.createElement('div');
+                _blRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
+                const _blLabel = document.createElement('span'); _blLabel.textContent = '在标签页中显示反向链接'; _blLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
+                const _blToggle = document.createElement('input'); _blToggle.type = 'checkbox'; _blToggle.checked = this.plugin.settings?.diaryShowBacklinks === true; _blToggle.style.cursor = 'pointer';
+                _blToggle.addEventListener('change', () => { this.plugin.settings.diaryShowBacklinks = _blToggle.checked; this.plugin.saveData(this.plugin.settings); this._applyDiaryCss?.(); this._renderDiaryContent?.(); });
+                _blRow.appendChild(_blLabel); _blRow.appendChild(_blToggle);
+                menu.appendChild(_blRow);
                 const _actSep = document.createElement('div'); _actSep.style.cssText = 'border-top:1px solid var(--background-modifier-border);margin:4px 0;';
                 menu.appendChild(_actSep);
                 const _actTitle = document.createElement('div'); _actTitle.textContent = t('main.diaryActivitySection'); _actTitle.style.cssText = 'color:var(--text-muted);font-weight:600;font-size:10px;margin-bottom:2px;';
@@ -14804,7 +14823,7 @@ class AddRegexRuleModal {
             }, { passive: true });
           });
           this._unifiedCardIds.add(cardId);
-          const _cardSettingMap = { infoSection: 'showInfoSection', parkingLotSection: 'showParkingLot', threadsSection: 'showThreads', relatedHighlights: 'showRelatedHighlightsSection', remarkContent: 'showRemarkContentBlock', keywordChips: 'showKeywordChipsBlock', aiQuestion: 'showAiQuestionBlock', relatedNotes: 'showRelatedNotesSection', recentFilesSection: 'showRecentFilesSection', recentlyCreatedSection: 'showRecentlyCreatedSection', focusSection: 'showFocusSection', randomReviewSection: 'showRandomReviewSection', quickNoteSection: 'showQuickNoteSection', quickMemoSection: 'showQuickMemoSection', calendarSection: 'showCalendarSection', diarySection: 'showDiarySection', statsSection: 'showStatsSection', openDocsSection: 'showOpenDocsSection', mindmapSection: 'showMindmapSection' };
+          const _cardSettingMap = { infoSection: 'showInfoSection', remarkContent: 'showRemarkContentBlock', keywordChips: 'showKeywordChipsBlock', aiQuestion: 'showAiQuestionBlock', recentFilesSection: 'showRecentFilesSection', recentlyCreatedSection: 'showRecentlyCreatedSection', randomReviewSection: 'showRandomReviewSection', quickNoteSection: 'showQuickNoteSection', calendarSection: 'showCalendarSection', diarySection: 'showDiarySection', statsSection: 'showStatsSection', openDocsSection: 'showOpenDocsSection', mindmapSection: 'showMindmapSection', mergedRelated: 'showMergedRelatedSection' };
           const _addToGrid = (grid) => {
             const existing = grid.engine?.nodes?.find(n => n.el?.querySelector?.('.unified-card')?.dataset?.cardId === cardId);
             if (existing) { try { grid.removeWidget(existing.el, true); } catch(e) {} }
@@ -14933,14 +14952,13 @@ class AddRegexRuleModal {
         }).catch((e) => { console.warn('[GridStack] load failed:', e); });
 
         this.addInfoSection(contentEl);
-        this.addParkingLotSection(contentEl);
-        this.addThreadsSection(contentEl);
+
+        this.addMergedRelatedSection(contentEl);
         this.addRecentFilesSection(contentEl);
         this.addRecentlyCreatedSection(contentEl);
-        this.addFocusSection(contentEl);
-        this.addRandomReviewSection(contentEl);
+
         this.addQuickNoteSection(contentEl);
-        this.addQuickMemoSection(contentEl);
+
         this.addCalendarSection(contentEl);
         this.addDiarySection(contentEl);
 
@@ -14975,7 +14993,7 @@ class AddRegexRuleModal {
             if (_onCard) return;
             ev.preventDefault(); ev.stopPropagation();
             const _paths = [];
-            if (this._plDraggedFilePath) { _paths.push(this._plDraggedFilePath); this._plDraggedFilePath = null; }
+
             if (_paths.length === 0 && ev.dataTransfer) {
               const _types = Array.from(ev.dataTransfer.types || []);
               for (const type of _types) {
@@ -15934,7 +15952,7 @@ class AddRegexRuleModal {
           _rulesEls.forEach(el => { if (el.parentNode === contentEl) chipContentSection.appendChild(el); });
 
 
-          const remarkSections = contentEl.querySelectorAll('.remark-content-container, .related-notes-section, .inline-related-highlights-section');
+          const remarkSections = contentEl.querySelectorAll('.remark-content-container');
           remarkSections.forEach(s => { contentEl.appendChild(s); });
         }
 
@@ -17171,93 +17189,36 @@ class AddRegexRuleModal {
       if (typeof this.refreshModalContent === 'function') await this.refreshModalContent();
     });
 
-    // 停车场板块开关
-    const showParkingLotRow = displayContent.createDiv();
-    showParkingLotRow.style.display = "flex";
-    showParkingLotRow.style.alignItems = "center";
-    showParkingLotRow.style.marginBottom = "5px";
-    showParkingLotRow.style.flexWrap = "wrap";
-    const showParkingLotLabel = showParkingLotRow.createEl("span");
-    showParkingLotLabel.textContent = t('settings.showParkingLot') + ": ";
-    showParkingLotLabel.style.marginRight = "10px";
-    showParkingLotLabel.style.fontSize = "14px";
-    const showParkingLotInput = showParkingLotRow.createEl("input");
-    showParkingLotInput.type = "checkbox";
-    showParkingLotInput.checked = this.plugin.settings?.showParkingLot !== false;
-    const showParkingLotHint = showParkingLotRow.createEl("span");
-    showParkingLotHint.textContent = t('settings.showParkingLotDesc');
-    showParkingLotHint.style.fontSize = "12px";
-    showParkingLotHint.style.color = "var(--text-muted)";
-    showParkingLotHint.style.marginLeft = "8px";
-    showParkingLotInput.addEventListener("change", async (e) => {
+    // 关联版块开关
+    const showMergedRelatedRow = displayContent.createDiv();
+    showMergedRelatedRow.style.display = "flex";
+    showMergedRelatedRow.style.alignItems = "center";
+    showMergedRelatedRow.style.marginBottom = "5px";
+    showMergedRelatedRow.style.flexWrap = "wrap";
+    const showMergedRelatedLabel = showMergedRelatedRow.createEl("span");
+    showMergedRelatedLabel.textContent = "关联版块: ";
+    showMergedRelatedLabel.style.marginRight = "10px";
+    showMergedRelatedLabel.style.fontSize = "14px";
+    const showMergedRelatedInput = showMergedRelatedRow.createEl("input");
+    showMergedRelatedInput.type = "checkbox";
+    showMergedRelatedInput.checked = this.plugin.settings?.showMergedRelatedSection !== false;
+    const showMergedRelatedHint = showMergedRelatedRow.createEl("span");
+    showMergedRelatedHint.textContent = "合并显示相关文档、脉络、相关高亮";
+    showMergedRelatedHint.style.fontSize = "12px";
+    showMergedRelatedHint.style.color = "var(--text-muted)";
+    showMergedRelatedHint.style.marginLeft = "8px";
+    showMergedRelatedInput.addEventListener("change", async (e) => {
       if (!this.plugin.settings) this.plugin.settings = {};
-      this.plugin.settings.showParkingLot = e.target.checked;
-      await this.plugin.saveData(this.plugin.settings);
-      if (typeof this.refreshModalContent === 'function') await this.refreshModalContent();
-    });
-
-    // 脉络板块开关
-    const showThreadsRow = displayContent.createDiv();
-    showThreadsRow.style.display = "flex";
-    showThreadsRow.style.alignItems = "center";
-    showThreadsRow.style.marginBottom = "5px";
-    showThreadsRow.style.flexWrap = "wrap";
-    const showThreadsLabel = showThreadsRow.createEl("span");
-    showThreadsLabel.textContent = t('settings.showThreads') + ": ";
-    showThreadsLabel.style.marginRight = "10px";
-    showThreadsLabel.style.fontSize = "14px";
-    const showThreadsInput = showThreadsRow.createEl("input");
-    showThreadsInput.type = "checkbox";
-    showThreadsInput.checked = this.plugin.settings?.showThreads !== false;
-    const showThreadsHint = showThreadsRow.createEl("span");
-    showThreadsHint.textContent = t('settings.showThreadsDesc');
-    showThreadsHint.style.fontSize = "12px";
-    showThreadsHint.style.color = "var(--text-muted)";
-    showThreadsHint.style.marginLeft = "8px";
-    showThreadsInput.addEventListener("change", async (e) => {
-      if (!this.plugin.settings) this.plugin.settings = {};
-      this.plugin.settings.showThreads = e.target.checked;
-      await this.plugin.saveData(this.plugin.settings);
-      if (typeof this.refreshModalContent === 'function') await this.refreshModalContent();
-    });
-
-
-    const showRelatedHighlightsRow = displayContent.createDiv();
-    showRelatedHighlightsRow.style.display = "flex";
-    showRelatedHighlightsRow.style.alignItems = "center";
-    showRelatedHighlightsRow.style.marginBottom = "5px";
-    showRelatedHighlightsRow.style.flexWrap = "wrap";
-
-    const showRelatedHighlightsLabel = showRelatedHighlightsRow.createEl("span");
-    showRelatedHighlightsLabel.textContent = t('settings.showRelatedHighlights') + ": ";
-    showRelatedHighlightsLabel.style.marginRight = "10px";
-    showRelatedHighlightsLabel.style.fontSize = "14px";
-
-    const showRelatedHighlightsInput = showRelatedHighlightsRow.createEl("input");
-    showRelatedHighlightsInput.type = "checkbox";
-    showRelatedHighlightsInput.checked = this.plugin.settings?.showRelatedHighlights !== false;
-
-    const showRelatedHighlightsHint = showRelatedHighlightsRow.createEl("span");
-    showRelatedHighlightsHint.textContent = t('settings.showRelatedHighlightsDesc');
-    showRelatedHighlightsHint.style.fontSize = "12px";
-    showRelatedHighlightsHint.style.color = "var(--text-muted)";
-    showRelatedHighlightsHint.style.marginLeft = "8px";
-
-    showRelatedHighlightsInput.addEventListener("change", async (e) => {
-      if (!this.plugin.settings) this.plugin.settings = {};
-      this.plugin.settings.showRelatedHighlights = e.target.checked;
+      this.plugin.settings.showMergedRelatedSection = e.target.checked;
       await this.plugin.saveData(this.plugin.settings);
       if (typeof this.refreshModalContent === 'function') await this.refreshModalContent();
     });
 
     const _sectionToggleConfigs = [
-      { key: 'showRelatedHighlightsSection', labelKey: 'settings.showRelatedHighlightsSection', descKey: 'settings.showRelatedHighlightsSectionDesc' },
       { key: 'showInlineRelatedHighlightsSection', labelKey: 'settings.showInlineRelatedHighlightsSection', descKey: 'settings.showInlineRelatedHighlightsSectionDesc' },
       { key: 'showRemarkContentBlock', labelKey: 'settings.showRemarkContentBlock', descKey: 'settings.showRemarkContentBlockDesc' },
       { key: 'showKeywordChipsBlock', labelKey: 'settings.showKeywordChipsBlock', descKey: 'settings.showKeywordChipsBlockDesc' },
       { key: 'showAiQuestionBlock', labelKey: 'settings.showAiQuestionBlock', descKey: 'settings.showAiQuestionBlockDesc' },
-      { key: 'showRelatedNotesSection', labelKey: 'settings.showRelatedNotesSection', descKey: 'settings.showRelatedNotesSectionDesc' },
-
     ];
     for (const _cfg of _sectionToggleConfigs) {
       const _row = displayContent.createDiv();
@@ -19978,9 +19939,7 @@ class AddRegexRuleModal {
           }
           this.toggleInlineRemark(ruleId, rule);
           // 同步筛选脉络 / Info / 相关文档（与 chip 点击行为一致）
-          this._threadsFilterKw = rule.regex;
-          if (this._threadsReload) this._threadsReload();
-          this.addRelatedNotesSection(this.contentEl, rule.regex);
+          this._mergedRelatedRefresh(rule.regex);
           this._infoActiveChip = rule.regex;
           if (typeof this._refreshInfoChips === 'function') this._refreshInfoChips();
         });
@@ -21213,7 +21172,8 @@ class AddRegexRuleModal {
   addRelatedNotesSection(contentEl, regex) {
     const plugin = this.plugin;
     this.clearRelatedNotesSection();
-    if (!plugin.settings || plugin.settings.showRelatedNotes === false || plugin.settings.showRelatedNotesSection !== true) return;
+    if (!plugin.settings || plugin.settings.showRelatedNotes === false) return;
+    if (!this._inMergedZone && plugin.settings.showRelatedNotesSection !== true) return;
     if (!regex) return;
     const _excludedGroups = plugin.settings?.excludedRelatedNotesCategories || [];
     const _groups = plugin.config?.globalRuleGroups || {};
@@ -21239,10 +21199,11 @@ class AddRegexRuleModal {
     }
     const section = document.createElement('div');
     section.className = 'related-notes-section';
-    section.style.cssText = 'margin-top:8px;';
+    const _inMerged = !!this._inMergedZone;
+    section.style.cssText = _inMerged ? 'margin-top:2px;' : 'margin-top:8px;';
     if (relatedNotes.length === 0) {
       const _emptyHint = document.createElement('div');
-      _emptyHint.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;padding:4px 0;';
+      _emptyHint.style.cssText = _inMerged ? 'color:var(--text-faint);font-size:11px;padding:1px 0;' : 'color:var(--text-muted);font-size:11px;font-style:italic;padding:4px 0;';
       _emptyHint.textContent = t('main.relatedNotesEmpty') || '（无相关文档）';
       section.appendChild(_emptyHint);
       this._relatedNotesSection = section;
@@ -21257,13 +21218,15 @@ class AddRegexRuleModal {
     headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
     const titleDiv = document.createElement('div');
     titleDiv.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;display:flex;align-items:center;gap:2px;';
-    titleDiv.innerHTML = t('main.relatedNotes') + ' ' + relatedNotes.length;
+    titleDiv.innerHTML = t('main.relatedNotes') + ' (' + relatedNotes.length + ')';
     headerRow.appendChild(titleDiv);
-    const closeBtn = document.createElement('span');
-    closeBtn.textContent = '\u2715';
-    closeBtn.style.cssText = 'cursor:pointer;font-size:14px;color:var(--text-muted);padding:0 4px;flex-shrink:0;';
-    closeBtn.addEventListener('click', () => { section.remove(); });
-    headerRow.appendChild(closeBtn);
+    if (!_inMerged) {
+      const closeBtn = document.createElement('span');
+      closeBtn.textContent = '\u2715';
+      closeBtn.style.cssText = 'cursor:pointer;font-size:14px;color:var(--text-muted);padding:0 4px;flex-shrink:0;';
+      closeBtn.addEventListener('click', () => { section.remove(); });
+      headerRow.appendChild(closeBtn);
+    }
     section.appendChild(headerRow);
     const relatedList = document.createElement('div');
     relatedList.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;overflow:hidden;';
@@ -21380,7 +21343,14 @@ class AddRegexRuleModal {
     if (matches.length === 0 && sgSentences.length === 0) {
       const _emptySection = document.createElement('div');
       _emptySection.className = 'inline-related-highlights-section';
-      _emptySection.style.cssText = 'margin-top:4px;user-select:text;-webkit-user-select:text;';
+      const _inMergedHl = !!this._inMergedZone;
+      _emptySection.style.cssText = _inMergedHl ? 'margin-top:2px;user-select:text;-webkit-user-select:text;' : 'margin-top:4px;user-select:text;-webkit-user-select:text;';
+      if (_inMergedHl) {
+        const _emptyHint = document.createElement('div');
+        _emptyHint.style.cssText = 'color:var(--text-faint);font-size:11px;padding:1px 0;';
+        _emptyHint.textContent = t('main.nonKeywordRelatedHighlights') + ' (0)';
+        _emptySection.appendChild(_emptyHint);
+      } else {
       const _emptyHeader = document.createElement('div');
       _emptyHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;';
       _emptyHeader.textContent = t('main.nonKeywordRelatedHighlights') + ' (0)';
@@ -21389,6 +21359,7 @@ class AddRegexRuleModal {
       _emptyHint.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;padding:4px 0;';
       _emptyHint.textContent = t('main.noMatchHighlights');
       _emptySection.appendChild(_emptyHint);
+      }
       if (this._addUnifiedCard) {
         this._addUnifiedCard(_emptySection, 'relatedHighlights', { w: 24, h: 6 });
       } else {
@@ -21400,14 +21371,16 @@ class AddRegexRuleModal {
     const totalCount = matches.length + sgSentences.length;
     const section = document.createElement('div');
     section.className = 'inline-related-highlights-section';
+    const _inMergedHl = !!this._inMergedZone;
     _SG_APPLY_PALETTE(section, this.plugin?.settings);
-    section.style.cssText = 'margin-top:4px;user-select:text;-webkit-user-select:text;';
+    section.style.cssText = _inMergedHl ? 'margin-top:2px;user-select:text;-webkit-user-select:text;' : 'margin-top:4px;user-select:text;-webkit-user-select:text;';
     const headerRow = document.createElement('div');
     headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
     const titleDiv = document.createElement('div');
     titleDiv.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
     titleDiv.innerHTML = t('main.nonKeywordRelatedHighlights') + ' (' + totalCount + ')';
     headerRow.appendChild(titleDiv);
+    if (!_inMergedHl) {
     // 问号图标：显示相关高亮说明
     const hlHelpIcon = document.createElement('span');
     hlHelpIcon.innerHTML = _SVG_QUESTION;
@@ -21421,7 +21394,7 @@ class AddRegexRuleModal {
     });
     headerRow.appendChild(hlHelpIcon);
     const hlSettingIcon = document.createElement('span');
-    hlSettingIcon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+    hlSettingIcon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
     hlSettingIcon.title = t('main.settings');
     hlSettingIcon.style.cssText = 'cursor:pointer;opacity:0.4;display:inline-flex;align-items:center;margin-left:2px;transition:opacity 0.15s;';
     hlSettingIcon.addEventListener('mouseenter', () => { hlSettingIcon.style.opacity = '0.8'; });
@@ -21441,9 +21414,6 @@ class AddRegexRuleModal {
         inp.addEventListener('input', () => { _s.relatedHlKwUniformClass = inp.value.trim(); this.plugin.saveData(this.plugin.settings); });
         row.appendChild(lbl); row.appendChild(inp); menu.appendChild(row); }
       _SG_FINISH_HL_SETTINGS(menu, _s, () => this.plugin.saveData(this.plugin.settings), section);
-      menu.appendChild(this._makeBgPatternRow('secBg_relatedHighlights', () => {
-        this._applyBgPattern(section, 'secBg_relatedHighlights');
-      }));
       this._floatSettingsMenu(hlSettingIcon, menu);
     });
     headerRow.appendChild(hlSettingIcon);
@@ -21452,6 +21422,7 @@ class AddRegexRuleModal {
     closeBtn.style.cssText = 'cursor:pointer;font-size:14px;color:var(--text-muted);padding:0 4px;flex-shrink:0;';
     closeBtn.addEventListener('click', () => { section.remove(); });
     headerRow.appendChild(closeBtn);
+    }
     section.appendChild(headerRow);
     const hlHues = [210, 30, 150, 340, 270, 60, 180, 90, 120, 0];
     const hlList = document.createElement('div');
@@ -21870,14 +21841,7 @@ class AddRegexRuleModal {
       this._infoActiveChip = regex;
       if (typeof this._refreshInfoChips === 'function') this._refreshInfoChips();
       if (typeof this._refreshUpdateChip === 'function') this._refreshUpdateChip();
-      this.addRelatedNotesSection(this.contentEl, regex);
-      if (plugin.settings?.showRelatedHighlights !== false && plugin.settings?.showInlineRelatedHighlightsSection !== false && regex) {
-        const _exclGrps = plugin.settings?.excludedRelatedNotesCategories || [];
-        const _grps = plugin.config?.globalRuleGroups || {};
-        let _hlExcl = false;
-        if (_exclGrps.length > 0) { for (const _g in _grps) { if (_exclGrps.includes(_g) && _grps[_g].includes(regex)) { _hlExcl = true; break; } } }
-        if (!_hlExcl) this._showRelatedHighlights(regex);
-      }
+      this._mergedRelatedRefresh(regex);
       this._updateSidebarTabTitle(regex);
       return;
     }
@@ -21887,15 +21851,7 @@ class AddRegexRuleModal {
     if (existingHighlights) existingHighlights.remove();
     const ruleId = 'regex-' + regex;
     this._showInlineRemarkForRules(ruleId, matchingRules);
-    this.addRelatedNotesSection(this.contentEl, regex);
-    // 有匹配规则时也需显示相关高亮（区别于renderRemarkContent内的版块，这里展示 contentEl 内 inline 相关高亮扫描结果）
-    if (plugin.settings?.showRelatedHighlights !== false && plugin.settings?.showInlineRelatedHighlightsSection !== false && regex) {
-      const _exclGrps2 = plugin.settings?.excludedRelatedNotesCategories || [];
-      const _grpsX = plugin.config?.globalRuleGroups || {};
-      let _hlExcl2 = false;
-      if (_exclGrps2.length > 0) { for (const _g in _grpsX) { if (_exclGrps2.includes(_g) && _grpsX[_g].some(r => { const _pp = _splitRegexPipes(r); return _pp.includes(regex) || r === regex || _regexMatch(regex, r); })) { _hlExcl2 = true; break; } } }
-      if (!_hlExcl2) this._showRelatedHighlights(regex);
-    }
+    this._mergedRelatedRefresh(regex);
     if (this._infoSection) this._infoSection.style.display = '';
     this._infoActiveChip = regex;
     if (typeof this._refreshInfoChips === 'function') this._refreshInfoChips();
@@ -22193,7 +22149,7 @@ class AddRegexRuleModal {
           _empty.textContent = '（空）' + label;
           return _empty;
         };
-        this._addUnifiedCard(_ensureSection(lastRenderResult?.relatedHighlightsSection, '相关高亮'), 'relatedHighlights', { w: 24, h: 6 });
+
         this._addUnifiedCard(_ensureSection(lastRenderResult?.remarkContentBlock, '备注'), 'remarkContent', { w: 24, h: 8 });
       }
 
@@ -22799,281 +22755,6 @@ class AddRegexRuleModal {
     }
   }
 
-  // 最近关注版块（拖入文件/文件夹，文件夹自动展开其中文件）
-  addFocusSection(contentEl) {
-    if (this.plugin.settings?.showFocusSection === false) return;
-    const plugin = this.plugin;
-
-    const section = document.createElement('div');
-    section.className = 'focus-section';
-    section.style.cssText = 'margin-top:8px;padding:6px 8px;border:1px dashed var(--background-modifier-border);border-radius:8px;background:var(--background-secondary);';
-
-    const headerRow = document.createElement('div');
-    headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
-    const titleEl = document.createElement('span');
-    titleEl.textContent = t('main.focusTitle');
-    titleEl.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-muted);';
-    headerRow.appendChild(titleEl);
-
-    const clearBtn = document.createElement('span');
-    clearBtn.textContent = t('main.focusClear');
-    clearBtn.style.cssText = 'font-size:10px;cursor:pointer;color:var(--text-faint);padding:2px 6px;border-radius:4px;';
-    clearBtn.addEventListener('mouseenter', () => { clearBtn.style.color = 'var(--text-muted)'; });
-    clearBtn.addEventListener('mouseleave', () => { clearBtn.style.color = 'var(--text-faint)'; });
-    clearBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      plugin.settings.focusPaths = [];
-      plugin.saveData(plugin.settings);
-      this._renderFocusList();
-    });
-    headerRow.appendChild(clearBtn);
-    section.appendChild(headerRow);
-
-    const listContainer = document.createElement('div');
-    listContainer.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
-    section.appendChild(listContainer);
-
-    // 接收拖放的文件/文件夹
-    // 用 document 捕获阶段监听：避免被 Obsidian 全局拖放处理/GridStack 拦截导致 drop 不触发
-    const _borderNormal = '1px dashed var(--background-modifier-border)';
-    const _borderActive = '1px dashed var(--interactive-accent)';
-    const _inSection = (ev) => { try { return !!(ev.target && section.contains(ev.target)); } catch (e) { return false; } };
-    const _over = (ev) => {
-      if (!_inSection(ev)) return;
-      ev.preventDefault();
-      ev.stopPropagation();
-      section.style.border = _borderActive;
-    };
-    const _leave = (ev) => {
-      if (!_inSection(ev)) return;
-      try { if (ev.relatedTarget && section.contains(ev.relatedTarget)) return; } catch (e) {}
-      section.style.border = _borderNormal;
-    };
-    // 从 dataTransfer 多类型中提取 vault 路径
-    const _extractPaths = (dt) => {
-      if (!dt || typeof dt.getData !== 'function') return [];
-      const _out = [];
-      const _pushLine = (line) => {
-        let p = String(line || '').trim();
-        if (!p) return;
-        const _md = p.match(/\[.*?\]\((.*?)\)/);
-        if (_md) p = _md[1];
-        const _wiki = p.match(/\[\[(.*?)\]\]/);
-        if (_wiki) p = _wiki[1].split('|')[0];
-        p = p.replace(/^<|>$/g, '');
-        try {
-          if (/^[a-z]+:\/\//i.test(p)) {
-            const u = new URL(p);
-            if (u.protocol === 'obsidian:') {
-              const file = u.searchParams.get('file');
-              if (file) p = decodeURIComponent(file);
-              else return;
-            } else {
-              // app://host/path 或 file:///D:/vault/path → 取路径部分（file:// 绝对路径匹配失败会自然丢弃）
-              const rest = decodeURIComponent(u.pathname).replace(/^\/+/, '');
-              if (rest) p = rest;
-              else return;
-            }
-          }
-        } catch (e) {}
-        if (p && !_out.includes(p)) _out.push(p);
-      };
-      const _types = (dt.types && Array.from(dt.types)) || [];
-      const _primary = ['text/plain', 'text/unicode', 'text/uri-list'];
-      for (const type of _primary) {
-        if (!_types.includes(type)) continue;
-        try { _pushLine(dt.getData(type)); } catch (e) {}
-      }
-      if (_out.length === 0) {
-        // 兜底：遍历其他 text/* 类型（Obsidian 可能使用非标准拖放数据类型）
-        for (const type of _types) {
-          if (!type.startsWith('text/') || _primary.includes(type)) continue;
-          try { _pushLine(dt.getData(type)); } catch (e) {}
-        }
-        if (_out.length === 0 && _types.includes('text/html')) {
-          try {
-            const html = dt.getData('text/html') || '';
-            const _hrefs = html.match(/href="([^"]+)"/g) || [];
-            for (const h of _hrefs) _pushLine(h.replace(/^href="/, '').replace(/"$/, ''));
-          } catch (e) {}
-        }
-      }
-      return _out;
-    };
-    const _drop = async (ev) => {
-      if (!_inSection(ev)) return;
-      ev.preventDefault();
-      ev.stopPropagation();
-      section.style.border = _borderNormal;
-      const paths = _extractPaths(ev.dataTransfer);
-      // 路径解析：拖入路径可能不带.md后缀（拖文件）或只有文件夹名（拖文件夹），依次尝试 原路径 → 补.md → 去.md → 按名称唯一匹配
-      const _findByName = (p) => {
-        try {
-          const folders = this.app.vault.getAllLoadedFiles().filter(f => f.children && f.name === p);
-          if (folders.length === 1) return folders[0];
-          const files = this.app.vault.getFiles().filter(f => f.basename === p || f.name === p);
-          if (files.length === 1) return files[0];
-        } catch (e) {}
-        return null;
-      };
-      const _resolve = (p) => {
-        try {
-          let af = this.app.vault.getAbstractFileByPath(p);
-          if (af) return af;
-          af = this.app.vault.getAbstractFileByPath(p + '.md');
-          if (af) return af;
-          const stripped = p.replace(/\.md$/i, '');
-          if (stripped !== p) {
-            af = this.app.vault.getAbstractFileByPath(stripped);
-            if (af) return af;
-          }
-          return _findByName(p);
-        } catch (e) {}
-        return null;
-      };
-      if (!Array.isArray(plugin.settings.focusPaths)) plugin.settings.focusPaths = [];
-      let added = 0;
-      for (const p of paths) {
-        const af = _resolve(p);
-        if (!af) { console.log('[SG] focus drop: path not found in vault:', p); continue; }
-        if (!plugin.settings.focusPaths.includes(af.path)) {
-          plugin.settings.focusPaths.unshift(af.path);
-          added++;
-        }
-      }
-      if (added > 0) {
-        try { await plugin.saveData(plugin.settings); } catch (err) { console.error('[SG] focus saveData failed:', err); }
-        this._renderFocusList();
-      }
-      console.log('[SG] focus drop: added', added, 'of', paths.length);
-    };
-    // 清理旧监听（版块重建时防泄漏）
-    if (this._focusDocDnD) {
-      try {
-        this._focusDocDnD.doc.removeEventListener('dragover', this._focusDocDnD.over, true);
-        this._focusDocDnD.doc.removeEventListener('drop', this._focusDocDnD.drop, true);
-        this._focusDocDnD.doc.removeEventListener('dragleave', this._focusDocDnD.leave, true);
-      } catch (e) {}
-    }
-    const _doc = section.ownerDocument || document;
-    _doc.addEventListener('dragover', _over, true);
-    _doc.addEventListener('drop', _drop, true);
-    _doc.addEventListener('dragleave', _leave, true);
-    this._focusDocDnD = { doc: _doc, over: _over, drop: _drop, leave: _leave };
-
-    this._focusListEl = listContainer;
-
-    if (this._addUnifiedCard) {
-      this._addUnifiedCard(section, 'focusSection', { w: 24, h: 6 });
-    } else if (!section.parentElement) {
-      contentEl.appendChild(section);
-    }
-
-    this._renderFocusList();
-  }
-
-  _renderFocusList() {
-    const listEl = this._focusListEl;
-    if (!listEl) return;
-    listEl.innerHTML = '';
-    const plugin = this.plugin;
-    if (!Array.isArray(plugin.settings.focusPaths)) plugin.settings.focusPaths = [];
-    const _exists = (p) => { try { return !!this.app.vault.getAbstractFileByPath(p); } catch (e) { return false; } };
-    // 清理已删除的路径
-    const valid = plugin.settings.focusPaths.filter(_exists);
-    if (valid.length !== plugin.settings.focusPaths.length) {
-      plugin.settings.focusPaths = valid;
-      plugin.saveData(plugin.settings);
-    }
-    if (valid.length === 0) {
-      const empty = document.createElement('div');
-      empty.textContent = t('main.focusEmpty');
-      empty.style.cssText = 'font-size:11px;color:var(--text-faint);padding:8px 4px;text-align:center;';
-      listEl.appendChild(empty);
-      return;
-    }
-
-    // 文件夹 → 递归收集其中文件
-    const _collectFiles = (folderPath) => {
-      const out = [];
-      try {
-        const af = this.app.vault.getAbstractFileByPath(folderPath);
-        if (!af || !af.children) return out;
-        const walk = (fo) => { for (const c of fo.children) { if (c.children) walk(c); else out.push(c); } };
-        walk(af);
-      } catch (e) {}
-      out.sort((a, b) => (a.path || '').localeCompare(b.path || ''));
-      return out;
-    };
-
-    const createRemoveBtn = (path) => {
-      const btn = document.createElement('span');
-      btn.textContent = '\u2715';
-      btn.title = t('main.focusRemove');
-      btn.style.cssText = 'font-size:11px;cursor:pointer;color:var(--text-faint);flex-shrink:0;margin-left:4px;padding:0 3px;border-radius:3px;';
-      btn.addEventListener('mouseenter', () => { btn.style.color = 'var(--text-error)'; });
-      btn.addEventListener('mouseleave', () => { btn.style.color = 'var(--text-faint)'; });
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        plugin.settings.focusPaths = plugin.settings.focusPaths.filter(pp => pp !== path);
-        await plugin.saveData(plugin.settings);
-        this._renderFocusList();
-      });
-      return btn;
-    };
-
-    const createFileItem = (file, isChild) => {
-      const item = document.createElement('div');
-      item.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 6px;border-radius:4px;cursor:pointer;transition:background 0.1s;' + (isChild ? 'padding-left:18px;' : '');
-      item.addEventListener('mouseenter', () => { item.style.background = 'var(--background-modifier-hover)'; });
-      item.addEventListener('mouseleave', () => { item.style.background = ''; });
-      const nameEl = document.createElement('span');
-      nameEl.textContent = file.basename || file.name;
-      nameEl.style.cssText = 'font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
-      nameEl.title = file.path;
-      item.appendChild(nameEl);
-      item.addEventListener('click', () => {
-        try { this.app.workspace.getLeaf(true).openFile(file); } catch (e) {}
-      });
-      return item;
-    };
-
-    for (const p of valid) {
-      let af = null;
-      try { af = this.app.vault.getAbstractFileByPath(p); } catch (e) {}
-      if (!af) continue;
-      if (af.children) {
-        // 文件夹：组头 + 自动展开其中所有文件
-        const files = _collectFiles(p);
-        const groupHeader = document.createElement('div');
-        groupHeader.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 6px;margin-top:2px;';
-        const gName = document.createElement('span');
-        gName.textContent = '\uD83D\uDCC1 ' + (af.name || p) + ' (' + files.length + ')';
-        gName.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
-        gName.title = p;
-        groupHeader.appendChild(gName);
-        groupHeader.appendChild(createRemoveBtn(p));
-        listEl.appendChild(groupHeader);
-        files.forEach(f => { listEl.appendChild(createFileItem(f, true)); });
-      } else {
-        const row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 6px;border-radius:4px;transition:background 0.1s;';
-        row.addEventListener('mouseenter', () => { row.style.background = 'var(--background-modifier-hover)'; });
-        row.addEventListener('mouseleave', () => { row.style.background = ''; });
-        const nameEl = document.createElement('span');
-        nameEl.textContent = af.name || p;
-        nameEl.style.cssText = 'font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;';
-        nameEl.title = af.path;
-        row.appendChild(nameEl);
-        row.appendChild(createRemoveBtn(p));
-        row.addEventListener('click', () => {
-          try { this.app.workspace.getLeaf(true).openFile(af); } catch (e) {}
-        });
-        listEl.appendChild(row);
-      }
-    }
-  }
-
   // 动态文件版块：拖入的文件作为版块显示内容，可双击编辑，可移除
   addDynFileSection(contentEl, filePath) {
     const plugin = this.plugin;
@@ -23095,6 +22776,15 @@ class AddRegexRuleModal {
     title.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-normal);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;';
     title.title = t('main.diaryOpenInTab') || '在新标签页打开';
     header.appendChild(title);
+    const openTabBtn = document.createElement('span');
+    openTabBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+    openTabBtn.title = t('main.diaryOpenInTab') || '在新标签页打开';
+    openTabBtn.style.cssText = 'cursor:pointer;display:inline-flex;align-items:center;color:var(--text-muted);flex-shrink:0;opacity:0.5;transition:opacity 0.15s;';
+    openTabBtn.addEventListener('mouseenter', () => { openTabBtn.style.opacity = '0.8'; });
+    openTabBtn.addEventListener('mouseleave', () => { openTabBtn.style.opacity = '0.5'; });
+    openTabBtn.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); plugin.app.workspace.openLinkText(file.path, '', true); });
+    ['mousedown','pointerdown'].forEach(evt => { openTabBtn.addEventListener(evt, ev => ev.stopPropagation()); });
+    header.appendChild(openTabBtn);
     const closeBtn = document.createElement('span');
     closeBtn.textContent = '×';
     closeBtn.style.cssText = 'cursor:pointer;font-size:16px;color:var(--text-muted);padding:0 6px;line-height:1;transition:color 0.15s;';
@@ -23136,16 +22826,43 @@ class AddRegexRuleModal {
       const _pl = _s.dynFilePaddingLeft ?? 8;
       const _pr = _s.dynFilePaddingRight ?? 8;
       const _ln = _s.dynFileShowLineNumbers === true;
+      const _bl = _s.dynFileShowBacklinks === true;
       let _styleEl = document.getElementById('sg-dyn-file-style');
       if (!_styleEl) { _styleEl = document.createElement('style'); _styleEl.id = 'sg-dyn-file-style'; document.head.appendChild(_styleEl); }
-      _styleEl.textContent = `.dyn-file-content .cm-content{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.dyn-file-content .cm-line{line-height:${_lh} !important;}.dyn-file-content .cm-gutters{display:${_ln ? 'flex' : 'none'} !important;}.dyn-file-content .markdown-reading-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.dyn-file-content .markdown-preview-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.dyn-file-content .markdown-preview-pushed{padding-left:${_pl}px !important;padding-right:${_pr}px !important;}`;
+      _styleEl.textContent = `.dyn-file-content .cm-content{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.dyn-file-content .cm-line{line-height:${_lh} !important;}.dyn-file-content .cm-gutters{display:${_ln ? 'flex' : 'none'} !important;}.dyn-file-content .cm-scroller{padding:0 !important;}.dyn-file-content .markdown-reading-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.dyn-file-content .markdown-preview-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.dyn-file-content .markdown-preview-pushed{padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.dyn-file-content .backlink,.dyn-file-content .markdown-backlinks,.dyn-file-content .backlink-pane,.dyn-file-content .embedded-backlinks{display:${_bl ? 'flex' : 'none'} !important;}`;
       try { document.querySelectorAll('.dyn-file-content .cm-gutters,.dyn-file-content .cm-gutter.cm-lineNumbers').forEach(el => { el.style.display = _ln ? '' : 'none'; }); } catch(e) {}
     };
     this._applyDynFileCss();
+    const _applyDynFileViewBg = () => {
+      contentArea.querySelectorAll('.view-content, .markdown-source-view, .markdown-reading-view, .markdown-preview-view, .cm-editor, .cm-scroller, .markdown-preview-pushed, .markdown-source-view.mod-cm6, .markdown-reading-view .markdown-preview-view').forEach(el => { el.style.setProperty('background', 'var(--background-secondary)', 'important'); el.style.setProperty('background-color', 'var(--background-secondary)', 'important'); });
+      contentArea.querySelectorAll('.cm-scroller').forEach(el => { el.style.setProperty('padding', '0', 'important'); });
+    };
+    let _dynViewBgTimer = null;
+    if (!contentArea._sgViewBgObs) {
+      contentArea._sgViewBgObs = new MutationObserver(() => { clearTimeout(_dynViewBgTimer); _dynViewBgTimer = setTimeout(_applyDynFileViewBg, 50); });
+      contentArea._sgViewBgObs.observe(contentArea, { childList: true, subtree: true });
+    }
+    const _toggleDynFileBacklinks = () => {
+      const _enabled = this.plugin.settings?.dynFileShowBacklinks === true;
+      const _applyBl = () => {
+        const leaf = section._dynFileLeaf;
+        if (!leaf?.containerEl) return;
+        const blPane = leaf.containerEl.querySelector('.backlink-pane, .embedded-backlinks');
+        if (!blPane) return;
+        if (_enabled) {
+          blPane.style.display = '';
+          const toggle = blPane.querySelector('.collapse-icon');
+          if (toggle && toggle.classList.contains('is-collapsed')) { try { toggle.click(); } catch(e) {} }
+        } else {
+          blPane.style.display = 'none';
+        }
+      };
+      _applyBl(); setTimeout(_applyBl, 200); setTimeout(_applyBl, 600);
+    };
     const _renderContent = async () => {
       try {
         if (section._dynFileLeaf && section._dynFileLeaf.containerEl && section._dynFileLeaf.containerEl.parentElement) {
-          try { await section._dynFileLeaf.openFile(file); const _vh = section._dynFileLeaf.containerEl.querySelector('.view-header'); if (_vh) _vh.style.display = 'none'; this._applyDynFileCss?.(); return; } catch (e) {}
+          try { await section._dynFileLeaf.openFile(file); const _vh = section._dynFileLeaf.containerEl.querySelector('.view-header'); if (_vh) _vh.style.display = 'none'; this._applyDynFileCss?.(); _applyDynFileViewBg(); _toggleDynFileBacklinks(); return; } catch (e) {}
         }
         if (section._dynFileLeaf) { try { section._dynFileLeaf.detach(); } catch(e) {} section._dynFileLeaf = null; }
         contentArea.innerHTML = '';
@@ -23158,6 +22875,8 @@ class AddRegexRuleModal {
         await leaf.openFile(file);
         const _vh = leaf.containerEl.querySelector('.view-header'); if (_vh) _vh.style.display = 'none';
         this._applyDynFileCss?.();
+        _applyDynFileViewBg();
+        _toggleDynFileBacklinks();
       } catch (e) {
         contentArea.textContent = '（无法读取文件: ' + file.path + '）';
       }
@@ -23467,9 +23186,9 @@ class AddRegexRuleModal {
   // 这些版块需点击关键词后才渲染内容；初始渲染时创建占位卡，沿用保存的布局位置，消除"版块消失只剩空位"的空洞
   addRemarkPlaceholderCards(contentEl) {
     if (!this._addUnifiedCard) return;
-    const _ids = Array.isArray(this._remarkCardIds) ? this._remarkCardIds : ['relatedHighlights', 'remarkContent', 'keywordChips', 'aiQuestion', 'relatedNotes'];
-    const _defaults = { relatedHighlights: { w: 24, h: 6 }, remarkContent: { w: 24, h: 8 }, keywordChips: { w: 24, h: 3 }, aiQuestion: { w: 24, h: 4 }, relatedNotes: { w: 24, h: 3 } };
-    const _settingsMap = { relatedHighlights: 'showRelatedHighlightsSection', remarkContent: 'showRemarkContentBlock', keywordChips: 'showKeywordChipsBlock', aiQuestion: 'showAiQuestionBlock', relatedNotes: 'showRelatedNotesSection' };
+    const _ids = Array.isArray(this._remarkCardIds) ? this._remarkCardIds : ['remarkContent', 'keywordChips', 'aiQuestion'];
+    const _defaults = { remarkContent: { w: 24, h: 8 }, keywordChips: { w: 24, h: 3 }, aiQuestion: { w: 24, h: 4 } };
+    const _settingsMap = { remarkContent: 'showRemarkContentBlock', keywordChips: 'showKeywordChipsBlock', aiQuestion: 'showAiQuestionBlock' };
     for (const cid of _ids) {
       if (!cid) continue;
       if (this.plugin.settings?.[_settingsMap[cid]] !== true) continue;
@@ -23477,6 +23196,71 @@ class AddRegexRuleModal {
       section.style.cssText = 'height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:11px;font-style:italic;padding:8px;text-align:center;user-select:none;';
       section.textContent = t('main.remarkPlaceholderHint');
       try { this._addUnifiedCard(section, cid, _defaults[cid] || { w: 24, h: 3 }); } catch (e) {}
+    }
+  }
+
+  addMergedRelatedSection(contentEl) {
+    if (this.plugin.settings?.showMergedRelatedSection === false) return;
+    const section = document.createElement('div');
+    section.className = 'merged-related-section';
+    section.style.cssText = 'height:100%;display:flex;flex-direction:column;overflow-y:auto;padding:4px 2px;';
+    const randomZone = document.createElement('div');
+    randomZone.style.cssText = 'flex-shrink:0;';
+    const notesZone = document.createElement('div');
+    notesZone.style.cssText = 'flex-shrink:0;';
+    const threadsZone = document.createElement('div');
+    threadsZone.style.cssText = 'flex-shrink:0;';
+    const hlZone = document.createElement('div');
+    hlZone.style.cssText = 'flex-shrink:0;';
+    section.appendChild(randomZone);
+    section.appendChild(notesZone);
+    section.appendChild(threadsZone);
+    section.appendChild(hlZone);
+    this._mergedZones = { random: randomZone, notes: notesZone, threads: threadsZone, hl: hlZone };
+    const _prevRegex = this._mergedCurrentRegex || null;
+    try { this._addUnifiedCard(section, 'mergedRelated', { w: 24, h: 8 }); } catch (e) { contentEl?.appendChild?.(section); }
+    this._mergedRelatedRefresh(_prevRegex);
+  }
+
+  _renderIntoZone(zone, renderFn) {
+    zone.innerHTML = '';
+    this._zoneOverride = zone;
+    this._inMergedZone = true;
+    try { renderFn(); } catch (e) {}
+    this._inMergedZone = false;
+    this._zoneOverride = null;
+  }
+
+  _mergedRelatedRefresh(regex) {
+    const zones = this._mergedZones;
+    if (!zones) return;
+    this._mergedCurrentRegex = regex || null;
+    if (!regex) {
+      zones.random.style.display = '';
+      zones.notes.style.display = 'none';
+      zones.threads.style.display = '';
+      zones.hl.style.display = 'none';
+      this._renderIntoZone(zones.random, () => this.addRandomReviewSection(zones.random));
+      this._threadsFilterKw = null;
+      this._renderIntoZone(zones.threads, () => this.addThreadsSection(zones.threads));
+    } else {
+      zones.notes.style.display = '';
+      zones.threads.style.display = '';
+      zones.hl.style.display = '';
+      this._threadsFilterKw = regex;
+
+      this._renderIntoZone(zones.notes, () => this.addRelatedNotesSection(zones.notes, regex));
+      this._renderIntoZone(zones.threads, () => this.addThreadsSection(zones.threads));
+      if (this.plugin.settings?.showRelatedHighlights !== false && this.plugin.settings?.showInlineRelatedHighlightsSection !== false) {
+        this._renderIntoZone(zones.hl, () => this._showRelatedHighlights(regex, null, zones.hl));
+      } else {
+        zones.hl.innerHTML = '';
+      }
+      this._renderIntoZone(zones.random, () => this.addRandomReviewSection(zones.random));
+      requestAnimationFrame(() => {
+        const _hasHl = zones.hl.querySelector('.hl-item-row');
+        zones.random.style.display = _hasHl ? 'none' : '';
+      });
     }
   }
 
@@ -23491,14 +23275,23 @@ class AddRegexRuleModal {
 
     // headerRow 用 margin-bottom:0 让 _mergeSectionHeader 将按钮移入统一标题栏
     const headerRow = document.createElement('div');
-    headerRow.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-shrink:0;margin-bottom:0;margin-left:-10px;';
+    const _inMergedRR = !!this._inMergedZone;
+    headerRow.style.cssText = _inMergedRR ? 'display:flex;align-items:center;justify-content:space-between;gap:4px;flex-shrink:0;margin-bottom:4px;' : 'display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-shrink:0;margin-bottom:0;margin-left:-10px;';
+    if (_inMergedRR) {
+      const _rrTitle = document.createElement('span');
+      _rrTitle.textContent = t('main.cardLabelRandomReview');
+      _rrTitle.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);';
+      headerRow.appendChild(_rrTitle);
+    }
+    const _rrBtns = document.createElement('div');
+    _rrBtns.style.cssText = 'display:flex;align-items:center;gap:4px;';
     const helpBtn = document.createElement('span');
     helpBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
     helpBtn.style.cssText = 'cursor:pointer;opacity:0.4;display:inline-flex;align-items:center;transition:opacity 0.15s;';
     helpBtn.addEventListener('mouseenter', () => { helpBtn.style.opacity = '0.8'; });
     helpBtn.addEventListener('mouseleave', () => { helpBtn.style.opacity = '0.4'; });
     helpBtn.addEventListener('click', (e) => { e.stopPropagation(); _showHelpFloat(helpBtn, '随机展示有备注的高亮条目'); });
-    headerRow.appendChild(helpBtn);
+    _rrBtns.appendChild(helpBtn);
     const anotherBtn = document.createElement('span');
     anotherBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>';
     anotherBtn.title = t('main.randomReviewAnother') || '换一条';
@@ -23509,7 +23302,8 @@ class AddRegexRuleModal {
     ['mousedown', 'touchstart', 'pointerdown'].forEach(evt => {
       anotherBtn.addEventListener(evt, (e) => { e.stopPropagation(); });
     });
-    headerRow.appendChild(anotherBtn);
+    _rrBtns.appendChild(anotherBtn);
+    headerRow.appendChild(_rrBtns);
     section.appendChild(headerRow);
 
     const bodyEl = document.createElement('div');
@@ -24152,7 +23946,7 @@ class AddRegexRuleModal {
     };
     const renderYear = async () => {
       let lunarHeader = '';
-      try { const ls = _lunarLib.Solar.fromYmd(vy, 1, 1).getLunar(); lunarHeader = (_currentLang === 'en') ? '' : ('  ' + ls.getYearInGanZhi() + '\u5e74'); } catch (e) {}
+      try { const ls = _lunarLib.Solar.fromYmd(vy, 6, 1).getLunar(); lunarHeader = (_currentLang === 'en') ? '' : ('  ' + ls.getYearInGanZhi() + '\u5e74'); } catch (e) {}
       mLabel.textContent = vy + (_currentLang === 'en' ? '' : '\u5e74') + lunarHeader;
       grid.innerHTML = '';
       grid.style.gridTemplateColumns = 'repeat(4,1fr)';
@@ -24306,7 +24100,7 @@ class AddRegexRuleModal {
       const _ln = _s.diaryShowLineNumbers === true;
       let _styleEl = document.getElementById('sg-diary-style');
       if (!_styleEl) { _styleEl = document.createElement('style'); _styleEl.id = 'sg-diary-style'; document.head.appendChild(_styleEl); }
-      _styleEl.textContent = `.diary-content .cm-content{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .cm-line{line-height:${_lh} !important;}.diary-content .cm-gutters{display:${_ln ? 'flex' : 'none'} !important;}.diary-content .cm-scroller{padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .markdown-reading-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .markdown-preview-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .markdown-preview-pushed{padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .view-content,.diary-content .markdown-source-view,.diary-content .markdown-reading-view,.diary-content .markdown-preview-view,.diary-content .cm-editor,.diary-content .cm-scroller,.diary-content .markdown-preview-pushed{background:transparent !important;}`;
+      _styleEl.textContent = `.diary-content .cm-content{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .cm-line{line-height:${_lh} !important;}.diary-content .cm-gutters{display:${_ln ? 'flex' : 'none'} !important;}.diary-content .cm-scroller{padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .markdown-reading-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .markdown-preview-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .markdown-preview-pushed{padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.diary-content .view-content,.diary-content .markdown-source-view,.diary-content .markdown-reading-view,.diary-content .markdown-preview-view,.diary-content .cm-editor,.diary-content .cm-scroller,.diary-content .markdown-preview-pushed{background:transparent !important;}.diary-content .backlink,.diary-content .markdown-backlinks,.diary-content .backlink-pane,.diary-content .embedded-backlinks{display:${_s.diaryShowBacklinks ? 'flex' : 'none'} !important;}`;
       try { contentArea.querySelectorAll('.cm-gutters,.cm-gutter.cm-lineNumbers').forEach(el => { el.style.display = _ln ? '' : 'none'; }); } catch(e) {}
     };
     this._applyDiaryCss();
@@ -24326,7 +24120,7 @@ class AddRegexRuleModal {
       const file = this.app.vault.getAbstractFileByPath(filePath);
       if (!file) return;
       if (_diaryLeaf && _diaryLeaf.containerEl && _diaryLeaf.containerEl.parentElement) {
-        try { await _diaryLeaf.openFile(file); const _vh = _diaryLeaf.containerEl.querySelector('.view-header'); if (_vh) _vh.style.display = 'none'; this._applyDiaryCss?.(); return; } catch (e) {}
+        try { await _diaryLeaf.openFile(file); const _vh = _diaryLeaf.containerEl.querySelector('.view-header'); if (_vh) _vh.style.display = 'none'; this._applyDiaryCss?.(); this._toggleDiaryBacklinks?.(); return; } catch (e) {}
       }
       contentArea.innerHTML = '';
       try {
@@ -24339,6 +24133,7 @@ class AddRegexRuleModal {
         await leaf.openFile(file);
         const _vh = leaf.containerEl.querySelector('.view-header'); if (_vh) _vh.style.display = 'none';
         this._applyDiaryCss?.();
+        this._toggleDiaryBacklinks?.();
       } catch (e) { contentArea.textContent = 'Error: ' + e.message; }
     };
     pmBtn.addEventListener('click', () => { currentDate.setDate(currentDate.getDate() - 1); renderDiary(); });
@@ -24350,6 +24145,25 @@ class AddRegexRuleModal {
     this._diaryNavigate = (date) => { currentDate = new Date(date); renderDiary().then(() => this._diaryWriteActivity?.()); };
     this._diaryGetDate = () => new Date(currentDate);
     this._diaryRefresh = () => { renderDiary().then(() => this._diaryWriteActivity?.()); };
+    this._renderDiaryContent = () => { renderDiary(); };
+    this._toggleDiaryBacklinks = () => {
+      const _enabled = plugin.settings?.diaryShowBacklinks === true;
+      const _apply = () => {
+        if (!_diaryLeaf?.containerEl) return;
+        const blPane = _diaryLeaf.containerEl.querySelector('.backlink-pane, .embedded-backlinks');
+        if (!blPane) return;
+        if (_enabled) {
+          blPane.style.display = '';
+          const toggle = blPane.querySelector('.collapse-icon');
+          if (toggle && toggle.classList.contains('is-collapsed')) { try { toggle.click(); } catch(e) {} }
+        } else {
+          blPane.style.display = 'none';
+        }
+      };
+      _apply();
+      setTimeout(_apply, 200);
+      setTimeout(_apply, 600);
+    };
     this._diaryWriteActivity = async () => {
       const _s = plugin.settings;
       if (!_s.diaryWriteHighlights && !_s.diaryWriteNewFiles && !_s.diaryWriteModifiedFiles && !_s.diaryWriteNewKeywords && !_s.diaryWriteFloatNotes) return;
@@ -24403,7 +24217,7 @@ class AddRegexRuleModal {
         content = content.replace(/\s+$/, '') + '\n\n' + _curSecHeader + '\n\n' + _lines.join('\n') + '\n';
       }
       await this.app.vault.modify(file, content);
-      if (_diaryLeaf && _diaryLeaf.containerEl && _diaryLeaf.containerEl.parentElement) { try { await _diaryLeaf.openFile(file); const _vh = _diaryLeaf.containerEl.querySelector('.view-header'); if (_vh) _vh.style.display = 'none'; this._applyDiaryCss?.(); } catch(e) {} }
+
     };
     try { this._addUnifiedCard(section, 'diarySection', { w: 12, h: 8 }); } catch (e) { contentEl?.appendChild?.(section); }
   }
@@ -24481,38 +24295,6 @@ class AddRegexRuleModal {
     try { this._addUnifiedCard(section, 'statsSection', { w: 24, h: 3 }); } catch (e) { contentEl?.appendChild?.(section); }
   }
 
-  addQuickMemoSection(contentEl) {
-    if (this.plugin.settings?.showQuickMemoSection === false) return;
-    const plugin = this.plugin;
-    const section = document.createElement('div');
-    section.className = 'quick-memo-section';
-    section.style.cssText = 'height:100%;display:flex;flex-direction:column;padding:2px;overflow:hidden;';
-    const headerRow = document.createElement('div');
-    headerRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:2px;flex-shrink:0;';
-    const titleSpan = document.createElement('span');
-    titleSpan.textContent = t('main.cardLabelQuickMemo');
-    titleSpan.style.cssText = 'font-size:13px;font-weight:600;color:var(--text-normal);user-select:none;';
-    headerRow.appendChild(titleSpan);
-    section.appendChild(headerRow);
-    const textarea = document.createElement('textarea');
-    textarea.className = 'quick-memo-textarea';
-    textarea.placeholder = t('main.quickMemoPlaceholder');
-    textarea.style.cssText = 'flex:1;width:100%;resize:none;border:1px solid var(--background-modifier-border);border-radius:4px;padding:6px 8px;font-size:13px;line-height:1.5;background:var(--background-primary);color:var(--text-normal);font-family:var(--font-interface);outline:none;';
-    textarea.value = plugin.settings.quickMemoText || '';
-    let _saveTimer = null;
-    textarea.addEventListener('input', () => {
-      clearTimeout(_saveTimer);
-      _saveTimer = setTimeout(() => {
-        plugin.settings.quickMemoText = textarea.value;
-        plugin.saveData(plugin.settings);
-      }, 500);
-    });
-    textarea.addEventListener('mousedown', (e) => e.stopPropagation());
-    textarea.addEventListener('pointerdown', (e) => e.stopPropagation());
-    section.appendChild(textarea);
-    const _qmS = plugin.settings || {}; const _qmFs = _qmS['quickMemoSectionFontSize']; const _qmLh = _qmS['quickMemoSectionLineHeight']; if (_qmFs) textarea.style.fontSize = _qmFs + 'px'; if (_qmLh) textarea.style.lineHeight = String(_qmLh);
-    try { this._addUnifiedCard(section, 'quickMemoSection', { w: 12, h: 6 }); } catch (e) { contentEl?.appendChild?.(section); }
-  }
 
   addOpenDocsSection(contentEl) {
     if (this.plugin.settings?.showOpenDocsSection === false) return;
@@ -24547,15 +24329,17 @@ class AddRegexRuleModal {
       const _pl = _s.openDocsPaddingLeft ?? 8;
       const _pr = _s.openDocsPaddingRight ?? 8;
       const _ln = _s.openDocsShowLineNumbers === true;
+      const _bl = _s.openDocsShowBacklinks === true;
       let _styleEl = document.getElementById('sg-open-docs-style');
       if (!_styleEl) { _styleEl = document.createElement('style'); _styleEl.id = 'sg-open-docs-style'; document.head.appendChild(_styleEl); }
-      _styleEl.textContent = `.open-docs-content .cm-content{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.open-docs-content .cm-line{line-height:${_lh} !important;}.open-docs-content .cm-gutters{display:${_ln ? 'flex' : 'none'} !important;}.open-docs-content .markdown-reading-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.open-docs-content .markdown-preview-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.open-docs-content .markdown-preview-pushed{padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.open-docs-content .view-content,.open-docs-content .markdown-source-view,.open-docs-content .markdown-reading-view,.open-docs-content .markdown-preview-view,.open-docs-content .cm-editor,.open-docs-content .cm-scroller,.open-docs-content .markdown-preview-pushed{background:transparent !important;}`;
+      _styleEl.textContent = `.open-docs-content .cm-content{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.open-docs-content .cm-line{line-height:${_lh} !important;}.open-docs-content .cm-gutters{display:${_ln ? 'flex' : 'none'} !important;}.open-docs-content .cm-scroller{padding:0 !important;}.open-docs-content .markdown-reading-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.open-docs-content .markdown-preview-view{font-size:${_fs}px !important;line-height:${_lh} !important;padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.open-docs-content .markdown-preview-pushed{padding-left:${_pl}px !important;padding-right:${_pr}px !important;}.open-docs-content .view-content,.open-docs-content .markdown-source-view,.open-docs-content .markdown-reading-view,.open-docs-content .markdown-preview-view,.open-docs-content .cm-editor,.open-docs-content .cm-scroller,.open-docs-content .markdown-preview-pushed{background:transparent !important;}.open-docs-content .backlink,.open-docs-content .markdown-backlinks,.open-docs-content .backlink-pane{display:${_bl ? 'flex' : 'none'} !important;}`;
       try { contentContainer.querySelectorAll('.cm-gutters,.cm-gutter.cm-lineNumbers').forEach(el => { el.style.display = _ln ? '' : 'none'; }); } catch(e) {}
     };
     this._applyOpenDocsCss();
     this._applyOpenDocsViewBg = () => {
       if (!contentContainer) return;
       contentContainer.querySelectorAll('.view-content, .markdown-source-view, .markdown-reading-view, .markdown-preview-view, .cm-editor, .cm-scroller, .markdown-preview-pushed, .markdown-source-view.mod-cm6, .markdown-reading-view .markdown-preview-view').forEach(el => { el.style.setProperty('background', 'var(--background-secondary)', 'important'); el.style.setProperty('background-color', 'var(--background-secondary)', 'important'); });
+      contentContainer.querySelectorAll('.cm-scroller').forEach(el => { el.style.setProperty('padding', '0', 'important'); });
     };
     let _viewBgTimer = null;
     if (!contentContainer._sgViewBgObs) {
@@ -24627,7 +24411,7 @@ class AddRegexRuleModal {
       ev.preventDefault(); ev.stopImmediatePropagation();
       contentContainer.style.outline = '';
       const _paths = [];
-      if (this._plDraggedFilePath) { _paths.push(this._plDraggedFilePath); this._plDraggedFilePath = null; }
+
       if (_paths.length === 0) { _paths.push(..._odExtractPaths(ev.dataTransfer)); }
       if (!Array.isArray(this._openDocsExtraFiles)) this._openDocsExtraFiles = [];
       for (const fp of _paths) {
@@ -24745,6 +24529,7 @@ class AddRegexRuleModal {
   }
 
   async _renderOpenDocsContent(filePath) {
+
     const contentEl = this._openDocsContentEl;
     if (!contentEl) return;
     const plugin = this.plugin;
@@ -24757,7 +24542,7 @@ class AddRegexRuleModal {
       return;
     }
     if (this._openDocsLeaf && this._openDocsLeaf.containerEl && this._openDocsLeaf.containerEl.parentElement) {
-      try { await this._openDocsLeaf.openFile(file); const _vh = this._openDocsLeaf.containerEl.querySelector('.view-header'); if (_vh) _vh.style.display = 'none'; this._applyOpenDocsCss?.(); this._bindOpenDocsSelection(); this._applyOpenDocsViewBg?.(); return; } catch (e) {}
+      try { await this._openDocsLeaf.openFile(file); const _vh = this._openDocsLeaf.containerEl.querySelector('.view-header'); if (_vh) _vh.style.display = 'none'; this._applyOpenDocsCss?.(); this._bindOpenDocsSelection(); this._applyOpenDocsViewBg?.(); this._toggleOpenDocsBacklinks(); return; } catch (e) {}
     }
     if (this._openDocsLeaf) { try { this._openDocsLeaf.detach(); } catch(e) {} this._openDocsLeaf = null; }
     contentEl.innerHTML = '';
@@ -24773,7 +24558,28 @@ class AddRegexRuleModal {
       this._applyOpenDocsCss?.();
       this._bindOpenDocsSelection();
       this._applyOpenDocsViewBg?.();
+      this._toggleOpenDocsBacklinks();
     } catch (e) { contentEl.textContent = 'Error: ' + e.message; }
+  }
+
+  _toggleOpenDocsBacklinks() {
+    const _enabled = this.plugin.settings?.openDocsShowBacklinks === true;
+    const _apply = () => {
+      const leaf = this._openDocsLeaf;
+      if (!leaf?.containerEl) return;
+      const blPane = leaf.containerEl.querySelector('.backlink-pane');
+      if (!blPane) return;
+      if (_enabled) {
+        blPane.style.display = '';
+        const toggle = blPane.querySelector('.collapse-icon');
+        if (toggle && toggle.classList.contains('is-collapsed')) { try { toggle.click(); } catch(e) {} }
+      } else {
+        blPane.style.display = 'none';
+      }
+    };
+    _apply();
+    setTimeout(_apply, 200);
+    setTimeout(_apply, 600);
   }
 
   _bindOpenDocsSelection() {
@@ -24928,7 +24734,7 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
     canvasContainer.className = 'sg-canvas-container';
     canvasContainer.style.cssText = 'flex:1;overflow:hidden;position:relative;border:1px solid var(--background-modifier-border);border-radius:4px;overscroll-behavior:contain;touch-action:auto;';
     canvasContainer.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
-    canvasContainer.addEventListener('wheel', (e) => { e.preventDefault(); e.stopPropagation(); }, { passive: false });
+    canvasContainer.addEventListener('wheel', (e) => { if (currentFilePath) { e.preventDefault(); e.stopPropagation(); } }, { passive: false });
     section.appendChild(canvasContainer);
     let currentFilePath = null;
     if (!Array.isArray(plugin.settings.canvasSections)) plugin.settings.canvasSections = [];
@@ -25139,7 +24945,7 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
       ev.preventDefault(); ev.stopPropagation();
       canvasContainer.style.borderColor = _borderNormal;
       const _paths = [];
-      if (this._plDraggedFilePath) { _paths.push(this._plDraggedFilePath); this._plDraggedFilePath = null; }
+
       if (_paths.length === 0) { _paths.push(..._extractPaths(ev.dataTransfer)); }
       const _allCanvas = plugin.app.vault.getFiles().filter(f => f.extension === 'canvas');
       let _added = false;
@@ -26056,7 +25862,8 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
     const _pluginInst = this.plugin || plugin.plugin || plugin;
     const section = document.createElement('div');
     section.className = 'threads-section';
-    section.style.cssText = 'margin-top:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:8px;';
+    const _inMerged = !!this._inMergedZone;
+    section.style.cssText = _inMerged ? 'margin-top:2px;' : 'margin-top:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:8px;';
     if (typeof _SG_APPLY_PALETTE === 'function') _SG_APPLY_PALETTE(section, (_pluginInst.settings || plugin.settings), 'threadsPalette');
     const header = document.createElement('div');
     header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
@@ -26066,6 +25873,7 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
     titleEl.textContent = t('main.threadsSection');
     titleEl.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-muted);';
     headerLeft.appendChild(titleEl);
+    if (!_inMerged) {
     const helpBtn = document.createElement('span');
     helpBtn.textContent = '?';
     helpBtn.style.cssText = 'cursor:pointer;color:var(--text-faint);font-size:10px;padding:0 3px;';
@@ -26074,6 +25882,7 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
       _showHelpFloat(helpBtn, t('main.threadsHelpContent'));
     });
     headerLeft.appendChild(helpBtn);
+    }
     const threadsSettingIcon = document.createElement('span');
     threadsSettingIcon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
     threadsSettingIcon.title = t('main.settings');
@@ -26109,12 +25918,31 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
       this._floatSettingsMenu(threadsSettingIcon, panel);
     });
     headerLeft.appendChild(threadsSettingIcon);
+
     header.appendChild(headerLeft);
     const addBtn = document.createElement('button');
     addBtn.textContent = '+';
     addBtn.title = t('main.threadsAddPlaceholder');
     addBtn.style.cssText = 'padding:0 6px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);font-size:12px;font-weight:700;line-height:16px;height:18px;';
     header.appendChild(addBtn);
+    addBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = t('main.threadsAddPlaceholder');
+      input.style.cssText = 'width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--border-color);border-radius:4px;background:var(--background-primary);color:var(--text-normal);box-sizing:border-box;margin-bottom:4px;';
+      body.insertBefore(input, body.firstChild);
+      input.focus();
+      let saved = false;
+      const save = async () => {
+        if (saved) return; saved = true;
+        const val = input.value.trim();
+        if (val) { const lines = await plugin._loadThreads(); lines.push(val); plugin._saveThreads(lines); renderLines(lines); }
+        else { input.remove(); }
+      };
+      input.addEventListener('blur', save);
+      input.addEventListener('keydown', (ke) => { if (ke.key === 'Enter') save(); if (ke.key === 'Escape') { saved = true; input.remove(); } });
+    });
     section.appendChild(header);
     const body = document.createElement('div');
     body.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
@@ -26216,817 +26044,12 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
       });
       this._applySectionFontStyle(section, 'threadsSection', '.sg-highlight-item');
     };
-    addBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.placeholder = t('main.threadsAddPlaceholder');
-      input.style.cssText = 'width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--border-color);border-radius:4px;background:var(--background-primary);color:var(--text-normal);box-sizing:border-box;margin-bottom:4px;';
-      body.insertBefore(input, body.firstChild);
-      input.focus();
-      let saved = false;
-      const save = async () => {
-        if (saved) return; saved = true;
-        const val = input.value.trim();
-        if (val) { const lines = await plugin._loadThreads(); lines.push(val); plugin._saveThreads(lines); renderLines(lines); }
-        else { input.remove(); }
-      };
-      input.addEventListener('blur', save);
-      input.addEventListener('keydown', (ke) => { if (ke.key === 'Enter') save(); if (ke.key === 'Escape') { saved = true; input.remove(); } });
-    });
+
     this._loadThreads().then(renderLines);
     this._threadsRenderLines = renderLines;
     this._threadsReload = () => this._loadThreads().then(renderLines);
   }
 
-
-  clearParkingLotSection() {
-    if (this._removeUnifiedCard) this._removeUnifiedCard('parkingLotSection');
-    if (this._plGrid) { try { this._plGrid.destroy(false); } catch(e){} }
-    if (this._plGridResizeObserver) { try { this._plGridResizeObserver.disconnect(); } catch(e){} this._plGridResizeObserver = null; }
-    if (this._plGridWaitObserver) { try { this._plGridWaitObserver.disconnect(); } catch(e){} this._plGridWaitObserver = null; }
-    this._plSection = null; this._plChipRow = null; this._plCardGrid = null; this._plPlaceholder = null;
-    this._plActiveChip = null; this._plGrid = null; this._plGridReady = false; this._plGridQueue = [];
-  }
-
-  addParkingLotSection(contentEl) {
-    this.clearParkingLotSection();
-    if (this.plugin.settings?.showParkingLot === false) return;
-    const plugin = this.plugin;
-    const _root = contentEl.getRootNode();
-    const _doc = (_root && _root.nodeType === 9) ? _root : (contentEl.ownerDocument || document);
-    const _existingPl = contentEl.querySelector('.parking-lot-section');
-    const _plNextSibling = _existingPl ? _existingPl.nextSibling : null;
-    if (_existingPl) _existingPl.remove();
-    const _plLang = (typeof _currentLang !== 'undefined' && _currentLang === 'en') ? 'en' : 'zh';
-    try { this.app.vault.adapter.mkdir('.obsidian/plugins/Regex-Css-Highlighter/parking-lot').catch(() => {}); } catch (e) {}
-    const _plFolders = (plugin.settings?.parkingLotFolders || []).map(f => f.trim().replace(/^\/+|\/+$/g, '')).filter(f => f);
-    const _plFiles = (plugin.settings?.parkingLotFiles || []).map(f => f.trim()).filter(f => f);
-    const pluginPlDir = '.obsidian/plugins/Regex-Css-Highlighter/parking-lot';
-    this._plResizeObservers = [];
-
-    const sanitizeFileName = (kw) => {
-      const parts = _splitRegexPipes(kw);
-      const name = parts.find(p => p.length <= 30) || parts[0] || kw;
-      return name.replace(/[\\/:*?"<>|]/g, '_').trim();
-    };
-    const readPlFile = async (fileName) => {
-      const adapter = this.app.vault.adapter;
-      for (const folder of _plFolders) { const p = folder + '/' + fileName; try { if (await adapter.exists(p)) return { content: await adapter.read(p), path: p }; } catch(e) {} }
-      for (const fp of _plFiles) { if (fp.endsWith('/' + fileName) || fp.endsWith(fileName)) { try { if (await adapter.exists(fp)) return { content: await adapter.read(fp), path: fp }; } catch(e) {} } }
-      const pluginPath = pluginPlDir + '/' + fileName;
-      try { if (await adapter.exists(pluginPath)) return { content: await adapter.read(pluginPath), path: pluginPath }; } catch(e) {}
-      return null;
-    };
-    const writePlFile = async (fileName, content) => {
-      const existing = await readPlFile(fileName);
-      if (existing) { try { await this.app.vault.adapter.write(existing.path, content); return existing.path; } catch(e) {} }
-      const targetDir = _plFolders[0] || pluginPlDir;
-      const path = targetDir + '/' + fileName;
-      try { await this.app.vault.adapter.write(path, content); } catch (e) { console.warn('[PL] write failed:', e); }
-      return path;
-    };
-    const listPlFiles = async () => {
-      const adapter = this.app.vault.adapter;
-      const result = [];
-      for (const folder of _plFolders) { try { const r = await adapter.list(folder); if (r && r.files) r.files.filter(f => f.endsWith('.md')).forEach(f => result.push({ name: f.split('/').pop(), source: folder })); } catch (e) {} }
-      for (const filePath of _plFiles) { if (filePath.endsWith('.md')) { try { if (await adapter.exists(filePath)) result.push({ name: filePath.split('/').pop(), source: filePath }); } catch(e) {} } }
-      try { const r = await adapter.list(pluginPlDir); if (r && r.files) r.files.filter(f => f.endsWith('.md')).forEach(f => result.push({ name: f.split('/').pop(), source: pluginPlDir })); } catch (e) {}
-      const seen = new Set();
-      return result.filter(f => { if (seen.has(f.name)) return false; seen.add(f.name); return true; });
-    };
-    const matchKw = (fileName, keywords) => true;
-    const getRelatedKeywords = () => [];
-
-    const section = _doc.createElement('div');
-    section.className = 'parking-lot-section';
-    section.style.cssText = 'margin-top:8px;padding:6px 8px;border:1px solid var(--background-modifier-border);border-radius:8px;display:flex;flex-direction:column;';
-    // 版块配色统一由全局配色方案（SG_COLOR_THEMES）负责，不再单独设置底色/文字色
-    const _applyInfoCardStyles = () => {
-      const showGrid = plugin.settings?.parkingLotCardGrid === true;
-      cardGrid.querySelectorAll('.info-card').forEach(c => { c.style.background = 'var(--background-secondary)'; c.style.backgroundImage = ''; c.style.backgroundSize = ''; });
-      if (showGrid) {
-        const cw = this._plGrid?.cellWidth?.() || (cardGrid.offsetWidth / 24);
-        const ch = 20;
-        cardGrid.style.backgroundImage = 'linear-gradient(rgba(128,128,128,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(128,128,128,0.2) 1px, transparent 1px)';
-        cardGrid.style.backgroundSize = `${cw}px ${ch}px`;
-      } else {
-        cardGrid.style.backgroundImage = '';
-        cardGrid.style.backgroundSize = '';
-      }
-    };
-    const headerRow = document.createElement('div');
-    headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;position:sticky;top:0;z-index:3;background:var(--background-secondary);padding:2px 0;';
-    const headerLeft = document.createElement('div');
-    headerLeft.style.cssText = 'display:flex;align-items:center;gap:4px;';
-    const titleEl = document.createElement('span');
-    titleEl.textContent = t('main.parkingLotSection');
-    titleEl.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-muted);';
-    headerLeft.appendChild(titleEl);
-    const plHelpBtn = document.createElement('span');
-    plHelpBtn.textContent = '?';
-    plHelpBtn.style.cssText = 'cursor:pointer;color:var(--text-faint);font-size:10px;padding:0 3px;';
-    plHelpBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      _showHelpFloat(plHelpBtn, t('main.parkingLotHelpContent'));
-    });
-    headerLeft.appendChild(plHelpBtn);
-    const infoSettingIcon = document.createElement('span');
-    infoSettingIcon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
-    infoSettingIcon.title = t('main.infoSettings');
-    infoSettingIcon.style.cssText = 'cursor:pointer;opacity:0.4;display:inline-flex;align-items:center;transition:opacity 0.15s;';
-    infoSettingIcon.addEventListener('mouseenter', () => { infoSettingIcon.style.opacity = '0.8'; });
-    infoSettingIcon.addEventListener('mouseleave', () => { infoSettingIcon.style.opacity = '0.4'; });
-    infoSettingIcon.addEventListener('click', (se) => {
-      se.preventDefault(); se.stopPropagation();
-      if (this._currentFloatingMenuAnchor === infoSettingIcon && this._currentFloatingMenu) { this._closeFloatingMenu(); return; }
-      const menu = document.createElement('div');
-      menu.className = 'info-settings-menu';
-      menu.style.cssText = 'background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:11px;min-width:240px;margin-top:4px;';
-      const _s = plugin.settings || {};
-      // 配色方案选择器已移除：版块配色统一由全局配色方案（SG_COLOR_THEMES）负责
-      menu.appendChild(this._makeBgPatternRow('secBg_parkingLotSection', () => {
-        this._applyBgPattern(section, 'secBg_parkingLotSection');
-      }));
-      menu.appendChild(this._makeFontLineHeightRows('parkingLotSection', () => {
-        this._applySectionFontStyle(this._plCardGrid, 'parkingLotSection', '.info-card-content, .info-card .markdown-rendered');
-      }));
-      {
-        const gridRow = document.createElement('div');
-        gridRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin:3px 0;';
-        const gridLbl = document.createElement('span');
-        gridLbl.textContent = t('main.parkingLotCardGrid');
-        gridLbl.style.cssText = 'color:var(--text-normal);font-size:10px;';
-        gridRow.appendChild(gridLbl);
-        const gridCb = document.createElement('input');
-        gridCb.type = 'checkbox';
-        gridCb.checked = _s.parkingLotCardGrid === true;
-        gridCb.style.cssText = 'cursor:pointer;';
-        gridCb.addEventListener('change', () => { _s.parkingLotCardGrid = gridCb.checked; plugin.saveData(plugin.settings); _applyInfoCardStyles(); });
-        gridRow.appendChild(gridCb);
-        menu.appendChild(gridRow);
-      }
-
-      const cpLabel = document.createElement('div');
-      cpLabel.textContent = t('settings.parkingLotCustomPrompts');
-      cpLabel.style.cssText = 'color:var(--text-muted);font-weight:600;margin:6px 0 4px;font-size:11px;';
-      menu.appendChild(cpLabel);
-      const _presetPrompts = [
-        { label: t('settings.presetPlainExplain'), text: t('settings.presetPlainExplainText'), _isPreset: true, _presetKey: 'plainExplain' },
-        { label: t('settings.presetOneLineDef'), text: t('settings.presetOneLineDefText'), _isPreset: true, _presetKey: 'oneLineDef' },
-        { label: t('settings.presetExample'), text: t('settings.presetExampleText'), _isPreset: true, _presetKey: 'example' },
-        { label: t('settings.presetCompare'), text: t('settings.presetCompareText'), _isPreset: true, _presetKey: 'compare' },
-      ];
-      const _presetKeyMap = { plainExplain: ['settings.presetPlainExplain', 'settings.presetPlainExplainText'], oneLineDef: ['settings.presetOneLineDef', 'settings.presetOneLineDefText'], example: ['settings.presetExample', 'settings.presetExampleText'], compare: ['settings.presetCompare', 'settings.presetCompareText'] };
-      if (!_s.parkingLotCustomPrompts) _s.parkingLotCustomPrompts = [];
-      else { _s.parkingLotCustomPrompts.forEach(p => { if (p._isPreset && _presetKeyMap[p._presetKey]) { p.label = t(_presetKeyMap[p._presetKey][0]); p.text = t(_presetKeyMap[p._presetKey][1]); } }); }
-      const cpList = document.createElement('div');
-      cpList.style.cssText = 'margin-bottom:6px;';
-      menu.appendChild(cpList);
-      const _renderCustomPrompts = () => {
-        cpList.innerHTML = '';
-        _s.parkingLotCustomPrompts.forEach((p, i) => {
-          const row = document.createElement('div');
-          row.style.cssText = 'display:flex;align-items:center;gap:4px;margin:3px 0;';
-          const lblInp = document.createElement('input');
-          lblInp.type = 'text'; lblInp.value = p.label; lblInp.placeholder = t('settings.promptLabelPlaceholder');
-          lblInp.style.cssText = 'flex:1;font-size:10px;padding:2px 4px;border:1px solid var(--background-modifier-border);border-radius:3px;';
-          const txtInp = document.createElement('input');
-          txtInp.type = 'text'; txtInp.value = p.text; txtInp.placeholder = t('settings.promptTextPlaceholder');
-          txtInp.style.cssText = 'flex:2;font-size:10px;padding:2px 4px;border:1px solid var(--background-modifier-border);border-radius:3px;';
-          const delBtn = document.createElement('span');
-          delBtn.textContent = '×'; delBtn.style.cssText = 'cursor:pointer;color:var(--text-error);font-size:14px;flex-shrink:0;padding:0 2px;';
-          lblInp.addEventListener('change', () => { p.label = lblInp.value; delete p._isPreset; delete p._presetKey; plugin.saveData(plugin.settings); });
-          txtInp.addEventListener('change', () => { p.text = txtInp.value; delete p._isPreset; delete p._presetKey; plugin.saveData(plugin.settings); });
-          delBtn.addEventListener('click', () => { _s.parkingLotCustomPrompts.splice(i, 1); plugin.saveData(plugin.settings); _renderCustomPrompts(); });
-          row.appendChild(lblInp); row.appendChild(txtInp); row.appendChild(delBtn);
-          cpList.appendChild(row);
-        });
-      };
-      _renderCustomPrompts();
-      const addPromptBtn = document.createElement('button');
-      addPromptBtn.textContent = t('settings.addPrompt');
-      addPromptBtn.style.cssText = 'margin-top:2px;padding:3px 8px;cursor:pointer;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);font-size:10px;';
-      addPromptBtn.addEventListener('click', () => { _s.parkingLotCustomPrompts.push({ label: '', text: '' }); plugin.saveData(plugin.settings); _renderCustomPrompts(); });
-      menu.appendChild(addPromptBtn);
-      this._floatSettingsMenu(infoSettingIcon, menu);
-    });
-    headerLeft.appendChild(infoSettingIcon);
-    headerRow.appendChild(headerLeft);
-    const addBtn = document.createElement('button');
-    addBtn.textContent = '+';
-    addBtn.title = t('main.infoAddFile');
-    addBtn.style.cssText = 'padding:0 6px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:18px;line-height:0;font-size:13px;font-weight:700;';
-
-    headerRow.appendChild(addBtn);
-    section.appendChild(headerRow);
-    const chipRow = _doc.createElement('div');
-    chipRow.className = 'info-chip-row';
-    chipRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;align-items:center;';
-    section.appendChild(chipRow);
-    const cardGrid = _doc.createElement('div');
-    cardGrid.className = 'info-card-grid';
-    cardGrid.style.cssText = 'flex:1;overflow-y:auto;min-height:0;';
-    section.appendChild(cardGrid);
-
-    const placeholder = document.createElement('div');
-    placeholder.className = 'info-placeholder';
-    placeholder.textContent = t('main.parkingLotEmpty');
-    placeholder.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;';
-    cardGrid.appendChild(placeholder);
-    this._plSection = section; this._plChipRow = chipRow; this._plCardGrid = cardGrid; this._plPlaceholder = placeholder;
-    this._plActiveChip = 'all';
-    this._plGrid = null;
-
-    if (!this._plDragStartHandler) {
-      this._plDragStartHandler = (e) => {
-        this._plDraggedFilePath = null;
-        this._plDraggedFolderPath = null;
-        const fileEl = e.target.closest('.nav-file-title, .nav-file');
-        if (fileEl) {
-          this._plDraggedFilePath = fileEl.dataset.path || fileEl.getAttribute('data-path') || null;
-          if (!this._plDraggedFilePath) {
-            const inner = fileEl.querySelector('.nav-file-title-content');
-            if (inner) {
-              const fname = inner.textContent.trim();
-              const f = plugin.app.vault.getFiles().find(x => x.basename === fname);
-              if (f) this._plDraggedFilePath = f.path;
-            }
-          }
-        }
-        const folderEl = e.target.closest('.nav-folder-title, .nav-folder');
-        if (folderEl && !this._plDraggedFilePath) {
-          this._plDraggedFolderPath = folderEl.dataset.path || folderEl.getAttribute('data-path') || null;
-          if (!this._plDraggedFolderPath) {
-            const inner = folderEl.querySelector('.nav-folder-title-content');
-            if (inner) this._plDraggedFolderPath = inner.textContent.trim();
-          }
-        }
-      };
-      document.addEventListener('dragstart', this._plDragStartHandler, true);
-    }
-
-    cardGrid.addEventListener('dragover', (ev) => {
-      ev.preventDefault();
-      if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'copy';
-      cardGrid.style.outline = '2px dashed var(--interactive-accent)';
-    });
-    cardGrid.addEventListener('dragleave', () => {
-      cardGrid.style.outline = '';
-    });
-    cardGrid.addEventListener('drop', async (ev) => {
-      ev.preventDefault(); ev.stopPropagation();
-      cardGrid.style.outline = '';
-      const dt = ev.dataTransfer;
-      const _paths = [];
-      const _folderPaths = [];
-      if (this._plDraggedFilePath) {
-        _paths.push(this._plDraggedFilePath);
-      }
-      if (this._plDraggedFolderPath) {
-        _folderPaths.push(this._plDraggedFolderPath);
-      }
-      this._plDraggedFilePath = null;
-      this._plDraggedFolderPath = null;
-      if (_paths.length === 0 && _folderPaths.length === 0 && dt) {
-        for (const type of (dt.types || [])) {
-          try {
-            const data = dt.getData(type);
-            if (!data) continue;
-            if (data.startsWith('obsidian://')) {
-              const m = data.match(/[?&]file=([^&]+)/);
-              if (m) { _paths.push(decodeURIComponent(m[1])); continue; }
-            }
-            data.split('\n').filter(Boolean).forEach(p => {
-              const trimmed = p.trim();
-              if (trimmed.endsWith('.md') || (trimmed.includes('/') && !trimmed.startsWith('obsidian://'))) _paths.push(trimmed);
-            });
-          } catch (e) {}
-        }
-        if (dt.files && dt.files.length > 0) {
-          for (const f of dt.files) { if (f.name && f.name.endsWith('.md')) _paths.push(f.name); }
-        }
-      }
-      const _addFileCard = (file) => {
-        if (file && file.extension === 'md' && this._addPlCard) this._addPlCard(file.path, file.name, '', false);
-      };
-      for (const fp of _paths) {
-        const fileName = fp.split('/').pop();
-        if (!fileName) continue;
-        let file = plugin.app.vault.getAbstractFileByPath(fp);
-        if (!file) {
-          const allFiles = plugin.app.vault.getFiles();
-          file = allFiles.find(f => f.name === fileName || f.path === fp);
-        }
-        if (!file) continue;
-        _addFileCard(file);
-      }
-      for (const folderPath of _folderPaths) {
-        try {
-          let folder = plugin.app.vault.getAbstractFileByPath(folderPath);
-          if (!folder) {
-            const allFolders = plugin.app.vault.getAllLoadedFiles().filter(f => f.children && f.name === folderPath);
-            if (allFolders.length === 1) folder = allFolders[0];
-          }
-          if (folder && folder.children) {
-            const _collectMdFiles = (f, depth) => {
-              if (depth > 3) return;
-              for (const child of f.children) {
-                if (child.extension === 'md') _addFileCard(child);
-                else if (child.children) _collectMdFiles(child, depth + 1);
-              }
-            };
-            _collectMdFiles(folder, 0);
-          }
-        } catch (e) {}
-      }
-    });
-    this._plGridReady = false;
-    this._plGridQueue = [];
-
-    const _saveGridLayout = () => {
-      if (!this._plGrid || !this._plGridReady) return;
-      try {
-        if (!plugin.settings.parkingLotGridLayout) plugin.settings.parkingLotGridLayout = {};
-        for (const n of (this._plGrid.engine?.nodes || [])) {
-          const cardEl = n.el?.querySelector?.('.info-card');
-          const fn = cardEl?.dataset?.file;
-          if (fn) plugin.settings.parkingLotGridLayout[fn] = { x: n.x, y: n.y, w: n.w, h: n.h };
-        }
-        plugin.saveData(plugin.settings);
-      } catch(e) {}
-    };
-
-    _loadGridStack(this.app).then((GridStack) => {
-      try {
-        if (!_doc.getElementById('info-grid-mobile-handle-style')) {
-          const mh = _doc.createElement('style');
-          mh.id = 'info-grid-mobile-handle-style';
-          mh.textContent = `.info-card-grid .grid-stack-item>.ui-resizable-handle{opacity:0;transition:opacity .15s;}.info-card-grid .grid-stack-item:hover>.ui-resizable-handle{opacity:1;}.info-card-grid .grid-stack-item>.ui-resizable-se{width:14px;height:14px;bottom:0;right:0;}@media (pointer:coarse){.info-card-grid .grid-stack-item>.ui-resizable-handle{width:20px!important;height:20px!important;z-index:5;opacity:1!important;}.info-card-grid .grid-stack-item>.ui-resizable-se{right:0!important;bottom:0!important;}}`;
-          _doc.head.appendChild(mh);
-        }
-        if (!_doc.getElementById('info-grid-col24-css')) {
-          const colCss = _doc.createElement('style');
-          colCss.id = 'info-grid-col24-css';
-          let rules = '';
-          for (let n = 1; n <= 24; n++) {
-            const pct = (n / 24 * 100);
-            rules += `.gs-24>.grid-stack-item[gs-w="${n}"]{width:${pct}%}`;
-            rules += `.gs-24>.grid-stack-item[gs-x="${n}"]{left:${pct}%}`;
-          }
-          colCss.textContent = rules;
-          _doc.head.appendChild(colCss);
-        }
-        const savedLayout = plugin.settings?.parkingLotGridLayout || {};
-        const _newCol = 24;
-        const _oldCol = savedLayout.__colVersion || 12;
-        if (_oldCol !== _newCol) {
-          const _ratio = _newCol / _oldCol;
-          for (const k of Object.keys(savedLayout)) {
-            if (k.startsWith('__')) continue;
-            const v = savedLayout[k];
-            if (v && typeof v === 'object') {
-              v.x = Math.round((v.x || 0) * _ratio);
-              v.w = Math.round((v.w || 0) * _ratio);
-            }
-          }
-          savedLayout.__colVersion = _newCol;
-          plugin.saveData(plugin.settings);
-        }
-        const _doInit = () => {
-          const grid = GridStack.init({
-            column: 24,
-            cellHeight: 20,
-            margin: 2,
-            draggable: { handle: '.info-card-drag-handle', scroll: false, appendTo: 'parent' },
-            resizable: { handles: 'se' },
-            animate: true,
-            float: true,
-            disableOneColumnMode: true,
-            alwaysShowResizeHandle: true,
-          }, cardGrid);
-          this._plGrid = grid;
-          this._plGridReady = true;
-          // 内联定位兜底：GridStack 动态样式表在部分场景失效，导致卡片纵向堆顶，用内联 top/height 保证位置
-          const _applyPlInlinePos = () => {
-            try {
-              const _ch = grid.opts.cellHeight || 20;
-              const _chu = grid.opts.cellHeightUnit || 'px';
-              for (const n of (grid.engine?.nodes || [])) {
-                if (!n.el) continue;
-                n.el.style.top = (n.y * _ch) + _chu;
-                n.el.style.height = (n.h * _ch) + _chu;
-                const ce = n.el.querySelector('.grid-stack-item-content');
-                if (ce) { ce.style.position = 'absolute'; ce.style.top = '2px'; ce.style.bottom = '2px'; ce.style.left = '2px'; ce.style.right = '2px'; }
-              }
-              const _row = grid.getRow();
-              cardGrid.style.minHeight = (_row * _ch) + _chu;
-            } catch(e) {}
-          };
-          const _reflowNodes = () => {
-            try {
-              if (grid.engine?.nodes?.length) { grid.column(24, 'move'); }
-            } catch(e) {}
-            _applyPlInlinePos();
-          };
-          const _ro = new ResizeObserver(() => {
-            if (this._plGrid && this._plGridReady && cardGrid.offsetWidth > 0) {
-              clearTimeout(this._plGridColTimer);
-              this._plGridColTimer = setTimeout(() => { _reflowNodes(); _applyInfoCardStyles(); }, 50);
-            }
-          });
-          _ro.observe(cardGrid);
-          this._plGridResizeObserver = _ro;
-          grid.on('change', () => { clearTimeout(this._plGridSaveTimer); this._plGridSaveTimer = setTimeout(_saveGridLayout, 500); _applyPlInlinePos(); });
-          grid.on('dragstop', () => { clearTimeout(this._plGridSaveTimer); this._plGridSaveTimer = setTimeout(_saveGridLayout, 300); _applyPlInlinePos(); });
-          grid.on('resizestop', () => { clearTimeout(this._plGridSaveTimer); this._plGridSaveTimer = setTimeout(_saveGridLayout, 300); requestAnimationFrame(() => requestAnimationFrame(() => _applyPlInlinePos())); setTimeout(() => _applyPlInlinePos(), 0); });
-          while (this._plGridQueue.length > 0) { const fn = this._plGridQueue.shift(); if (typeof fn === 'function') fn(grid); }
-          _applyPlInlinePos();
-          requestAnimationFrame(() => _applyPlInlinePos());
-          setTimeout(() => _applyPlInlinePos(), 0);
-        };
-        if (cardGrid.offsetWidth > 0) { _doInit(); }
-        else {
-          const _waitRo = new ResizeObserver(() => {
-            if (cardGrid.offsetWidth > 0) { _waitRo.disconnect(); _doInit(); }
-          });
-          _waitRo.observe(cardGrid);
-          this._plGridWaitObserver = _waitRo;
-        }
-      } catch(e) { console.warn('[GridStack] init failed:', e); }
-    }).catch((e) => { console.warn('[GridStack] load failed:', e); });
-
-    const clearCards = () => {
-      if (this._plGrid && this._plGridReady) {
-        try { this._plGrid.removeAll(true); } catch(e) {}
-      }
-      cardGrid.innerHTML = '';
-      placeholder.textContent = t('main.parkingLotEmpty');
-      cardGrid.appendChild(placeholder);
-    };
-
-    const renderMd = async (container, mdContent) => {
-      container.innerHTML = '';
-      try { const { MarkdownRenderer, Component } = require('obsidian'); const comp = new Component(); comp.load(); const srcPath = plugin.app.workspace.getActiveFile()?.path || plugin.currentFilePath || ''; await MarkdownRenderer.renderMarkdown(mdContent, container, srcPath, comp); if (plugin.renderImagesManually) await plugin.renderImagesManually(mdContent, container, plugin); if (!container._sgLinkBound) { container._sgLinkBound = true; container.addEventListener('click', (ce) => { const linkEl = ce.target.closest('a.internal-link, a.is-unresolved'); if (linkEl) { ce.preventDefault(); ce.stopPropagation(); const href = linkEl.dataset.href || linkEl.getAttribute('href') || linkEl.textContent; if (href) plugin.app.workspace.openLinkText(href, '', true); } }); container.addEventListener('auxclick', (ce) => { if (ce.button !== 1) return; const linkEl = ce.target.closest('a.internal-link, a.is-unresolved'); if (linkEl) { ce.preventDefault(); ce.stopPropagation(); const href = linkEl.dataset.href || linkEl.getAttribute('href') || linkEl.textContent; if (href) { const leaf = plugin.app.workspace.getLeaf('window'); const file = plugin.app.metadataCache.getFirstLinkpathDest(href.replace(/\.md$/, ''), '') || plugin.app.vault.getAbstractFileByPath(href); if (file) leaf.openFile(file); } } }); } this._applySectionFontStyle(cardGrid, 'parkingLotSection', '.info-card-content, .info-card .markdown-rendered'); }
-      catch (e) { container.textContent = mdContent; }
-    };
-
-    this._addPlCard = (filePath, fileName, kw, editMode) => {
-      if (!fileName || !cardGrid) return null;
-      if (cardGrid.querySelector(`.info-card[data-file="${fileName.replace(/"/g, '&quot;')}"]`)) return null;
-      placeholder.remove();
-      const card = document.createElement('div');
-      card.className = 'info-card sg-highlight-item has-comment';
-      card.dataset.file = fileName;
-      card.dataset.kw = kw || '';
-      card.style.cssText = 'width:100%;height:100%;border:1px solid var(--background-modifier-border);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;';
-      const layout = plugin.settings?.parkingLotGridLayout?.[fileName];
-      const cardHeader = document.createElement('div');
-      cardHeader.className = 'info-card-header';
-      cardHeader.style.cssText = 'display:flex;align-items:center;padding:4px 8px 4px 8px;padding-right:20px;border-bottom:1px solid var(--background-modifier-border);cursor:default;touch-action:none;background:transparent;';
-      ['mousedown', 'touchstart', 'pointerdown'].forEach(evt => {
-        cardHeader.addEventListener(evt, (e) => {
-          if (!e.target.closest('.info-card-drag-handle')) { e.stopPropagation(); }
-        });
-      });
-      const dragHandle = document.createElement('span');
-      dragHandle.className = 'info-card-drag-handle';
-      dragHandle.innerHTML = '<svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="2" cy="2" r="1.2"/><circle cx="8" cy="2" r="1.2"/><circle cx="2" cy="7" r="1.2"/><circle cx="8" cy="7" r="1.2"/><circle cx="2" cy="12" r="1.2"/><circle cx="8" cy="12" r="1.2"/></svg>';
-      dragHandle.title = '拖动移动';
-      dragHandle.style.cssText = 'cursor:grab;flex-shrink:0;margin-right:5px;color:var(--text-muted);display:inline-flex;align-items:center;user-select:none;-webkit-user-select:none;touch-action:none;';
-      cardHeader.appendChild(dragHandle);
-      const cardTitle = document.createElement('span');
-      cardTitle.className = 'sg-related-source';
-      cardTitle.textContent = fileName.replace(/\.md$/, '');
-      cardTitle.style.cssText = 'font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;cursor:text;';
-      cardTitle.title = t('main.infoDblClickEditTitle');
-      cardTitle.addEventListener('dblclick', (ev) => {
-        ev.preventDefault(); ev.stopPropagation();
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = fileName.replace(/\.md$/, '');
-        input.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-normal);flex:1;border:1px solid var(--interactive-accent);border-radius:3px;padding:1px 4px;background:var(--background-primary);';
-        cardTitle.replaceWith(input); input.focus(); input.select();
-        const finish = async () => {
-          const newBase = sanitizeFileName(input.value.trim()) || fileName.replace(/\.md$/, '');
-          const newName = newBase + '.md';
-          input.replaceWith(cardTitle);
-          if (newName === fileName) return;
-          const r = await readPlFile(fileName);
-          if (r) { await writePlFile(newName, r.content); try { await this.app.vault.adapter.remove(r.path); } catch(e){} }
-          card.dataset.file = newName;
-          cardTitle.textContent = newBase;
-          if (plugin.settings.parkingLotGridLayout && plugin.settings.parkingLotGridLayout[fileName]) { plugin.settings.parkingLotGridLayout[newName] = plugin.settings.parkingLotGridLayout[fileName]; delete plugin.settings.parkingLotGridLayout[fileName]; plugin.saveData(plugin.settings); }
-          fileName = newName;
-        };
-        input.addEventListener('blur', finish);
-        input.addEventListener('keydown', (ke) => { if (ke.key === 'Enter') input.blur(); if (ke.key === 'Escape') { input.value = fileName.replace(/\.md$/, ''); input.blur(); } });
-      });
-      cardHeader.appendChild(cardTitle);
-      const aiBtn = document.createElement('span');
-      aiBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/><circle cx="12" cy="12" r="3"/></svg>';
-      aiBtn.title = t('main.infoAiGenerate');
-      aiBtn.style.cssText = 'cursor:pointer;opacity:0.5;display:inline-flex;align-items:center;flex-shrink:0;margin-left:4px;transition:opacity 0.15s;';
-      let _aiPopup = null;
-      const _closeAiPopup = () => { if (_aiPopup) { if (_aiPopup._dragAb) _aiPopup._dragAb.abort(); if (_aiPopup._escHandler) { document.removeEventListener('keydown', _aiPopup._escHandler); _aiPopup._escHandler = null; } _aiPopup.remove(); _aiPopup = null; } };
-      const _openAiPopup = () => {
-        if (_aiPopup) { _closeAiPopup(); return; }
-        const kwName = fileName.replace(/\.md$/, '').replace(/_\d+$/, '');
-        const _presetKeyMap = { plainExplain: ['settings.presetPlainExplain', 'settings.presetPlainExplainText'], oneLineDef: ['settings.presetOneLineDef', 'settings.presetOneLineDefText'], example: ['settings.presetExample', 'settings.presetExampleText'], compare: ['settings.presetCompare', 'settings.presetCompareText'] };
-        if (!plugin.settings.parkingLotCustomPrompts) plugin.settings.parkingLotCustomPrompts = [];
-        else { plugin.settings.parkingLotCustomPrompts.forEach(p => { if (p._isPreset && _presetKeyMap[p._presetKey]) { p.label = t(_presetKeyMap[p._presetKey][0]); p.text = t(_presetKeyMap[p._presetKey][1]); } }); }
-        const _allPrompts = (plugin.settings.parkingLotCustomPrompts || []).filter(p => p.label && p.text);
-        const _selected = new Set([0]);
-        _aiPopup = document.createElement('div');
-        _aiPopup.className = 'info-ai-popup';
-        _aiPopup.style.cssText = 'position:fixed;z-index:9999;background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:14px;padding:14px;box-shadow:0 4px 16px rgba(0,0,0,0.08);font-size:11px;width:340px;';
-        const panelHead = document.createElement('div');
-        panelHead.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:move;user-select:none;-webkit-user-select:none;touch-action:none;';
-        const headLabel = document.createElement('span');
-        headLabel.textContent = t('main.aiPromptTitle');
-        headLabel.style.cssText = 'font-size:12px;color:var(--text-muted);font-weight:500;';
-        panelHead.appendChild(headLabel);
-        const _aiCloseBtn = document.createElement('span');
-        _aiCloseBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-        _aiCloseBtn.style.cssText = 'cursor:pointer;opacity:0.5;display:inline-flex;align-items:center;flex-shrink:0;transition:opacity 0.15s;';
-        _aiCloseBtn.addEventListener('mouseenter', () => { _aiCloseBtn.style.opacity = '1'; });
-        _aiCloseBtn.addEventListener('mouseleave', () => { _aiCloseBtn.style.opacity = '0.5'; });
-        _aiCloseBtn.addEventListener('mousedown', (ce) => { ce.stopPropagation(); });
-        _aiCloseBtn.addEventListener('click', (ce) => { ce.stopPropagation(); _closeAiPopup(); });
-        panelHead.appendChild(_aiCloseBtn);
-        _aiPopup.appendChild(panelHead);
-        _aiPopup._dragAb = new AbortController();
-        { const _dAb = _aiPopup._dragAb; let _dragging = false, _dx = 0, _dy = 0;
-          const _dStart = (ev) => { _dragging = true; const r = _aiPopup.getBoundingClientRect(); const px = ev.touches ? ev.touches[0].clientX : ev.clientX; const py = ev.touches ? ev.touches[0].clientY : ev.clientY; _dx = px - r.left; _dy = py - r.top; if (ev.cancelable) ev.preventDefault(); };
-          const _dMove = (ev) => { if (!_dragging || !_aiPopup) return; const px = ev.touches ? ev.touches[0].clientX : ev.clientX; const py = ev.touches ? ev.touches[0].clientY : ev.clientY; _aiPopup.style.left = Math.max(0, Math.min(window.innerWidth - 40, px - _dx)) + 'px'; _aiPopup.style.top = Math.max(0, Math.min(window.innerHeight - 40, py - _dy)) + 'px'; };
-          const _dEnd = () => { _dragging = false; };
-          panelHead.addEventListener('mousedown', _dStart, { signal: _dAb.signal });
-          document.addEventListener('mousemove', _dMove, { signal: _dAb.signal });
-          document.addEventListener('mouseup', _dEnd, { signal: _dAb.signal });
-          panelHead.addEventListener('touchstart', _dStart, { passive: true, signal: _dAb.signal });
-          document.addEventListener('touchmove', _dMove, { passive: true, signal: _dAb.signal });
-          document.addEventListener('touchend', _dEnd, { signal: _dAb.signal , passive: true});
-        }
-        const chipRow = document.createElement('div');
-        chipRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;';
-        _aiPopup.appendChild(chipRow);
-        const _renderChips = () => {
-          chipRow.innerHTML = '';
-          _allPrompts.forEach((p, i) => {
-            const chip = document.createElement('div');
-            const isSel = _selected.has(i);
-            chip.style.cssText = `font-size:11px;padding:5px 11px;border-radius:14px;cursor:pointer;user-select:none;display:flex;align-items:center;gap:4px;transition:all 0.15s;border:1px solid ${isSel?'#b3a1ec':'var(--background-modifier-border)'};background:${isSel?'#f1ecfd':'var(--background-secondary)'};color:${isSel?'#6c4fd4':'var(--text-normal)'};`;
-            if (isSel) {
-              const check = document.createElement('span');
-              check.textContent = '✓';
-              check.style.fontSize = '11px';
-              chip.appendChild(check);
-            }
-            const lbl = document.createElement('span');
-            lbl.textContent = p.label;
-            chip.appendChild(lbl);
-            chip.addEventListener('click', () => {
-              if (_selected.has(i)) _selected.delete(i); else _selected.add(i);
-              _renderChips(); _updatePrompt();
-            });
-            chipRow.appendChild(chip);
-          });
-        };
-        const promptTa = document.createElement('textarea');
-        promptTa.style.cssText = 'width:100%;box-sizing:border-box;min-height:64px;border-radius:10px;border:1px solid var(--background-modifier-border);background:var(--background-secondary);padding:10px 12px;font-size:12px;color:var(--text-normal);line-height:1.6;resize:vertical;font-family:inherit;margin-bottom:8px;';
-        _aiPopup.appendChild(promptTa);
-        const sendBtn = document.createElement('button');
-        sendBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' + t('main.aiSend');
-        sendBtn.style.cssText = 'width:100%;padding:9px;border:none;border-radius:10px;background:linear-gradient(135deg,#9b7ee8,#8266d6);color:#fff;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;';
-        _aiPopup.appendChild(sendBtn);
-        const _updatePrompt = () => {
-          const sortedIdx = Array.from(_selected).sort((a, b) => a - b).filter(i => _allPrompts[i]);
-          promptTa.value = sortedIdx.map(i => _allPrompts[i].text.replace(/\{keyword\}/g, kwName)).join('');
-        };
-        _renderChips();
-        _updatePrompt();
-        document.body.appendChild(_aiPopup);
-        _aiPopup._escHandler = (ev) => { if (ev.key === 'Escape') { _closeAiPopup(); } };
-        document.addEventListener('keydown', _aiPopup._escHandler);
-        const btnRect = aiBtn.getBoundingClientRect();
-        _aiPopup.style.left = Math.min(btnRect.left, window.innerWidth - 360) + 'px';
-        _aiPopup.style.top = (btnRect.bottom + 4) + 'px';
-        sendBtn.addEventListener('click', async () => {
-          const p = promptTa.value.trim();
-          if (!p) return;
-          _closeAiPopup();
-          aiBtn.style.opacity = '0.5';
-          cardContent.innerHTML = '';
-          const streamEl = document.createElement('div');
-          streamEl.style.cssText = 'white-space:pre-wrap;word-break:break-word;padding:8px;font-size:12px;line-height:1.6;color:var(--text-normal);display:block !important;visibility:visible !important;';
-          cardContent.appendChild(streamEl);
-          let accumulated = '';
-          try {
-            const reply = await plugin.callAIStream(p, (delta, full) => { accumulated = full; streamEl.textContent = full; cardContent.scrollTop = cardContent.scrollHeight; });
-            if (reply && reply.trim()) { await writePlFile(fileName, reply.trim()); await renderMd(cardContent, reply.trim()); }
-            else if (accumulated) { await writePlFile(fileName, accumulated); await renderMd(cardContent, accumulated); }
-          } catch (err) { new Notice(t('main.infoAiFailed') + ': ' + (err.message || t('main.infoUnknownError'))); if (accumulated) { try { await writePlFile(fileName, accumulated); await renderMd(cardContent, accumulated); } catch(e){} } }
-          finally { aiBtn.style.opacity = '1'; }
-        });
-        const _onDocDown = (ev) => { if (_aiPopup && !_aiPopup.contains(ev.target) && !aiBtn.contains(ev.target)) { _closeAiPopup(); document.removeEventListener('mousedown', _onDocDown); } };
-        setTimeout(() => document.addEventListener('mousedown', _onDocDown), 0);
-      };
-
-      aiBtn.addEventListener('mouseenter', () => { aiBtn.style.opacity = '1'; });
-      aiBtn.addEventListener('mouseleave', () => { aiBtn.style.opacity = '0.5'; });
-      aiBtn.addEventListener('click', (ce) => { ce.stopPropagation(); ce.preventDefault(); _openAiPopup(); });
-      cardHeader.appendChild(aiBtn);
-      const delBtn = document.createElement('span');
-      delBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>';
-      delBtn.title = t('main.infoDeleteCard') || '删除';
-      delBtn.style.cssText = 'cursor:pointer;opacity:0.5;display:inline-flex;align-items:center;flex-shrink:0;margin-left:10px;transition:opacity 0.15s;';
-      delBtn.addEventListener('mouseenter', () => { delBtn.style.opacity = '1'; });
-      delBtn.addEventListener('mouseleave', () => { delBtn.style.opacity = '0.5'; });
-      delBtn.addEventListener('click', async (de) => {
-        de.preventDefault(); de.stopPropagation();
-        const r = await readPlFile(fileName);
-        if (r) { try { await this.app.vault.adapter.remove(r.path); } catch(e){} }
-        if (plugin.settings.parkingLotGridLayout && plugin.settings.parkingLotGridLayout[fileName]) { delete plugin.settings.parkingLotGridLayout[fileName]; plugin.saveData(plugin.settings); }
-        const widgetEl = card.closest('.grid-stack-item');
-        if (widgetEl && this._plGrid && this._plGridReady) { try { this._plGrid.removeWidget(widgetEl, true); } catch(e) { card.remove(); } }
-        else { card.remove(); }
-        if (cardGrid.querySelectorAll('.info-card').length === 0) { cardGrid.appendChild(placeholder); }
-      });
-      cardHeader.appendChild(delBtn);
-      card.appendChild(cardHeader);
-      const cardContent = document.createElement('div');
-      cardContent.className = 'info-card-content sg-related-text';
-      cardContent.style.cssText = 'padding:6px 8px;font-size:13px;line-height:1.5;user-select:text;-webkit-user-select:text;overflow-y:auto;flex:1;touch-action:pan-y;';
-      ['mousedown', 'touchstart', 'pointerdown'].forEach(evt => {
-        cardContent.addEventListener(evt, (e) => {
-          if (!e.target.closest('.info-card-drag-handle') && !e.target.closest('button') && !e.target.closest('a')) {
-            e.stopPropagation();
-          }
-        });
-      });
-      card.appendChild(cardContent);
-      const _addToGrid = (grid) => {
-        const wOpts = { w: layout?.w || 12, h: layout?.h || 4, minW: 2, minH: 2, autoPosition: !layout };
-        if (layout) { wOpts.x = layout.x; wOpts.y = layout.y; }
-        const widgetEl = grid.addWidget(wOpts);
-        const itemContent = widgetEl.querySelector('.grid-stack-item-content') || widgetEl;
-        itemContent.appendChild(card);
-        itemContent.style.overflow = 'hidden';
-        // 内联定位兜底（gs-y/gs-h 属性由 GridStack 写入，含 autoPosition 计算结果）
-        try {
-          const _ch = grid.opts.cellHeight || 20;
-          const _chu = grid.opts.cellHeightUnit || 'px';
-          const _gy = parseInt(widgetEl.getAttribute('gs-y') || '', 10);
-          const _gh = parseInt(widgetEl.getAttribute('gs-h') || '', 10);
-          if (!isNaN(_gy)) widgetEl.style.top = (_gy * _ch) + _chu;
-          if (!isNaN(_gh)) widgetEl.style.height = (_gh * _ch) + _chu;
-          itemContent.style.position = 'absolute'; itemContent.style.top = '2px'; itemContent.style.bottom = '2px'; itemContent.style.left = '2px'; itemContent.style.right = '2px';
-        } catch(e) {}
-      };
-      if (this._plGrid && this._plGridReady) { _addToGrid(this._plGrid); }
-      else { cardGrid.appendChild(card); this._plGridQueue.push((grid) => { try { card.remove(); _addToGrid(grid); } catch(e) {} }); }
-      _applyInfoCardStyles();
-      const startEdit = async () => {
-        const r = await readPlFile(fileName);
-        const raw = r ? r.content : '';
-        cardContent.innerHTML = '';
-        const ta = document.createElement('textarea');
-        ta.value = raw;
-        ta.style.cssText = 'width:100%;height:calc(100% - 4px);border:none;resize:none;font-size:13px;line-height:1.5;padding:4px 6px;background:var(--background-primary);color:var(--text-normal);font-family:var(--font-monospace);';
-        cardContent.appendChild(ta);
-        ta.focus();
-        const save = async () => {
-          await writePlFile(fileName, ta.value);
-          await renderMd(cardContent, ta.value);
-        };
-        ta.addEventListener('blur', save);
-        ta.addEventListener('keydown', (ke) => { if (ke.key === 'Enter' && (ke.ctrlKey || ke.metaKey)) { ke.preventDefault(); ta.blur(); } });
-        ta.addEventListener('paste', async (pe) => {
-          const items = pe.clipboardData?.items;
-          if (!items) return;
-          let imgItem = null;
-          for (const it of items) { if (it.type.startsWith('image/')) { imgItem = it; break; } }
-          if (!imgItem) return;
-          pe.preventDefault();
-          const blob = imgItem.getAsFile();
-          if (!blob) return;
-          const ext = blob.type.split('/')[1] || 'png';
-          const ts = Date.now();
-          const imgName = `${fileName.replace(/\.md$/, '')}_${ts}.${ext}`;
-          try {
-            const buf = await blob.arrayBuffer();
-            const savedName = await plugin.saveImageToVault(new Uint8Array(buf), imgName);
-            const insertText = `\n![[${savedName}]]\n`;
-            const s = ta.selectionStart, e = ta.selectionEnd;
-            ta.value = ta.value.slice(0, s) + insertText + ta.value.slice(e);
-            ta.selectionStart = ta.selectionEnd = s + insertText.length;
-          } catch (err) { new Notice(t('main.infoAiFailed') + ': ' + (err.message || '')); }
-        });
-      };
-      cardContent.addEventListener('dblclick', (ev) => { ev.preventDefault(); ev.stopPropagation(); startEdit(); });
-      if (editMode) { startEdit(); }
-      else {
-        const loading = document.createElement('div');
-        loading.textContent = '...';
-        loading.style.color = 'var(--text-muted)';
-        cardContent.appendChild(loading);
-        (async () => {
-          const r = await readPlFile(fileName);
-          if (r) { await renderMd(cardContent, r.content); }
-          else {
-            try {
-              const vFile = plugin.app.vault.getAbstractFileByPath(filePath);
-              if (vFile) { const content = await plugin.app.vault.read(vFile); await renderMd(cardContent, content); return; }
-            } catch (e) {}
-            cardContent.innerHTML = ''; const nf1 = document.createElement('div'); nf1.textContent = t('main.infoEmptyCard'); nf1.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;'; cardContent.appendChild(nf1);
-          }
-        })();
-      }
-      return card;
-    };
-
-    this._createPlFile = async (kw) => {
-      if (!kw) return;
-      const base = sanitizeFileName(kw);
-      let fileName = base + '.md';
-      let i = 1;
-      while (await readPlFile(fileName)) { fileName = base + '_' + i + '.md'; i++; }
-      await writePlFile(fileName, '');
-      this._addPlFile(fileName, kw, true);
-    };
-
-    this._addPlFile = (fileName, kw, editMode) => {
-      return this._addPlCard((_plFolders[0] || pluginPlDir) + '/' + fileName, fileName, kw, editMode);
-    };
-
-    this._showAllPlCards = async () => {
-      clearCards();
-      const files = await listPlFiles();
-      for (const f of files) { this._addPlCard(f.name, f.name, '', false); }
-    };
-
-    this._showKeywordPlCards = async (kw) => {
-      clearCards();
-      if (!kw) return;
-      const files = await listPlFiles();
-      const matched = files.filter(f => matchKw(f.name, [kw]));
-      if (matched.length === 0) {
-        placeholder.textContent = t('main.infoNoCardHint') + `（${kw}）`;
-      } else {
-        for (const f of matched) { this._addPlCard(f.name, f.name, kw, false); }
-      }
-    };
-
-    addBtn.addEventListener('click', async () => {
-      const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      await this._createPlFile(ts);
-    });
-
-    const chipBaseStyle = 'display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;cursor:pointer;user-select:none;white-space:nowrap;border:1px solid var(--background-modifier-border);background:rgba(var(--mono-rgb-0),0.3);color:var(--text-muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;';
-    const activeChipStyle = 'border-color:var(--interactive-accent);color:var(--interactive-accent);';
-    const setChipActive = (chipEl) => {
-      chipRow.querySelectorAll('.info-kw-chip').forEach(c => { c.style.borderColor = 'var(--background-modifier-border)'; c.style.color = 'var(--text-muted)'; });
-      if (chipEl) { chipEl.style.borderColor = 'var(--interactive-accent)'; chipEl.style.color = 'var(--interactive-accent)'; }
-    };
-
-    this._showSourcePlCards = async (source) => {
-      clearCards();
-      const files = await listPlFiles();
-      const matched = files.filter(f => f.source === source);
-      for (const f of matched) { this._addPlCard(f.name, f.name, '', false); }
-    };
-
-    this._refreshPlChips = () => {
-      if (!chipRow) return;
-      chipRow.innerHTML = '';
-      const allChip = document.createElement('span');
-      allChip.textContent = t('main.parkingLotAll');
-      allChip.style.cssText = chipBaseStyle + activeChipStyle;
-      allChip.classList.add('info-kw-chip');
-      allChip.addEventListener('click', () => { setChipActive(allChip); this._showAllPlCards(); });
-      chipRow.appendChild(allChip);
-      const sources = [..._plFolders, ..._plFiles];
-      sources.forEach(src => {
-        const chip = document.createElement('span');
-        const label = src.includes('/') ? src.split('/').pop() : src;
-        chip.textContent = label;
-        chip.style.cssText = chipBaseStyle;
-        chip.classList.add('info-kw-chip');
-        chip.title = src;
-        chip.addEventListener('click', () => { setChipActive(chip); this._showSourcePlCards(src); });
-        chipRow.appendChild(chip);
-      });
-      const editing = cardGrid.querySelector('textarea');
-      if (!editing) this._showAllPlCards();
-    };
-
-    this._refreshPlChips();
-    if (this._addUnifiedCard) {
-      this._addUnifiedCard(section, 'parkingLotSection', { w: 24, h: 10 });
-    } else {
-      contentEl.appendChild(section);
-    }
-  }
   addHistorySection(contentEl) {
     return;
     // 先清理已存在的历史记录容器
@@ -30145,11 +29168,9 @@ class SwiftGlossaSidebarView extends ItemView {
           modal._unifiedGridQueue.push((grid) => { try { modal._reapplyLayout(); } catch(e){} });
         }
         try { if (modal._infoGrid) modal._infoGrid.destroy(false); } catch(e){}
-        try { if (modal._plGrid) modal._plGrid.destroy(false); } catch(e){}
+
         modal._infoGrid = null; modal._infoGridReady = false;
-        modal._plGrid = null; modal._plGridReady = false;
         if (modal.addInfoSection) { try { modal.addInfoSection(modal.contentEl); } catch(e){ console.warn('[rebuild info grid]', e); } }
-        if (modal.addParkingLotSection) { try { modal.addParkingLotSection(modal.contentEl); } catch(e){ console.warn('[rebuild pl grid]', e); } }
       } else if (modal._reapplyLayout) {
         modal._reapplyLayout();
       }
@@ -30295,18 +29316,12 @@ class SwiftGlossaSidebarView extends ItemView {
             if (modal._unifiedGridColTimer) { clearTimeout(modal._unifiedGridColTimer); modal._unifiedGridColTimer = null; }
             if (modal._infoGridSaveTimer) { clearTimeout(modal._infoGridSaveTimer); modal._infoGridSaveTimer = null; }
             if (modal._infoGridColTimer) { clearTimeout(modal._infoGridColTimer); modal._infoGridColTimer = null; }
-            if (modal._plGridSaveTimer) { clearTimeout(modal._plGridSaveTimer); modal._plGridSaveTimer = null; }
-            if (modal._plGridColTimer) { clearTimeout(modal._plGridColTimer); modal._plGridColTimer = null; }
             if (modal._unifiedGridResizeObserver) { try { modal._unifiedGridResizeObserver.disconnect(); } catch(e){} modal._unifiedGridResizeObserver = null; }
             if (modal._infoGridResizeObserver) { try { modal._infoGridResizeObserver.disconnect(); } catch(e){} modal._infoGridResizeObserver = null; }
             if (modal._infoGridWaitObserver) { try { modal._infoGridWaitObserver.disconnect(); } catch(e){} modal._infoGridWaitObserver = null; }
-            if (modal._plGridResizeObserver) { try { modal._plGridResizeObserver.disconnect(); } catch(e){} modal._plGridResizeObserver = null; }
-            if (modal._plGridWaitObserver) { try { modal._plGridWaitObserver.disconnect(); } catch(e){} modal._plGridWaitObserver = null; }
             if (modal._infoResizeObservers) { modal._infoResizeObservers.forEach(ro => { try { ro.disconnect(); } catch(e){} }); modal._infoResizeObservers = null; }
-            if (modal._plResizeObservers) { modal._plResizeObservers.forEach(ro => { try { ro.disconnect(); } catch(e){} }); modal._plResizeObservers = null; }
             if (modal._unifiedGrid) { try { modal._unifiedGrid.destroy(false); } catch(e){} modal._unifiedGrid = null; modal._unifiedGridReady = false; }
             if (modal._infoGrid) { try { modal._infoGrid.destroy(false); } catch(e){} modal._infoGrid = null; modal._infoGridReady = false; }
-            if (modal._plGrid) { try { modal._plGrid.destroy(false); } catch(e){} modal._plGrid = null; modal._plGridReady = false; }
           } catch(e3) {}
           if (modal.modalEl && modal.modalEl.parentNode) {
             try { modal.modalEl.parentNode.removeChild(modal.modalEl); } catch(e2){}
@@ -30525,7 +29540,7 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       chipHoverMode: false,
       showRelatedNotes: true,
       showRelatedHighlights: true,
-      showParkingLot: false,
+
       showInfoSection: false,
       infoShowLineNumbers: false,
       infoPaddingLeft: 4,
@@ -30539,10 +29554,10 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       showRecentFilesSection: false,
       showThreads: false,
       showRecentlyCreatedSection: false,
-      showFocusSection: false,
+
       showRandomReviewSection: false,
       showQuickNoteSection: false,
-      showQuickMemoSection: true,
+
       showCalendarSection: true,
       showCalendarHolidays: true,
       calendarViewMode: 'month',
@@ -52061,8 +51076,8 @@ ${fullContext}`;
       } catch(e) {}
     };
 
-    const _kwCardLabels = { infoSection: t('main.cardLabelInfo'), parkingLotSection: t('main.cardLabelParkingLot'), threadsSection: t('main.cardLabelThreads'), keywordHistory: t('main.cardLabelKeywordHistory'), relatedHighlights: t('main.cardLabelRelatedHighlights'), remarkContent: t('main.cardLabelRemarkContent'), keywordChips: t('main.cardLabelKeywordChips'), aiQuestion: t('main.cardLabelAiQuestion'), relatedNotes: t('main.cardLabelRelatedNotes') };
-    const _kwCardSettingMap = { infoSection: 'showInfoSection', parkingLotSection: 'showParkingLot', threadsSection: 'showThreads', relatedHighlights: 'showRelatedHighlightsSection', remarkContent: 'showRemarkContentBlock', keywordChips: 'showKeywordChipsBlock', aiQuestion: 'showAiQuestionBlock', relatedNotes: 'showRelatedNotesSection' };
+    const _kwCardLabels = { infoSection: t('main.cardLabelInfo'), keywordHistory: t('main.cardLabelKeywordHistory'), remarkContent: t('main.cardLabelRemarkContent'), keywordChips: t('main.cardLabelKeywordChips'), aiQuestion: t('main.cardLabelAiQuestion') };
+    const _kwCardSettingMap = { infoSection: 'showInfoSection', remarkContent: 'showRemarkContentBlock', keywordChips: 'showKeywordChipsBlock', aiQuestion: 'showAiQuestionBlock' };
     const _addKwRemarkCard = (sectionEl, cardId, defaultOpts) => {
       if (!sectionEl) return null;
       const savedLayout = plugin.settings?.kwWindowGridLayout?.[cardId];
@@ -52071,9 +51086,19 @@ ${fullContext}`;
       card.dataset.cardId = cardId;
       card.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;height:100%;';
       const dragHandle = document.createElement('div');
-      dragHandle.className = 'remark-card-drag-handle';
-      dragHandle.style.cssText = 'cursor:move;font-size:10px;font-weight:600;color:var(--text-muted);padding:2px 6px;border-bottom:1px solid var(--background-modifier-border);opacity:0.7;transition:opacity .15s;display:flex;align-items:center;gap:4px;';
-      dragHandle.innerHTML = '<span style="font-size:12px;">\u263F</span><span class="remark-card-label">' + (_kwCardLabels[cardId] || cardId) + '</span>';
+      dragHandle.className = 'remark-card-header-bar';
+      dragHandle.style.cssText = 'font-size:10px;font-weight:600;color:var(--text-muted);padding:2px 6px;border-bottom:1px solid var(--background-modifier-border);opacity:0.7;transition:opacity .15s;display:flex;align-items:center;gap:4px;';
+      const _kwGrip = document.createElement('span');
+      _kwGrip.className = 'remark-card-drag-handle';
+      _kwGrip.innerHTML = '<svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="2" cy="2" r="1.2"/><circle cx="8" cy="2" r="1.2"/><circle cx="2" cy="7" r="1.2"/><circle cx="8" cy="7" r="1.2"/><circle cx="2" cy="12" r="1.2"/><circle cx="8" cy="12" r="1.2"/></svg>';
+      _kwGrip.title = '拖动移动';
+      _kwGrip.style.cssText = 'cursor:grab;flex-shrink:0;color:var(--text-muted);display:inline-flex;align-items:center;user-select:none;-webkit-user-select:none;touch-action:none;';
+      dragHandle.appendChild(_kwGrip);
+      const _kwLabelEl = document.createElement('span'); _kwLabelEl.className = 'remark-card-label'; _kwLabelEl.textContent = _kwCardLabels[cardId] || cardId;
+      dragHandle.appendChild(_kwLabelEl);
+      ['mousedown', 'touchstart', 'pointerdown'].forEach(evt => {
+        dragHandle.addEventListener(evt, (e) => { if (!e.target.closest('.remark-card-drag-handle')) e.stopPropagation(); }, { capture: true });
+      });
       card.appendChild(dragHandle);
       const cardContent = document.createElement('div');
       cardContent.style.cssText = 'flex:1;overflow-y:auto;overflow-x:hidden;padding:4px;display:flex;flex-direction:column;';
@@ -52121,7 +51146,7 @@ ${fullContext}`;
         dragHandle.appendChild(_spacer);
         const _blockKwDrag = (el) => {
           el.classList.add('remark-card-ctrl');
-          ['mousedown', 'touchstart'].forEach(evt => {
+          ['mousedown', 'touchstart', 'pointerdown'].forEach(evt => {
             el.addEventListener(evt, (e) => { e.stopPropagation(); });
           });
         };
@@ -52163,7 +51188,7 @@ ${fullContext}`;
         itemContent.style.overflow = 'hidden';
         const _settingKey = _kwCardSettingMap[cardId];
         if (_settingKey && plugin.settings?.[_settingKey] === false) { widgetEl.style.display = 'none'; }
-        dragHandle.addEventListener('mousedown', () => { }, true);
+
       };
       if (_kwRemarkGrid && _kwRemarkGridReady) { _addToGrid(_kwRemarkGrid); }
       else { _kwRemarkGridQueue.push((grid) => { try { _addToGrid(grid); } catch(e) {} }); }

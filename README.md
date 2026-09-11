@@ -95,6 +95,21 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 
 <details>
+<summary>v2.1.9 (2026-09-12)</summary>
+
+- **Merged Related Section / 合并关联版块** — Combined related docs, highlights, threads, and random review into a single "关联" section with zone-based rendering / 将关联文档、高亮、脉络、随机回顾合并为单一"关联"版块，使用zone渲染
+- **Removed Sections / 移除版块** — Removed parking lot, focus, and quick memo sections / 移除停车场、最近关注、随手记版块
+- **SVG Drag Handle / SVG拖拽手柄** — Replaced full-width title bar drag with 6-dot SVG grip handle; header bar no longer draggable except from grip / 拖拽手柄改为6点SVG图标，标题栏非手柄区域不可拖拽
+- **Font/Line-Height Slider / 字体行距滑块** — Changed font size and line height from dropdowns to range sliders in dragged-file and diary sections / 拖拽文件和日记版块的字体大小/行间距改为滑块控件
+- **Drag File Open Button / 拖拽文件打开按钮** — Added open-in-new-tab button to dragged file section headers / 拖拽文件版块标题栏添加新标签页打开按钮
+- **Diary Backlinks / 日记反向链接** — Added show-backlinks-in-tab toggle in diary section settings / 日记版块设置添加在标签页中显示反向链接开关
+- **Gan-Zhi Fix / 干支纪年修复** — Fixed Gan-Zhi year calculation using mid-year solar date / 修复干支纪年计算，改用年中 solar 日期
+- **Canvas Scroll Passthrough / Canvas滚动透传** — Canvas section passes wheel events to parent when no file loaded / Canvas无文件时滚轮事件冒泡到父容器
+- **Related Section Optimizations / 关联版块优化** — Empty states collapsed to single-line hints, highlight settings merged into related section menu, random review hidden when highlights present / 空状态折叠为单行提示，高亮设置合并到关联版块菜单，有高亮时隐藏随机回顾
+
+</details>
+
+<details>
 <summary>v2.1.8 (2026-09-10)</summary>
 
 - **Open Docs Chip Close / 当前文档chip关闭按钮** — Added close button (×) to open docs chips; closes leaf for open files, removes from list for dragged files / 当前文档chip添加关闭按钮，主工作区文档关闭标签页，拖入文件从列表移除

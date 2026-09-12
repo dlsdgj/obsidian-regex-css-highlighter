@@ -95,6 +95,17 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 
 <details>
+<summary>v2.2.2 (2026-09-12)</summary>
+
+- **i18n Translation / 国际化翻译** — Translated remaining untranslated strings: related section, regex settings, random review help / 翻译剩余未翻译字符串：关联版块、正则设置、随机回顾提示
+- **Removed Sections / 移除版块** — Removed remark, keyword chips, AI question sections from panel / 从面板移除备注、关联词、AI提问版块
+- **Removed Heading Style / 移除标题样式** — Removed heading style feature, heading level label, and settings group / 移除标题样式功能、标题层级标签及设置分组
+- **Removed Floating Ball Options / 移除悬浮球选项** — Removed format replace, add remark, AI reply, switch mode, hide buttons; fixed to always-show / 移除格式替换、添加备注、AI回复、模式切换、隐藏按钮；固定为常显模式
+- **Cleaned Settings / 清理设置** — Removed redundant display options from settings panel / 从设置面板移除冗余显示选项
+
+</details>
+
+<details>
 <summary>v2.1.9 (2026-09-12)</summary>
 
 - **Merged Related Section / 合并关联版块** — Combined related docs, highlights, threads, and random review into a single "关联" section with zone-based rendering / 将关联文档、高亮、脉络、随机回顾合并为单一"关联"版块，使用zone渲染

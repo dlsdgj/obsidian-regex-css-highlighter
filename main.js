@@ -726,9 +726,18 @@ const i18n = {
     'main.randomReviewTitle': '随机回顾',
     'main.randomReviewEmpty': '暂无备注可回顾',
     'main.randomReviewAnother': '换一条',
+    'main.randomReviewHelp': '随机展示有备注的高亮条目',
     'main.cardLabelOpenDocs': '当前打开的文档',
     'main.openDocsTitle': '当前打开的文档',
     'main.openDocsEmpty': '当前没有打开的文档',
+    'main.cardLabelMergedRelated': '关联',
+    'main.showBacklinks': '显示反向链接',
+    'main.regexEmptyHint': '（请设置正则表达式）',
+    'main.regexScope': '匹配范围',
+    'main.regexScopeCurrent': '当前文档',
+    'main.regexScopeVault': '全库匹配',
+    'main.regexApply': '应用',
+    'main.regexNoMatch': '（无匹配）',
     'main.cardLabelMindmap': 'Canvas',
     'main.mindmapTitle': 'Canvas',
     'main.mindmapEmpty': '双击空白处创建节点',
@@ -1704,7 +1713,8 @@ const i18n = {
     'main.glBtnTip': '左键切换 | 中键移除',
     'main.switchedToLocal': '已切换为文件规则',
     'main.switchedToGlobal': '已切换为全局规则',
-    'floating.openMainPanel': '打开主面板',
+    'floating.openMainPanel': '右侧面板打开sg',
+    'floating.openInNewTab': '新标签页打开sg',
     'floating.formatReplace': '格式替换',
     'floating.addRemark': '添加备注',
     'floating.removeHighlight': '移除高亮',
@@ -2000,9 +2010,18 @@ const i18n = {
     'main.randomReviewTitle': 'Random Review',
     'main.randomReviewEmpty': 'No remarks to review yet',
     'main.randomReviewAnother': 'Another',
+    'main.randomReviewHelp': 'Randomly show highlight entries with remarks',
     'main.cardLabelOpenDocs': 'Open Documents',
     'main.openDocsTitle': 'Open Documents',
     'main.openDocsEmpty': 'No documents open',
+    'main.cardLabelMergedRelated': 'Related',
+    'main.showBacklinks': 'Show backlinks',
+    'main.regexEmptyHint': '(Please set a regex)',
+    'main.regexScope': 'Scope',
+    'main.regexScopeCurrent': 'Current file',
+    'main.regexScopeVault': 'Whole vault',
+    'main.regexApply': 'Apply',
+    'main.regexNoMatch': '(No matches)',
     'main.cardLabelMindmap': 'Canvas',
     'main.mindmapTitle': 'Canvas',
     'main.mindmapEmpty': 'Double-click empty area to create a node',
@@ -2978,7 +2997,8 @@ const i18n = {
     'main.glBtnTip': 'Left-click: toggle | Middle-click: remove',
     'main.switchedToLocal': 'Switched to file rule',
     'main.switchedToGlobal': 'Switched to global rule',
-    'floating.openMainPanel': 'Open Main Panel',
+    'floating.openMainPanel': 'Open SG in Right Sidebar',
+    'floating.openInNewTab': 'Open SG in New Tab',
     'floating.formatReplace': 'Format Replace',
     'floating.addRemark': 'Add Remark',
     'floating.removeHighlight': 'Remove Highlight',
@@ -12768,269 +12788,6 @@ class AddRegexRuleModal {
               });
               menu.appendChild(copyFullStyleOption);
 
-              // 添加添加为标题样式选项
-              const addHeadingOption = document.createElement('div');
-              addHeadingOption.textContent = t('context.addAsHeadingStyle');
-              addHeadingOption.style.cssText = `
-                padding: 8px 16px;
-                cursor: pointer;
-                font-size: 14px;
-                color: var(--text-normal);
-                border-top: 1px solid var(--border-color);
-                position: relative;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-              `;
-
-              // 添加箭头指示
-              const arrow = document.createElement('span');
-              arrow.textContent = '▶';
-              arrow.style.cssText = 'font-size: 10px; margin-left: 8px;';
-              addHeadingOption.appendChild(arrow);
-
-              // 创建标题级别列表（提前创建）
-              const headingList = document.createElement('div');
-              headingList.style.cssText = `
-                position: absolute;
-                top: -1px;
-                left: 100%;
-                background: var(--background-primary);
-                border: 1px solid var(--border-color);
-                border-radius: 4px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-                z-index: 10001;
-                padding: 4px 0;
-                min-width: 150px;
-                display: none;
-              `;
-
-              // 添加h1~h6选项
-              const headings = [
-                { level: 1, text: t('heading.level1') },
-                { level: 2, text: t('heading.level2') },
-                { level: 3, text: t('heading.level3') },
-                { level: 4, text: t('heading.level4') },
-                { level: 5, text: t('heading.level5') },
-                { level: 6, text: t('heading.level6') }
-              ];
-
-              headings.forEach(heading => {
-                const headingItem = document.createElement('div');
-                headingItem.textContent = heading.text;
-                headingItem.style.cssText = `
-                  padding: 8px 16px;
-                  cursor: pointer;
-                  font-size: 14px;
-                  color: var(--text-normal);
-                `;
-
-                headingItem.addEventListener('mouseenter', () => {
-                  headingItem.style.background = 'var(--background-modifier-hover)';
-                });
-
-                headingItem.addEventListener('mouseleave', () => {
-                  headingItem.style.background = 'transparent';
-                });
-
-                headingItem.addEventListener('click', async () => {
-                  try {
-                    // 获取原始样式
-                    const originalStyle = this.cssStyles.get(className);
-                    if (!originalStyle) {
-                      throw new Error('未找到样式定义');
-                    }
-                    // 转换样式为适合标题显示的形式
-                    const convertedStyle = this.convertToInlineHeadingStyle(originalStyle);
-
-                    // 创建新的标题样式类名
-                    const newClassName = `h${heading.level}`;
-
-                    // 将标题样式保存到data.json（而非styles.css）
-                    if (!this.plugin.settings.headingStyles) {
-                      this.plugin.settings.headingStyles = {};
-                    }
-                    // 清除该标题级别旧的样式和伪元素条目
-                    delete this.plugin.settings.headingStyles[newClassName];
-                    const oldPseudoKeys = Object.keys(this.plugin.settings.headingStyles).filter(k => k.startsWith(newClassName + '::'));
-                    oldPseudoKeys.forEach(k => delete this.plugin.settings.headingStyles[k]);
-
-                    this.plugin.settings.headingStyles[newClassName] = convertedStyle;
-
-                    // 从cssStyles中提取伪元素规则（::before, ::after等）
-                    const pseudoSuffixes = ['::before', '::after', '::first-line', '::first-letter'];
-                    let pseudoFound = false;
-                    pseudoSuffixes.forEach(pseudoSuffix => {
-                      const pseudoClassName = className + pseudoSuffix;
-                      const pseudoStyle = this.cssStyles.get(pseudoClassName);
-                      if (pseudoStyle) {
-                        this.plugin.settings.headingStyles[newClassName + pseudoSuffix] = pseudoStyle;
-                        pseudoFound = true;
-                      }
-                    });
-
-                    // 如果cssStyles中没有伪元素，尝试直接从CSS文件中提取
-                    if (!pseudoFound) {
-                      try {
-                        const cssContent = await this.app.vault.adapter.read('.obsidian/plugins/Regex-Css-Highlighter/styles.css');
-                        const escapedName = className.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                        const pseudoRegex = new RegExp('\\.' + escapedName + '(::[a-zA-Z-]+(?:\\([^)]*\\))?)\\s*\\{([^}]*)\\}', 'g');
-                        let pseudoMatch;
-                        while ((pseudoMatch = pseudoRegex.exec(cssContent)) !== null) {
-                          const pseudoElement = pseudoMatch[1]; // e.g. "::before"
-                          const pseudoStyle = pseudoMatch[2].trim();
-                          if (pseudoStyle) {
-                            this.plugin.settings.headingStyles[newClassName + pseudoElement] = pseudoStyle;
-                          }
-                        }
-                      } catch (e) {
-                        // 读取CSS文件失败时忽略
-                      }
-                    }
-
-                    await this.plugin.saveData(this.plugin.settings);
-
-                    // 确保"标题样式"分组存在
-                    if (!this.plugin.config.styleCategories['标题样式']) {
-                      this.plugin.config.styleCategories['标题样式'] = [];
-                    }
-
-                    // 检查新类名是否已在"标题样式"分组中
-                    if (!this.plugin.config.styleCategories['标题样式'].includes(newClassName)) {
-                      this.plugin.config.styleCategories['标题样式'].push(newClassName);
-                    }
-
-                    // 保存配置文件
-                    const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
-                    await this.app.vault.adapter.write(configPath, JSON.stringify(this.plugin.config.styleCategories, null, 2));
-
-                    // 重新注入CSS内容（直接从文件读取，确保最新）
-                    if (typeof this.plugin.injectCSSContent === 'function') {
-                      await this.plugin.injectCSSContent();
-                    }
-
-                    // 同步更新模态框的cssStyles
-                    this.cssStyles.set(newClassName, convertedStyle);
-                    // 同步伪元素到cssStyles
-                    pseudoSuffixes.forEach(ps => {
-                      const key = newClassName + ps;
-                      if (this.plugin.settings.headingStyles[key]) {
-                        this.cssStyles.set(key, this.plugin.settings.headingStyles[key]);
-                      }
-                    });
-
-                    // 重新应用高亮
-                    if (typeof this.plugin.checkAndApplyHighlights === 'function') {
-                      this.plugin.checkAndApplyHighlights();
-                    }
-
-                    // 仅刷新标题样式区域，而非重建整个面板
-                    this.addHeadingStylesSection(this.contentEl);
-
-                    // 显示成功消息
-                    this.showSuccessMessage(t('main.styleAddedAsHeading') + ` ${heading.text}`);
-                  } catch (error) {
-                    console.error('Error adding heading style:', error);
-                    this.showErrorMessage(styleOption, t('other.addTitleStyleFailed', {err: error.message}));
-                  }
-
-                  // 关闭菜单
-                  if (document.body.contains(menu)) {
-                    document.body.removeChild(menu);
-                  }
-                });
-
-                headingList.appendChild(headingItem);
-              });
-
-              // 添加到标题选项
-              addHeadingOption.appendChild(headingList);
-
-              let hideTimeout = null;
-
-              if (_isDesktop) {
-                // 桌面版：使用 mouseenter/mouseleave 显示/隐藏子菜单
-                addHeadingOption.addEventListener('mouseenter', () => {
-                  addHeadingOption.style.background = 'var(--background-modifier-hover)';
-                  if (hideTimeout) { clearTimeout(hideTimeout); hideTimeout = null; }
-                  headingList.style.display = 'block';
-                  const menuRect = menu.getBoundingClientRect();
-                  const listRect = headingList.getBoundingClientRect();
-                  if (menuRect.right + listRect.width > window.innerWidth - 10) {
-                    headingList.style.left = 'auto';
-                    headingList.style.right = '100%';
-                  } else {
-                    headingList.style.left = '100%';
-                    headingList.style.right = 'auto';
-                  }
-                  const hSubRect = headingList.getBoundingClientRect();
-                  if (hSubRect.bottom > window.innerHeight - 10) {
-                    const hOverflow = hSubRect.bottom - (window.innerHeight - 10);
-                    const hCurrentTop = parseFloat(headingList.style.top) || 0;
-                    const hNewViewportTop = hSubRect.top - hOverflow;
-                    if (hNewViewportTop >= 10) {
-                      headingList.style.top = `${hCurrentTop - hOverflow}px`;
-                    } else {
-                      headingList.style.top = `${hCurrentTop - (hSubRect.top - 10)}px`;
-                      headingList.style.maxHeight = `${window.innerHeight - 20}px`;
-                      headingList.style.overflowY = 'auto';
-                    }
-                  }
-                });
-
-                addHeadingOption.addEventListener('mouseleave', () => {
-                  addHeadingOption.style.background = 'transparent';
-                  hideTimeout = setTimeout(() => {
-                    if (!headingList.matches(':hover')) {
-                      headingList.style.display = 'none';
-                    }
-                  }, 150);
-                });
-
-                headingList.addEventListener('mouseenter', () => {
-                  if (hideTimeout) { clearTimeout(hideTimeout); hideTimeout = null; }
-                });
-
-                headingList.addEventListener('mouseleave', () => {
-                  hideTimeout = setTimeout(() => {
-                    if (!addHeadingOption.matches(':hover')) {
-                      headingList.style.display = 'none';
-                    }
-                  }, 150);
-                });
-              } else {
-                // 手机版：点击切换子菜单显示/隐藏
-                addHeadingOption.addEventListener('click', (ce) => {
-                  ce.stopPropagation();
-                  const isVisible = headingList.style.display === 'block';
-                  // 先关闭所有其他子菜单
-                  menu.querySelectorAll('.rch-submenu-list').forEach(sl => sl.style.display = 'none');
-                  if (!isVisible) {
-                    headingList.style.display = 'block';
-                    // 手机版：子菜单改为向下展开而非侧边
-                    headingList.style.position = 'relative';
-                    headingList.style.left = '0';
-                    headingList.style.right = 'auto';
-                    headingList.style.top = '0';
-                    headingList.style.marginLeft = '0';
-                    headingList.style.marginRight = '0';
-                    headingList.style.width = '100%';
-                    headingList.style.maxHeight = '150px';
-                  }
-                });
-                headingList.classList.add('rch-submenu-list');
-              }
-
-              if (_isDesktop) {
-                addHeadingOption.addEventListener('click', () => {
-                  // 桌面版：点击时不做任何操作，等待用户选择标题级别
-                });
-              }
-
-              // 手机版不显示"添加为标题样式"子菜单
-              if (_isDesktop) {
-                menu.appendChild(addHeadingOption);
-              }
 
               // 添加悬浮显示选项
               const floatOption = document.createElement('div');
@@ -13461,64 +13218,7 @@ class AddRegexRuleModal {
             moveRow.addEventListener('mouseleave', () => { moveRow.style.background = ''; });
             secondaryContainer.appendChild(moveRow);
             secondaryContainer.appendChild(groupSubMenu);
-            const headingRow = document.createElement('div');
-            headingRow.className = 'chip-tooltip-option';
-            headingRow.style.cssText = 'padding:5px 8px;font-size:12px;border-radius:2px;cursor:pointer;color:#4a3c28;display:flex;justify-content:space-between;align-items:center;';
-            headingRow.textContent = t('context.addAsHeadingStyle');
-            const headingArrow = document.createElement('span');
-            headingArrow.textContent = ' ▶';
-            headingArrow.style.cssText = 'font-size:10px;color:#a8967a;';
-            headingRow.appendChild(headingArrow);
-            const headingSubMenu = document.createElement('div');
-            headingSubMenu.style.cssText = 'display:none;flex-direction:column;padding-left:8px;border-left:2px solid #d4c4a0;margin-left:4px;margin-top:2px;';
-            const headingLevels = [1,2,3,4,5,6];
-            const headingLabels = [t('heading.level1'),t('heading.level2'),t('heading.level3'),t('heading.level4'),t('heading.level5'),t('heading.level6')];
-            headingLevels.forEach((level, idx) => {
-              const hRow = document.createElement('div');
-              hRow.className = 'chip-tooltip-option';
-              hRow.style.cssText = 'padding:4px 8px;font-size:11px;border-radius:2px;cursor:pointer;color:#4a3c28;';
-              hRow.textContent = headingLabels[idx];
-              hRow.addEventListener('click', async (ev) => {
-                ev.stopPropagation();
-                try {
-                  const originalStyle = this.cssStyles.get(className);
-                  if (!originalStyle) { throw new Error('未找到样式定义'); }
-                  const convertedStyle = this.convertToInlineHeadingStyle(originalStyle);
-                  const newClassName = `h${level}`;
-                  if (!this.plugin.settings.headingStyles) { this.plugin.settings.headingStyles = {}; }
-                  delete this.plugin.settings.headingStyles[newClassName];
-                  const oldPseudoKeys = Object.keys(this.plugin.settings.headingStyles).filter(k => k.startsWith(newClassName + '::'));
-                  oldPseudoKeys.forEach(k => delete this.plugin.settings.headingStyles[k]);
-                  this.plugin.settings.headingStyles[newClassName] = convertedStyle;
-                  const pseudoSuffixes = ['::before', '::after', '::first-line', '::first-letter'];
-                  pseudoSuffixes.forEach(pseudoSuffix => {
-                    const pseudoClassName = className + pseudoSuffix;
-                    const pseudoStyle = this.cssStyles.get(pseudoClassName);
-                    if (pseudoStyle) { this.plugin.settings.headingStyles[newClassName + pseudoSuffix] = pseudoStyle; }
-                  });
-                  await this.plugin.saveData(this.plugin.settings);
-                  if (!this.plugin.config.styleCategories['标题样式']) { this.plugin.config.styleCategories['标题样式'] = []; }
-                  if (!this.plugin.config.styleCategories['标题样式'].includes(newClassName)) { this.plugin.config.styleCategories['标题样式'].push(newClassName); }
-                  const configPath = '.obsidian/plugins/Regex-Css-Highlighter/style-categories.json';
-                  await this.app.vault.adapter.write(configPath, JSON.stringify(this.plugin.config.styleCategories, null, 2));
-                  if (typeof this.plugin.injectCSSContent === 'function') { await this.plugin.injectCSSContent(); }
-                  this.cssStyles.set(newClassName, convertedStyle);
-                  pseudoSuffixes.forEach(ps => { const key = newClassName + ps; if (this.plugin.settings.headingStyles[key]) { this.cssStyles.set(key, this.plugin.settings.headingStyles[key]); } });
-                  if (typeof this.plugin.checkAndApplyHighlights === 'function') { this.plugin.checkAndApplyHighlights(); }
-                  this.addHeadingStylesSection(this.contentEl);
-                  this.showSuccessMessage(t('main.styleAddedAsHeading') + ` ${headingLabels[idx]}`);
-                } catch (error) { console.error('Error adding heading style:', error); this.showErrorMessage(styleOption, t('other.addTitleStyleFailed', {err: error.message})); }
-                _removeStyleOptionTooltip();
-              });
-              hRow.addEventListener('mouseenter', () => { hRow.style.background = '#ece0c4'; });
-              hRow.addEventListener('mouseleave', () => { hRow.style.background = ''; });
-              headingSubMenu.appendChild(hRow);
-            });
-            headingRow.addEventListener('click', (ev) => { ev.stopPropagation(); const visible = headingSubMenu.style.display === 'flex'; headingSubMenu.style.display = visible ? 'none' : 'flex'; headingArrow.textContent = visible ? ' ▶' : ' ▼'; });
-            headingRow.addEventListener('mouseenter', () => { headingRow.style.background = '#ece0c4'; });
-            headingRow.addEventListener('mouseleave', () => { headingRow.style.background = ''; });
-            secondaryContainer.appendChild(headingRow);
-            secondaryContainer.appendChild(headingSubMenu);
+
             tip.appendChild(secondaryContainer);
             const expandBtn = document.createElement('div');
             expandBtn.style.cssText = 'padding:3px 8px;font-size:11px;border-radius:3px;cursor:pointer;color:#a8967a;text-align:center;background:#f5edd6;margin:2px 2px 0;user-select:none;transition:background 0.15s;';
@@ -13998,7 +13698,7 @@ class AddRegexRuleModal {
       this.addHistorySection(contentEl);
       this.addGlobalRulesSection(contentEl);
       requestAnimationFrame(() => {
-        this.addHeadingStylesSection(contentEl);
+
         this.addRemarkSection(contentEl);
 
         const _unifiedGrid = document.createElement('div');
@@ -14156,10 +13856,8 @@ class AddRegexRuleModal {
           panel.appendChild(_sep);
           const _sectionToggles = [
             { key: 'showInfoSection', label: t('main.cardLabelInfo'), cardId: 'infoSection', defaultVal: false },
-            { key: 'showMergedRelatedSection', label: '关联', cardId: 'mergedRelated', defaultVal: true },
-            { key: 'showRemarkContentBlock', label: t('main.cardLabelRemarkContent'), cardId: 'remarkContent', defaultVal: true },
-            { key: 'showKeywordChipsBlock', label: t('main.cardLabelKeywordChips'), cardId: 'keywordChips', defaultVal: true },
-            { key: 'showAiQuestionBlock', label: t('main.cardLabelAiQuestion'), cardId: 'aiQuestion', defaultVal: true },
+            { key: 'showMergedRelatedSection', label: t('main.cardLabelMergedRelated'), cardId: 'mergedRelated', defaultVal: true },
+
             { key: 'showRecentFilesSection', label: t('main.cardLabelRecentFiles'), cardId: 'recentFilesSection', defaultVal: true },
             { key: 'showRecentlyCreatedSection', label: t('main.cardLabelRecentlyCreated'), cardId: 'recentlyCreatedSection', defaultVal: true },
 
@@ -14228,7 +13926,7 @@ class AddRegexRuleModal {
         this._unifiedGridReady = false;
         this._unifiedGridQueue = [];
         this._unifiedCardIds = new Set();
-        this._remarkCardIds = new Set(['remarkContent', 'keywordChips', 'aiQuestion']);
+        this._remarkCardIds = new Set();
 
         this._getLayoutKey = () => {
           // 侧边栏（窄区域）与标签页/独立窗口（宽区域）分别保存布局
@@ -14485,7 +14183,7 @@ class AddRegexRuleModal {
           card.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;height:100%;';
           const dragHandle = document.createElement('div');
           dragHandle.className = 'unified-card-header-bar';
-          const _cardLabels = { infoSection: t('main.cardLabelInfo'), keywordHistory: t('main.cardLabelKeywordHistory'), remarkContent: t('main.cardLabelRemarkContent'), keywordChips: t('main.cardLabelKeywordChips'), aiQuestion: t('main.cardLabelAiQuestion'), recentFilesSection: t('main.cardLabelRecentFiles'), recentlyCreatedSection: t('main.cardLabelRecentlyCreated'), randomReviewSection: t('main.cardLabelRandomReview'), quickNoteSection: t('main.cardLabelQuickNote'), calendarSection: t('main.cardLabelCalendar'), diarySection: t('main.cardLabelDiary'), statsSection: t('main.cardLabelStats'), openDocsSection: t('main.cardLabelOpenDocs'), mindmapSection: t('main.cardLabelMindmap'), mergedRelated: '关联' };
+          const _cardLabels = { infoSection: t('main.cardLabelInfo'), keywordHistory: t('main.cardLabelKeywordHistory'), recentFilesSection: t('main.cardLabelRecentFiles'), recentlyCreatedSection: t('main.cardLabelRecentlyCreated'), randomReviewSection: t('main.cardLabelRandomReview'), quickNoteSection: t('main.cardLabelQuickNote'), calendarSection: t('main.cardLabelCalendar'), diarySection: t('main.cardLabelDiary'), statsSection: t('main.cardLabelStats'), openDocsSection: t('main.cardLabelOpenDocs'), mindmapSection: t('main.cardLabelMindmap'), mergedRelated: t('main.cardLabelMergedRelated') };
           dragHandle.style.cssText = 'font-size:10px;font-weight:600;color:var(--text-muted);padding:2px 6px;border-bottom:1px solid var(--background-modifier-border);opacity:0.7;transition:opacity .15s;display:flex;align-items:center;gap:4px;';
           const _grip = document.createElement('span');
           _grip.className = 'unified-card-drag-handle';
@@ -14665,7 +14363,7 @@ class AddRegexRuleModal {
                 menu.appendChild(_odLnRow);
                 const _odBlRow = document.createElement('div');
                 _odBlRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
-                const _odBlLabel = document.createElement('span'); _odBlLabel.textContent = '在标签页中显示反向链接'; _odBlLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
+                const _odBlLabel = document.createElement('span'); _odBlLabel.textContent = t('main.showBacklinks'); _odBlLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
                 const _odBlToggle = document.createElement('input'); _odBlToggle.type = 'checkbox'; _odBlToggle.checked = this.plugin.settings?.openDocsShowBacklinks === true; _odBlToggle.style.cursor = 'pointer';
                 _odBlToggle.addEventListener('change', () => { this.plugin.settings.openDocsShowBacklinks = _odBlToggle.checked; this.plugin.saveData(this.plugin.settings); this._applyOpenDocsCss?.(); this._renderOpenDocsContent?.(this._openDocsSelectedPath); });
                 _odBlRow.appendChild(_odBlLabel); _odBlRow.appendChild(_odBlToggle);
@@ -14682,7 +14380,7 @@ class AddRegexRuleModal {
                   _rrRow.appendChild(_rrLbl); _rrRow.appendChild(_rrCb); menu.appendChild(_rrRow); }
                 const _hlSep = document.createElement('div'); _hlSep.style.cssText = 'border-top:1px solid var(--background-modifier-border);margin:4px 0;';
                 menu.appendChild(_hlSep);
-                const _hlTitle = document.createElement('div'); _hlTitle.textContent = '高亮'; _hlTitle.style.cssText = 'color:var(--text-muted);font-weight:600;font-size:10px;margin-bottom:2px;';
+                const _hlTitle = document.createElement('div'); _hlTitle.textContent = t('main.nonKeywordRelatedHighlights'); _hlTitle.style.cssText = 'color:var(--text-muted);font-weight:600;font-size:10px;margin-bottom:2px;';
                 menu.appendChild(_hlTitle);
                 _SG_CREATE_HL_SETTINGS(menu, _s, () => this.plugin.saveData(this.plugin.settings), sectionEl);
                 { const row = document.createElement('div');
@@ -14726,7 +14424,7 @@ class AddRegexRuleModal {
                 menu.appendChild(_dfLnRow);
                 const _dfBlRow = document.createElement('div');
                 _dfBlRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
-                const _dfBlLabel = document.createElement('span'); _dfBlLabel.textContent = '在标签页中显示反向链接'; _dfBlLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
+                const _dfBlLabel = document.createElement('span'); _dfBlLabel.textContent = t('main.showBacklinks'); _dfBlLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
                 const _dfBlToggle = document.createElement('input'); _dfBlToggle.type = 'checkbox'; _dfBlToggle.checked = this.plugin.settings?.dynFileShowBacklinks === true; _dfBlToggle.style.cursor = 'pointer';
                 _dfBlToggle.addEventListener('change', () => { this.plugin.settings.dynFileShowBacklinks = _dfBlToggle.checked; this.plugin.saveData(this.plugin.settings); this._applyDynFileCss?.(); const _sec = sectionEl?.closest?.('.dyn-file-section'); if (_sec?._dynFileLeaf) { const _bl = _sec._dynFileLeaf.containerEl?.querySelector('.backlink-pane, .embedded-backlinks'); if (_bl) { _bl.style.display = _dfBlToggle.checked ? '' : 'none'; if (_dfBlToggle.checked) { const _tg = _bl.querySelector('.collapse-icon'); if (_tg && _tg.classList.contains('is-collapsed')) { try { _tg.click(); } catch(e) {} } } } } });
                 _dfBlRow.appendChild(_dfBlLabel); _dfBlRow.appendChild(_dfBlToggle);
@@ -14779,7 +14477,7 @@ class AddRegexRuleModal {
                 menu.appendChild(_lnRow);
                 const _blRow = document.createElement('div');
                 _blRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;gap:8px;';
-                const _blLabel = document.createElement('span'); _blLabel.textContent = '在标签页中显示反向链接'; _blLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
+                const _blLabel = document.createElement('span'); _blLabel.textContent = t('main.showBacklinks'); _blLabel.style.cssText = 'color:var(--text-normal);font-size:10px;';
                 const _blToggle = document.createElement('input'); _blToggle.type = 'checkbox'; _blToggle.checked = this.plugin.settings?.diaryShowBacklinks === true; _blToggle.style.cursor = 'pointer';
                 _blToggle.addEventListener('change', () => { this.plugin.settings.diaryShowBacklinks = _blToggle.checked; this.plugin.saveData(this.plugin.settings); this._applyDiaryCss?.(); this._renderDiaryContent?.(); });
                 _blRow.appendChild(_blLabel); _blRow.appendChild(_blToggle);
@@ -14823,7 +14521,7 @@ class AddRegexRuleModal {
             }, { passive: true });
           });
           this._unifiedCardIds.add(cardId);
-          const _cardSettingMap = { infoSection: 'showInfoSection', remarkContent: 'showRemarkContentBlock', keywordChips: 'showKeywordChipsBlock', aiQuestion: 'showAiQuestionBlock', recentFilesSection: 'showRecentFilesSection', recentlyCreatedSection: 'showRecentlyCreatedSection', randomReviewSection: 'showRandomReviewSection', quickNoteSection: 'showQuickNoteSection', calendarSection: 'showCalendarSection', diarySection: 'showDiarySection', statsSection: 'showStatsSection', openDocsSection: 'showOpenDocsSection', mindmapSection: 'showMindmapSection', mergedRelated: 'showMergedRelatedSection' };
+          const _cardSettingMap = { infoSection: 'showInfoSection', recentFilesSection: 'showRecentFilesSection', recentlyCreatedSection: 'showRecentlyCreatedSection', randomReviewSection: 'showRandomReviewSection', quickNoteSection: 'showQuickNoteSection', calendarSection: 'showCalendarSection', diarySection: 'showDiarySection', statsSection: 'showStatsSection', openDocsSection: 'showOpenDocsSection', mindmapSection: 'showMindmapSection', mergedRelated: 'showMergedRelatedSection' };
           const _addToGrid = (grid) => {
             const existing = grid.engine?.nodes?.find(n => n.el?.querySelector?.('.unified-card')?.dataset?.cardId === cardId);
             if (existing) { try { grid.removeWidget(existing.el, true); } catch(e) {} }
@@ -16798,453 +16496,6 @@ class AddRegexRuleModal {
     const displayOutline = createOutlineSection(settingsContainer, t('settings.display'), { isCollapsed: true });
     const displayContent = displayOutline.content;
 
-    // 备注提示符设置
-    const showRemarkBadgeRow = displayContent.createDiv();
-    showRemarkBadgeRow.style.display = "flex";
-    showRemarkBadgeRow.style.alignItems = "center";
-    showRemarkBadgeRow.style.marginBottom = "5px";
-    showRemarkBadgeRow.style.flexWrap = "wrap";
-
-    const showRemarkBadgeCheckbox = showRemarkBadgeRow.createEl("input");
-    showRemarkBadgeCheckbox.type = "checkbox";
-    showRemarkBadgeCheckbox.checked = this.plugin.settings?.showRemarkBadge === true;
-    showRemarkBadgeCheckbox.style.marginRight = "8px";
-    showRemarkBadgeCheckbox.style.cursor = "pointer";
-
-    const showRemarkBadgeLabel = showRemarkBadgeRow.createEl("span");
-    showRemarkBadgeLabel.textContent = t('settings.showRemarkBadge') + ": ";
-    showRemarkBadgeLabel.style.marginRight = "4px";
-    showRemarkBadgeLabel.style.fontSize = "14px";
-
-    const showRemarkBadgeHint = showRemarkBadgeRow.createEl("span");
-    showRemarkBadgeHint.textContent = t('settings.showRemarkBadgeHint');
-    showRemarkBadgeHint.style.fontSize = "12px";
-    showRemarkBadgeHint.style.color = "var(--text-muted)";
-    showRemarkBadgeHint.style.marginLeft = "8px";
-
-    showRemarkBadgeCheckbox.addEventListener("change", async (e) => {
-      if (!this.plugin.settings) this.plugin.settings = {};
-      this.plugin.settings.showRemarkBadge = e.target.checked;
-      await this.plugin.saveData(this.plugin.settings);
-    });
-
-    const remarkBadgeThresholdRow = displayContent.createDiv();
-    remarkBadgeThresholdRow.style.display = "flex";
-    remarkBadgeThresholdRow.style.alignItems = "center";
-    remarkBadgeThresholdRow.style.marginBottom = "5px";
-    remarkBadgeThresholdRow.style.marginLeft = "20px";
-
-    const remarkBadgeThresholdLabel = remarkBadgeThresholdRow.createEl("span");
-    remarkBadgeThresholdLabel.textContent = t('settings.remarkBadgeThreshold') + ": ";
-    remarkBadgeThresholdLabel.style.marginRight = "10px";
-    remarkBadgeThresholdLabel.style.fontSize = "14px";
-
-    const remarkBadgeThresholdInput = remarkBadgeThresholdRow.createEl("input");
-    remarkBadgeThresholdInput.type = "number";
-    remarkBadgeThresholdInput.value = this.plugin.settings?.remarkBadgeThreshold ?? 1;
-    remarkBadgeThresholdInput.style.cssText = "width:60px;padding:4px 8px;border:1px solid var(--background-modifier-border);border-radius:4px;font-size:14px;";
-
-    const remarkBadgeThresholdHint = remarkBadgeThresholdRow.createEl("span");
-    remarkBadgeThresholdHint.textContent = t('settings.remarkBadgeThresholdHint');
-    remarkBadgeThresholdHint.style.fontSize = "12px";
-    remarkBadgeThresholdHint.style.color = "var(--text-muted)";
-    remarkBadgeThresholdHint.style.marginLeft = "8px";
-
-    remarkBadgeThresholdInput.addEventListener("change", async (e) => {
-      if (!this.plugin.settings) this.plugin.settings = {};
-      this.plugin.settings.remarkBadgeThreshold = parseInt(e.target.value) || 0;
-      await this.plugin.saveData(this.plugin.settings);
-    });
-
-    // 规则来源标记设置
-    const ruleSourceBadgeRow = displayContent.createDiv();
-    ruleSourceBadgeRow.style.display = "flex";
-    ruleSourceBadgeRow.style.alignItems = "center";
-    ruleSourceBadgeRow.style.marginBottom = "5px";
-    ruleSourceBadgeRow.style.flexWrap = "wrap";
-
-    const ruleSourceBadgeLabel = ruleSourceBadgeRow.createEl("span");
-    ruleSourceBadgeLabel.textContent = t('settings.ruleSourceBadge') + ": ";
-    ruleSourceBadgeLabel.style.marginRight = "10px";
-    ruleSourceBadgeLabel.style.fontSize = "14px";
-
-    const ruleSourceBadgeInput = ruleSourceBadgeRow.createEl("input");
-    ruleSourceBadgeInput.type = "checkbox";
-    ruleSourceBadgeInput.checked = this.plugin.settings && this.plugin.settings.showRuleSourceBadge === true;
-
-    const ruleSourceBadgeHint = ruleSourceBadgeRow.createEl("span");
-    ruleSourceBadgeHint.textContent = t('settings.ruleSourceBadgeHint');
-    ruleSourceBadgeHint.style.fontSize = "12px";
-    ruleSourceBadgeHint.style.color = "var(--text-muted)";
-    ruleSourceBadgeHint.style.marginLeft = "8px";
-
-    ruleSourceBadgeInput.addEventListener("change", async (e) => {
-      const isChecked = e.target.checked;
-      if (!this.plugin.settings) {
-        this.plugin.settings = {};
-      }
-      this.plugin.settings.showRuleSourceBadge = isChecked;
-      await this.plugin.saveData(this.plugin.settings);
-    });
-
-    const ruleSourceBadgeThresholdRow = displayContent.createDiv();
-    ruleSourceBadgeThresholdRow.style.display = "flex";
-    ruleSourceBadgeThresholdRow.style.alignItems = "center";
-    ruleSourceBadgeThresholdRow.style.marginBottom = "5px";
-    ruleSourceBadgeThresholdRow.style.marginLeft = "20px";
-
-    const ruleSourceBadgeThresholdLabel = ruleSourceBadgeThresholdRow.createEl("span");
-    ruleSourceBadgeThresholdLabel.textContent = t('settings.ruleSourceBadgeThreshold') + ": ";
-    ruleSourceBadgeThresholdLabel.style.marginRight = "10px";
-    ruleSourceBadgeThresholdLabel.style.fontSize = "14px";
-
-    const ruleSourceBadgeThresholdInput = ruleSourceBadgeThresholdRow.createEl("input");
-    ruleSourceBadgeThresholdInput.type = "number";
-    ruleSourceBadgeThresholdInput.value = this.plugin.settings?.ruleSourceBadgeThreshold ?? 1;
-    ruleSourceBadgeThresholdInput.style.width = "60px";
-    ruleSourceBadgeThresholdInput.style.padding = "4px 8px";
-    ruleSourceBadgeThresholdInput.style.border = "1px solid var(--background-modifier-border)";
-    ruleSourceBadgeThresholdInput.style.borderRadius = "4px";
-    ruleSourceBadgeThresholdInput.style.fontSize = "14px";
-
-    const ruleSourceBadgeThresholdHint = ruleSourceBadgeThresholdRow.createEl("span");
-    ruleSourceBadgeThresholdHint.textContent = t('settings.ruleSourceBadgeThresholdHint');
-    ruleSourceBadgeThresholdHint.style.fontSize = "12px";
-    ruleSourceBadgeThresholdHint.style.color = "var(--text-muted)";
-    ruleSourceBadgeThresholdHint.style.marginLeft = "8px";
-
-    ruleSourceBadgeThresholdInput.addEventListener("change", async (e) => {
-      const val = parseInt(e.target.value) || 0;
-      if (!this.plugin.settings) {
-        this.plugin.settings = {};
-      }
-      this.plugin.settings.ruleSourceBadgeThreshold = val;
-      await this.plugin.saveData(this.plugin.settings);
-    });
-
-    // 不显示tooltip设置
-    const hideTooltipRow = displayContent.createDiv();
-    hideTooltipRow.style.display = "flex";
-    hideTooltipRow.style.alignItems = "center";
-    hideTooltipRow.style.marginBottom = "5px";
-
-    const hideTooltipLabel = hideTooltipRow.createEl("span");
-    hideTooltipLabel.textContent = t('settings.hideTooltip') + ": ";
-    hideTooltipLabel.style.marginRight = "10px";
-    hideTooltipLabel.style.fontSize = "14px";
-
-    const hideTooltipInput = hideTooltipRow.createEl("input");
-    hideTooltipInput.type = "checkbox";
-    hideTooltipInput.checked = this.plugin.settings?.hideTooltip === true;
-
-    const hideTooltipHint = hideTooltipRow.createEl("span");
-    hideTooltipHint.textContent = t('settings.hideTooltipHint');
-    hideTooltipHint.style.fontSize = "12px";
-    hideTooltipHint.style.color = "var(--text-muted)";
-    hideTooltipHint.style.marginLeft = "8px";
-
-    hideTooltipInput.addEventListener("change", async (e) => {
-      if (!this.plugin.settings) {
-        this.plugin.settings = {};
-      }
-      this.plugin.settings.hideTooltip = e.target.checked;
-      await this.plugin.saveData(this.plugin.settings);
-    });
-
-    // 默认预览文本设置
-    const defaultPreviewTextTitle = displayContent.createDiv();
-    defaultPreviewTextTitle.style.display = "flex";
-    defaultPreviewTextTitle.style.alignItems = "center";
-    defaultPreviewTextTitle.style.marginBottom = "5px";
-
-    const defaultPreviewTextLabel = defaultPreviewTextTitle.createEl("span");
-    defaultPreviewTextLabel.textContent = t('settings.defaultPreviewText') + ": ";
-    defaultPreviewTextLabel.style.marginRight = "10px";
-    defaultPreviewTextLabel.style.fontSize = "14px";
-
-    const defaultPreviewTextHint = defaultPreviewTextTitle.createEl("span");
-    defaultPreviewTextHint.textContent = t('settings.defaultPreviewTextHint');
-    defaultPreviewTextHint.style.fontSize = "12px";
-    defaultPreviewTextHint.style.color = "var(--text-muted)";
-
-    const defaultPreviewTextCNRow = displayContent.createDiv();
-    defaultPreviewTextCNRow.style.display = "flex";
-    defaultPreviewTextCNRow.style.alignItems = "center";
-    defaultPreviewTextCNRow.style.marginBottom = "5px";
-    defaultPreviewTextCNRow.style.marginLeft = "20px";
-
-    const defaultPreviewTextCNLabel = defaultPreviewTextCNRow.createEl("span");
-    defaultPreviewTextCNLabel.textContent = t('settings.defaultPreviewTextCN') + ": ";
-    defaultPreviewTextCNLabel.style.marginRight = "10px";
-    defaultPreviewTextCNLabel.style.fontSize = "14px";
-
-    const defaultPreviewTextCNInput = defaultPreviewTextCNRow.createEl("input");
-    defaultPreviewTextCNInput.type = "text";
-    defaultPreviewTextCNInput.value = this.plugin.settings?.defaultPreviewTextCN || '';
-    defaultPreviewTextCNInput.placeholder = t('settings.defaultPreviewTextCN');
-    defaultPreviewTextCNInput.style.width = "120px";
-    defaultPreviewTextCNInput.style.padding = "4px 8px";
-    defaultPreviewTextCNInput.style.border = "1px solid var(--background-modifier-border)";
-    defaultPreviewTextCNInput.style.borderRadius = "4px";
-    defaultPreviewTextCNInput.style.fontSize = "14px";
-
-    defaultPreviewTextCNInput.addEventListener("change", async (e) => {
-      if (!this.plugin.settings) this.plugin.settings = {};
-      this.plugin.settings.defaultPreviewTextCN = e.target.value;
-      await this.plugin.saveData(this.plugin.settings);
-    });
-
-    const defaultPreviewTextENRow = displayContent.createDiv();
-    defaultPreviewTextENRow.style.display = "flex";
-    defaultPreviewTextENRow.style.alignItems = "center";
-    defaultPreviewTextENRow.style.marginBottom = "5px";
-    defaultPreviewTextENRow.style.marginLeft = "20px";
-
-    const defaultPreviewTextENLabel = defaultPreviewTextENRow.createEl("span");
-    defaultPreviewTextENLabel.textContent = t('settings.defaultPreviewTextEN') + ": ";
-    defaultPreviewTextENLabel.style.marginRight = "10px";
-    defaultPreviewTextENLabel.style.fontSize = "14px";
-
-    const defaultPreviewTextENInput = defaultPreviewTextENRow.createEl("input");
-    defaultPreviewTextENInput.type = "text";
-    defaultPreviewTextENInput.value = this.plugin.settings?.defaultPreviewTextEN || '';
-      defaultPreviewTextENInput.placeholder = 'gloss';
-    defaultPreviewTextENInput.style.width = "120px";
-    defaultPreviewTextENInput.style.padding = "4px 8px";
-    defaultPreviewTextENInput.style.border = "1px solid var(--background-modifier-border)";
-    defaultPreviewTextENInput.style.borderRadius = "4px";
-    defaultPreviewTextENInput.style.fontSize = "14px";
-
-    defaultPreviewTextENInput.addEventListener("change", async (e) => {
-      if (!this.plugin.settings) this.plugin.settings = {};
-      this.plugin.settings.defaultPreviewTextEN = e.target.value;
-      await this.plugin.saveData(this.plugin.settings);
-    });
-
-    // 显示类名设置
-    const showClassNameRow = displayContent.createDiv();
-    showClassNameRow.style.display = "flex";
-    showClassNameRow.style.alignItems = "center";
-    showClassNameRow.style.marginBottom = "5px";
-    showClassNameRow.style.marginLeft = "20px";
-
-    const showClassNameLabel = showClassNameRow.createEl("span");
-    showClassNameLabel.textContent = t('settings.showClassNameAsPreview') + ": ";
-    showClassNameLabel.style.marginRight = "10px";
-    showClassNameLabel.style.fontSize = "14px";
-
-    const showClassNameInput = showClassNameRow.createEl("input");
-    showClassNameInput.type = "checkbox";
-    showClassNameInput.checked = this.plugin.settings?.showClassNameAsPreview || false;
-
-    const showClassNameHint = showClassNameRow.createEl("span");
-    showClassNameHint.textContent = t('settings.showClassNameAsPreviewHint');
-    showClassNameHint.style.fontSize = "12px";
-    showClassNameHint.style.color = "var(--text-muted)";
-    showClassNameHint.style.marginLeft = "8px";
-
-    showClassNameInput.addEventListener("change", async (e) => {
-      if (!this.plugin.settings) this.plugin.settings = {};
-      this.plugin.settings.showClassNameAsPreview = e.target.checked;
-      await this.plugin.saveData(this.plugin.settings);
-    });
-
-    // 搜索类名设置
-    const searchClassNameRow = displayContent.createDiv();
-    searchClassNameRow.style.display = "flex";
-    searchClassNameRow.style.alignItems = "center";
-    searchClassNameRow.style.marginBottom = "5px";
-    searchClassNameRow.style.marginLeft = "20px";
-
-    const searchClassNameLabel = searchClassNameRow.createEl("span");
-    searchClassNameLabel.textContent = t('settings.searchClassName') + ": ";
-    searchClassNameLabel.style.marginRight = "10px";
-    searchClassNameLabel.style.fontSize = "14px";
-
-    const searchClassNameInput = searchClassNameRow.createEl("input");
-    searchClassNameInput.type = "text";
-    searchClassNameInput.placeholder = t('settings.searchClassNamePlaceholder');
-    searchClassNameInput.value = this.plugin.settings?.searchClassName || '';
-    searchClassNameInput.style.width = "150px";
-    searchClassNameInput.style.padding = "4px 8px";
-    searchClassNameInput.style.border = "1px solid var(--background-modifier-border)";
-    searchClassNameInput.style.borderRadius = "4px";
-    searchClassNameInput.style.fontSize = "14px";
-
-    const searchClassNameHint = searchClassNameRow.createEl("span");
-    searchClassNameHint.textContent = t('settings.searchClassNameHint');
-    searchClassNameHint.style.fontSize = "12px";
-    searchClassNameHint.style.color = "var(--text-muted)";
-    searchClassNameHint.style.marginLeft = "8px";
-
-    searchClassNameInput.addEventListener("keydown", (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        e.stopPropagation();
-        const searchValue = searchClassNameInput.value.trim();
-        if (searchValue) {
-          // 搜索类名并高亮匹配样式
-          this.highlightByClassName(searchValue);
-        } else {
-          // 清空时恢复
-          this.clearClassNameHighlight();
-        }
-        searchClassNameInput.blur();
-      }
-    });
-
-    searchClassNameInput.addEventListener("change", async () => {
-      if (!this.plugin.settings) this.plugin.settings = {};
-      this.plugin.settings.searchClassName = searchClassNameInput.value;
-      await this.plugin.saveData(this.plugin.settings);
-    });
-
-    // chip悬浮激活延迟设置
-    const chipHoverDelayRow = displayContent.createDiv();
-    chipHoverDelayRow.style.display = "flex";
-    chipHoverDelayRow.style.alignItems = "center";
-    chipHoverDelayRow.style.marginBottom = "5px";
-    chipHoverDelayRow.style.flexWrap = "wrap";
-
-    const chipHoverDelayLabel = chipHoverDelayRow.createEl("span");
-    chipHoverDelayLabel.textContent = t('settings.chipHoverDelay') + ': ';
-    chipHoverDelayLabel.style.marginRight = "10px";
-    chipHoverDelayLabel.style.fontSize = "14px";
-
-    const chipHoverDelayInput = chipHoverDelayRow.createEl("input");
-    chipHoverDelayInput.type = "number";
-    chipHoverDelayInput.value = this.plugin.settings?.chipHoverDelay !== undefined ? this.plugin.settings.chipHoverDelay : 300;
-    chipHoverDelayInput.min = "0";
-    chipHoverDelayInput.max = "2000";
-    chipHoverDelayInput.step = "50";
-    chipHoverDelayInput.style.width = "80px";
-    chipHoverDelayInput.style.padding = "4px";
-    chipHoverDelayInput.style.border = "1px solid var(--background-modifier-border)";
-    chipHoverDelayInput.style.borderRadius = "4px";
-
-    const chipHoverDelayUnit = chipHoverDelayRow.createEl("span", { text: "ms" });
-    chipHoverDelayUnit.style.marginLeft = "5px";
-    chipHoverDelayUnit.style.fontSize = "14px";
-
-    chipHoverDelayInput.addEventListener("change", async () => {
-      if (!this.plugin.settings) this.plugin.settings = {};
-      this.plugin.settings.chipHoverDelay = parseInt(chipHoverDelayInput.value) || 0;
-      await this.plugin.saveData(this.plugin.settings);
-    });
-
-
-    const showRelatedNotesRow = displayContent.createDiv();
-    showRelatedNotesRow.style.display = "flex";
-    showRelatedNotesRow.style.alignItems = "center";
-    showRelatedNotesRow.style.marginBottom = "5px";
-    showRelatedNotesRow.style.flexWrap = "wrap";
-
-    const showRelatedNotesLabel = showRelatedNotesRow.createEl("span");
-    showRelatedNotesLabel.textContent = t('settings.showRelatedNotes') + ": ";
-    showRelatedNotesLabel.style.marginRight = "10px";
-    showRelatedNotesLabel.style.fontSize = "14px";
-
-    const showRelatedNotesInput = showRelatedNotesRow.createEl("input");
-    showRelatedNotesInput.type = "checkbox";
-    showRelatedNotesInput.checked = this.plugin.settings?.showRelatedNotes !== false;
-
-    const showRelatedNotesHint = showRelatedNotesRow.createEl("span");
-    showRelatedNotesHint.textContent = t('settings.showRelatedNotesDesc');
-    showRelatedNotesHint.style.fontSize = "12px";
-    showRelatedNotesHint.style.color = "var(--text-muted)";
-    showRelatedNotesHint.style.marginLeft = "8px";
-
-    showRelatedNotesInput.addEventListener("change", async (e) => {
-      if (!this.plugin.settings) this.plugin.settings = {};
-      this.plugin.settings.showRelatedNotes = e.target.checked;
-      await this.plugin.saveData(this.plugin.settings);
-    });
-
-    // Info 板块开关
-    const showInfoSectionRow = displayContent.createDiv();
-    showInfoSectionRow.style.display = "flex";
-    showInfoSectionRow.style.alignItems = "center";
-    showInfoSectionRow.style.marginBottom = "5px";
-    showInfoSectionRow.style.flexWrap = "wrap";
-
-    const showInfoSectionLabel = showInfoSectionRow.createEl("span");
-    showInfoSectionLabel.textContent = t('settings.showInfoSection') + ": ";
-    showInfoSectionLabel.style.marginRight = "10px";
-    showInfoSectionLabel.style.fontSize = "14px";
-
-    const showInfoSectionInput = showInfoSectionRow.createEl("input");
-    showInfoSectionInput.type = "checkbox";
-    showInfoSectionInput.checked = this.plugin.settings?.showInfoSection !== false;
-
-    const showInfoSectionHint = showInfoSectionRow.createEl("span");
-    showInfoSectionHint.textContent = t('settings.showInfoSectionDesc');
-    showInfoSectionHint.style.fontSize = "12px";
-    showInfoSectionHint.style.color = "var(--text-muted)";
-    showInfoSectionHint.style.marginLeft = "8px";
-
-    showInfoSectionInput.addEventListener("change", async (e) => {
-      if (!this.plugin.settings) this.plugin.settings = {};
-      this.plugin.settings.showInfoSection = e.target.checked;
-      await this.plugin.saveData(this.plugin.settings);
-      if (typeof this.refreshModalContent === 'function') await this.refreshModalContent();
-    });
-
-    // 关联版块开关
-    const showMergedRelatedRow = displayContent.createDiv();
-    showMergedRelatedRow.style.display = "flex";
-    showMergedRelatedRow.style.alignItems = "center";
-    showMergedRelatedRow.style.marginBottom = "5px";
-    showMergedRelatedRow.style.flexWrap = "wrap";
-    const showMergedRelatedLabel = showMergedRelatedRow.createEl("span");
-    showMergedRelatedLabel.textContent = "关联版块: ";
-    showMergedRelatedLabel.style.marginRight = "10px";
-    showMergedRelatedLabel.style.fontSize = "14px";
-    const showMergedRelatedInput = showMergedRelatedRow.createEl("input");
-    showMergedRelatedInput.type = "checkbox";
-    showMergedRelatedInput.checked = this.plugin.settings?.showMergedRelatedSection !== false;
-    const showMergedRelatedHint = showMergedRelatedRow.createEl("span");
-    showMergedRelatedHint.textContent = "合并显示相关文档、脉络、相关高亮";
-    showMergedRelatedHint.style.fontSize = "12px";
-    showMergedRelatedHint.style.color = "var(--text-muted)";
-    showMergedRelatedHint.style.marginLeft = "8px";
-    showMergedRelatedInput.addEventListener("change", async (e) => {
-      if (!this.plugin.settings) this.plugin.settings = {};
-      this.plugin.settings.showMergedRelatedSection = e.target.checked;
-      await this.plugin.saveData(this.plugin.settings);
-      if (typeof this.refreshModalContent === 'function') await this.refreshModalContent();
-    });
-
-    const _sectionToggleConfigs = [
-      { key: 'showInlineRelatedHighlightsSection', labelKey: 'settings.showInlineRelatedHighlightsSection', descKey: 'settings.showInlineRelatedHighlightsSectionDesc' },
-      { key: 'showRemarkContentBlock', labelKey: 'settings.showRemarkContentBlock', descKey: 'settings.showRemarkContentBlockDesc' },
-      { key: 'showKeywordChipsBlock', labelKey: 'settings.showKeywordChipsBlock', descKey: 'settings.showKeywordChipsBlockDesc' },
-      { key: 'showAiQuestionBlock', labelKey: 'settings.showAiQuestionBlock', descKey: 'settings.showAiQuestionBlockDesc' },
-    ];
-    for (const _cfg of _sectionToggleConfigs) {
-      const _row = displayContent.createDiv();
-      _row.style.display = "flex";
-      _row.style.alignItems = "center";
-      _row.style.marginBottom = "5px";
-      _row.style.flexWrap = "wrap";
-      const _label = _row.createEl("span");
-      _label.textContent = t(_cfg.labelKey) + ": ";
-      _label.style.marginRight = "10px";
-      _label.style.fontSize = "14px";
-      const _input = _row.createEl("input");
-      _input.type = "checkbox";
-      _input.checked = this.plugin.settings?.[_cfg.key] !== false;
-      const _hint = _row.createEl("span");
-      _hint.textContent = t(_cfg.descKey);
-      _hint.style.fontSize = "12px";
-      _hint.style.color = "var(--text-muted)";
-      _hint.style.marginLeft = "8px";
-      _input.addEventListener("change", async (e) => {
-        if (!this.plugin.settings) this.plugin.settings = {};
-        this.plugin.settings[_cfg.key] = e.target.checked;
-        await this.plugin.saveData(this.plugin.settings);
-        if (typeof this.refreshModalContent === 'function') await this.refreshModalContent();
-      });
-    }
 
     const sentenceThresholdRow = displayContent.createDiv();
     sentenceThresholdRow.style.display = "flex";
@@ -17305,70 +16556,6 @@ class AddRegexRuleModal {
     enInput.addEventListener("change", saveThreshold);
 
 
-    // 添加标题设置分类
-    const headingOutline = createOutlineSection(settingsContainer, t('settings.heading'), { isCollapsed: true, icon: '📌' });
-    const headingSettingsContent = headingOutline.content;
-
-    // 添加标题层级标签的开关
-    const showHeadingLabelRow = headingSettingsContent.createDiv();
-    showHeadingLabelRow.style.display = "flex";
-    showHeadingLabelRow.style.alignItems = "center";
-    showHeadingLabelRow.style.marginBottom = "5px";
-
-    const showHeadingLabelLabel = showHeadingLabelRow.createEl("span");
-    showHeadingLabelLabel.textContent = t('settings.headingLevelLabel') + ": ";
-    showHeadingLabelLabel.style.marginRight = "10px";
-    showHeadingLabelLabel.style.fontSize = "14px";
-
-    const showHeadingLabelInput = showHeadingLabelRow.createEl("input");
-    showHeadingLabelInput.type = "checkbox";
-    showHeadingLabelInput.checked = this.plugin.settings && this.plugin.settings.showHeadingLevelLabel !== false;
-
-    showHeadingLabelInput.addEventListener("change", async (e) => {
-      const isChecked = e.target.checked;
-      if (!this.plugin.settings) {
-        this.plugin.settings = {};
-      }
-      this.plugin.settings.showHeadingLevelLabel = isChecked;
-      await this.plugin.saveData(this.plugin.settings);
-
-      // 重新注入CSS以更新伪元素显示
-      if (typeof this.plugin.injectCSSContent === 'function') {
-        await this.plugin.injectCSSContent();
-      }
-    });
-
-    // 添加禁用标题样式的开关
-    const disableHeadingStyleRow = headingSettingsContent.createDiv();
-    disableHeadingStyleRow.style.display = "flex";
-    disableHeadingStyleRow.style.alignItems = "center";
-    disableHeadingStyleRow.style.marginBottom = "5px";
-
-    const disableHeadingStyleLabel = disableHeadingStyleRow.createEl("span");
-    disableHeadingStyleLabel.textContent = t('settings.enableHeadingStyle') + ": ";
-    disableHeadingStyleLabel.style.marginRight = "10px";
-    disableHeadingStyleLabel.style.fontSize = "14px";
-
-    const disableHeadingStyleInput = disableHeadingStyleRow.createEl("input");
-    disableHeadingStyleInput.type = "checkbox";
-    disableHeadingStyleInput.checked = this.plugin.settings && this.plugin.settings.disableHeadingStyle !== true;
-
-    disableHeadingStyleInput.addEventListener("change", async (e) => {
-      const isChecked = e.target.checked;
-      if (!this.plugin.settings) {
-        this.plugin.settings = {};
-      }
-      this.plugin.settings.disableHeadingStyle = !isChecked;
-      await this.plugin.saveData(this.plugin.settings);
-
-      // 重新注入CSS以更新标题样式
-      if (typeof this.plugin.injectCSSContent === 'function') {
-        await this.plugin.injectCSSContent();
-      }
-
-      // 刷新标题样式区域
-      this.addHeadingStylesSection(this.contentEl);
-    });
 
 
 
@@ -17916,59 +17103,6 @@ class AddRegexRuleModal {
       new Notice(hidden ? t('main.floatingBallHidden') : t('main.floatingBallShown'));
     });
 
-    // 添加悬浮球模式设置
-    const floatingBallModeRow = floatingBallSettingsContent.createDiv();
-    floatingBallModeRow.style.display = "flex";
-    floatingBallModeRow.style.alignItems = "center";
-    floatingBallModeRow.style.marginBottom = "5px";
-
-    const floatingBallModeLabel = floatingBallModeRow.createEl("span", { text: t('settings.floatingBallMode') + ': ' });
-    floatingBallModeLabel.style.marginRight = "10px";
-    floatingBallModeLabel.style.fontSize = "14px";
-
-    const floatingBallModeSelect = floatingBallModeRow.createEl("select");
-    floatingBallModeSelect.style.padding = "4px 8px";
-    floatingBallModeSelect.style.border = "1px solid var(--background-modifier-border)";
-    floatingBallModeSelect.style.borderRadius = "4px";
-    floatingBallModeSelect.style.fontSize = "14px";
-    floatingBallModeSelect.style.backgroundColor = "var(--background-primary)";
-    floatingBallModeSelect.style.color = "var(--text-normal)";
-
-    const alwaysOption = floatingBallModeSelect.createEl("option", { text: t('settings.alwaysShow'), value: "always" });
-    const followSelectionOption = floatingBallModeSelect.createEl("option", { text: t('settings.followSelection'), value: "followSelection" });
-
-    // 设置当前选中的值
-    const currentFloatingBallMode = this.plugin.floatButtonData?.floatingBallMode || 'always';
-    floatingBallModeSelect.value = currentFloatingBallMode;
-
-    // 模式说明
-    const floatingBallModeDesc = floatingBallSettingsContent.createDiv();
-    floatingBallModeDesc.style.fontSize = "12px";
-    floatingBallModeDesc.style.color = "#666";
-    floatingBallModeDesc.style.marginBottom = "10px";
-    floatingBallModeDesc.innerHTML = `
-      <div>• ${t('floating.alwaysModeDesc')}</div>
-      <div>• ${t('floating.followModeDesc')}</div>
-      <div style="margin-top: 8px; color: #888;">💡 ${t('floating.opacityTip')}</div>
-    `;
-
-    // 悬浮球模式切换事件
-    floatingBallModeSelect.addEventListener("change", async () => {
-      const newMode = floatingBallModeSelect.value;
-      if (!this.plugin.floatButtonData) {
-        this.plugin.floatButtonData = {};
-      }
-      this.plugin.floatButtonData.floatingBallMode = newMode;
-      await this.plugin.saveFloatButtonData();
-      new Notice(t('main.modeSwitched') + ': ' + (newMode === 'always' ? t('main.alwaysMode') : t('main.followMode')));
-
-      // 重新创建悬浮球以应用新模式
-      const existingBall = document.getElementById('regex-highlighter-floating-ball');
-      if (existingBall) {
-        existingBall.remove();
-      }
-      this.plugin.createFloatingBall();
-    });
 
 
     // 管理悬浮球选项
@@ -17987,17 +17121,13 @@ class AddRegexRuleModal {
 
     const floatingBallOptionItems = [
       { id: 'openMainPanel', label: t('floating.openMainPanel') },
-      { id: 'formatReplace', label: t('floating.formatReplace') },
-      { id: 'addRemark', label: t('floating.addRemark') },
+      { id: 'openInNewTab', label: t('floating.openInNewTab') },
       { id: 'addCount', label: t('floating.addCount') },
       { id: 'removeHighlight', label: t('floating.removeHighlight') },
       { id: 'pinyin', label: t('floating.pinyin') },
       { id: 'interlinearNote', label: t('floating.interlinearNote') },
-      { id: 'aiAssistant', label: t('floating.aiAssistant') },
       { id: 'extractEntities', label: t('floating.extractEntities') },
       { id: 'styleShowcase', label: t('floating.styleShowcase') },
-      { id: 'switchMode', label: t('floating.switchMode') },
-      { id: 'hideFloatingBtns', label: t('floating.hideFloatingBtns') },
       { id: 'hideTextStyles', label: t('floating.hideTextStyles') },
       { id: 'addFloatNote', label: t('floating.addFloatNote') }
     ];
@@ -20457,6 +19587,10 @@ class AddRegexRuleModal {
 
   // 添加标题样式部分
   addHeadingStylesSection(contentEl, initialActivePreset = null) {
+    return;
+  }
+
+  _addHeadingStylesSectionDisabled(contentEl, initialActivePreset = null) {
     // 先清理已存在的标题样式容器
     this.clearHeadingStylesSection();
 
@@ -21709,7 +20843,7 @@ class AddRegexRuleModal {
             cssScope: 'remark-custom-popup'
           });
           if (_rnResult?.relatedHighlightsSection) popup.appendChild(_rnResult.relatedHighlightsSection);
-          if (_rnResult?.remarkContentBlock) popup.appendChild(_rnResult.remarkContentBlock);
+
           if (_rnResult?.aiBtnContainer) popup.appendChild(_rnResult.aiBtnContainer);
           document.body.appendChild(popup);
           const closePopup = (e) => { if (!popup.contains(e.target)) { popup.remove(); document.removeEventListener('mousedown', closePopup, true); } };
@@ -22140,103 +21274,6 @@ class AddRegexRuleModal {
       });
       if (lastRenderResult?.aiBtnContainer) contentContainer.appendChild(lastRenderResult.aiBtnContainer);
 
-      for (const _cid of (this._remarkCardIds || [])) { if (this._removeUnifiedCard) this._removeUnifiedCard(_cid); }
-      if (this._addUnifiedCard) {
-        const _ensureSection = (el, label) => {
-          if (el) return el;
-          const _empty = document.createElement('div');
-          _empty.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;padding:4px 0;';
-          _empty.textContent = '（空）' + label;
-          return _empty;
-        };
-
-        this._addUnifiedCard(_ensureSection(lastRenderResult?.remarkContentBlock, '备注'), 'remarkContent', { w: 24, h: 8 });
-      }
-
-      // 关键词反向链接 chips
-      const ruleRelatedKws = new Map();
-      const mentionedKeywords = [];
-      const currentRule = this.plugin.globalRules.find(r => r.regex === activeRule.regex) || this.plugin.rules.find(r => r.regex === activeRule.regex);
-      if (currentRule && currentRule.links) {
-        const sortedKws = [...keywordIndex.values()]
-          .filter(k => k.plainTexts && k.plainTexts.length > 0 && k.regex !== activeRule.regex)
-          .sort((a, b) => Math.max(...b.plainTexts.map(p => p.length)) - Math.max(...a.plainTexts.map(p => p.length)));
-        for (const link of currentRule.links) {
-          const remarkText = link.remark || '';
-          if (!remarkText.trim()) continue;
-          for (const kw of sortedKws) {
-            if (mentionedKeywords.some(m => m.regex === kw.regex)) continue;
-            if (kw.plainTexts.some(p => remarkText.includes(p))) {
-              mentionedKeywords.push(kw);
-            }
-          }
-        }
-      }
-      const mentionedBy = backlinkIndex.get(activeRule.regex) || [];
-      for (const kw of mentionedKeywords) {
-        if (!ruleRelatedKws.has(kw.regex)) ruleRelatedKws.set(kw.regex, { regex: kw.regex, cssClass: kw.cssClass, relation: 'mention' });
-      }
-      for (const bl of mentionedBy) {
-        if (!ruleRelatedKws.has(bl.sourceRegex)) {
-          const sourceRule = this.plugin.globalRules.find(r => r.regex === bl.sourceRegex) || this.plugin.rules.find(r => r.regex === bl.sourceRegex);
-          ruleRelatedKws.set(bl.sourceRegex, { regex: bl.sourceRegex, cssClass: sourceRule?.cssClass || '', relation: 'mentionedBy' });
-        }
-      }
-
-      if (ruleRelatedKws.size > 0 && this.plugin.settings?.showKeywordChipsBlock === true) {
-        const kwBlock = document.createElement('div');
-        kwBlock.className = 'keyword-chips-block';
-        kwBlock.style.cssText = 'margin-bottom:8px;';
-        const kwBlockHeader = document.createElement('div');
-        kwBlockHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:4px;';
-        const kwBlockHeaderLeft = document.createElement('div');
-        kwBlockHeaderLeft.style.cssText = 'display:flex;align-items:center;gap:4px;';
-        const kwBlockTitle = document.createElement('span');
-        kwBlockTitle.innerHTML = t('remark.relatedKeywords');
-        kwBlockHeaderLeft.appendChild(kwBlockTitle);
-        kwBlockHeader.appendChild(kwBlockHeaderLeft);
-        if (lastRenderResult?.aiGraphBtn) kwBlockHeader.appendChild(lastRenderResult.aiGraphBtn);
-        kwBlock.appendChild(kwBlockHeader);
-        const chipsBar = document.createElement('div');
-        chipsBar.className = 'keyword-chips-bar';
-        chipsBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;flex-shrink:0;';
-        for (const [kwRegex, info] of ruleRelatedKws) {
-
-          const chip = document.createElement('span');
-          chip.className = 'keyword-chip';
-          chip.title = (info.relation === 'mention' ? t('main.keywordMentions') : t('main.keywordMentionedBy')) + ' ' + kwRegex;
-          chip.style.cssText = 'display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(var(--mono-rgb-0),0.3);transition:all 0.15s ease;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-          const chipLabel = document.createElement('span');
-          chipLabel.textContent = (info.relation === 'mention' ? '→ ' : '← ') + kwRegex;
-          if (info.cssClass) { chipLabel.className = info.cssClass + ' highlight-regex-text'; chip.style.borderColor = 'transparent'; }
-          else { chipLabel.style.cssText = 'font-weight:500;color:var(--text-normal);'; }
-          chip.appendChild(chipLabel);
-          chip.addEventListener('click', (ce) => { ce.preventDefault(); ce.stopPropagation(); const _m = this.plugin._regexHighlightModal || this; if (_m && _m.regexInput) { if (_m._showKwChips) { _m._showKwChips([kwRegex], kwRegex, kwRegex); } _m.regexInput.setValue?.(kwRegex); requestAnimationFrame(() => { const _ar=[...(this.plugin.globalRules||[]),...(this.plugin.rules||[])],_mr=_ar.find(r=>r.regex===kwRegex); if(_mr){const _gi=this.plugin.globalRules.includes(_mr);_m.currentEditingRule={index:_gi?this.plugin.globalRules.indexOf(_mr):this.plugin.rules.indexOf(_mr),regex:_mr.regex,cssClass:_mr.cssClass,isGlobal:_gi,remark:_mr.remark||''};_m.inputModifiedSinceEdit=false;} if (_m.updateStyleButtonsPreview) _m.updateStyleButtonsPreview(kwRegex); _m.highlightMatchingRuleButtons?.(); _m._needsRefresh = false; _m.showInlineRemarkForRegex?.(kwRegex); if (_m._refreshUpdateChip) _m._refreshUpdateChip(); }); setTimeout(() => { if (_m.regexInput) _m.regexInput.setValue?.(kwRegex); }, 50); } });
-          chipsBar.appendChild(chip);
-        }
-        kwBlock.appendChild(chipsBar);
-        // 添加折叠按钮
-        _createSectionToggle(this.plugin, 'relatedKeywords_sidebar', chipsBar, kwBlockHeaderLeft);
-        if (lastRenderResult?._existingMermaidGraph && lastRenderResult?._renderGraphSection) lastRenderResult._renderGraphSection(lastRenderResult._existingMermaidGraph, undefined, kwBlock);
-        if (this._addUnifiedCard) this._addUnifiedCard(kwBlock, 'keywordChips', { w: 24, h: 3 });
-      } else if (this.plugin.settings?.showKeywordChipsBlock === true && this._addUnifiedCard) {
-        const _emptyChips = document.createElement('div');
-        _emptyChips.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;padding:4px 0;';
-        _emptyChips.textContent = '（空）关联词';
-        this._addUnifiedCard(_emptyChips, 'keywordChips', { w: 24, h: 3 });
-      }
-
-      if (this._addUnifiedCard) {
-        const _aiEl = lastRenderResult?.aiQuestionBlock;
-        if (_aiEl) {
-          this._addUnifiedCard(_aiEl, 'aiQuestion', { w: 24, h: 4 });
-        } else if (this.plugin.settings?.showAiQuestionBlock === true) {
-          const _emptyAi = document.createElement('div');
-          _emptyAi.style.cssText = 'color:var(--text-muted);font-size:11px;font-style:italic;padding:4px 0;';
-          _emptyAi.textContent = '（空）AI提问';
-          this._addUnifiedCard(_emptyAi, 'aiQuestion', { w: 24, h: 4 });
-        }
-      }
 
 
     };
@@ -22959,21 +21996,21 @@ class AddRegexRuleModal {
         const menu = document.createElement('div');
         menu.style.cssText = 'background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:11px;min-width:240px;';
         const reRow = document.createElement('div'); reRow.style.cssText = 'margin-bottom:6px;';
-        const reLbl = document.createElement('div'); reLbl.textContent = '正则表达式'; reLbl.style.cssText = 'margin-bottom:2px;color:var(--text-muted);';
+        const reLbl = document.createElement('div'); reLbl.textContent = t('main.regexLabel'); reLbl.style.cssText = 'margin-bottom:2px;color:var(--text-muted);';
         reRow.appendChild(reLbl);
-        const reInput = document.createElement('input'); reInput.type = 'text'; reInput.value = sec.regex || ''; reInput.placeholder = '正则表达式'; reInput.style.cssText = 'width:100%;padding:3px 4px;font-size:11px;border:1px solid var(--background-modifier-border);border-radius:3px;background:var(--background-primary);color:var(--text-normal);font-family:monospace;box-sizing:border-box;';
+        const reInput = document.createElement('input'); reInput.type = 'text'; reInput.value = sec.regex || ''; reInput.placeholder = t('main.regexLabel'); reInput.style.cssText = 'width:100%;padding:3px 4px;font-size:11px;border:1px solid var(--background-modifier-border);border-radius:3px;background:var(--background-primary);color:var(--text-normal);font-family:monospace;box-sizing:border-box;';
         reRow.appendChild(reInput);
         menu.appendChild(reRow);
         const scRow = document.createElement('div'); scRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:6px;';
-        const scLbl = document.createElement('span'); scLbl.textContent = '匹配范围'; scLbl.style.cssText = 'color:var(--text-muted);';
+        const scLbl = document.createElement('span'); scLbl.textContent = t('main.regexScope'); scLbl.style.cssText = 'color:var(--text-muted);';
         scRow.appendChild(scLbl);
         const scSel = document.createElement('select'); scSel.style.cssText = 'padding:2px 4px;font-size:11px;border:1px solid var(--background-modifier-border);border-radius:3px;background:var(--background-primary);color:var(--text-normal);';
-        const opt1 = document.createElement('option'); opt1.value = 'current'; opt1.textContent = '当前文档'; scSel.appendChild(opt1);
-        const opt2 = document.createElement('option'); opt2.value = 'vault'; opt2.textContent = '全库匹配'; scSel.appendChild(opt2);
+        const opt1 = document.createElement('option'); opt1.value = 'current'; opt1.textContent = t('main.regexScopeCurrent'); scSel.appendChild(opt1);
+        const opt2 = document.createElement('option'); opt2.value = 'vault'; opt2.textContent = t('main.regexScopeVault'); scSel.appendChild(opt2);
         scSel.value = sec.scope || 'current';
         scRow.appendChild(scSel);
         menu.appendChild(scRow);
-        const applyBtn = document.createElement('button'); applyBtn.textContent = '应用'; applyBtn.style.cssText = 'padding:3px 10px;cursor:pointer;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--interactive-accent);color:#fff;font-size:11px;';
+        const applyBtn = document.createElement('button'); applyBtn.textContent = t('main.regexApply'); applyBtn.style.cssText = 'padding:3px 10px;cursor:pointer;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--interactive-accent);color:#fff;font-size:11px;';
         applyBtn.addEventListener('click', async () => {
           sec.regex = reInput.value; sec.scope = scSel.value;
           await plugin.saveData(plugin.settings);
@@ -22989,12 +22026,12 @@ class AddRegexRuleModal {
       list.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
       if (!sec.regex) {
         const empty = document.createElement('div');
-        empty.textContent = '（请设置正则表达式）';
+        empty.textContent = t('main.regexEmptyHint');
         empty.style.cssText = 'color:var(--text-faint);font-size:11px;font-style:italic;padding:4px;';
         list.appendChild(empty);
       } else if (matches.length === 0) {
         const empty = document.createElement('div');
-        empty.textContent = '（无匹配）';
+        empty.textContent = t('main.regexNoMatch');
         empty.style.cssText = 'color:var(--text-faint);font-size:11px;font-style:italic;padding:4px;';
         list.appendChild(empty);
       }
@@ -23094,18 +22131,18 @@ class AddRegexRuleModal {
               const menu = document.createElement('div');
               menu.style.cssText = 'background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:8px;padding:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:11px;min-width:240px;';
               const reRow = document.createElement('div'); reRow.style.cssText = 'margin-bottom:6px;';
-              const reLbl = document.createElement('div'); reLbl.textContent = '正则表达式'; reLbl.style.cssText = 'margin-bottom:2px;color:var(--text-muted);';
+              const reLbl = document.createElement('div'); reLbl.textContent = t('main.regexLabel'); reLbl.style.cssText = 'margin-bottom:2px;color:var(--text-muted);';
               reRow.appendChild(reLbl);
-              const reInput = document.createElement('input'); reInput.type = 'text'; reInput.value = sec.regex || ''; reInput.placeholder = '正则表达式'; reInput.style.cssText = 'width:100%;padding:3px 4px;font-size:11px;border:1px solid var(--background-modifier-border);border-radius:3px;background:var(--background-primary);color:var(--text-normal);font-family:monospace;box-sizing:border-box;';
+              const reInput = document.createElement('input'); reInput.type = 'text'; reInput.value = sec.regex || ''; reInput.placeholder = t('main.regexLabel'); reInput.style.cssText = 'width:100%;padding:3px 4px;font-size:11px;border:1px solid var(--background-modifier-border);border-radius:3px;background:var(--background-primary);color:var(--text-normal);font-family:monospace;box-sizing:border-box;';
               reRow.appendChild(reInput); menu.appendChild(reRow);
               const scRow = document.createElement('div'); scRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:6px;';
-              const scLbl = document.createElement('span'); scLbl.textContent = '匹配范围'; scLbl.style.cssText = 'color:var(--text-muted);';
+              const scLbl = document.createElement('span'); scLbl.textContent = t('main.regexScope'); scLbl.style.cssText = 'color:var(--text-muted);';
               scRow.appendChild(scLbl);
               const scSel = document.createElement('select'); scSel.style.cssText = 'padding:2px 4px;font-size:11px;border:1px solid var(--background-modifier-border);border-radius:3px;background:var(--background-primary);color:var(--text-normal);';
-              const opt1 = document.createElement('option'); opt1.value = 'current'; opt1.textContent = '当前文档'; scSel.appendChild(opt1);
-              const opt2 = document.createElement('option'); opt2.value = 'vault'; opt2.textContent = '全库匹配'; scSel.appendChild(opt2);
+              const opt1 = document.createElement('option'); opt1.value = 'current'; opt1.textContent = t('main.regexScopeCurrent'); scSel.appendChild(opt1);
+              const opt2 = document.createElement('option'); opt2.value = 'vault'; opt2.textContent = t('main.regexScopeVault'); scSel.appendChild(opt2);
               scSel.value = sec.scope || 'current'; scRow.appendChild(scSel); menu.appendChild(scRow);
-              const applyBtn = document.createElement('button'); applyBtn.textContent = '应用'; applyBtn.style.cssText = 'padding:3px 10px;cursor:pointer;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--interactive-accent);color:#fff;font-size:11px;';
+              const applyBtn = document.createElement('button'); applyBtn.textContent = t('main.regexApply'); applyBtn.style.cssText = 'padding:3px 10px;cursor:pointer;border:1px solid var(--background-modifier-border);border-radius:4px;background:var(--interactive-accent);color:#fff;font-size:11px;';
               applyBtn.addEventListener('click', async () => { sec.regex = reInput.value; sec.scope = scSel.value; await plugin.saveData(plugin.settings); this._closeFloatingMenu(); if (this._refreshRegexTextSections) this._refreshRegexTextSections(); });
               menu.appendChild(applyBtn);
               this._floatSettingsMenu(setBtn, menu);
@@ -23114,7 +22151,7 @@ class AddRegexRuleModal {
             const list = document.createElement('div');
             list.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
             if (allMatches.length === 0) {
-              const empty = document.createElement('div'); empty.textContent = '（无匹配）'; empty.style.cssText = 'color:var(--text-faint);font-size:11px;font-style:italic;padding:4px;'; list.appendChild(empty);
+              const empty = document.createElement('div'); empty.textContent = t('main.regexNoMatch'); empty.style.cssText = 'color:var(--text-faint);font-size:11px;font-style:italic;padding:4px;'; list.appendChild(empty);
             }
             for (const mt of allMatches) {
               const item = document.createElement('div');
@@ -23186,9 +22223,9 @@ class AddRegexRuleModal {
   // 这些版块需点击关键词后才渲染内容；初始渲染时创建占位卡，沿用保存的布局位置，消除"版块消失只剩空位"的空洞
   addRemarkPlaceholderCards(contentEl) {
     if (!this._addUnifiedCard) return;
-    const _ids = Array.isArray(this._remarkCardIds) ? this._remarkCardIds : ['remarkContent', 'keywordChips', 'aiQuestion'];
-    const _defaults = { remarkContent: { w: 24, h: 8 }, keywordChips: { w: 24, h: 3 }, aiQuestion: { w: 24, h: 4 } };
-    const _settingsMap = { remarkContent: 'showRemarkContentBlock', keywordChips: 'showKeywordChipsBlock', aiQuestion: 'showAiQuestionBlock' };
+    const _ids = [];
+    const _defaults = {};
+    const _settingsMap = {};
     for (const cid of _ids) {
       if (!cid) continue;
       if (this.plugin.settings?.[_settingsMap[cid]] !== true) continue;
@@ -23290,7 +22327,7 @@ class AddRegexRuleModal {
     helpBtn.style.cssText = 'cursor:pointer;opacity:0.4;display:inline-flex;align-items:center;transition:opacity 0.15s;';
     helpBtn.addEventListener('mouseenter', () => { helpBtn.style.opacity = '0.8'; });
     helpBtn.addEventListener('mouseleave', () => { helpBtn.style.opacity = '0.4'; });
-    helpBtn.addEventListener('click', (e) => { e.stopPropagation(); _showHelpFloat(helpBtn, '随机展示有备注的高亮条目'); });
+    helpBtn.addEventListener('click', (e) => { e.stopPropagation(); _showHelpFloat(helpBtn, t('main.randomReviewHelp')); });
     _rrBtns.appendChild(helpBtn);
     const anotherBtn = document.createElement('span');
     anotherBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>';
@@ -29683,19 +28720,21 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       floatingBallHiddenMobile: false,
       floatingBallVisibleOptions: {
         openMainPanel: true,
+        openInNewTab: true,
         formatReplace: false,
-        addRemark: true,
-        removeHighlight: true,
+        addRemark: false,
+        removeHighlight: false,
         pinyin: false,
         interlinearNote: false,
         aiAssistant: false,
         extractEntities: false,
-        styleShowcase: true,
+        styleShowcase: false,
         fontSwitch: false,
         switchMode: false,
         hideFloatingBtns: false,
         hideTextStyles: false,
-        addFloatNote: true
+        addFloatNote: true,
+        addCount: false
       },
       hiddenFloatingStyleWindows: [],
       randomHighlightGroups: ''
@@ -31526,7 +30565,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     }
 
     // 获取悬浮球模式
-    const floatingBallMode = this.floatButtonData.floatingBallMode || 'always';
+    const floatingBallMode = 'always';
 
     // 创建悬浮球元素
     const floatingBall = document.createElement('div');
@@ -32056,130 +31095,17 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       if (isOptionVisible('openMainPanel')) menu.appendChild(mainModalOption);
 
-      // 格式替换选项
-      const formatReplaceOption = createMenuOptionWithFloat('formatReplace', t('floating.formatReplace'), () => {
-        new FormatReplaceModal(this.app, this).open();
+      // 新标签页打开sg选项
+      const openInTabOption = createMenuOptionWithFloat('openInNewTab', t('floating.openInNewTab'), () => {
+        this.openPanelInTab();
         if (document.body.contains(menu)) {
           document.body.removeChild(menu);
         }
         hoverMenu = null;
       });
 
-      if (isOptionVisible('formatReplace')) menu.appendChild(formatReplaceOption);
+      if (isOptionVisible('openInNewTab')) menu.appendChild(openInTabOption);
 
-      // 添加备注选项
-      const addRemarkOption = createMenuOptionWithFloat('addRemark', t('floating.addRemark'), () => {
-        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-        if (!activeView) {
-          new Notice(t('main.openMdFile'));
-          return;
-        }
-
-        const selectedText = this.getSelectedText().trim();
-        if (!selectedText) {
-          new Notice(t('main.selectTextToRemark'));
-          return;
-        }
-
-        // 检查是否在全局规则中
-        const globalRuleIndex = this.globalRules.findIndex(rule => textMatchesRegex(selectedText, rule.regex));
-        const isGlobalRule = globalRuleIndex !== -1;
-
-        // 尝试从全局规则或当前文件规则中查找匹配的规则并获取备注
-        let currentRemark = '';
-        if (isGlobalRule) {
-          // 从全局规则中获取备注
-          const matchingGlobalRule = this.globalRules[globalRuleIndex];
-          if (matchingGlobalRule && matchingGlobalRule.remark) {
-            currentRemark = matchingGlobalRule.remark;
-          }
-        } else if (this.rules) {
-          // 从当前文件规则中获取备注
-          const matchingRule = this.rules.find(rule => textMatchesRegex(selectedText, rule.regex));
-          if (matchingRule && matchingRule.remark) {
-            currentRemark = matchingRule.remark;
-          }
-        }
-
-        if (document.body.contains(menu)) {
-          document.body.removeChild(menu);
-        }
-        hoverMenu = null;
-
-        const modal = new AddRemarkModal(
-          this.app,
-          currentRemark ? (isGlobalRule ? t('main.editRemarkGlobal') : t('main.editRemark')) : (isGlobalRule ? t('main.addRemarkGlobal') : t('main.addRemark')),
-          t('main.inputRemarkContent'),
-          currentRemark,
-          async (remark) => {
-            const trimmedRemark = remark.trim();
-
-            // 构建来源链接条目
-            let linkFilePath = this.currentFilePath;
-            if (!linkFilePath) {
-              const av = this.app.workspace.getActiveViewOfType(MarkdownView);
-              if (av?.file) linkFilePath = av.file.path;
-            }
-            const searchText = linkFilePath ? await this.determineSearchText(selectedText, trimmedRemark, linkFilePath) : selectedText;
-            const linkEntry = linkFilePath ? {
-              filePath: linkFilePath,
-              searchText: searchText,
-              remark: trimmedRemark,
-              timestamp: Date.now()
-            } : null;
-
-            // 如果是全局规则，更新全局规则中的备注
-            if (isGlobalRule) {
-              // 自动添加来源链接
-              if (linkEntry) {
-                if (!this.globalRules[globalRuleIndex].links) this.globalRules[globalRuleIndex].links = [];
-                this.globalRules[globalRuleIndex].links.push(linkEntry);
-              }
-              await this.saveGlobalRules(this.globalRules);
-              this.rulesVersion++;
-              this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
-              this.refreshCurrentView();
-              new Notice(trimmedRemark ? t('main.remarkUpdated') : t('main.remarkCleared'));
-              return;
-            }
-
-            let currentFilePath = this.currentFilePath;
-            if (!currentFilePath) {
-              const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-              if (activeView?.file) {
-                currentFilePath = activeView.file.path;
-                this.currentFilePath = currentFilePath;
-              }
-            }
-
-            if (currentFilePath && selectedText) {
-              await this.loadFileRules(currentFilePath);
-
-              const ruleIndex = this.rules.findIndex(rule => textMatchesRegex(selectedText, rule.regex));
-              if (ruleIndex !== -1) {
-                // 自动添加来源链接
-                if (linkEntry) {
-                  if (!this.rules[ruleIndex].links) this.rules[ruleIndex].links = [];
-                  this.rules[ruleIndex].links.push(linkEntry);
-                }
-                await this.saveFileRules(currentFilePath, this.rules);
-                this.rulesVersion++;
-                this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
-                this.refreshCurrentView();
-                new Notice(trimmedRemark ? t('main.remarkUpdated') : t('main.remarkCleared'));
-              } else {
-                await this.addFileRule(selectedText, '', trimmedRemark, linkEntry ? [linkEntry] : null);
-                new Notice(trimmedRemark ? t('main.remarkAdded') : t('main.remarkCleared'));
-              }
-            }
-          },
-          this,
-          selectedText || ''
-        );
-        modal.open();
-      });
-
-      if (isOptionVisible('addRemark')) menu.appendChild(addRemarkOption);
 
       // 添加计数选项
       const addCountOption = createMenuOptionWithFloat('addCount', (() => {
@@ -32522,15 +31448,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       if (isOptionVisible('interlinearNote')) menu.appendChild(interlinearNoteOption);
 
-      const aiOption = createMenuOptionWithFloat('aiAssistant', t('floating.aiAssistant'), () => {
-        this.aiAssistant();
-        if (document.body.contains(menu)) {
-          document.body.removeChild(menu);
-        }
-        hoverMenu = null;
-      });
-
-      if (isOptionVisible('aiAssistant')) menu.appendChild(aiOption);
 
       const entityOption = createMenuOptionWithFloat('extractEntities', t('floating.extractEntities'), () => {
         this.extractEntities();
@@ -32554,139 +31471,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
       if (isOptionVisible('styleShowcase')) menu.appendChild(showcaseOption);
 
-      const switchModeOption = document.createElement('div');
-      const currentMode = this.floatButtonData.floatingBallMode || 'always';
-      switchModeOption.textContent = t('floating.mode') + `: ${currentMode === 'always' ? t('floating.alwaysShow') : t('floating.follow')}`;
-      switchModeOption.style.cssText = `
-        padding: 8px 16px;
-        cursor: pointer;
-        font-size: 14px;
-        color: var(--text-normal);
-      `;
-
-      switchModeOption.addEventListener('mouseenter', () => {
-        switchModeOption.style.background = 'var(--background-modifier-hover)';
-      });
-
-      switchModeOption.addEventListener('mouseleave', () => {
-        switchModeOption.style.background = 'transparent';
-      });
-
-      switchModeOption.addEventListener('click', async () => {
-        const newMode = currentMode === 'always' ? 'followSelection' : 'always';
-        this.floatButtonData.floatingBallMode = newMode;
-        await this.saveFloatButtonData();
-
-        if (newMode === 'followSelection') {
-          floatingBall.style.display = 'none';
-          this.setupFollowSelectionMode(floatingBall);
-        } else {
-          if (this.floatingBallMouseListener) {
-            document.removeEventListener('mousemove', this.floatingBallMouseListener);
-            this.floatingBallMouseListener = null;
-          }
-          if (this.floatingBallMouseDownListener) {
-            document.removeEventListener('mousedown', this.floatingBallMouseDownListener);
-            this.floatingBallMouseDownListener = null;
-          }
-          if (this.floatingBallMouseUpListener) {
-            document.removeEventListener('mouseup', this.floatingBallMouseUpListener);
-            this.floatingBallMouseUpListener = null;
-          }
-          if (this.floatingBallGlobalSelectionListener) {
-            document.removeEventListener('selectionchange', this.floatingBallGlobalSelectionListener);
-            this.floatingBallGlobalSelectionListener = null;
-          }
-          if (this.floatingBallGlobalClickListener) {
-            document.removeEventListener('click', this.floatingBallGlobalClickListener);
-            this.floatingBallGlobalClickListener = null;
-          }
-          if (this.floatingBallEditorCm) {
-            const cm = this.floatingBallEditorCm;
-            if (this.floatingBallHandleEditorMouseUp) {
-              cm.removeEventListener('mouseup', this.floatingBallHandleEditorMouseUp);
-            }
-            if (this.floatingBallHandleEditorSelectionChange) {
-              cm.removeEventListener('selectionchange', this.floatingBallHandleEditorSelectionChange);
-            }
-            this.floatingBallEditorCm = null;
-          }
-          if (this.floatingBallLeafChangeEvent) {
-            this.floatingBallLeafChangeEvent.off();
-            this.floatingBallLeafChangeEvent = null;
-            this.floatingBallLeafChangeListener = null;
-          }
-          if (this.floatingBallLayoutChangeEvent) {
-            this.floatingBallLayoutChangeEvent.off();
-            this.floatingBallLayoutChangeEvent = null;
-            this.floatingBallLayoutChangeListener = null;
-          }
-          if (this.floatingBallEditorChangeEvent) {
-            this.floatingBallEditorChangeEvent.off();
-            this.floatingBallEditorChangeEvent = null;
-            this.floatingBallEditorChangeListener = null;
-          }
-          floatingBall.style.display = 'flex';
-          const positionKey = _isDesktop ? 'floatingBallPosition' : 'floatingBallPositionMobile';
-          this.floatButtonData[positionKey] = this.floatButtonData[positionKey] || {
-            x: window.innerWidth / 2 - 10,
-            y: window.innerHeight / 2 - 10
-          };
-          floatingBall.style.left = `${this.floatButtonData[positionKey].x}px`;
-          floatingBall.style.top = `${this.floatButtonData[positionKey].y}px`;
-        }
-
-        new Notice(t('main.modeSwitched') + ': ' + (newMode === 'always' ? t('main.alwaysMode') : t('main.followMode')));
-
-        if (document.body.contains(menu)) {
-          document.body.removeChild(menu);
-        }
-        hoverMenu = null;
-      });
-
-      if (isOptionVisible('switchMode')) menu.appendChild(switchModeOption);
-
-      const hideFloatingBtnsOption = document.createElement('div');
-      const hideKey = _isDesktop ? 'hideFloatingOptionButtons' : 'hideFloatingOptionButtonsMobile';
-      const isHideFloatingBtns = this.floatButtonData[hideKey] || false;
-      hideFloatingBtnsOption.textContent = isHideFloatingBtns ? t('main.showFloatingBtns') : t('main.hideFloatingBtns');
-      hideFloatingBtnsOption.style.cssText = `
-        padding: 8px 16px;
-        cursor: pointer;
-        font-size: 14px;
-        color: var(--text-normal);
-      `;
-
-      hideFloatingBtnsOption.addEventListener('mouseenter', () => {
-        hideFloatingBtnsOption.style.background = 'var(--background-modifier-hover)';
-      });
-
-      hideFloatingBtnsOption.addEventListener('mouseleave', () => {
-        hideFloatingBtnsOption.style.background = 'transparent';
-      });
-
-      hideFloatingBtnsOption.addEventListener('click', async () => {
-        this.floatButtonData[hideKey] = !this.floatButtonData[hideKey];
-        const _hiddenKey = _isDesktop ? 'floatingBallHiddenDesktop' : 'floatingBallHiddenMobile';
-        if (this.floatButtonData[hideKey]) {
-          this.floatButtonData[_hiddenKey] = true;
-          const floatingBall = document.getElementById('regex-highlighter-floating-ball');
-          if (floatingBall) floatingBall.style.display = 'none';
-        } else {
-          this.floatButtonData[_hiddenKey] = false;
-          const floatingBall = document.getElementById('regex-highlighter-floating-ball');
-          if (floatingBall) floatingBall.style.display = 'flex';
-        }
-        await this.saveFloatButtonData();
-        this.renderFloatingOptionButtons();
-        new Notice(this.floatButtonData[hideKey] ? t('main.floatingBtnsHidden') : t('main.floatingBtnsShown'));
-        if (document.body.contains(menu)) {
-          document.body.removeChild(menu);
-        }
-        hoverMenu = null;
-      });
-
-      if (isOptionVisible('hideFloatingBtns')) menu.appendChild(hideFloatingBtnsOption);
 
       const hideTextStylesOption = document.createElement('div');
       const isHideTextStyles = this.settings?.hideAllStyles === true;
@@ -34032,6 +32816,9 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       openMainPanel: () => {
         this.openSidebarView();
       },
+      openInNewTab: () => {
+        this.openPanelInTab();
+      },
       addFloatNote: () => {
         const mx = this.lastMouseX || (window.innerWidth - 80);
         const my = this.lastMouseY || 200;
@@ -34299,10 +33086,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
 
     const optionLabels = {
       openMainPanel: t('floating.openMainPanel'),
-      formatReplace: t('floating.formatReplace'),
-      addRemark: t('floating.addRemark'),
+      openInNewTab: t('floating.openInNewTab'),
       addCount: t('floating.addCount'),
-      aiAssistant: t('floating.aiAssistant'),
       extractEntities: t('floating.extractEntities'),
       pinyin: t('floating.pinyin'),
       styleShowcase: t('floating.styleShowcase'),
@@ -51076,8 +49861,8 @@ ${fullContext}`;
       } catch(e) {}
     };
 
-    const _kwCardLabels = { infoSection: t('main.cardLabelInfo'), keywordHistory: t('main.cardLabelKeywordHistory'), remarkContent: t('main.cardLabelRemarkContent'), keywordChips: t('main.cardLabelKeywordChips'), aiQuestion: t('main.cardLabelAiQuestion') };
-    const _kwCardSettingMap = { infoSection: 'showInfoSection', remarkContent: 'showRemarkContentBlock', keywordChips: 'showKeywordChipsBlock', aiQuestion: 'showAiQuestionBlock' };
+    const _kwCardLabels = { infoSection: t('main.cardLabelInfo'), keywordHistory: t('main.cardLabelKeywordHistory') };
+    const _kwCardSettingMap = { infoSection: 'showInfoSection' };
     const _addKwRemarkCard = (sectionEl, cardId, defaultOpts) => {
       if (!sectionEl) return null;
       const savedLayout = plugin.settings?.kwWindowGridLayout?.[cardId];
@@ -51242,7 +50027,7 @@ ${fullContext}`;
     }).catch((e) => { console.warn('[GridStack] load failed:', e); });
 
     _addKwRemarkCard(renderResult?.relatedHighlightsSection, 'relatedHighlights', { w: 24, h: 6 });
-    _addKwRemarkCard(renderResult?.remarkContentBlock, 'remarkContent', { w: 24, h: 8 });
+
 
     const linksByFile = renderResult.linksByFile;
 
@@ -51382,187 +50167,6 @@ ${fullContext}`;
       });
     });
 
-    // ===== 关键词反向链接 chips 区 =====
-    const keywordIndex = plugin.buildKeywordIndex();
-    const backlinkIndex = plugin.buildBacklinkIndex(keywordIndex);
-
-    const mentionedKeywords = [];
-    const sortedKws = [...keywordIndex.values()]
-      .filter(k => k.plainTexts && k.plainTexts.length > 0 && k.regex !== keywordRegex)
-      .sort((a, b) => Math.max(...b.plainTexts.map(p => p.length)) - Math.max(...a.plainTexts.map(p => p.length)));
-    for (const link of (rule.links || [])) {
-      const remarkText = link.remark || '';
-      if (!remarkText.trim()) continue;
-      for (const kw of sortedKws) {
-        if (mentionedKeywords.some(m => m.regex === kw.regex)) continue;
-        if (kw.plainTexts.some(p => remarkText.includes(p))) {
-          mentionedKeywords.push(kw);
-        }
-      }
-    }
-
-    const mentionedBy = backlinkIndex.get(keywordRegex) || [];
-
-    const allRelatedKeywords = new Map();
-    for (const kw of mentionedKeywords) {
-      allRelatedKeywords.set(kw.regex, { regex: kw.regex, cssClass: kw.cssClass, relation: 'mention' });
-    }
-    for (const bl of mentionedBy) {
-      if (!allRelatedKeywords.has(bl.sourceRegex)) {
-        const sourceRule = plugin.globalRules.find(r => r.regex === bl.sourceRegex) || plugin.rules.find(r => r.regex === bl.sourceRegex);
-        allRelatedKeywords.set(bl.sourceRegex, { regex: bl.sourceRegex, cssClass: sourceRule?.cssClass || '', relation: 'mentionedBy' });
-      }
-    }
-
-    if (allRelatedKeywords.size > 0 && plugin.settings?.showKeywordChipsBlock === true) {
-      const kwBlock = document.createElement('div');
-      kwBlock.className = 'keyword-chips-block';
-      kwBlock.style.cssText = 'margin-bottom:8px;';
-      const kwBlockHeader = document.createElement('div');
-      kwBlockHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:4px;';
-      const kwBlockHeaderLeft = document.createElement('div');
-      kwBlockHeaderLeft.style.cssText = 'display:flex;align-items:center;gap:4px;';
-      const kwBlockTitle = document.createElement('span');
-      kwBlockTitle.innerHTML = t('remark.relatedKeywords');
-      kwBlockHeaderLeft.appendChild(kwBlockTitle);
-      kwBlockHeader.appendChild(kwBlockHeaderLeft);
-      if (renderResult?.aiGraphBtn) kwBlockHeader.appendChild(renderResult.aiGraphBtn);
-      kwBlock.appendChild(kwBlockHeader);
-      const chipsBar = document.createElement('div');
-      chipsBar.className = 'keyword-chips-bar';
-      chipsBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;flex-shrink:0;';
-
-
-      for (const [kwRegex, info] of allRelatedKeywords) {
-
-        const chip = document.createElement('span');
-        chip.className = 'keyword-chip';
-        chip.title = (info.relation === 'mention' ? t('main.keywordMentions') : t('main.keywordMentionedBy')) + ' ' + kwRegex;
-                chip.style.cssText = 'display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(var(--mono-rgb-0),0.3);transition:all 0.15s ease;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-
-        const chipLabel = document.createElement('span');
-        chipLabel.textContent = (info.relation === 'mention' ? '→ ' : '← ') + kwRegex;
-        if (info.cssClass) {
-          chipLabel.className = info.cssClass + ' highlight-regex-text';
-          chip.style.borderColor = 'transparent';
-        } else {
-          chipLabel.style.cssText = 'font-weight:500;color:var(--text-normal);';
-        }
-        chip.appendChild(chipLabel);
-
-        let hoverTimeout = null;
-        let previewEl = null;
-        let previewHideTimeout = null;
-
-        const closePreview = () => {
-          if (previewEl) { previewEl.remove(); previewEl = null; }
-          if (previewHideTimeout) { clearTimeout(previewHideTimeout); previewHideTimeout = null; }
-        };
-
-        chip.addEventListener('mouseenter', () => {
-          if (!_isDesktop) return;
-          chip.style.transform = 'scale(1.05)';
-          chip.style.filter = 'brightness(1.15)';
-          if (previewHideTimeout) { clearTimeout(previewHideTimeout); previewHideTimeout = null; }
-          if (previewEl) return;
-          hoverTimeout = setTimeout(() => {
-            const kwRule = plugin.globalRules.find(r => r.regex === kwRegex) || plugin.rules.find(r => r.regex === kwRegex);
-            if (!kwRule || !kwRule.links) return;
-            const remarks = kwRule.links.filter(l => l.remark && l.remark.trim()).map(l => l.remark.trim());
-            if (remarks.length === 0) return;
-
-            previewEl = document.createElement('div');
-            previewEl.className = 'keyword-chip-preview';
-            previewEl.style.cssText = `position:fixed;z-index:1200;max-width:350px;max-height:300px;overflow-y:auto;padding:${popupSpacing}px;background:rgba(var(--mono-rgb-0),0.75);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border:none;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.35);font-size:12px;line-height:1.4;`;
-
-            const titleDiv = document.createElement('div');
-            titleDiv.textContent = kwRegex;
-            titleDiv.style.cssText = 'font-weight:600;margin-bottom:4px;color:var(--text-accent);';
-            previewEl.appendChild(titleDiv);
-
-            for (const r of remarks) {
-              const rDiv = document.createElement('div');
-              rDiv.textContent = r;
-              rDiv.style.cssText = 'color:var(--text-muted);margin-top:2px;border-left:2px solid var(--background-modifier-border);padding-left:6px;';
-              previewEl.appendChild(rDiv);
-            }
-
-            previewEl.addEventListener('mouseenter', () => {
-              if (previewHideTimeout) { clearTimeout(previewHideTimeout); previewHideTimeout = null; }
-            });
-            previewEl.addEventListener('mouseleave', () => {
-              previewHideTimeout = setTimeout(() => {
-                closePreview();
-                chip.style.transform = 'scale(1)';
-                chip.style.filter = '';
-              }, 200);
-            });
-
-            document.body.appendChild(previewEl);
-            plugin.constructor.bringToFront(previewEl);
-
-            const chipRect = chip.getBoundingClientRect();
-            const previewHeight = previewEl.offsetHeight;
-            let top = chipRect.top - previewHeight - 4;
-            if (top < 4) top = chipRect.bottom + 4;
-            let left = chipRect.left;
-            if (left + 350 > window.innerWidth) left = window.innerWidth - 360;
-            previewEl.style.top = top + 'px';
-            previewEl.style.left = left + 'px';
-          }, 400);
-        });
-        chip.addEventListener('mouseleave', () => {
-          if (hoverTimeout) clearTimeout(hoverTimeout);
-          previewHideTimeout = setTimeout(() => {
-            closePreview();
-            chip.style.transform = 'scale(1)';
-            chip.style.filter = '';
-          }, 200);
-        });
-
-        chip.addEventListener('click', (ce) => {
-          ce.preventDefault();
-          ce.stopPropagation();
-          closePreview();
-          chip.style.transform = 'scale(1)';
-          chip.style.filter = '';
-          const _m6 = plugin._regexHighlightModal; if (_m6 && _m6.contentEl && _isInAnyDoc(_m6.contentEl) && _m6.showInlineRemarkForRegex) { _m6.regexInput?.setValue?.(kwRegex); _m6.highlightMatchingRuleButtons?.(); _m6.showInlineRemarkForRegex(kwRegex); } else { const existingWin = document.querySelector(`.keyword-detail-window[data-keyword="${CSS.escape(kwRegex)}"]`); if (existingWin) { existingWin.remove(); } else { plugin.openKeywordWindow(kwRegex); } }
-        });
-
-        chipsBar.appendChild(chip);
-      }
-
-      // chips 底部拖动移动窗口
-      chipsBar.style.cursor = 'move';
-      chipsBar.addEventListener('mousedown', (e) => {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('.keyword-chip')) return;
-        isDragging = true;
-        dragStartX = e.clientX;
-        dragStartY = e.clientY;
-        const rect = win.getBoundingClientRect();
-        winStartX = Math.round(rect.left);
-        winStartY = Math.round(rect.top);
-        e.preventDefault();
-      });
-      chipsBar.addEventListener('touchstart', (e) => {
-        if (e.target.tagName === 'INPUT') return;
-        const touch = e.touches[0];
-        isDragging = true;
-        dragStartX = touch.clientX;
-        dragStartY = touch.clientY;
-        const rect = win.getBoundingClientRect();
-        winStartX = Math.round(rect.left);
-        winStartY = Math.round(rect.top);
-      }, { passive: true });
-
-      kwBlock.appendChild(chipsBar);
-      // 添加折叠按钮
-      _createSectionToggle(plugin, 'relatedKeywords', chipsBar, kwBlockHeaderLeft);
-      if (renderResult?._existingMermaidGraph && renderResult?._renderGraphSection) renderResult._renderGraphSection(renderResult._existingMermaidGraph, undefined, kwBlock);
-      _addKwRemarkCard(kwBlock, 'keywordChips', { w: 24, h: 3 });
-    }
-
-    _addKwRemarkCard(renderResult?.aiQuestionBlock, 'aiQuestion', { w: 24, h: 4 });
 
     // 右下角 resize 手柄
     const resizeHandle = document.createElement('div');
@@ -52642,14 +51246,7 @@ ${fullContext}`;
                 _createSectionToggle(plugin, 'relatedKeywords', chipsBar, kwBlockHeaderLeft);
                 if (currentRenderResult?._existingMermaidGraph && currentRenderResult?._renderGraphSection) currentRenderResult._renderGraphSection(currentRenderResult._existingMermaidGraph, undefined, kwBlock);
                 contentContainer.appendChild(kwBlock);
-                // 插入 AI 提问块到关联词下方
-                if (currentRenderResult?.aiQuestionBlock) {
-                  if (kwBlock.parentNode) {
-                    kwBlock.after(currentRenderResult.aiQuestionBlock);
-                  } else {
-                    contentContainer.appendChild(currentRenderResult.aiQuestionBlock);
-                  }
-                }
+
 
                 // 版本标签放入 chipsBar 内部（避免重叠）
                 const versionLabel = document.createElement('span');
@@ -52688,10 +51285,7 @@ ${fullContext}`;
                   if (helpNote) { const _ht = helpNote.text; const _em = _ht.indexOf('--- English ---'); const _en = (typeof _currentLang !== 'undefined' && _currentLang === 'en'); _showHelpFloat(verHelpBtn2, _em >= 0 ? (_en ? _ht.substring(_em + 16).trim() : _ht.substring(0, _em).trim()) : _ht); }
                 });
                 popup.appendChild(verHelpBtn2);
-                // 即使没有关联词，也要插入 AI 提问块
-                if (currentRenderResult?.aiQuestionBlock) {
-                  contentContainer.appendChild(currentRenderResult.aiQuestionBlock);
-                }
+
               }
             }
           };
@@ -52725,7 +51319,7 @@ ${fullContext}`;
               masonry: _calcMasonry(freshLinks, plugin)
             });
             if (result?.relatedHighlightsSection) contentContainer.appendChild(result.relatedHighlightsSection);
-            if (result?.remarkContentBlock) contentContainer.appendChild(result.remarkContentBlock);
+
             if (result?.aiBtnContainer) contentContainer.appendChild(result.aiBtnContainer);
             currentLinksByFile = result.linksByFile;
             currentRenderResult = result;

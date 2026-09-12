@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v2.1.9 (2026-09-12)
+## 🆕 v2.2.2 (2026-09-12)
+
+- **i18n Translation** — Translated remaining untranslated strings: related section title/label, highlight title, backlink toggle, regex section settings (regex/scope/apply/no-match), random review help tooltip
+- **Removed Sections** — Removed remark, keyword chips, and AI question sections from panel cards and render entries (underlying functions preserved)
+- **Removed Heading Style** — Removed heading style feature: enable toggle, right-click "add as heading style" menu, heading styles section render, heading level label option, and "标题样式" settings group
+- **Removed Floating Ball Options** — Removed format replace, add remark, AI reply, switch mode, hide floating buttons from floating ball menu and settings; fixed floating ball to always-show mode
+- **Cleaned Settings Panel** — Removed redundant display options: related notes, info section, non-keyword highlights, keyword remark, keyword chips, AI question, remark badge, rule source badge, tooltip, default preview text, show class name, search class name, chip hover delay, merged related section toggle
+
+## v2.1.9 (2026-09-12)
 
 - **Merged Related Section** — Combined related docs, highlights, threads, and random review into a single "关联" section with zone-based rendering; removed separate toggles from settings panel
 - **Removed Sections** — Removed parking lot, focus, and quick memo sections from settings and code

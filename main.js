@@ -8851,6 +8851,11 @@ ${currentCss}
   }
 
   async refreshModalContent() {
+
+    if (this._refreshing) return;
+    this._refreshing = true;
+    this._needsRefresh = false;
+    const _savedRegexInput = this.regexInput?.getValue?.() || '';
     try {
       if (this.contentEl) {
         if (this._unifiedGrid) { try { this._unifiedGrid.destroy(false); } catch(e) {} this._unifiedGrid = null; this._unifiedGridReady = false; }
@@ -8861,9 +8866,14 @@ ${currentCss}
         if (typeof this.onOpen === 'function') {
           await this.onOpen();
         }
+        if (_savedRegexInput && this.regexInput) {
+          this.regexInput.setValue(_savedRegexInput);
+        }
       }
     } catch (error) {
       console.error('refreshModalContent执行错误:', error);
+    } finally {
+      this._refreshing = false;
     }
   }
 }
@@ -9100,14 +9110,14 @@ class AddRegexRuleModal {
       if (this._skipRefreshOnInteraction) return;
       if (this._rulesRefreshTimer) clearTimeout(this._rulesRefreshTimer);
       this._rulesRefreshTimer = setTimeout(async () => {
-        if (!this._isOpen || this._skipRefreshOnInteraction) { return; }
+        if (!this._isOpen || this._skipRefreshOnInteraction || !this._needsRefresh) { return; }
+        this._needsRefresh = false;
         try {
           const scrollTop = this.contentEl?.scrollTop || 0;
           // 检测当前激活的chip（KEY WORDS / STYLES / FLOATING NOTES）
           const activeChip = this.contentEl?.querySelector('.rch-top-chip[data-active="true"]');
           const activeChipClass = activeChip?.className.match(/rch-(style|rules|float-note)-chip/)?.[0] || null;
           await this.refreshModalContent();
-          this._needsRefresh = false;
           if (this.contentEl) this.contentEl.scrollTop = scrollTop;
           // 延迟恢复tab，等onOpen的requestAnimationFrame创建chip bar完成
           requestAnimationFrame(() => {
@@ -10617,7 +10627,7 @@ class AddRegexRuleModal {
           const _opts = [];
           if (_kwGroupName) _opts.push({ label: _kwGroupName, hint: t('main.group') || '分组', action: () => { const _lv = this.app?.workspace?.getLeavesOfType?.('swiftglossa-sidebar'); const _v = _lv?.[0]?.view; const _m = _v?._sidebarModal; if (_m) { const _rulesChip = _m.contentEl?.querySelector('.rch-rules-chip'); if (_rulesChip) _rulesChip.click(); setTimeout(() => { const _grpChip = _m.contentEl?.querySelector(`.global-rules-section [data-group="${_kwGroupName}"]`); if (_grpChip) { _grpChip.click(); _grpChip.style.border = '2px solid var(--interactive-accent)'; } }, 100); } } });
           _opts.push({ label: t('main.edit') || '编辑', hint: t('main.dblClickEdit') || '双击编辑', action: () => { chip.dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); } });
-          _opts.push({ label: t('main.deleteKeyword') || '删除关键词', action: () => { if (_matchedRule) { const _allR = [...(Array.isArray(this.plugin.rules)?this.plugin.rules:[]), ...(Array.isArray(this.plugin.globalRules)?this.plugin.globalRules:[])]; const _ri = _allR.indexOf(_matchedRule); if (_ri >= 0) { if (_matchedRule.isGlobal || _ri >= this.plugin.rules.length) { const _gi = _ri - this.plugin.rules.length; if (this.plugin && typeof this.plugin.removeGlobalRule === 'function') this.plugin.removeGlobalRule(_gi); } else { if (typeof this.deleteRule === 'function') this.deleteRule(_ri); } hideKwChips(); } } } });
+          _opts.push({ label: t('main.deleteKeyword') || '删除关键词', action: async () => { if (_matchedRule) { const _allR = [...(Array.isArray(this.plugin.rules)?this.plugin.rules:[]), ...(Array.isArray(this.plugin.globalRules)?this.plugin.globalRules:[])]; const _ri = _allR.indexOf(_matchedRule); if (_ri >= 0) { if (_matchedRule.isGlobal || _ri >= this.plugin.rules.length) { const _gi = _ri - this.plugin.rules.length; if (this.plugin && typeof this.plugin.removeGlobalRule === 'function') await this.plugin.removeGlobalRule(_gi); } else { if (typeof this.deleteRule === 'function') await this.deleteRule(_ri); } this._needsRefresh = false; this._skipRefreshOnInteraction = true; this.clearGlobalRulesSection(); this.addGlobalRulesSection(this.contentEl); hideKwChips(); } } } });
 
           showChipTooltip(chip, _opts);
         });
@@ -10697,6 +10707,7 @@ class AddRegexRuleModal {
 
     // 更新规则的通用方法
     this.updateCurrentRule = async (newRegexValue) => {
+
       if (!newRegexValue || !newRegexValue.trim()) return false;
 
       const trimmedValue = newRegexValue.trim();
@@ -10823,10 +10834,12 @@ class AddRegexRuleModal {
               if (candidateStyles.length > 0) {
                 const randomClass = candidateStyles[Math.floor(Math.random() * candidateStyles.length)];
                 try {
-                  await this.plugin.addRule(trimmedVal, randomClass, false, this.remark || '');
+                  const _isGlobal = true;
+                  await this.plugin.addRule(trimmedVal, randomClass, _isGlobal, this.remark || '');
                   this.showSuccessMessage(t('main.ruleStyleApplied') + ` "${trimmedVal}" ` + t('main.styleClass') + ` .${randomClass}`);
-                  const newRuleIndex = this.plugin.rules.findIndex(r => r.regex === trimmedVal && r.cssClass === randomClass);
-                  if (newRuleIndex !== -1) { this.currentEditingRule = { index: newRuleIndex, regex: trimmedVal, cssClass: randomClass, isGlobal: false, remark: this.remark || '' }; this.inputModifiedSinceEdit = false; }
+                  const _searchArr = _isGlobal ? this.plugin.globalRules : this.plugin.rules;
+                  const newRuleIndex = _searchArr.findIndex(r => r.regex === trimmedVal && r.cssClass === randomClass);
+                  if (newRuleIndex !== -1) { this.currentEditingRule = { index: newRuleIndex, regex: trimmedVal, cssClass: randomClass, isGlobal: _isGlobal, remark: this.remark || '' }; this.inputModifiedSinceEdit = false; }
                   this.clearGlobalRulesSection();
                   this.addGlobalRulesSection(this.contentEl);
                   this.updateStyleButtonState(trimmedVal, randomClass, true);
@@ -12625,17 +12638,19 @@ class AddRegexRuleModal {
               }
             } else {
               if (currentRegexValue && currentRegexValue.trim() !== '') {
-                await this.plugin.addRule(currentRegexValue, className, false, this.remark);
+                const _isGlobal2 = true;
+                await this.plugin.addRule(currentRegexValue, className, _isGlobal2, this.remark);
 
                 const message = t('main.ruleStyleApplied') + ` "${currentRegexValue}" ` + t('main.styleClass') + ` .${className}`;
                 this.showSuccessMessage(message);
-                const newRuleIndex = this.plugin.rules.findIndex(r => r.regex === currentRegexValue && r.cssClass === className);
+                const _searchArr2 = _isGlobal2 ? this.plugin.globalRules : this.plugin.rules;
+                const newRuleIndex = _searchArr2.findIndex(r => r.regex === currentRegexValue && r.cssClass === className);
                 if (newRuleIndex !== -1) {
                   this.currentEditingRule = {
                     index: newRuleIndex,
                     regex: currentRegexValue,
                     cssClass: className,
-                    isGlobal: false,
+                    isGlobal: _isGlobal2,
                     remark: this.remark || ""
                   };
                 this.inputModifiedSinceEdit = false;
@@ -19293,7 +19308,8 @@ class AddRegexRuleModal {
                 await this.plugin.removeGlobalRule(ruleIndex);
               }
               this.plugin.rulesVersion++;
-              this.plugin.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+              this._needsRefresh = false;
+              this._skipRefreshOnInteraction = true;
               this.plugin.refreshCurrentView();
               this.clearGlobalRulesSection();
               this.addGlobalRulesSection(contentEl);
@@ -19571,8 +19587,7 @@ class AddRegexRuleModal {
         newRulesEl.style.display = '';
         if (newStyleEl) newStyleEl.style.display = 'none';
         if (newHeadingEl) newHeadingEl.style.display = 'none';
-        const _grids = newRulesEl.querySelectorAll('[data-rule-group]');
-        _grids.forEach(_g => { _g.style.display = 'flex'; _g.querySelectorAll('[data-rule-regex]').forEach(_b => { _b.style.display = 'flex'; }); });
+        if (this._applyRuleGroupCollapse) { this._applyRuleGroupCollapse(); }
       } else if (_styleActive) {
         if (newRulesEl) newRulesEl.style.display = 'none';
         if (newStyleEl) newStyleEl.style.display = '';
@@ -20449,7 +20464,7 @@ class AddRegexRuleModal {
     } else {
       const allFiles = plugin.app.vault.getFiles();
       const mdFiles = allFiles.filter(f => f.extension === 'md');
-      const highlightRegex = /==([^=\n]{1,200})==/g;
+      const highlightRegex = /==(.{1,200}?)==/g;
       for (const f of mdFiles) {
         try {
           const content = await plugin.app.vault.cachedRead(f);
@@ -21270,7 +21285,8 @@ class AddRegexRuleModal {
         showImageRender: true,
         showFromFileRuleDelete: true,
         cssScope: 'remark-content-container',
-        masonry: _calcMasonry(activeRule.links, this.plugin)
+        masonry: _calcMasonry(activeRule.links, this.plugin),
+        showMergedRelated: false
       });
       if (lastRenderResult?.aiBtnContainer) contentContainer.appendChild(lastRenderResult.aiBtnContainer);
 
@@ -25817,11 +25833,12 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
     this.plugin.refreshCurrentView();
     this.clearGlobalRulesSection();
     this.addGlobalRulesSection(this.contentEl);
-    if (typeof this.refreshModalContent === 'function') { this.refreshModalContent(); }
+
   }
 
 
   async editGlobalRule(index, newRegex, cssClass, remark = undefined) {
+
     const existingRemark = this.plugin.globalRules[index]?.remark || '';
     const existingLinks = this.plugin.globalRules[index]?.links || undefined;
     const oldRegex = this.plugin.globalRules[index]?.regex;
@@ -25856,7 +25873,11 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
     await this.plugin.saveGlobalRules(this.plugin.globalRules);
     this.clearGlobalRulesSection();
     this.addGlobalRulesSection(this.contentEl);
-    if (typeof this.refreshModalContent === 'function') { this.refreshModalContent(); }
+    this._needsRefresh = false;
+    this._skipRefreshOnInteraction = true;
+    if (typeof this._renderKeywordHistory === 'function') this._renderKeywordHistory();
+    if (typeof this.highlightMatchingRuleButtons === 'function') this.highlightMatchingRuleButtons();
+
     return true;
   }
 
@@ -25905,7 +25926,7 @@ const ts=Symbol("DELETE");function es(t,...e){return is({},t,...e)}function is(.
       this.plugin.refreshCurrentView();
       this.clearGlobalRulesSection();
       this.addGlobalRulesSection(this.contentEl);
-      if (typeof this.refreshModalContent === 'function') { this.refreshModalContent(); }
+
     } else {
     }
 
@@ -28770,7 +28791,6 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
 
     this.registerCategoryShortcuts();
 
-    this.registerAIHotkey();
 
     this.registerEntityExtractionHotkey();
 
@@ -29153,8 +29173,16 @@ module.exports = class MinimalRegexHighlightPlugin extends Plugin {
       id: "add-regex-highlight-rule",
       name: t('cmd.openMainPanel'),
       callback: () => {
-
+        const _sel = this.getSelectedText();
         this.openSidebarView();
+        if (_sel && _sel.trim()) {
+          const _trySet = (n) => {
+            const modal = this._regexHighlightModal;
+            if (modal && modal.regexInput) { modal.regexInput.setValue(_sel); if (typeof modal.showInlineRemarkForRegex === 'function') modal.showInlineRemarkForRegex(_sel); }
+            else if (n > 0) setTimeout(() => _trySet(n - 1), 50);
+          };
+          _trySet(20);
+        }
       },
       hotkeys: [
         {
@@ -32920,8 +32948,8 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
                   this.rules[ruleIndex].links.push(linkEntry);
                 }
                 await this.saveFileRules(currentFilePath, this.rules);
-                this.rulesVersion++;
-                this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
+      this.rulesVersion++;
+      this.rulesUpdateEmitter.dispatchEvent(new Event('update'));
                 this.refreshCurrentView();
                 new Notice(trimmedRemark ? t('main.remarkUpdated') : t('main.remarkCleared'));
               } else {
@@ -32966,9 +32994,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
         this.refreshCurrentView();
         this.saveCountedRegexes();
       },
-      aiAssistant: () => {
-        this.aiAssistant();
-      },
+
       extractEntities: () => {
         this.extractEntities();
       },
@@ -37053,39 +37079,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     }
   }
 
-  registerAIHotkey() {
-    try {
-      const { Notice } = require('obsidian');
-
-      const currentAI = this.settings?.currentAI || 0;
-      const aiConfigs = this.settings?.aiConfigs || [];
-      const currentAIConfig = aiConfigs[currentAI] || {};
-
-      const hotkey = currentAIConfig.hotkey || "Ctrl+Shift+A";
-
-      const hotkeyConfig = this.parseShortcutCombination(hotkey);
-      if (!hotkeyConfig) {
-        return;
-      }
-
-      const commandId = 'ai-assistant';
-
-      try {
-        const command = this.addCommand({
-          id: commandId,
-          name: t('cmd.aiAssistant'),
-          callback: () => {
-            this.aiAssistant();
-          },
-          hotkeys: [hotkeyConfig]
-        });
-      } catch (innerError) {
-        console.error('❌ 内部错误:', innerError);
-      }
-    } catch (error) {
-      console.error('❌ 注册AI快捷键失败:', error);
-    }
-  }
 
   registerEntityExtractionHotkey() {
     try {
@@ -37116,158 +37109,6 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       }
     } catch (error) {
       console.error('❌ 注册实体提取快捷键失败:', error);
-    }
-  }
-
-  // AI助手主函数
-  async aiAssistant() {
-    const { Notice, MarkdownView } = require('obsidian');
-
-    try {
-      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-      if (!activeView) {
-        console.warn('⚠️ 没有打开的Markdown文件');
-        new Notice(t('main.openMdFile'));
-        return;
-      }
-
-      const selectedText = this.getSelectedText();
-      if (!selectedText || !selectedText.trim()) {
-      }
-
-      // 检查是否需要立即发送到AI
-      const currentAI = this.settings?.currentAI || 0;
-      const aiConfigs = this.settings?.aiConfigs || [];
-      const currentAIConfig = aiConfigs[currentAI] || {};
-
-      // 优先使用全局设置，保持向后兼容
-      const autoSend = this.settings?.aiAutoSend || currentAIConfig.autoSend || false;
-
-      if (autoSend) {
-        // 检查是否有默认提示词和选中文字
-        const hasSelectedText = selectedText && selectedText.trim();
-        const hasDefaultPromptId = this.settings?.defaultPromptId;
-
-
-        // 只有同时有默认提示词和选中文字时才自动发送
-        if (hasDefaultPromptId && hasSelectedText) {
-          // 立即发送到AI
-          if (!currentAIConfig.apiKey) {
-            console.warn('⚠️ 未配置API Key');
-            new Notice(t('main.configureAiFirst'));
-            return;
-          }
-
-          // 加载默认提示词模板
-          const configPath = '.obsidian/plugins/Regex-Css-Highlighter/prompt-templates.json';
-          let templates = [];
-          try {
-            const content = await this.app.vault.adapter.read(configPath);
-            templates = JSON.parse(content);
-          } catch (e) {
-          }
-
-          // 获取当前文档信息
-          const { MarkdownView } = require('obsidian');
-          const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-          let documentName = t('ai.unknownDoc');
-
-          if (activeView && activeView.file) {
-            // 获取完整的文件名（包含扩展名）
-            const fullFileName = activeView.file.name;
-            // 去除扩展名
-            documentName = fullFileName.replace(/\.[^/.]+$/, "");
-          }
-
-          // 找到默认提示词
-          const defaultPrompt = templates.find(t => t.id === this.settings.defaultPromptId);
-          const promptContent = defaultPrompt ? defaultPrompt.content : (this.settings?.aiPrompt || "请分析以下内容：");
-          const fullPrompt = `${promptContent}\n\n` + t('ai.docName') + `: ${documentName}\n\n${selectedText}`;
-
-
-          new Notice(t('main.sendingToAi'));
-
-          // 创建对话历史
-          const conversationHistory = [
-            {
-              role: "user",
-              content: fullPrompt
-            }
-          ];
-
-          // 创建Promise并在后台执行
-          const responsePromise = this.callAIWithHistory(conversationHistory);
-
-          // 立即显示弹窗，传入Promise、selectedText、plugin实例和对话历史
-          this.showAIResponse(responsePromise, selectedText, conversationHistory);
-
-        } else {
-          // 不满足自动发送条件，仅显示窗口
-
-          // 创建一个空的Promise和对话历史
-          const responsePromise = Promise.resolve('');
-          const conversationHistory = [];
-
-          // 显示AI窗口
-          this.showAIResponse(responsePromise, selectedText, conversationHistory);
-
-        }
-      } else {
-        // 自动发送开关未开启，仅显示窗口
-
-        // 创建一个空的Promise和对话历史
-        const responsePromise = Promise.resolve('');
-        const conversationHistory = [];
-
-        // 显示AI窗口
-        this.showAIResponse(responsePromise, selectedText, conversationHistory);
-
-      }
-    } catch (error) {
-      console.error('❌ AI助手错误:', error);
-      console.error('❌ 错误堆栈:', error.stack);
-      new Notice(t('main.aiError') + ': ' + error.message);
-    }
-  }
-
-  async extractEntities() {
-    const { Notice, MarkdownView } = require('obsidian');
-
-    try {
-      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-      if (!activeView?.editor) {
-        console.warn('⚠️ 没有打开的Markdown文件或编辑器');
-        new Notice(t('main.openMdFile'));
-        return;
-      }
-
-      const selectedText = this.getSelectedText();
-
-      if (!selectedText || !selectedText.trim()) {
-        console.warn('⚠️ 没有选中的文本');
-        new Notice(t('main.selectTextToEntity'));
-        return;
-      }
-
-      // 检查是否配置了AI
-      const currentAI = this.settings?.currentAI || 0;
-      const aiConfigs = this.settings?.aiConfigs || [];
-      const currentAIConfig = aiConfigs[currentAI] || {};
-
-      if (!currentAIConfig.apiKey) {
-        console.warn('⚠️ 未配置API Key');
-        new Notice(t('main.configureAiFirst'));
-        // 打开侧边栏面板并跳到底部AI设置（主面板已删除）
-        await this.openPanelAndScroll('#ai-settings-section');
-        return;
-      }
-
-      // 打开实体提取模态框
-      new EntityExtractionModal(this.app, selectedText, this).open();
-    } catch (error) {
-      console.error('❌ 实体提取错误:', error);
-      console.error('❌ 错误堆栈:', error.stack);
-      new Notice(t('main.aiError') + ': ' + error.message);
     }
   }
 
@@ -41245,7 +41086,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
     try {
       const allFiles = this.app.vault.getFiles();
       const mdFiles = allFiles.filter(f => f.extension === 'md');
-      const highlightRegex = /==([^=\n]{1,200})==/g;
+      const highlightRegex = /==(.{1,200}?)==/g;
       const db = [];
       const fileStats = {};
       for (const f of mdFiles) {
@@ -41648,7 +41489,7 @@ ${leftMargin ? `  padding-left: ${leftMargin} !important;\n` : ''}${rightMargin 
       const file = this.app.vault.getAbstractFileByPath(filePath);
       if (!file || file.extension !== 'md') return;
       const content = await this.app.vault.cachedRead(file);
-      const highlightRegex = /==([^=\n]{1,200})==/g;
+      const highlightRegex = /==(.{1,200}?)==/g;
       const newEntries = [];
       if (content) {
         highlightRegex.lastIndex = 0;
@@ -44329,12 +44170,7 @@ content.addEventListener('auxclick', (e) => {
 
   // 从全局规则中删除规则
   async removeGlobalRule(index) {
-    // Removing global rule at index
-
-    // 删除规则
     this.globalRules.splice(index, 1);
-
-    // 保存全局规则
     await this.saveGlobalRules(this.globalRules);
   }
 
@@ -47224,7 +47060,8 @@ content.addEventListener('auxclick', (e) => {
       showImageRender,
       showFromFileRuleDelete,
       cssScope,
-      masonry
+      masonry,
+      showMergedRelated
     } = opts;
 
     const savedScrollTop = container.scrollTop;
@@ -47267,7 +47104,7 @@ content.addEventListener('auxclick', (e) => {
     container.appendChild(styleEl);
 
 
-    if (plugin.settings?.showRelatedHighlights !== false && plugin.settings?.showRelatedHighlightsSection !== false && ruleRegex) {
+    if (false && plugin.settings?.showRelatedHighlights !== false && plugin.settings?.showRelatedHighlightsSection !== false && ruleRegex) {
       const _excludedHlGroups = plugin.settings?.excludedRelatedNotesCategories || [];
       const _hlGroups = plugin.config?.globalRuleGroups || {};
       let _isHlExcluded = false;
@@ -47687,11 +47524,121 @@ content.addEventListener('auxclick', (e) => {
       }
     }
 
+    if (ruleRegex && showMergedRelated !== false) {
+      const _m = _modal();
+      if (_m && typeof _m.addRelatedNotesSection === 'function') {
+        const _mergedContainer = document.createElement('div');
+        _mergedContainer.className = 'popup-merged-related';
+        _mergedContainer.style.cssText = 'margin-bottom:8px;border:1px solid var(--background-modifier-border);border-radius:6px;padding:6px;';
+        container.appendChild(_mergedContainer);
+        const _mergedHeader = document.createElement('div');
+        _mergedHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;';
+        const _mergedTitle = document.createElement('span');
+        _mergedTitle.textContent = t('main.cardLabelMergedRelated') || '关联';
+        _mergedHeader.appendChild(_mergedTitle);
+        const _settingsIcon = document.createElement('span');
+        _settingsIcon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1.65 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+        _settingsIcon.style.cssText = 'cursor:pointer;opacity:0.4;display:inline-flex;align-items:center;transition:opacity 0.15s;';
+        _settingsIcon.addEventListener('mouseenter', () => { _settingsIcon.style.opacity = '0.8'; });
+        _settingsIcon.addEventListener('mouseleave', () => { _settingsIcon.style.opacity = '0.4'; });
+        _settingsIcon.addEventListener('click', (se) => {
+          se.preventDefault(); se.stopPropagation();
+          const _existingMenu = _mergedContainer.querySelector('.popup-merged-settings');
+          if (_existingMenu) { _existingMenu.remove(); return; }
+          const _menu = document.createElement('div');
+          _menu.className = 'popup-merged-settings';
+          _menu.style.cssText = 'background:var(--background-primary);border:1px solid var(--background-modifier-border);border-radius:6px;padding:6px 8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-size:11px;margin-bottom:4px;';
+          const _items = [
+            { key: 'popupShowRelatedNotes', label: t('main.cardLabelRelatedNotes') || '相关文档', defaultVal: true },
+            { key: 'popupShowThreads', label: t('main.cardLabelThreads') || '脉络', defaultVal: true },
+            { key: 'popupShowHl', label: t('main.keywordRelatedHighlights') || '高亮', defaultVal: true }
+          ];
+          for (const _item of _items) {
+            const _row = document.createElement('div');
+            _row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;';
+            const _lbl = document.createElement('span'); _lbl.textContent = _item.label; _lbl.style.cssText = 'color:var(--text-normal);';
+            const _cb = document.createElement('input'); _cb.type = 'checkbox';
+            _cb.checked = plugin.settings[_item.key] !== false;
+            _cb.addEventListener('change', () => {
+              plugin.settings[_item.key] = _cb.checked;
+              plugin.saveData(plugin.settings);
+              const _rn = _mergedContainer.querySelector('.popup-related-notes-zone');
+              const _th = _mergedContainer.querySelector('.popup-threads-zone');
+              const _hl = _mergedContainer.querySelector('.popup-hl-zone');
+              if (_rn) _rn.style.display = plugin.settings['popupShowRelatedNotes'] !== false ? '' : 'none';
+              if (_th) _th.style.display = plugin.settings['popupShowThreads'] !== false ? '' : 'none';
+              if (_hl) _hl.style.display = plugin.settings['popupShowHl'] !== false ? '' : 'none';
+            });
+            _row.appendChild(_lbl); _row.appendChild(_cb); _menu.appendChild(_row);
+          }
+          const _addSlider = (key, label, min, max, step, unit) => {
+            const _row = document.createElement('div');
+            _row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;gap:6px;';
+            const _lbl = document.createElement('span'); _lbl.textContent = label; _lbl.style.cssText = 'color:var(--text-normal);flex-shrink:0;';
+            const _sl = document.createElement('input'); _sl.type = 'range'; _sl.min = min; _sl.max = max; _sl.step = step;
+            _sl.value = plugin.settings[key] !== undefined ? plugin.settings[key] : (key === 'popupHlFontSize' ? 11 : 1.5);
+            _sl.style.cssText = 'flex:1;min-width:80px;';
+            const _val = document.createElement('span'); _val.style.cssText = 'color:var(--text-muted);flex-shrink:0;min-width:30px;text-align:right;';
+            _val.textContent = _sl.value + unit;
+            _sl.addEventListener('input', () => {
+              plugin.settings[key] = parseFloat(_sl.value);
+              _val.textContent = _sl.value + unit;
+              plugin.saveData(plugin.settings);
+              const _hlZone = _mergedContainer.querySelector('.popup-hl-zone');
+              if (_hlZone) {
+                if (key === 'popupHlFontSize') _hlZone.style.fontSize = _sl.value + 'px';
+                if (key === 'popupHlLineHeight') _hlZone.style.lineHeight = _sl.value;
+              }
+            });
+            _row.appendChild(_lbl); _row.appendChild(_sl); _row.appendChild(_val); _menu.appendChild(_row);
+          };
+          const _sep = document.createElement('div'); _sep.style.cssText = 'border-top:1px solid var(--background-modifier-border);margin:4px 0;'; _menu.appendChild(_sep);
+          _addSlider('popupHlFontSize', '高亮字体', 9, 16, 1, 'px');
+          _addSlider('popupHlLineHeight', '高亮行距', 1.2, 2.0, 0.1, '');
+          _mergedHeader.after(_menu);
+          const _closeMenu = (ev) => { if (!_menu.contains(ev.target) && !_settingsIcon.contains(ev.target)) { _menu.remove(); document.removeEventListener('mousedown', _closeMenu); } };
+          setTimeout(() => document.addEventListener('mousedown', _closeMenu), 0);
+        });
+        _mergedHeader.appendChild(_settingsIcon);
+        _mergedContainer.appendChild(_mergedHeader);
+        const _prevInMerged = _m._inMergedZone;
+        const _prevZone = _m._zoneOverride;
+        const _renderIntoPopup = (zoneClass, settingsKey, renderFn) => {
+          const _zone = document.createElement('div');
+          _zone.className = zoneClass;
+          _zone.style.display = plugin.settings[settingsKey] !== false ? '' : 'none';
+          _mergedContainer.appendChild(_zone);
+          const _tm = Object.create(_m);
+          _tm.contentEl = _zone;
+          _tm._addUnifiedCard = null;
+          _tm._removeUnifiedCard = null;
+          _tm._inMergedZone = true;
+          _tm._zoneOverride = _zone;
+          try { renderFn(_tm, _zone); } catch(e) { console.error('[SG-Popup] render error:', e); }
+        };
+        _renderIntoPopup('popup-related-notes-zone', 'popupShowRelatedNotes', (_tm, _zone) => _tm.addRelatedNotesSection(_zone, ruleRegex));
+        _renderIntoPopup('popup-threads-zone', 'popupShowThreads', (_tm, _zone) => _tm.addThreadsSection(_zone));
+        const _hlZone = document.createElement('div');
+        _hlZone.className = 'popup-hl-zone';
+        _hlZone.style.display = plugin.settings['popupShowHl'] !== false ? '' : 'none';
+        _hlZone.style.fontSize = (plugin.settings['popupHlFontSize'] !== undefined ? plugin.settings['popupHlFontSize'] : 11) + 'px';
+        _hlZone.style.lineHeight = plugin.settings['popupHlLineHeight'] !== undefined ? plugin.settings['popupHlLineHeight'] : 1.5;
+        _mergedContainer.appendChild(_hlZone);
+
+        const _hlInner = document.createElement('div');
+        _hlZone.appendChild(_hlInner);
+        { const _tm = Object.create(_m); _tm.contentEl = _hlInner; _tm._addUnifiedCard = null; _tm._removeUnifiedCard = null; _tm._inMergedZone = true; _tm._zoneOverride = _hlInner;
+          try { _tm._showRelatedHighlights(ruleRegex, null, _hlInner); } catch(e) { console.error('[SG-Popup] hl render error:', e); }
+        }
+        _m._inMergedZone = _prevInMerged;
+        _m._zoneOverride = _prevZone;
+      }
+    }
 
     const remarkBlock = document.createElement('div');
     remarkBlock.className = 'remark-content-block';
     remarkBlock.classList.add(cssScope);
-    remarkBlock.style.cssText = 'margin-bottom:8px;';
+    remarkBlock.style.cssText = 'margin-bottom:8px;color:var(--text-normal);';
     if (typeof _SG_APPLY_PALETTE === 'function') _SG_APPLY_PALETTE(remarkBlock, plugin.settings);
     const _popupFs = plugin.settings?.popupFontSize;
     const _popupLh = plugin.settings?.popupLineHeight;
@@ -47902,31 +47849,9 @@ content.addEventListener('auxclick', (e) => {
     _createSectionToggle(plugin, 'keywordRemarks', remarkBlockBody, remarkBlockHeaderLeft);
 
 
-    const aiQuestionBlock = document.createElement('div');
-    aiQuestionBlock.className = 'ai-question-block';
-    aiQuestionBlock.classList.add(cssScope);
-    aiQuestionBlock.style.cssText = 'margin-bottom:8px;';
-    const aiQuestionBlockHeader = document.createElement('div');
-    aiQuestionBlockHeader.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:4px;';
-    const aiQuestionBlockHeaderLeft = document.createElement('div');
-    aiQuestionBlockHeaderLeft.style.cssText = 'display:flex;align-items:center;gap:4px;';
-    const aiQuestionBlockTitle = document.createElement('span');
-    aiQuestionBlockTitle.innerHTML = t('remark.aiQuestions');
-    aiQuestionBlockHeaderLeft.appendChild(aiQuestionBlockTitle);
-    aiQuestionBlockHeader.appendChild(aiQuestionBlockHeaderLeft);
-    // AI 提问生成按钮（移到标题栏右侧，与关联词一致）
-    const aiAddBtn = document.createElement('button');
-    aiAddBtn.textContent = '+';
-    aiAddBtn.title = t('remark.aiAsk');
-    aiAddBtn.style.cssText = 'padding:0 5px;cursor:pointer;border:none;box-shadow:0 0 0 0.5px var(--background-modifier-border);border-radius:4px;background:var(--background-primary);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;height:16px;line-height:0;font-size:11px;font-weight:700;';
-    // aiHasContent 和点击逻辑在后面绑定
-    aiQuestionBlockHeader.appendChild(aiAddBtn);
-    aiQuestionBlock.appendChild(aiQuestionBlockHeader);
-    const aiQuestionBlockBody = document.createElement('div');
-    aiQuestionBlockBody.className = 'ai-question-block-body';
-    aiQuestionBlock.appendChild(aiQuestionBlockBody);
-    // 添加折叠按钮（替代原有的aiFoldBtn）
-    _createSectionToggle(plugin, 'aiQuestions', aiQuestionBlockBody, aiQuestionBlockHeaderLeft);
+    const aiQuestionBlock = null;
+    const aiQuestionBlockBody = null;
+    const aiAddBtn = null;
 
     const linksByFile = new Map();
     if (links && links.length > 0) {
@@ -48481,7 +48406,7 @@ content.addEventListener('auxclick', (e) => {
         aiInputRow.appendChild(aiSendBtn);
         aiGroup.appendChild(aiInputRow);
 
-        aiQuestionBlockBody.appendChild(aiGroup);
+        if (aiQuestionBlockBody) aiQuestionBlockBody.appendChild(aiGroup);
       }
     }
 
@@ -48650,7 +48575,7 @@ content.addEventListener('auxclick', (e) => {
         aiInputRow2.appendChild(aiSendBtn2);
         aiGroup.appendChild(aiInputRow2);
 
-        aiQuestionBlockBody.appendChild(aiGroup);
+        if (aiQuestionBlockBody) aiQuestionBlockBody.appendChild(aiGroup);
       }
     }
 
@@ -48698,6 +48623,7 @@ content.addEventListener('auxclick', (e) => {
         }
       }
     }
+    if (aiAddBtn) {
     if (!aiHasContent) {
       aiAddBtn.style.opacity = '0.35';
       aiAddBtn.style.cursor = 'not-allowed';
@@ -48776,6 +48702,7 @@ content.addEventListener('auxclick', (e) => {
         aiAddBtn.style.pointerEvents = '';
       }
     });
+    }
 
     const aiGraphBtn = document.createElement('button');
     aiGraphBtn.textContent = '⬡';
@@ -51096,7 +51023,7 @@ ${fullContext}`;
                 }
               }
 
-              if (allRelatedKeywords.size > 0 && plugin.settings?.showKeywordChipsBlock === true) {
+              if (false && allRelatedKeywords.size > 0 && plugin.settings?.showKeywordChipsBlock === true) {
                 const kwBlock = document.createElement('div');
                 kwBlock.className = 'keyword-chips-block';
                 kwBlock.style.cssText = 'margin-bottom:8px;';
@@ -51266,7 +51193,7 @@ ${fullContext}`;
                   if (helpNote) { const _ht = helpNote.text; const _em = _ht.indexOf('--- English ---'); const _en = (typeof _currentLang !== 'undefined' && _currentLang === 'en'); _showHelpFloat(verHelpBtn, _em >= 0 ? (_en ? _ht.substring(_em + 16).trim() : _ht.substring(0, _em).trim()) : _ht); }
                 });
                 chipsBar.appendChild(verHelpBtn);
-              } else {
+              } else if (false) {
                 // 无 chips 时，版本标签固定在弹窗底部
                 const versionLabel = document.createElement('div');
                 const pluginVersion = plugin && plugin.manifest ? plugin.manifest.version : '';
@@ -52158,97 +52085,6 @@ ${fullContext}`;
             popupLeftBtns.appendChild(ruleBadge);
           }
 
-          // "s" 保存文件按钮
-          const saveFileBtn = document.createElement('span');
-          saveFileBtn.textContent = 's';
-          saveFileBtn.title = t('main.saveAsFile');
-          saveFileBtn.style.cssText = `
-            font-size: 10px;font-weight: bold;
-            color: var(--text-muted);opacity: 0.6;
-            background: var(--background-secondary);
-            border: 1px solid var(--background-modifier-border);
-            border-radius: 3px;padding: 1px 5px;
-            line-height: 1.3;cursor: pointer;
-            user-select: none;flex-shrink: 0;
-            transition: opacity 0.15s, color 0.15s, background 0.15s;
-          `;
-          saveFileBtn.addEventListener('mouseenter', () => {
-            saveFileBtn.style.opacity = '1';
-            saveFileBtn.style.color = 'var(--text-accent)';
-            saveFileBtn.style.background = 'var(--background-modifier-hover)';
-          });
-          saveFileBtn.addEventListener('mouseleave', () => {
-            saveFileBtn.style.opacity = '0.6';
-            saveFileBtn.style.color = 'var(--text-muted)';
-            saveFileBtn.style.background = 'var(--background-secondary)';
-          });
-          saveFileBtn.addEventListener('click', async (ce) => {
-            ce.stopPropagation();
-            ce.preventDefault();
-            try {
-              const matchedText = targetEl.textContent || targetEl.innerText || '';
-              if (!matchedText.trim()) {
-                new Notice(t('main.cannotGetMatchText'));
-                return;
-              }
-              let mdContent = `# ${matchedText.trim()}\n\n`;
-              if (currentLinksByFile && currentLinksByFile.size > 0) {
-                for (const [filePath, fileLinks] of currentLinksByFile) {
-                  const fileName = filePath.split('/').pop().replace(/\.md$/, '');
-                  mdContent += `## [[${fileName}|${fileName}]]\n\n`;
-                  for (const link of fileLinks) {
-                    if (link.remark?.trim()) {
-                      mdContent += `- ${link.remark.trim()}\n`;
-                    }
-                  }
-                  mdContent += '\n';
-                }
-              }
-              const fileName = matchedText.trim();
-              const filePath = `${fileName}.md`;
-              const existingFile = plugin.app.vault.getAbstractFileByPath(filePath);
-              if (existingFile) {
-                const choiceModal = new Modal(plugin.app);
-                choiceModal.titleEl.setText(t('main.fileExistsTitle'));
-                const messageEl = choiceModal.contentEl.createEl('p');
-                messageEl.textContent = t('main.fileExistsDesc');
-                messageEl.style.marginBottom = '16px';
-                const buttonContainer = choiceModal.contentEl.createEl('div');
-                buttonContainer.style.display = 'flex';
-                buttonContainer.style.justifyContent = 'flex-end';
-                buttonContainer.style.gap = '8px';
-                buttonContainer.style.flexWrap = 'wrap';
-                const cancelBtn = buttonContainer.createEl('button');
-                cancelBtn.textContent = t('main.cancel');
-                cancelBtn.addEventListener('click', () => choiceModal.close());
-                const mergeBtn = buttonContainer.createEl('button');
-                mergeBtn.textContent = t('main.mergeContent');
-                mergeBtn.style.backgroundColor = 'var(--interactive-accent)';
-                mergeBtn.style.color = 'white';
-                mergeBtn.style.border = 'none';
-                mergeBtn.style.borderRadius = '4px';
-                mergeBtn.addEventListener('click', async () => {
-                  try {
-                    const existingContent = await plugin.app.vault.read(existingFile);
-                    const newContent = existingContent + '\n\n---\n\n' + mdContent;
-                    await plugin.app.vault.modify(existingFile, newContent);
-                    new Notice(t('main.mergedToFile'));
-                    choiceModal.close();
-                  } catch (err) {
-                    new Notice(t('main.mergeFailed') + ': ' + err.message);
-                  }
-                });
-                choiceModal.open();
-                return;
-              }
-              await plugin.app.vault.create(filePath, mdContent);
-              new Notice(t('main.savedToFile'));
-            } catch (error) {
-              console.error('保存文件时出错:', error);
-              new Notice(t('main.saveFailed') + ': ' + error.message);
-            }
-          });
-          popupLeftBtns.appendChild(saveFileBtn);
 
           // "c" 计数按钮
           const countBtn = document.createElement('span');

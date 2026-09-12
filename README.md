@@ -95,6 +95,16 @@ Search for "Regex Css Highlighter" in Obsidian Settings → Community Plugins �
 
 
 <details>
+<summary>v2.2.3 (2026-09-13)</summary>
+
+- **Fixed Group Expansion on Chip Delete / 修复chip删除后分组展开** — Fixed bug where deleting a keyword via chip expanded all collapsed groups / 修复通过chip删除关键词时所有折叠分组展开的bug
+- **Selected Text Auto-Fill / 选中文本自动填入** — Open-panel shortcut with selected text now auto-fills regex input / 打开面板快捷键有选中文本时自动填入正则输入框
+- **Removed AI Reply Window / 移除AI回复窗口** — Removed AI question/reply block from remark popup / 从备注弹窗移除AI提问/回复板块
+- **Removed AI Assistant Command / 移除AI助手命令** — Removed AI Assistant command from hotkey settings / 从快捷键设置移除AI助手命令
+
+</details>
+
+<details>
 <summary>v2.2.2 (2026-09-12)</summary>
 
 - **i18n Translation / 国际化翻译** — Translated remaining untranslated strings: related section, regex settings, random review help / 翻译剩余未翻译字符串：关联版块、正则设置、随机回顾提示

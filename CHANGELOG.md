@@ -2,7 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-## 🆕 v2.2.2 (2026-09-12)
+## 🆕 v2.2.3 (2026-09-13)
+
+- **Fixed Group Expansion on Chip Delete** — Fixed bug where deleting a keyword via chip context menu expanded all collapsed groups; `addGlobalRulesSection` was forcibly setting all grids to `display: flex`, overriding `applyRuleGroupCollapse` state
+- **Selected Text Auto-Fill** — Pressing the open-panel shortcut (Mod+Alt+R) with selected text now auto-fills the regex input and triggers inline remark search
+- **Removed AI Reply Window** — Removed AI question/reply block (aiQuestionBlock) from the remark popup; AI generation and AI style optimization features are preserved
+- **Removed AI Assistant Command** — Removed the "SwiftGlossa: AI Assistant" command from hotkey settings and command palette
+
+## v2.2.2 (2026-09-12)
 
 - **i18n Translation** — Translated remaining untranslated strings: related section title/label, highlight title, backlink toggle, regex section settings (regex/scope/apply/no-match), random review help tooltip
 - **Removed Sections** — Removed remark, keyword chips, and AI question sections from panel cards and render entries (underlying functions preserved)

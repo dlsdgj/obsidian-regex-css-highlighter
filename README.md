@@ -10,15 +10,11 @@ SwiftGlossa highlights keywords with regex + custom CSS and indexes them into a 
 
 ![Remark Feature / 1](./assets/拖拽文件到sg.gif)
 
-![Remark Feature / 2](./assets/sg-Canvas.gif)
 
 ## Floating Notes / 悬浮笔记
 
 ![Floating Notes / 悬浮笔记](./assets/sg_floatingnotes.gif)
 
-## Mobile Adaptation / 手机适配
-
-![Remark Feature / 4](./assets/203-3.png)
 
 
 
